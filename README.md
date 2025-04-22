@@ -35,12 +35,23 @@ Use the provided scripts in the tools/ directory to export GraphQL schemas to di
 # TODO Add commands here...
 ```
 
+### ID Generation
+
+`to_id.py` script can be used for ID generation of a given graphql schema.
+It generates a yaml output that has the fqn of a node and the ID of it as the key.
+
+```bash
+uv run python src/tools/to_id.py <path_to_schema.graphql> <path_to_units.yaml> output.yaml
+```
+
+For further information check out the [idgen readme](src/idgen/README.md).
+
 ### Further information
 For detailed instructions on how to use the repository, refer to the [Usage Guide](docs/usage_guide.md).
 
 ## Contributing
 
-See [here](CONTRIBUTING.md) if you would like to contribute.
+See [here](docs/CONTRIBUTING.md) if you would like to contribute.
 
 # License
 > TODO: Add the corresponding license.
