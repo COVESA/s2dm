@@ -1,0 +1,265 @@
+Seat:
+  description: The model of a vehicle's Seat.
+  instances:
+  - [ROW1, ROW2]
+  - [DRIVERSIDE, PASSENGERSIDE]
+  type: Branch
+
+Seat.heatingCooling:
+  datatype: int8
+  description: Heating or Cooling requested for the Item. -100 = Maximum cooling,
+    0 = Heating/cooling deactivated, 100 = Maximum heating.
+  max: '100'
+  min: '-100'
+  type: Leaf
+  unit: PERCENT
+
+Seat.height:
+  datatype: uint16
+  description: Seat position on vehicle z-axis. Position is relative within available
+    movable range of the seating. 0 = Lowermost position supported.
+  type: Leaf
+  unit: MILLIMETER
+
+Seat.isBackwardSwitchEngaged:
+  datatype: boolean
+  description: Seat backward switch engaged.
+  type: Leaf
+
+Seat.isBelted:
+  datatype: boolean
+  description: Is the belt engaged.
+  type: Leaf
+
+Seat.isCoolerSwitchEngaged:
+  datatype: boolean
+  description: Cooler switch for Seat heater.
+  type: Leaf
+
+Seat.isDecreaseMassageLevelSwitchEngaged:
+  datatype: boolean
+  description: Decrease massage level switch engaged.
+  type: Leaf
+
+Seat.isDownSwitchEngaged:
+  datatype: boolean
+  description: Seat down switch engaged.
+  type: Leaf
+
+Seat.isForwardSwitchEngaged:
+  datatype: boolean
+  description: Seat forward switch engaged.
+  type: Leaf
+
+Seat.isIncreaseMassageLevelSwitchEngaged:
+  datatype: boolean
+  description: Increase massage level switch engaged.
+  type: Leaf
+
+Seat.isOccupied:
+  datatype: boolean
+  description: Does the seat have a passenger in it.
+  type: Leaf
+
+Seat.isTiltBackwardSwitchEngaged:
+  datatype: boolean
+  description: Tilt backward switch engaged.
+  type: Leaf
+
+Seat.isTiltForwardSwitchEngaged:
+  datatype: boolean
+  description: Tilt forward switch engaged.
+  type: Leaf
+
+Seat.isUpSwitchEngaged:
+  datatype: boolean
+  description: Seat up switch engaged.
+  type: Leaf
+
+Seat.isWarmerSwitchEngaged:
+  datatype: boolean
+  description: Warmer switch for Seat heater.
+  type: Leaf
+
+Seat.massage:
+  datatype: uint8
+  description: Seat massage level. 0 = off. 100 = max massage.
+  type: Leaf
+  unit: PERCENT
+
+Seat.massageLevel:
+  datatype: uint8
+  description: Seat massage level. 0 = off. 100 = max massage.
+  max: '100'
+  min: null
+  type: Leaf
+  unit: PERCENT
+
+Seat.position:
+  datatype: uint16
+  description: Seat position on vehicle x-axis. Position is relative to the frontmost
+    position supported by the seat. 0 = Frontmost position supported.
+  type: Leaf
+  unit: MILLIMETER
+
+Seat.seatBeltHeight:
+  datatype: uint16
+  description: Seat belt position on vehicle z-axis. Position is relative within available
+    movable range of the seat belt. 0 = Lowermost position supported.
+  type: Leaf
+  unit: MILLIMETER
+
+Seat.tilt:
+  datatype: float
+  description: Tilting of seat (seating and backrest) relative to vehicle x-axis.
+    0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive
+    degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted
+    backward.
+  type: Leaf
+  unit: DEGREE
+
+SeatAirbag:
+  description: Airbag signals.
+  type: Branch
+
+SeatAirbag.isDeployed:
+  datatype: boolean
+  description: Airbag deployment status. True = Airbag deployed. False = Airbag not
+    deployed.
+  type: Leaf
+
+SeatBackrest:
+  description: Describes signals related to the backrest of the seat.
+  type: Branch
+
+SeatBackrest.isLessLumbarSupportSwitchEngaged:
+  datatype: boolean
+  description: Is switch for less lumbar support engaged.
+  type: Leaf
+
+SeatBackrest.isLessSideBolsterSupportSwitchEngaged:
+  datatype: boolean
+  description: Is switch for less side bolster support engaged.
+  type: Leaf
+
+SeatBackrest.isLumbarDownSwitchEngaged:
+  datatype: boolean
+  description: Lumbar down switch engaged.
+  type: Leaf
+
+SeatBackrest.isLumbarUpSwitchEngaged:
+  datatype: boolean
+  description: Lumbar up switch engaged.
+  type: Leaf
+
+SeatBackrest.isMoreLumbarSupportSwitchEngaged:
+  datatype: boolean
+  description: Is switch for more lumbar support engaged.
+  type: Leaf
+
+SeatBackrest.isMoreSideBolsterSupportSwitchEngaged:
+  datatype: boolean
+  description: Is switch for more side bolster support engaged.
+  type: Leaf
+
+SeatBackrest.isReclineBackwardSwitchEngaged:
+  datatype: boolean
+  description: Backrest recline backward switch engaged.
+  type: Leaf
+
+SeatBackrest.isReclineForwardSwitchEngaged:
+  datatype: boolean
+  description: Backrest recline forward switch engaged.
+  type: Leaf
+
+SeatBackrest.lumbarHeight:
+  datatype: uint8
+  description: Height of lumbar support. Position is relative within available movable
+    range of the lumbar support. 0 = Lowermost position supported.
+  type: Leaf
+  unit: MILLIMETER
+
+SeatBackrest.lumbarSupport:
+  datatype: float
+  description: Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost
+    position.
+  max: '100'
+  min: null
+  type: Leaf
+  unit: PERCENT
+
+SeatBackrest.recline:
+  datatype: float
+  description: Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees
+    = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees
+    for backward recline.
+  type: Leaf
+  unit: DEGREE
+
+SeatBackrest.sideBolsterSupport:
+  datatype: float
+  description: Side bolster support. 0 = Minimum support (widest side bolster setting).
+    100 = Maximum support.
+  max: '100'
+  min: null
+  type: Leaf
+  unit: PERCENT
+
+SeatHeadrest:
+  description: Headrest settings.
+  type: Branch
+
+SeatHeadrest.angle:
+  datatype: float
+  description: Headrest angle, relative to backrest, 0 degrees if parallel to backrest,
+    Positive degrees = tilted forward.
+  type: Leaf
+  unit: DEGREE
+
+SeatHeadrest.height:
+  datatype: uint8
+  description: Position of headrest relative to movable range of the head rest. 0
+    = Bottommost position supported.
+  type: Leaf
+  unit: MILLIMETER
+
+SeatHeadrest.isBackwardSwitchEngaged:
+  datatype: boolean
+  description: Head rest backward switch engaged.
+  type: Leaf
+
+SeatHeadrest.isDownSwitchEngaged:
+  datatype: boolean
+  description: Head rest down switch engaged.
+  type: Leaf
+
+SeatHeadrest.isForwardSwitchEngaged:
+  datatype: boolean
+  description: Head rest forward switch engaged.
+  type: Leaf
+
+SeatHeadrest.isUpSwitchEngaged:
+  datatype: boolean
+  description: Head rest up switch engaged.
+  type: Leaf
+
+SeatSeating:
+  description: Describes signals related to the seat bottom of the seat.
+  type: Branch
+
+SeatSeating.isBackwardSwitchEngaged:
+  datatype: boolean
+  description: Is switch to decrease seating length engaged.
+  type: Leaf
+
+SeatSeating.isForwardSwitchEngaged:
+  datatype: boolean
+  description: Is switch to increase seating length engaged.
+  type: Leaf
+
+SeatSeating.length:
+  datatype: uint16
+  description: Length adjustment of seating. 0 = Adjustable part of seating in rearmost
+    position (Shortest length of seating).
+  type: Leaf
+  unit: MILLIMETER

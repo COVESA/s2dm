@@ -5,3 +5,5 @@ directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
 directive @noDuplicates on FIELD_DEFINITION
 
 directive @instanceTag on OBJECT
+
+directive @metadata(comment: String) on FIELD_DEFINITION | OBJECT
