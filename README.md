@@ -44,3 +44,7 @@ See [here](CONTRIBUTING.md) if you would like to contribute.
 
 # License
 > TODO: Add the corresponding license.
+
+# Docs
+
+at: https://pages.atc-github.azure.cloud.bmw/q555872/s2dm/approach/index.html
