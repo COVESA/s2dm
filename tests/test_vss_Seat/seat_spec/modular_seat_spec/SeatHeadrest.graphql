@@ -1,0 +1,32 @@
+"""Headrest settings."""
+type SeatHeadrest {
+  """
+  Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.
+  """
+  angle(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
+  """
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  """
+  Head rest backward switch engaged.
+  """
+  isBackwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Angle)")
+
+  """
+  Head rest down switch engaged.
+  """
+  isDownSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Height)")
+
+  """
+  Head rest forward switch engaged.
+  """
+  isForwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Angle)")
+
+  """
+  Head rest up switch engaged.
+  """
+  isUpSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Height)")
+}

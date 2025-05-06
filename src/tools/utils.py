@@ -48,10 +48,18 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     common_types_file = os.path.join(os.path.dirname(__file__), "..", "spec", "common_types.graphql")
     common_types_str = read_file(common_types_file)
 
+    # Read custom scalar types from file
+    custom_scalar_types_file = os.path.join(os.path.dirname(__file__), "..", "spec", "custom_scalars.graphql")
+    custom_scalar_types_str = read_file(custom_scalar_types_file)
+
+    # Read unit enums from file
+    unit_enums_file = os.path.join(os.path.dirname(__file__), "..", "spec", "unit_enums.graphql")
+    unit_enums_str = read_file(unit_enums_file)
+
     # Build schema with custom directives
     # TODO: Improve this part with schema merge function with a whole directory.
     # TODO: For example: with Ariadne https://ariadnegraphql.org/docs/modularization#defining-schema-in-graphql-files
-    schema_str = custom_directives_str + "\n" + common_types_str + "\n" + schema_str
+    schema_str = custom_directives_str + "\n" + common_types_str  + "\n" + custom_scalar_types_str + "\n" + schema_str + "\n" + unit_enums_str
 
     schema = build_schema(schema_str)  # Convert GraphQL SDL to a GraphQLSchema object
     logging.info("Successfully loaded the given GraphQL schema file.")
@@ -299,3 +307,76 @@ def print_field_sdl(field: GraphQLField) -> str:
         directives = " ".join([f"@{directive.name.value}" for directive in field.ast_node.directives])
         field_sdl += f" {directives}"
     return field_sdl
+
+def is_valid_instance_tag_field(field: GraphQLField, schema: GraphQLSchema) -> bool:
+    """
+    Check if the output type of a given field is a valid instanceTag.
+    A valid instanceTag is an object type with the @instanceTag directive.
+
+    Args:
+        field (GraphQLField): The field to check.
+        schema (GraphQLSchema): The GraphQL schema to validate against.
+
+    Returns:
+        bool: True if the field's output type is a valid instanceTag, False otherwise.
+    """
+    if not isinstance(field.type, GraphQLObjectType):
+        return False
+
+    output_type = schema.get_type(field.type.name)
+    return isinstance(output_type, GraphQLObjectType) and has_directive(output_type, "instanceTag")
+
+
+def has_valid_instance_tag_field(object_type: GraphQLObjectType, schema: GraphQLSchema) -> bool:
+    """
+    Check if a given object type has a field named 'instanceTag' and if the field's output type
+    is a valid instanceTag.
+
+    Args:
+        object_type (GraphQLObjectType): The object type to check.
+        schema (GraphQLSchema): The GraphQL schema to validate against.
+
+    Returns:
+        bool: True if the object type has a valid instanceTag field, False otherwise.
+    """
+    if "instanceTag" in object_type.fields:
+        field = object_type.fields["instanceTag"]
+        return is_valid_instance_tag_field(field, schema)
+
+    return False
+
+def get_instance_tag_object(object_type: GraphQLObjectType, schema: GraphQLSchema) -> GraphQLObjectType | None:
+    """
+    Get the valid instance tag object type used in a valid instance tag field.
+
+    Args:
+        object_type (GraphQLObjectType): The object type to check.
+        schema (GraphQLSchema): The GraphQL schema to validate against.
+
+    Returns:
+        GraphQLObjectType | None: The valid instance tag object type if found, None otherwise.
+    """
+    if has_valid_instance_tag_field(object_type, schema):
+        field = object_type.fields["instanceTag"]
+        return schema.get_type(field.type.name)
+    return None
+
+def get_instance_tag_dict(instance_tag_object: GraphQLObjectType) -> dict[str, list[str]]:
+    """
+    Given a valid instance tag object type, return the list of all enum values by level.
+
+    Args:
+        instance_tag_object (GraphQLObjectType): The instance tag object type to process.
+
+    Returns:
+        dict[str, list[str]]: A dictionary where keys are field names and values are lists of enum values.
+    """
+    instance_tag_dict = {}
+
+    for field_name, field in instance_tag_object.fields.items():
+        if isinstance(field.type, GraphQLEnumType):
+            instance_tag_dict[field_name] = list(field.type.values.keys())
+        else:
+            raise TypeError(f"Field '{field_name}' in object '{instance_tag_object.name}' is not an enum.")
+
+    return instance_tag_dict
