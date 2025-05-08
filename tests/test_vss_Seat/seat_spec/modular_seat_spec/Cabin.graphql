@@ -4,10 +4,9 @@ type Cabin {
   """
   The position of the driver seat in row 1.
   """
-  driverPosition: DriverPositionEnum
-    @metadata(
-      comment: "Some signals use DriverSide and PassengerSide as instances. If this signal specifies that DriverPosition is LEFT or MIDDLE, then DriverSide refers to left side and PassengerSide to right side. If this signal specifies that DriverPosition is RIGHT, then DriverSide refers to right side and PassengerSide to left side."
-      vssType: "attribute")
+  driverPosition: DriverPositionEnum @metadata(
+    comment: "Some signals use DriverSide and PassengerSide as instances. If this signal specifies that DriverPosition is LEFT or MIDDLE, then DriverSide refers to left side and PassengerSide to right side. If this signal specifies that DriverPosition is RIGHT, then DriverSide refers to right side and PassengerSide to left side.",
+    vssType: "attribute")
 }
 
 enum DriverPositionEnum {
