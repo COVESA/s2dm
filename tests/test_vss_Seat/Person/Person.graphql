@@ -1,0 +1,12 @@
+type Person {
+  name: String
+  address: Address
+  #seatedOn: Seat
+}
+
+type Address {
+  street: String
+  city: String
+  state: String
+  zip: String
+}
