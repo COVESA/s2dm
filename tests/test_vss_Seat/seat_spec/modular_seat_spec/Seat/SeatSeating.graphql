@@ -11,13 +11,14 @@ type Seating
   isBackwardSwitchEngaged: Boolean 
     @metadata(
       comment: "Affects the property (SingleSeat.Seating.Length)"
+      vssType: "actuator"
     )
 
   """Is switch to increase seating length engaged."""
-  isForwardSwitchEngaged: Boolean
+  isForwardSwitchEngaged: Boolean @metadata(vssType: "actuator")
 
   """
   Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).
   """
-  length(unit: Length_Unit_Enum = MILLIMETER): UInt16
+  length(unit: Length_Unit_Enum = MILLIMETER): UInt16 @metadata(vssType: "actuator")
 }

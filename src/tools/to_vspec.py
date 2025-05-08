@@ -289,7 +289,8 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
         field_dict = {
             "description": field.description if field.description else "",
             "datatype": "string",  # TODO: Consider that VSS allows any datatype for enums.
-            "allowed": [value.value for value in field.type.values.values()]
+            "allowed": [value.value for value in field.type.values.values()],
+            "type": "attribute" # TODO: Get this from the @metadata directive.
         }
         return {concat_field_name: field_dict}
         

@@ -3,5 +3,5 @@ type Airbag {
   """
   Airbag deployment status. True = Airbag deployed. False = Airbag not deployed.
   """
-  isDeployed: Boolean
+  isDeployed: Boolean @metadata(vssType: "sensor")
 }

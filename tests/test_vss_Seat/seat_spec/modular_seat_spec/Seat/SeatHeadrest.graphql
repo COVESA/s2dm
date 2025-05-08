@@ -3,30 +3,30 @@ type Headrest {
   """
   Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.
   """
-  angle(unit: Angle_Unit_Enum = DEGREE): Float
+  angle(unit: Angle_Unit_Enum = DEGREE): Float @metadata(vssType: "actuator")
 
   """
   Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
   """
-  height(unit: Length_Unit_Enum = MILLIMETER): UInt8
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt8 @metadata(vssType: "actuator")
 
   """
   Head rest backward switch engaged.
   """
-  isBackwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Angle)")
+  isBackwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Angle)", vssType:"actuator")
 
   """
   Head rest down switch engaged.
   """
-  isDownSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Height)")
+  isDownSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Height)", vssType:"actuator")
 
   """
   Head rest forward switch engaged.
   """
-  isForwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Angle)")
+  isForwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Angle)", vssType:"actuator")
 
   """
   Head rest up switch engaged.
   """
-  isUpSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Height)")
+  isUpSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Headrest.Height)", vssType:"actuator")
 }
