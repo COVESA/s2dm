@@ -1,0 +1,37 @@
+type A {
+  b: B
+  g: G
+}
+
+type B {
+  c: d
+  e: E
+}
+
+type C {
+  d: D
+}
+
+type D {
+  someField: String
+}
+
+type E {
+  f: F
+}
+
+type F {
+  someField: String
+}
+
+type G {
+  h: H
+}
+
+type H {
+  i: I
+}
+
+type I {
+  someField: String
+}
