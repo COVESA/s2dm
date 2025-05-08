@@ -70,15 +70,14 @@ Vehicle.Cabin.Seat.Backrest.lumbarHeight:
   datatype: uint8
   description: Height of lumbar support. Position is relative within available movable
     range of the lumbar support. 0 = Lowermost position supported.
-  unit: MILLIMETER
+  unit: mm
 
 Vehicle.Cabin.Seat.Backrest.lumbarSupport:
   datatype: float
   description: Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost
     position.
-  max: '100'
-  min: null
-  unit: PERCENT
+  max: 100
+  unit: percent
 
 Vehicle.Cabin.Seat.Backrest.recline:
   comment: Seat z-axis depends on seat tilt. This means that movement of backrest
@@ -89,15 +88,14 @@ Vehicle.Cabin.Seat.Backrest.recline:
   description: Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees
     = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees
     for backward recline.
-  unit: DEGREE
+  unit: degrees
 
 Vehicle.Cabin.Seat.Backrest.sideBolsterSupport:
   datatype: float
   description: Side bolster support. 0 = Minimum support (widest side bolster setting).
     100 = Maximum support.
-  max: '100'
-  min: null
-  unit: PERCENT
+  max: 100
+  unit: percent
 
 Vehicle.Cabin.Seat.Headrest:
   description: Headrest settings.
@@ -107,13 +105,13 @@ Vehicle.Cabin.Seat.Headrest.angle:
   datatype: float
   description: Headrest angle, relative to backrest, 0 degrees if parallel to backrest,
     Positive degrees = tilted forward.
-  unit: DEGREE
+  unit: degrees
 
 Vehicle.Cabin.Seat.Headrest.height:
   datatype: uint8
   description: Position of headrest relative to movable range of the head rest. 0
     = Bottommost position supported.
-  unit: MILLIMETER
+  unit: mm
 
 Vehicle.Cabin.Seat.Headrest.isBackwardSwitchEngaged:
   comment: Affects the property (SingleSeat.Headrest.Angle)
@@ -152,23 +150,23 @@ Vehicle.Cabin.Seat.Seating.length:
   datatype: uint16
   description: Length adjustment of seating. 0 = Adjustable part of seating in rearmost
     position (Shortest length of seating).
-  unit: MILLIMETER
+  unit: mm
 
 Vehicle.Cabin.Seat.heatingCooling:
   datatype: int8
   description: Heating or Cooling requested for the Item. -100 = Maximum cooling,
     0 = Heating/cooling deactivated, 100 = Maximum heating.
-  max: '100'
-  min: '-100'
+  max: 100
+  min: -100
   type: actuator
-  unit: PERCENT
+  unit: percent
 
 Vehicle.Cabin.Seat.height:
   datatype: uint16
   description: Seat position on vehicle z-axis. Position is relative within available
     movable range of the seating. 0 = Lowermost position supported.
   type: actuator
-  unit: MILLIMETER
+  unit: mm
 
 Vehicle.Cabin.Seat.isBackwardSwitchEngaged:
   comment: Affects the property (SingleSeat.Position)
@@ -244,29 +242,28 @@ Vehicle.Cabin.Seat.massage:
   datatype: uint8
   description: Seat massage level. 0 = off. 100 = max massage.
   type: actuator
-  unit: PERCENT
+  unit: percent
 
 Vehicle.Cabin.Seat.massageLevel:
   datatype: uint8
   description: Seat massage level. 0 = off. 100 = max massage.
-  max: '100'
-  min: null
+  max: 100
   type: actuator
-  unit: PERCENT
+  unit: percent
 
 Vehicle.Cabin.Seat.position:
   datatype: uint16
   description: Seat position on vehicle x-axis. Position is relative to the frontmost
     position supported by the seat. 0 = Frontmost position supported.
   type: actuator
-  unit: MILLIMETER
+  unit: mm
 
 Vehicle.Cabin.Seat.seatBeltHeight:
   datatype: uint16
   description: Seat belt position on vehicle z-axis. Position is relative within available
     movable range of the seat belt. 0 = Lowermost position supported.
   type: actuator
-  unit: MILLIMETER
+  unit: mm
 
 Vehicle.Cabin.Seat.tilt:
   comment: In VSS it is assumed that tilting a seat affects both seating (seat bottom)
@@ -278,7 +275,7 @@ Vehicle.Cabin.Seat.tilt:
     degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted
     backward.
   type: actuator
-  unit: DEGREE
+  unit: degrees
 
 Vehicle.Cabin.driverPosition:
   allowed: [LEFT, MIDDLE, RIGHT]

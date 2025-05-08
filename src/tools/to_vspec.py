@@ -24,6 +24,73 @@ from tools.utils import (
     load_schema,
 )
 
+UNITS_DICT = { #TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
+    "MILLIMETER": "mm",
+    "CENTIMETER": "cm",
+    "METER": "m",
+    "KILOMETER": "km",
+    "INCH": "inch",
+    "KILOMETER_PER_HOUR": "km/h",
+    "METERS_PER_SECOND": "m/s",
+    "METERS_PER_SECOND_SQUARED": "m/s^2",
+    "CENTIMETERS_PER_SECOND_SQUARED": "cm/s^2",
+    "MILLILITER": "ml",
+    "LITER": "l",
+    "CUBIC_CENTIMETERS": "cm^3",
+    "DEGREE_CELSIUS": "celsius",
+    "DEGREE": "degrees",
+    "DEGREE_PER_SECOND": "degrees/s",
+    "RADIANS_PER_SECOND": "rad/s",
+    "WATT": "W",
+    "KILOWATT": "kW",
+    "HORSEPOWER": "PS",
+    "KILOWATT_HOURS": "kWh",
+    "GRAM": "g",
+    "KILOGRAM": "kg",
+    "POUND": "lbs",
+    "VOLT": "V",
+    "AMPERE": "A",
+    "AMPERE_HOURS": "Ah",
+    "MILLISECOND": "ms",
+    "SECOND": "s",
+    "MINUTE": "min",
+    "HOUR": "h",
+    "DAYS": "day",
+    "WEEKS": "weeks",
+    "MONTHS": "months",
+    "YEARS": "years",
+    "UNIX_TIMESTAMP": "unix-time",
+    "ISO_8601": "iso8601",
+    "MILLIBAR": "mbar",
+    "PASCAL": "Pa",
+    "KILOPASCAL": "kPa",
+    "POUNDS_PER_SQUARE_INCH": "psi",
+    "STARS": "stars",
+    "GRAMS_PER_SECOND": "g/s",
+    "GRAMS_PER_KILOMETER": "g/km",
+    "KILOWATT_HOURS_PER_100_KILOMETERS": "kWh/100km",
+    "WATT_HOUR_PER_KM": "Wh/km",
+    "MILLILITER_PER_100_KILOMETERS": "ml/100km",
+    "LITER_PER_100_KILOMETERS": "l/100km",
+    "LITER_PER_HOUR": "l/h",
+    "MILES_PER_GALLON": "mpg",
+    "KILOMETERS_PER_LITER": "km/l",
+    "NEWTON": "N",
+    "KILO_NEWTON": "kN",
+    "NEWTON_METER": "Nm",
+    "REVOLUTIONS_PER_MINUTE": "rpm",
+    "HERTZ": "Hz",
+    "CYCLES_PER_MINUTE": "cpm",
+    "BEATS_PER_MINUTE": "bpm",
+    "RATIO": "ratio",
+    "PERCENT": "percent",
+    "NANO_METER_PER_KILOMETER": "nm/km",
+    "DECIBEL_MILLIWATT": "dBm",
+    "DECIBEL": "dB",
+    "OHM": "Ohm",
+    "LUX": "lx"
+}
+
 SUPPORTED_FIELD_CASES = {
     FieldCase.DEFAULT,
     FieldCase.NON_NULL,
@@ -183,15 +250,16 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
             range_directive = field.ast_node.directives[0]
             min_arg = next((arg.value.value for arg in range_directive.arguments if arg.name.value == "min"), None)
             max_arg = next((arg.value.value for arg in range_directive.arguments if arg.name.value == "max"), None)
-            if min_arg is not None or max_arg is not None:
-                field_dict["min"] = min_arg
-                field_dict["max"] = max_arg
+            if min_arg is not None:
+                field_dict["min"] = int(min_arg)
+            if max_arg is not None:
+                field_dict["max"] = int(max_arg)
 
         # TODO: Map the unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
         if "unit" in field.args:
             unit_arg = field.args["unit"].default_value
             if unit_arg is not None:
-                field_dict["unit"] = unit_arg
+                field_dict["unit"] = UNITS_DICT[unit_arg]
 
         if has_directive(field, "metadata"):
             metadata_directive = next(
