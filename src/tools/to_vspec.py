@@ -6,7 +6,6 @@ import yaml
 from graphql import (
     GraphQLEnumType,
     GraphQLField,
-    GraphQLList,
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLSchema,
@@ -22,8 +21,6 @@ from tools.utils import (
     get_instance_tag_dict,
     get_instance_tag_object,
     has_directive,
-    has_valid_instance_tag_field,
-    is_valid_instance_tag_field,
     load_schema,
 )
 
@@ -108,7 +105,7 @@ def translate_to_vspec(schema_path: Path) -> str:
     logging.debug(f"Instance Tag Objects: {instance_tag_objects}")
     global INSTANCE_TAGS
     INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
-
+    nested_types = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
     for object_type in object_types:
         if object_type.name == "Query":
@@ -127,13 +124,24 @@ def translate_to_vspec(schema_path: Path) -> str:
             #    logging.debug(f"Skipping field '{field_name}' in object type '{object_type.name}' as it is a valid instance tag field.")
             #    continue  # Skip instance tag fields
             # Add a VSS leaf structure for the field
-            field_result = process_field(field_name, field, object_type, schema)
+            field_result = process_field(field_name, field, object_type, schema, nested_types)
             if field_result is not None:
                 yaml_dict.update(field_result)
             else:
                 logging.debug(f"Skipping field '{field_name}' in object type '{object_type.name}' as process_field returned None.")
 
+    logging.debug(f"Nested types: {nested_types}")
+    reconstructed_paths = reconstruct_paths(nested_types)
+    logging.debug(f"Reconstructed {reconstructed_paths}")
     # TODO: Think of splitting the yaml dump into two: one for object types and one for fields. Reason: to maintain the same order of the keys in the fields, and also to structure the export better and sorted for easier control of the output.    
+    for key in list(yaml_dict.keys()):
+        first_word = key.split('.')[0]
+        for path in reconstructed_paths:
+            path_parts = path.split('.')
+            if first_word == path_parts[-1]:
+                new_key = '.'.join(path_parts[:-1] + [key])
+                yaml_dict[new_key] = yaml_dict.pop(key)
+                break
     return yaml.dump(yaml_dict, default_flow_style=False, Dumper=CustomDumper, sort_keys=True)
 
 
@@ -142,7 +150,7 @@ def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -
     logging.info(f"Processing object type '{object_type.name}'.")
 
     obj_dict = {
-        "type": "Branch",
+        "type": "branch",
     }
     if object_type.description:
         obj_dict["description"] = object_type.description
@@ -156,7 +164,8 @@ def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -
         
     return {object_type.name: obj_dict}
 
-def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObjectType, schema: GraphQLSchema) -> dict:
+def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObjectType, schema: GraphQLSchema, 
+                  nested_types: list) -> dict:
     """Process a GraphQL field and generate the corresponding YAML."""
     logging.info(f"Processing field '{field_name}'.")
     concat_field_name = f"{object_type.name}.{field_name}"
@@ -200,9 +209,10 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
                 field_dict["type"] = vss_type
 
         return {concat_field_name: field_dict}
-    elif isinstance(output_type, GraphQLObjectType):
+    elif isinstance(output_type, GraphQLObjectType) and field_name != "instanceTag":
         # Collect nested structures
         #nested_types.append(f"{object_type.name}.{output_type}({field_name})")
+        nested_types.append((object_type.name, output_type.name))
         logging.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
         return process_object_type(get_named_type(field.type), schema)  # Nested object type, process it recursively
     elif isinstance(output_type, GraphQLEnumType):
@@ -215,6 +225,39 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
         
     else:
         logging.debug(f"Skipping (in the output YAML) the field '{field_name}' with output type '{type(field.type).__name__}'.")
+
+def reconstruct_paths(nested_types):
+    # Dictionary to store the graph structure
+    graph = {}
+    for parent, child in nested_types:
+        if parent not in graph:
+            graph[parent] = []
+        graph[parent].append(child)
+
+    # Identify all potential root nodes (nodes that are parents but not children)
+    all_parents = set(parent for parent, _ in nested_types)
+    all_children = set(child for _, child in nested_types)
+    root_nodes = all_parents - all_children
+
+    # Set to store unique paths
+    unique_paths = set()
+
+    # Recursive function to build paths
+    def build_paths(current, path):
+        # Add the current path to the unique paths set
+        unique_paths.add(".".join(path))
+
+        # If the current type has children, recurse
+        if current in graph:
+            for child in graph[current]:
+                build_paths(child, path + [child])
+
+    # Start building paths from each root node
+    for root in root_nodes:
+        build_paths(root, [root])
+
+    # Return the sorted unique paths
+    return sorted(unique_paths)
 
 
 @click.command()
