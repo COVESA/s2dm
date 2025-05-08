@@ -1,3 +1,137 @@
+Airbag:
+  description: Airbag signals.
+  type: Branch
+
+Airbag.isDeployed:
+  datatype: boolean
+  description: Airbag deployment status. True = Airbag deployed. False = Airbag not
+    deployed.
+
+Backrest:
+  description: Describes signals related to the backrest of the seat.
+  type: Branch
+
+Backrest.isLessLumbarSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Is switch for less lumbar support engaged.
+
+Backrest.isLessSideBolsterSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport)
+  datatype: boolean
+  description: Is switch for less side bolster support engaged.
+
+Backrest.isLumbarDownSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Lumbar down switch engaged.
+
+Backrest.isLumbarUpSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Lumbar up switch engaged.
+
+Backrest.isMoreLumbarSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Is switch for more lumbar support engaged.
+
+Backrest.isMoreSideBolsterSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport)
+  datatype: boolean
+  description: Is switch for more side bolster support engaged.
+
+Backrest.isReclineBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.Recline)
+  datatype: boolean
+  description: Backrest recline backward switch engaged.
+
+Backrest.isReclineForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.Recline)
+  datatype: boolean
+  description: Backrest recline forward switch engaged.
+
+Backrest.lumbarHeight:
+  datatype: uint8
+  description: Height of lumbar support. Position is relative within available movable
+    range of the lumbar support. 0 = Lowermost position supported.
+  unit: MILLIMETER
+
+Backrest.lumbarSupport:
+  datatype: float
+  description: Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost
+    position.
+  max: '100'
+  min: null
+  unit: PERCENT
+
+Backrest.recline:
+  comment: Seat z-axis depends on seat tilt. This means that movement of backrest
+    due to seat tilting will not affect Backrest.Recline as long as the angle between
+    Seating and Backrest are constant. Absolute recline relative to vehicle z-axis
+    can be calculated as Tilt + Backrest.Recline.
+  datatype: float
+  description: Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees
+    = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees
+    for backward recline.
+  unit: DEGREE
+
+Backrest.sideBolsterSupport:
+  datatype: float
+  description: Side bolster support. 0 = Minimum support (widest side bolster setting).
+    100 = Maximum support.
+  max: '100'
+  min: null
+  unit: PERCENT
+
+Cabin:
+  description: All in-cabin components, including doors.
+  type: Branch
+
+Cabin.driverPosition:
+  allowed: [LEFT, MIDDLE, RIGHT]
+  datatype: string
+  description: The position of the driver seat in row 1.
+
+Headrest:
+  description: Headrest settings.
+  type: Branch
+
+Headrest.angle:
+  datatype: float
+  description: Headrest angle, relative to backrest, 0 degrees if parallel to backrest,
+    Positive degrees = tilted forward.
+  unit: DEGREE
+
+Headrest.height:
+  datatype: uint8
+  description: Position of headrest relative to movable range of the head rest. 0
+    = Bottommost position supported.
+  unit: MILLIMETER
+
+Headrest.isBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Angle)
+  datatype: boolean
+  description: Head rest backward switch engaged.
+
+Headrest.isDownSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Height)
+  datatype: boolean
+  description: Head rest down switch engaged.
+
+Headrest.isForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Angle)
+  datatype: boolean
+  description: Head rest forward switch engaged.
+
+Headrest.isUpSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Height)
+  datatype: boolean
+  description: Head rest up switch engaged.
+
+InCabinArea2x2:
+  type: Branch
+
 Seat:
   description: The model of a vehicle's Seat.
   instances:
@@ -11,80 +145,90 @@ Seat.heatingCooling:
     0 = Heating/cooling deactivated, 100 = Maximum heating.
   max: '100'
   min: '-100'
-  type: Leaf
+  type: actuator
   unit: PERCENT
 
 Seat.height:
   datatype: uint16
   description: Seat position on vehicle z-axis. Position is relative within available
     movable range of the seating. 0 = Lowermost position supported.
-  type: Leaf
+  type: actuator
   unit: MILLIMETER
 
 Seat.isBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Position)
   datatype: boolean
   description: Seat backward switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isBelted:
   datatype: boolean
   description: Is the belt engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isCoolerSwitchEngaged:
+  comment: Affects the property (SingleSeat.Heating)
   datatype: boolean
   description: Cooler switch for Seat heater.
-  type: Leaf
+  type: actuator
 
 Seat.isDecreaseMassageLevelSwitchEngaged:
+  comment: Affects the property (SingleSeat.MassageLevel)
   datatype: boolean
   description: Decrease massage level switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isDownSwitchEngaged:
+  comment: Affects the property (SingleSeat.Height)
   datatype: boolean
   description: Seat down switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Position)
   datatype: boolean
   description: Seat forward switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isIncreaseMassageLevelSwitchEngaged:
+  comment: Affects the property (SingleSeat.MassageLevel)
   datatype: boolean
   description: Increase massage level switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isOccupied:
   datatype: boolean
   description: Does the seat have a passenger in it.
-  type: Leaf
+  type: sensor
 
 Seat.isTiltBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Tilt)
   datatype: boolean
   description: Tilt backward switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isTiltForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Tilt)
   datatype: boolean
   description: Tilt forward switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isUpSwitchEngaged:
+  comment: Affects the property (SingleSeat.Height)
   datatype: boolean
   description: Seat up switch engaged.
-  type: Leaf
+  type: actuator
 
 Seat.isWarmerSwitchEngaged:
+  comment: Affects the property (SingleSeat.Heating)
   datatype: boolean
   description: Warmer switch for Seat heater.
-  type: Leaf
+  type: actuator
 
 Seat.massage:
   datatype: uint8
   description: Seat massage level. 0 = off. 100 = max massage.
-  type: Leaf
+  type: actuator
   unit: PERCENT
 
 Seat.massageLevel:
@@ -92,174 +236,64 @@ Seat.massageLevel:
   description: Seat massage level. 0 = off. 100 = max massage.
   max: '100'
   min: null
-  type: Leaf
+  type: actuator
   unit: PERCENT
 
 Seat.position:
   datatype: uint16
   description: Seat position on vehicle x-axis. Position is relative to the frontmost
     position supported by the seat. 0 = Frontmost position supported.
-  type: Leaf
+  type: actuator
   unit: MILLIMETER
 
 Seat.seatBeltHeight:
   datatype: uint16
   description: Seat belt position on vehicle z-axis. Position is relative within available
     movable range of the seat belt. 0 = Lowermost position supported.
-  type: Leaf
+  type: actuator
   unit: MILLIMETER
 
 Seat.tilt:
+  comment: In VSS it is assumed that tilting a seat affects both seating (seat bottom)
+    and backrest, i.e. the angle between seating and backrest will not be affected
+    when changing Tilt.
   datatype: float
   description: Tilting of seat (seating and backrest) relative to vehicle x-axis.
     0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive
     degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted
     backward.
-  type: Leaf
+  type: actuator
   unit: DEGREE
 
-SeatAirbag:
-  description: Airbag signals.
-  type: Branch
-
-SeatAirbag.isDeployed:
-  datatype: boolean
-  description: Airbag deployment status. True = Airbag deployed. False = Airbag not
-    deployed.
-  type: Leaf
-
-SeatBackrest:
-  description: Describes signals related to the backrest of the seat.
-  type: Branch
-
-SeatBackrest.isLessLumbarSupportSwitchEngaged:
-  datatype: boolean
-  description: Is switch for less lumbar support engaged.
-  type: Leaf
-
-SeatBackrest.isLessSideBolsterSupportSwitchEngaged:
-  datatype: boolean
-  description: Is switch for less side bolster support engaged.
-  type: Leaf
-
-SeatBackrest.isLumbarDownSwitchEngaged:
-  datatype: boolean
-  description: Lumbar down switch engaged.
-  type: Leaf
-
-SeatBackrest.isLumbarUpSwitchEngaged:
-  datatype: boolean
-  description: Lumbar up switch engaged.
-  type: Leaf
-
-SeatBackrest.isMoreLumbarSupportSwitchEngaged:
-  datatype: boolean
-  description: Is switch for more lumbar support engaged.
-  type: Leaf
-
-SeatBackrest.isMoreSideBolsterSupportSwitchEngaged:
-  datatype: boolean
-  description: Is switch for more side bolster support engaged.
-  type: Leaf
-
-SeatBackrest.isReclineBackwardSwitchEngaged:
-  datatype: boolean
-  description: Backrest recline backward switch engaged.
-  type: Leaf
-
-SeatBackrest.isReclineForwardSwitchEngaged:
-  datatype: boolean
-  description: Backrest recline forward switch engaged.
-  type: Leaf
-
-SeatBackrest.lumbarHeight:
-  datatype: uint8
-  description: Height of lumbar support. Position is relative within available movable
-    range of the lumbar support. 0 = Lowermost position supported.
-  type: Leaf
-  unit: MILLIMETER
-
-SeatBackrest.lumbarSupport:
-  datatype: float
-  description: Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost
-    position.
-  max: '100'
-  min: null
-  type: Leaf
-  unit: PERCENT
-
-SeatBackrest.recline:
-  datatype: float
-  description: Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees
-    = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees
-    for backward recline.
-  type: Leaf
-  unit: DEGREE
-
-SeatBackrest.sideBolsterSupport:
-  datatype: float
-  description: Side bolster support. 0 = Minimum support (widest side bolster setting).
-    100 = Maximum support.
-  max: '100'
-  min: null
-  type: Leaf
-  unit: PERCENT
-
-SeatHeadrest:
-  description: Headrest settings.
-  type: Branch
-
-SeatHeadrest.angle:
-  datatype: float
-  description: Headrest angle, relative to backrest, 0 degrees if parallel to backrest,
-    Positive degrees = tilted forward.
-  type: Leaf
-  unit: DEGREE
-
-SeatHeadrest.height:
-  datatype: uint8
-  description: Position of headrest relative to movable range of the head rest. 0
-    = Bottommost position supported.
-  type: Leaf
-  unit: MILLIMETER
-
-SeatHeadrest.isBackwardSwitchEngaged:
-  datatype: boolean
-  description: Head rest backward switch engaged.
-  type: Leaf
-
-SeatHeadrest.isDownSwitchEngaged:
-  datatype: boolean
-  description: Head rest down switch engaged.
-  type: Leaf
-
-SeatHeadrest.isForwardSwitchEngaged:
-  datatype: boolean
-  description: Head rest forward switch engaged.
-  type: Leaf
-
-SeatHeadrest.isUpSwitchEngaged:
-  datatype: boolean
-  description: Head rest up switch engaged.
-  type: Leaf
-
-SeatSeating:
+Seating:
   description: Describes signals related to the seat bottom of the seat.
   type: Branch
 
-SeatSeating.isBackwardSwitchEngaged:
+Seating.isBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Seating.Length)
   datatype: boolean
   description: Is switch to decrease seating length engaged.
-  type: Leaf
 
-SeatSeating.isForwardSwitchEngaged:
+Seating.isForwardSwitchEngaged:
   datatype: boolean
   description: Is switch to increase seating length engaged.
-  type: Leaf
 
-SeatSeating.length:
+Seating.length:
   datatype: uint16
   description: Length adjustment of seating. 0 = Adjustable part of seating in rearmost
     position (Shortest length of seating).
-  type: Leaf
   unit: MILLIMETER
+
+Vehicle:
+  description: High-level vehicle data.
+  type: Branch
+
+VehicleIdentification:
+  description: Attributes that identify a vehicle.
+  type: Branch
+
+VehicleIdentification.vin:
+  datatype: string
+  description: 17-character Vehicle Identification Number (VIN) as defined by ISO
+    3779.
+  type: attribute

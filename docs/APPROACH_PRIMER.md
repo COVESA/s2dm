@@ -174,6 +174,103 @@ For example:
 Refer to the [examples folder](/examples/).
 
 ## Special considerations
+The following cases require special treatments. 
+
+### Dilemma: Property as field or as object type
+
+Here’s the markdown summarizing the three cases for your dilemma:
+
+---
+
+#### **Case 1: Scalar Field**
+```graphql
+type Vehicle {
+  speed: Int
+}
+```
+
+**Pros:**
+- Simple and concise representation.
+- Easy to read and understand for straightforward use cases.
+- Suitable for static properties that do not require additional metadata or complexity.
+
+**Cons:**
+- Limited extensibility: Adding metadata (e.g., units like "km/h") or additional attributes (e.g., timestamp) requires refactoring.
+- Not future-proof: If the property evolves to include more details, significant schema changes are needed.
+- Cannot represent complex relationships or metadata.
+
+---
+
+#### **Case 2: Dedicated Object Type**
+```graphql
+type Vehicle {
+  speed: VehicleSpeed
+}
+
+type VehicleSpeed {
+  value: Int
+  unit: String
+  timestamp: String
+}
+```
+
+**Pros:**
+- Highly extensible: Allows adding metadata like `unit` or `timestamp` without breaking the schema.
+- Better suited for complex properties: Can easily accommodate additional fields like ranges or error margins.
+- Future-proof: Supports evolving requirements without major schema changes.
+
+**Cons:**
+- More verbose: Introduces additional layers of nesting, making the schema longer and more complex.
+- Overhead for simple properties: Feels excessive for straightforward fields like `speed`.
+- Harder to read and maintain for basic use cases.
+
+---
+
+#### **Case 3: Reusable Property Type**
+```graphql
+type Vehicle {
+  speed: IntProperty
+}
+
+type IntProperty {
+  value: Int
+  unit: String
+  timestamp: String
+}
+```
+
+**Pros:**
+- Reusability: The `IntProperty` type can be used across multiple fields (e.g., `speed`, `weight`, etc.), ensuring consistency and reducing duplication.
+- Extensible: Like Case 2, it supports adding metadata or attributes without schema refactoring.
+- Consistent: Standardizes the representation of similar properties across the schema.
+- Future-proof: Accommodates evolving requirements while maintaining schema clarity.
+
+**Cons:**
+- Overhead for simple properties: Adds complexity for fields that don’t require metadata.
+- Generic naming: May feel less descriptive compared to dedicated types like `VehicleSpeed`.
+- Potential for overgeneralization: If properties diverge significantly, the reusable type may become too generic.
+
+---
+
+### **Recommendation**
+- Use **Case 1** for simple, static properties that are unlikely to evolve or require metadata.
+- Use **Case 2** for properties that are unique and require specific metadata or complex structures.
+- Use **Case 3** for properties that share common metadata or structures across the schema, ensuring reusability and consistency.
+
+For vehicle-related information, **Case 3** with a reusable type like `IntProperty` is often the best choice, as it balances extensibility, reusability, and clarity.
+
+### Enums' datatypes
+In GraphQL, enums are typically used to define a set of allowed values for a field. These values are usually represented as strings, such as `[FIRST, SECOND, ...]`. However, GraphQL enums are not limited to strings conceptually; they can represent any discrete set of values.
+
+If your model defines "allowed" values as integers, like `[0, 1, 2, ...]`, you can still use GraphQL enums to represent them. Internally, GraphQL will treat these enum values as strings in the schema, but you can map them to integers in your application logic.
+```gql
+enum TheAllowedValues {
+  ZERO
+  ONE
+  TWO
+}
+```
+In your application, you can map ZERO to 0, ONE to 1, and so on. This approach allows you to enforce a fixed set of values while maintaining flexibility in how they are interpreted in your code.
 
 ### Special cross references
 GraphQL schema language excels in defining the structure of data models in a clear and understandable way. It provides robust elements such as types, fields within types, nested objects, and enumerations.
@@ -183,10 +280,41 @@ However, it has limitations such as restricted cross-references, where linking f
 Let us assume our model has the concepts `Window.position`, `AC.temperature`, `AC.isOn`, `Sunroof.position`.
 In the `GraphQL` schema language, it is not possible to say that the `Person.perceivedTemperature` can be modified by acting on these properties.
 ```graphql
-type Person {
-  perceivedTemperature: Int
+type Window {
+  position: Int
 }
+
+type AC {
+  temperature: Float
+  isOn: Boolean
+}
+
+type Sunroof {
+  position: Int  
+}
+
+type Person {
+  perceivedTemperature: Int  # I want to say that this property might be affected by acting on the others
+  pTemp: PTem
+}
+
+type PTemp{
+  affectedByProp: Property
+  value: String!
+}
+
+type Property {
+  objectName: String!
+  fieldName: String!
+}
+
+
+
 ```
+#### Option 1 - Instance data file
+An alternative would be to define the schema as usual, and then write another instance data file with concrete instance data that represents the connections. For example, that the perceived temperature is affected by `Window.position`, `AC.temperature`, `AC.isOn`, `Sunroof.position`.
+
+#### Option 2 - Enums with URIs
 However, the following is possible and supported by the language out of the box by using nested objects:
 ```graphql
 type Person {
@@ -203,5 +331,20 @@ enum perceivedTemperatureModifiersEnum {
     ns:AC.temperature
     ns:AC.isOn
     ns:Sunroof.position
+}
+```
+
+Option 3 - using directives
+```gql
+```graphql
+directive @affectedBy(object: String!, field: String!) on FIELD_DEFINITION
+
+type Person {
+  perceivedTemperature: Int
+    @affectedBy(object: "Window", field: "position")
+}
+
+type Window {
+  position: Int
 }
 ```

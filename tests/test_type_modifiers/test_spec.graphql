@@ -1,34 +1,34 @@
 type TestTypeModifiers {
     # field.case.DEFAULT
-    #defaultScalar: Boolean
-    #defaultType: ExampleType
-    #defaultWithInstances: ExampleTypeWithInstances
+    defaultScalar: Boolean
+    defaultType: ExampleType
+    defaultWithInstances: ExampleTypeWithInstances
 
     
     # field.case.NON_NULL
-    #nonNullScalar: Boolean!
-    #nonNull: ExampleType!
-    #nonNullWithInstances: ExampleTypeWithInstances!
+    nonNullScalar: Boolean!
+    nonNull: ExampleType!
+    nonNullWithInstances: ExampleTypeWithInstances!
 
     # field.case.LIST
-    #listScalar: [Boolean]
-    #list: [ExampleType]
-    #listWithInstances: [ExampleTypeWithInstances]
+    listScalar: [Boolean]
+    list: [ExampleType]
+    listWithInstances: [ExampleTypeWithInstances]
 
     # field.case.NON_NULL_LIST
-    #nonNullListScalar: [Boolean]!
-    #nonNullList: [ExampleType]!
-    #nonNullListWithInstances: [ExampleTypeWithInstances]!
+    nonNullListScalar: [Boolean]!
+    nonNullList: [ExampleType]!
+    nonNullListWithInstances: [ExampleTypeWithInstances]!
     
     # field.case.LIST_NON_NULL
-    #listNonNullScalar: [Boolean!]
-    #listNonNull: [ExampleType!]
-    #listNonNullWithInstances: [ExampleTypeWithInstances!]
+    listNonNullScalar: [Boolean!]
+    listNonNull: [ExampleType!]
+    listNonNullWithInstances: [ExampleTypeWithInstances!]
     
     # field.case.NON_NULL_LIST_NON_NULL
-    #nonNullListNonNullScalar: [Boolean!]!
-    #nonNullListNonNull: [ExampleType!]!
-    #nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]!
+    nonNullListNonNullScalar: [Boolean!]!
+    nonNullListNonNull: [ExampleType!]!
+    nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]!
 
     # field.case.SET
     #setScalar: [Boolean] @noDuplicates
@@ -36,9 +36,9 @@ type TestTypeModifiers {
     #setWithInstances: [ExampleTypeWithInstances] @noDuplicates
 
     # field.case.LIST_NON_NULL
-    setNonNullScalar: [Boolean!] @noDuplicates
-    setNonNull: [ExampleType!] @noDuplicates
-    setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates
+    #setNonNullScalar: [Boolean!] @noDuplicates
+    #setNonNull: [ExampleType!] @noDuplicates
+    #setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates
     
 }
 

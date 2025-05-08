@@ -1,0 +1,62 @@
+"""Describes signals related to the backrest of the seat."""
+type Backrest {
+  """
+  Is switch for less lumbar support engaged.
+  """
+  isLessLumbarSupportSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.LumbarSupport)")
+
+  """
+  Is switch for less side bolster support engaged.
+  """
+  isLessSideBolsterSupportSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.SideBolsterSupport)")
+
+  """
+  Lumbar down switch engaged.
+  """
+  isLumbarDownSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.LumbarSupport)")
+
+  """
+  Lumbar up switch engaged.
+  """
+  isLumbarUpSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.LumbarSupport)")
+
+  """
+  Is switch for more lumbar support engaged.
+  """
+  isMoreLumbarSupportSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.LumbarSupport)")
+
+  """
+  Is switch for more side bolster support engaged.
+  """
+  isMoreSideBolsterSupportSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.SideBolsterSupport)")
+
+  """
+  Backrest recline backward switch engaged.
+  """
+  isReclineBackwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.Recline)")
+
+  """
+  Backrest recline forward switch engaged.
+  """
+  isReclineForwardSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.Recline)")
+
+  """
+  Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported.
+  """
+  lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  """
+  Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  """
+  lumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float @range(max: 100)
+
+  """
+  Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline.
+  """
+  recline(unit: Angle_Unit_Enum = DEGREE): Float @metadata(comment:"Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.")
+
+  """
+  Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  """
+  sideBolsterSupport(unit: Relation_Unit_Enum = PERCENT): Float @range(max: 100)
+}
