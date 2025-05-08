@@ -11,6 +11,7 @@ from graphql import (
     GraphQLEnumType,
     GraphQLString,
     build_schema,
+    get_named_type,
     is_list_type,
     is_non_null_type,
 )
@@ -130,10 +131,14 @@ def get_all_expanded_instance_tags(schema: GraphQLSchema) -> dict[GraphQLObjectT
     for object in get_all_objects_with_directive(get_all_object_types(get_all_named_types(schema)), "instanceTag"):
         all_expanded_instance_tags[object] = expand_instance_tag(object)
 
+    logging.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
+
+
     return all_expanded_instance_tags
 
 
 def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
+    logging.debug(f"Expanding instanceTag for object: {object.name}")
     expanded_tags = []
     if not has_directive(object, "instanceTag"):
         raise ValueError(f"Object '{object.name}' does not have an instance tag directive.")
@@ -144,7 +149,7 @@ def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
                 # TODO: Move this check to a validation function for the @instanceTag directive
                 raise TypeError(f"Field '{field_name}' in object '{object.name}' is not an enum.")
             tags_per_enum_field.append(list(field.type.values.keys()))
-        logging.debug(f"Tags per enum field: {tags_per_enum_field}")
+        logging.debug(f"Tags per field: {tags_per_enum_field}")
 
         # Combine tags from different enum fields
         for combination in product(*tags_per_enum_field):
@@ -319,11 +324,8 @@ def is_valid_instance_tag_field(field: GraphQLField, schema: GraphQLSchema) -> b
 
     Returns:
         bool: True if the field's output type is a valid instanceTag, False otherwise.
-    """
-    if not isinstance(field.type, GraphQLObjectType):
-        return False
-
-    output_type = schema.get_type(field.type.name)
+    """    
+    output_type = schema.get_type(get_named_type(field.type).name)
     return isinstance(output_type, GraphQLObjectType) and has_directive(output_type, "instanceTag")
 
 
@@ -340,10 +342,12 @@ def has_valid_instance_tag_field(object_type: GraphQLObjectType, schema: GraphQL
         bool: True if the object type has a valid instanceTag field, False otherwise.
     """
     if "instanceTag" in object_type.fields:
+        logging.debug(f"instanceTag? {True}")
         field = object_type.fields["instanceTag"]
         return is_valid_instance_tag_field(field, schema)
-
-    return False
+    else:
+        logging.debug(f"instanceTag? {False}")
+        return False
 
 def get_instance_tag_object(object_type: GraphQLObjectType, schema: GraphQLSchema) -> GraphQLObjectType | None:
     """
@@ -358,7 +362,7 @@ def get_instance_tag_object(object_type: GraphQLObjectType, schema: GraphQLSchem
     """
     if has_valid_instance_tag_field(object_type, schema):
         field = object_type.fields["instanceTag"]
-        return schema.get_type(field.type.name)
+        return schema.get_type(get_named_type(field.type).name)
     return None
 
 def get_instance_tag_dict(instance_tag_object: GraphQLObjectType) -> dict[str, list[str]]:

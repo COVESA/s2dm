@@ -2,16 +2,16 @@ import logging
 from pathlib import Path
 
 import click
+import yaml
 from graphql import (
+    GraphQLEnumType,
     GraphQLField,
+    GraphQLList,
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLSchema,
     get_named_type,
-    is_list_type,
 )
-from rdflib import BNode, Graph, Literal
-import yaml
 
 from tools.utils import (
     FieldCase,
@@ -19,14 +19,12 @@ from tools.utils import (
     get_all_named_types,
     get_all_object_types,
     get_all_objects_with_directive,
-    get_field_case_extended,
     get_instance_tag_dict,
     get_instance_tag_object,
     has_directive,
     has_valid_instance_tag_field,
     is_valid_instance_tag_field,
     load_schema,
-    print_field_sdl,
 )
 
 SUPPORTED_FIELD_CASES = {
@@ -102,31 +100,38 @@ def translate_to_vspec(schema_path: Path) -> str:
     schema = load_schema(schema_path)
     
     named_types = get_all_named_types(schema)
-    object_types = get_all_object_types(named_types)
-    logging.debug(f"Object types: {object_types}")
-    instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
+    all_object_types = get_all_object_types(named_types)
+    logging.debug(f"Object types: {all_object_types}")
+    instance_tag_objects = get_all_objects_with_directive(all_object_types, "instanceTag")
+    # Remove instance tag objects from object_types
+    object_types = [obj for obj in all_object_types if obj not in instance_tag_objects]
     logging.debug(f"Instance Tag Objects: {instance_tag_objects}")
     global INSTANCE_TAGS
     INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
-    logging.debug(f"Expanded tags from spec: {INSTANCE_TAGS}")
 
     yaml_dict = {}
     for object_type in object_types:
         if object_type.name == "Query":
             logging.debug("Skipping Query object type.")
             continue
-        if object_type in instance_tag_objects:
-            logging.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
-            continue
-
-        # Add a VSS branch structure for the object type
-        yaml_dict.update(process_object_type(object_type, schema))
         
+        # Add a VSS branch structure for the object type
+        if object_type.name not in yaml_dict:
+            yaml_dict.update(process_object_type(object_type, schema))  
+        else:
+            # TODO: Check if the processed object type is already in the yaml_dict
+            logging.debug(f"Object type '{object_type.name}' already exists in the YAML dictionary. Skipping.")
         # Process the fields of the object type
         for field_name, field in object_type.fields.items():
-            if is_valid_instance_tag_field(field, schema):
-                continue  # Skip instance tag fields
-            yaml_dict.update(process_field(field_name, field, object_type, schema))
+            #if is_valid_instance_tag_field(field, schema):
+            #    logging.debug(f"Skipping field '{field_name}' in object type '{object_type.name}' as it is a valid instance tag field.")
+            #    continue  # Skip instance tag fields
+            # Add a VSS leaf structure for the field
+            field_result = process_field(field_name, field, object_type, schema)
+            if field_result is not None:
+                yaml_dict.update(field_result)
+            else:
+                logging.debug(f"Skipping field '{field_name}' in object type '{object_type.name}' as process_field returned None.")
 
     # TODO: Think of splitting the yaml dump into two: one for object types and one for fields. Reason: to maintain the same order of the keys in the fields, and also to structure the export better and sorted for easier control of the output.    
     return yaml.dump(yaml_dict, default_flow_style=False, Dumper=CustomDumper, sort_keys=True)
@@ -144,13 +149,11 @@ def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -
 
     instance_tag_object = get_instance_tag_object(object_type, schema)
     if instance_tag_object:
-        logging.debug(f"Object type '{object_type.name}' has instance tag '{instance_tag_object}'.")
-        logging.debug(f"Instance tags are: {INSTANCE_TAGS}")
-        
-        #obj_dict["instances"] = INSTANCE_TAGS[instance_tag_object]
-        
+        logging.debug(f"Object type '{object_type.name}' has instance tag '{instance_tag_object}'.")        
         obj_dict["instances"] = list(get_instance_tag_dict(instance_tag_object).values())
-            
+    else:
+        logging.debug(f"Object type '{object_type.name}' does not have an instance tag.")
+        
     return {object_type.name: obj_dict}
 
 def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObjectType, schema: GraphQLSchema) -> dict:
@@ -158,11 +161,11 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
     logging.info(f"Processing field '{field_name}'.")
     concat_field_name = f"{object_type.name}.{field_name}"
 
-    if isinstance(field.type, GraphQLScalarType):
+    output_type = get_named_type(field.type)
+    if isinstance(output_type, GraphQLScalarType):
         field_dict = {
-            "type": "Leaf",
             "description": field.description if field.description else "",
-            "datatype": SCALAR_DATATYPE_MAP[field.type.name]
+            "datatype": SCALAR_DATATYPE_MAP[output_type.name]
         }
         # TODO: Fix numbers that are appearing with quotes as strings.
         if has_directive(field, "range"):
@@ -178,9 +181,40 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
             unit_arg = field.args["unit"].default_value
             if unit_arg is not None:
                 field_dict["unit"] = unit_arg
+
+        if has_directive(field, "metadata"):
+            metadata_directive = next(
+                (directive for directive in field.ast_node.directives if directive.name.value == "metadata"), 
+                None
+            )
+            
+            metadata_args = {}
+            for arg in metadata_directive.arguments:
+                metadata_args[arg.name.value] = arg.value.value
+
+            comment = metadata_args.get("comment")
+            vss_type = metadata_args.get("vssType")
+            if comment:
+                field_dict["comment"] = comment
+            if vss_type:
+                field_dict["type"] = vss_type
+
         return {concat_field_name: field_dict}
+    elif isinstance(output_type, GraphQLObjectType):
+        # Collect nested structures
+        #nested_types.append(f"{object_type.name}.{output_type}({field_name})")
+        logging.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
+        return process_object_type(get_named_type(field.type), schema)  # Nested object type, process it recursively
+    elif isinstance(output_type, GraphQLEnumType):
+        field_dict = {
+            "description": field.description if field.description else "",
+            "datatype": "string",  # TODO: Consider that VSS allows any datatype for enums.
+            "allowed": [value.value for value in field.type.values.values()]
+        }
+        return {concat_field_name: field_dict}
+        
     else:
-        return process_object_type(get_named_type(field.type), schema)
+        logging.debug(f"Skipping (in the output YAML) the field '{field_name}' with output type '{type(field.type).__name__}'.")
 
 
 @click.command()
