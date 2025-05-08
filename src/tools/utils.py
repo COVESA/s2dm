@@ -60,7 +60,13 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     # Build schema with custom directives
     # TODO: Improve this part with schema merge function with a whole directory.
     # TODO: For example: with Ariadne https://ariadnegraphql.org/docs/modularization#defining-schema-in-graphql-files
-    schema_str = custom_directives_str + "\n" + common_types_str  + "\n" + custom_scalar_types_str + "\n" + schema_str + "\n" + unit_enums_str
+    schema_str = (
+        custom_directives_str + "\n" +
+        common_types_str + "\n" +
+        custom_scalar_types_str + "\n" +
+        schema_str + "\n" +
+        unit_enums_str
+    )
 
     schema = build_schema(schema_str)  # Convert GraphQL SDL to a GraphQLSchema object
     logging.info("Successfully loaded the given GraphQL schema file.")

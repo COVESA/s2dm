@@ -120,20 +120,22 @@ def translate_to_vspec(schema_path: Path) -> str:
             logging.debug(f"Object type '{object_type.name}' already exists in the YAML dictionary. Skipping.")
         # Process the fields of the object type
         for field_name, field in object_type.fields.items():
-            #if is_valid_instance_tag_field(field, schema):
-            #    logging.debug(f"Skipping field '{field_name}' in object type '{object_type.name}' as it is a valid instance tag field.")
-            #    continue  # Skip instance tag fields
             # Add a VSS leaf structure for the field
             field_result = process_field(field_name, field, object_type, schema, nested_types)
             if field_result is not None:
                 yaml_dict.update(field_result)
             else:
-                logging.debug(f"Skipping field '{field_name}' in object type '{object_type.name}' as process_field returned None.")
+                logging.debug(
+                    f"Skipping field '{field_name}' in object type "
+                    f"'{object_type.name}' as process_field returned None."
+                )
 
     logging.debug(f"Nested types: {nested_types}")
     reconstructed_paths = reconstruct_paths(nested_types)
     logging.debug(f"Reconstructed {reconstructed_paths}")
-    # TODO: Think of splitting the yaml dump into two: one for object types and one for fields. Reason: to maintain the same order of the keys in the fields, and also to structure the export better and sorted for easier control of the output.    
+    # TODO: Think of splitting the yaml dump into two: one for object types and one for fields. 
+    # Reason: to maintain the same order of the keys in the fields, and also to structure the 
+    # export better and sorted for easier control of the output.    
     for key in list(yaml_dict.keys()):
         first_word = key.split('.')[0]
         for path in reconstructed_paths:
@@ -185,7 +187,7 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
                 field_dict["min"] = min_arg
                 field_dict["max"] = max_arg
 
-        # TODO: Map the unit name to the VSS unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
+        # TODO: Map the unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
         if "unit" in field.args:
             unit_arg = field.args["unit"].default_value
             if unit_arg is not None:
@@ -224,7 +226,7 @@ def process_field(field_name: str, field: GraphQLField, object_type: GraphQLObje
         return {concat_field_name: field_dict}
         
     else:
-        logging.debug(f"Skipping (in the output YAML) the field '{field_name}' with output type '{type(field.type).__name__}'.")
+        logging.debug(f"Skipping in the output: field '{field_name}' with output type '{type(field.type).__name__}'.")
 
 def reconstruct_paths(nested_types):
     # Dictionary to store the graph structure
