@@ -1,15 +1,16 @@
-import random
 from dataclasses import dataclass, field
 
 import pytest
 from ariadne import gql
 from faker import Faker
-from graphql import build_schema
+from graphql import (
+    build_schema,
+)
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
-from idgen.spec import IDGenerationSpec, to_capitalized
-from tools.utils import ensure_query
+from idgen.spec import IDGenerationSpec
+from tools.utils import ensure_query, get_all_named_types
 
 SCALAR_TYPES = ["String", "Int", "Float", "Boolean"]
 
@@ -36,7 +37,7 @@ class MockFieldData:
     maximum: int | None = None
 
     @property
-    def prefix(self) -> str:
+    def parent_name(self) -> str:
         return "Vehicle"
 
     @property
@@ -45,7 +46,7 @@ class MockFieldData:
 
     @property
     def enum_name(self) -> str:
-        return f"{self.prefix}_{self.name.capitalize()}_Enum"
+        return f"{self.parent_name}_{self.name.capitalize()}_Enum"
 
     @property
     def enum_schema_str(self) -> str:
@@ -68,26 +69,26 @@ class MockFieldData:
         return [self.unit_default_value]
 
     @classmethod
-    def non_enum_field_data(cls, faker) -> "MockFieldData":
+    def non_enum_field_data(cls, faker: Faker) -> "MockFieldData":
         """Generates a random non-enum field data with a random values
         e.g.
         length(unit: Length_Unit_Enum = MILLIMETER): Int
         """
         name = faker.unique.word().lower()
-        data_type = random.choice(SCALAR_TYPES)
+        data_type = faker.random_element(SCALAR_TYPES)
         unit = faker.unique.word()
 
         return cls(name, data_type, unit)
 
     @classmethod
-    def enum_field_data(cls, faker) -> "MockFieldData":
+    def enum_field_data(cls, faker: Faker) -> "MockFieldData":
         """Generates a random enum field data with a random values
         e.g.
         lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
         """
 
         name = faker.unique.word().lower()
-        num_values = random.randint(2, 5)
+        num_values = faker.random_int(min=2, max=5)
         allowed = [faker.unique.word().upper() for _ in range(num_values)]
 
         return cls(name, data_type="string", allowed=allowed)
@@ -98,11 +99,12 @@ class MockFieldData:
         return f"{self.name}(unit: {self.unit_enum_name} = {self.unit_default_value}): {self.data_type}"
 
     def expected_id_spec(self) -> IDGenerationSpec:
+        sorted_allowed = sorted(self.allowed.copy())
         return IDGenerationSpec(
-            name=f"{self.prefix}.{to_capitalized(self.name)}",
+            name=f"{self.parent_name}.{self.name}",
             data_type=self.data_type.lower(),
             unit=self.unit_default_value,
-            allowed=str(self.allowed or ""),
+            allowed=str(sorted_allowed or ""),
             minimum=self.minimum,
             maximum=self.maximum,
         )
@@ -142,3 +144,9 @@ def mock_graphql_schema_strategy(draw):
     )
 
     return ensure_query(build_schema(gql(schema_str))), fields
+
+
+@composite
+def mock_named_types_strategy(draw):
+    schema, fields = draw(mock_graphql_schema_strategy())
+    return get_all_named_types(schema), fields

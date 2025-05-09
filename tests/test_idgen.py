@@ -1,72 +1,73 @@
 import ast
-import random
 
 import pytest
 from faker import Faker
-from graphql import GraphQLSchema
+from graphql import GraphQLNamedType
 from hypothesis import given
 
 from idgen.idgen import fnv1_32_wrapper
 from idgen.spec import IDGenerationSpec
 from tests.conftest import (
     MockFieldData,
-    mock_graphql_schema_strategy,
+    mock_named_types_strategy,
 )
-from tools.to_id import iter_all_nodes
+from tools.to_id import iter_all_id_specs
 
 
-@given(schema_and_fields=mock_graphql_schema_strategy())
+@given(named_types_and_fields=mock_named_types_strategy())
 def test_id_spec_generation_of_all_fields_from_graphql_schema(
-    schema_and_fields: tuple[GraphQLSchema, list[MockFieldData]],
+    named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]],
     mock_unit_lookup: dict,
 ):
     """Test that ID generation spec can be generated from a GraphQL schema."""
-
-    schema, fields = schema_and_fields
+    named_types, fields = named_types_and_fields
     expected_id_specs = {field.expected_id_spec() for field in fields}
 
-    all_id_specs = set(iter_all_nodes(schema.query_type, unit_lookup=mock_unit_lookup))
+    all_id_specs = set(iter_all_id_specs(named_types, mock_unit_lookup))
 
     for expected_id_spec in expected_id_specs:
         assert expected_id_spec in all_id_specs
 
 
-@given(schema_and_fields=mock_graphql_schema_strategy())
+@given(named_types_and_fields=mock_named_types_strategy())
 @pytest.mark.parametrize("strict_mode", [True, False])
 def test_id_generation_is_deterministic_across_iterations(
-    schema_and_fields: tuple[GraphQLSchema, list[MockFieldData]],
+    named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]],
     strict_mode: bool,
     mock_unit_lookup: dict,
 ):
     """Test that ID generation is deterministic across iterations."""
 
-    schema, _ = schema_and_fields
+    named_types, _ = named_types_and_fields
+
+    all_id_specs = set(iter_all_id_specs(named_types, mock_unit_lookup))
 
     first_iteration_ids = {}
-    for id_spec in iter_all_nodes(schema.query_type, unit_lookup=mock_unit_lookup):
+    for id_spec in all_id_specs:
         field_id = fnv1_32_wrapper(id_spec, strict_mode=strict_mode)
         first_iteration_ids[id_spec.name] = field_id
 
     second_iteration_ids = {}
-    for id_spec in iter_all_nodes(schema.query_type, unit_lookup=mock_unit_lookup):
+    for id_spec in all_id_specs:
         field_id = fnv1_32_wrapper(id_spec, strict_mode=strict_mode)
         second_iteration_ids[id_spec.name] = field_id
 
     assert first_iteration_ids == second_iteration_ids
 
 
-@given(schema_and_fields=mock_graphql_schema_strategy())
+@given(named_types_and_fields=mock_named_types_strategy())
 @pytest.mark.parametrize("strict_mode", [True, False])
 def test_id_generation_is_unique_accros_schema(
-    schema_and_fields: tuple[GraphQLSchema, list[MockFieldData]],
+    named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]],
     strict_mode: bool,
     mock_unit_lookup: dict,
 ):
     """Test that ID generation produces unique IDs across the schema fields."""
 
-    schema, _ = schema_and_fields
+    named_types, _ = named_types_and_fields
+
     ids = {}
-    for id_spec in iter_all_nodes(schema.query_type, unit_lookup=mock_unit_lookup):
+    for id_spec in iter_all_id_specs(named_types, mock_unit_lookup):
         field_id = fnv1_32_wrapper(id_spec, strict_mode=strict_mode)
         ids[id_spec.name] = field_id
 
@@ -79,27 +80,25 @@ def test_id_generation_changes_with_field_changes_for_enum_field_allowed_values(
 
     changes_to_test = [
         # Adding a new value
-        lambda lst: lst.copy().append(faker.unique.word()),
+        lambda lst: lst.append(faker.unique.word()),
         # Removing a value
-        lambda lst: lst.copy().pop(),
+        lambda lst: lst.pop(),
         # Inserting a value at a specific index
-        lambda lst: lst.copy().insert(len(lst) // 2, faker.unique.word()),
-        # Shuffling the list
-        lambda lst: random.shuffle(lst.copy()),
+        lambda lst: lst.insert(len(lst) // 2, faker.unique.word()),
     ]
 
-    id_spec = MockFieldData.enum_field_data(faker).expected_id_spec()
-
-    initial_id = fnv1_32_wrapper(id_spec, strict_mode=True)
+    original_id_spec = MockFieldData.enum_field_data(faker).expected_id_spec()
+    initial_id = fnv1_32_wrapper(original_id_spec, strict_mode=strict_mode)
     assert initial_id is not None
 
-    id_spec_dict = id_spec.__dict__
-
-    # Change the allowed values by appending a new value
-    allowed_values = ast.literal_eval(id_spec.allowed)
+    id_spec_dict = original_id_spec.__dict__.copy()
+    original_allowed_values = ast.literal_eval(id_spec_dict["allowed"])
 
     for change_fn in changes_to_test:
-        id_spec_dict["allowed"] = change_fn(allowed_values)
+        allowed_values_copy = original_allowed_values.copy()
+        # Apply the change to the allowed values
+        change_fn(allowed_values_copy)
+        id_spec_dict["allowed"] = allowed_values_copy
 
         new_id_spec = IDGenerationSpec(**id_spec_dict)
 

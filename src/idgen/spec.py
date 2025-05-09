@@ -18,35 +18,37 @@ logger = logging.getLogger(__name__)
 
 class FieldTypeWrapper:
     def __init__(self, field_type: GraphQLType):
-        self.field_type = field_type
+        self._field_type = field_type
 
     @property
     def name(self) -> str:
-        return self.field_type.name
+        return self._field_type.name
+
+    @property
+    def internal_type(self) -> "FieldTypeWrapper":
+        internal_type = self._field_type
+        if self.is_list_type():
+            # Unwrap non-null and list types
+            while hasattr(internal_type, "of_type"):
+                internal_type = internal_type.of_type
+        return FieldTypeWrapper(internal_type)
 
     def get_allowed_enum_values(self) -> str:
         if self.is_enum_type():
-            return str(list(self.field_type.values.keys()))
-        else:
-            return ""
+            return str(sorted(list(self._field_type.values.keys())))
+        return ""
 
     def is_enum_type(self) -> bool:
-        return isinstance(self.field_type, GraphQLEnumType)
+        return isinstance(self._field_type, GraphQLEnumType)
 
     def is_scalar_type(self) -> bool:
-        return isinstance(self.field_type, GraphQLScalarType)
+        return isinstance(self._field_type, GraphQLScalarType)
 
     def is_list_type(self) -> bool:
-        return isinstance(self.field_type, GraphQLList)
+        return isinstance(self._field_type, GraphQLList)
 
     def is_object_type(self) -> bool:
-        return isinstance(self.field_type, GraphQLObjectType)
-
-    def is_leaf_node(self) -> bool:
-        return self.is_scalar_type() or self.is_enum_type()
-
-    def is_branch_node(self) -> bool:
-        return self.is_object_type() or self.is_list_type()
+        return isinstance(self._field_type, GraphQLObjectType)
 
 
 def to_capitalized(name: str) -> str:
@@ -89,10 +91,10 @@ class IDGenerationSpec:
         return hash(f"{self.name}:{self.data_type}:{self.unit}:{self.allowed}:{self.minimum}:{self.maximum}")
 
     def is_concept(self):
-        return self._field_type.is_branch_node()
+        return self._field_type.internal_type.is_object_type()
 
     def is_realization(self):
-        return self._field_type.is_leaf_node()
+        return not self.is_concept()
 
     def get_node_identifier_bytes(
         self,
@@ -121,38 +123,57 @@ class IDGenerationSpec:
             return node_identifier.lower()
 
     @classmethod
+    def from_enum(
+        cls,
+        *,
+        field: GraphQLEnumType,
+    ) -> "IDGenerationSpec":
+        if not isinstance(field, GraphQLEnumType):
+            raise ValueError(f"Field is not a GraphQLEnumType: {field}")
+
+        _field_type = FieldTypeWrapper(field)
+        allowed = IDGenerationSpec._resolve_allowed(_field_type)
+
+        return cls(
+            name=field.name,
+            data_type="string",
+            allowed=allowed,
+            _field_type=_field_type,
+        )
+
+    @classmethod
     def from_field(
         cls,
         *,
-        prefix: str,
+        parent_name: str,
         field_name: str,
         field: GraphQLField,
         unit_lookup: dict[str, str],
     ) -> "IDGenerationSpec":
         """Create an IDGenerationSpec from a GraphQL field
 
-        @param prefix: the prefix of the fully qualified name
+        @param parent_name: Parent name of the field
         @param field_name: the name of the field
         @param field: the GraphQL field to extract the ID generation spec from
         @return: an IDGenerationSpec
         """
 
-        _field_type = field.type
+        if not isinstance(field, GraphQLField):
+            raise ValueError(f"Field is not a GraphQLField: {field}")
 
-        # Unwrap non-null and list types
-        while hasattr(_field_type, "of_type"):
-            _field_type = _field_type.of_type
+        original_field_type = field.type
+        original_field_type_wrapped = FieldTypeWrapper(original_field_type)
 
-        field_type = FieldTypeWrapper(_field_type)
+        inside_field_type_wrapped = original_field_type_wrapped.internal_type
 
         # Name is resolved from the field's name, type and prefix
-        name = IDGenerationSpec._resolve_name(field_name, field_type, prefix)
+        name = IDGenerationSpec._resolve_name(parent_name, field_name)
 
         # Data type is resolved from the field's type (lower case name)
-        data_type = IDGenerationSpec._resolve_data_type(field_type)
+        data_type = IDGenerationSpec._resolve_data_type(original_field_type_wrapped)
 
         # Allowed values are resolved from the field's type (string of allowed values for enums)
-        allowed = IDGenerationSpec._resolve_allowed(field_type)
+        allowed = IDGenerationSpec._resolve_allowed(inside_field_type_wrapped)
 
         # Unit is resolved from the field's "unit" argument
         field_args = field.args or {}
@@ -169,20 +190,33 @@ class IDGenerationSpec:
             allowed=allowed,
             minimum=minimum,
             maximum=maximum,
-            _field_type=field_type,
+            _field_type=original_field_type_wrapped,
         )
 
     @staticmethod
-    def _resolve_data_type(field: FieldTypeWrapper) -> str:
-        if field.is_scalar_type():
+    def _resolve_data_type(original_field_type: FieldTypeWrapper) -> str:
+        """Resolve the data type from original and inside field types
+        If the original field type is a list, wrap the inside field type with "list[]"
+        @param original_field_type: the original field type
+        @param inside_field_type: the inside field type
+        @return: the data type
+        """
+
+        internal_field_type = original_field_type.internal_type
+        field_type_name = ""
+        if internal_field_type.is_scalar_type():
             # Use lowercase name for scalar types
-            return field.name.lower()
-        elif field.is_enum_type():
+            field_type_name = internal_field_type.name.lower()
+        elif internal_field_type.is_enum_type():
             # Use string for enum types
-            return "string"
-        else:
-            # Use empty string for unknown types
-            return ""
+            field_type_name = "string"
+
+        surrounding_type = original_field_type
+        while surrounding_type.is_list_type():
+            field_type_name = f"list[{field_type_name}]"
+            surrounding_type = FieldTypeWrapper(surrounding_type._field_type.of_type)
+
+        return field_type_name
 
     @staticmethod
     def _resolve_allowed(field: FieldTypeWrapper) -> str:
@@ -198,21 +232,10 @@ class IDGenerationSpec:
 
     @staticmethod
     def _resolve_name(
+        parent_name: str,
         field_name: str,
-        field: FieldTypeWrapper,
-        prefix: str = "",
     ) -> str:
-        if field.is_branch_node():
-            # Use the name as it is for branch nodes
-            # E.g. "Vehicle_ADAS"
-            return field.name
-
-        elif field.is_leaf_node():
-            # Use the field_name for leaf nodes
-            # E.g. "steeringWheel"
-            return f"{prefix}.{field_name}"
-
-        raise ValueError(f"Unknown field type: {field}")
+        return f"{parent_name}.{field_name}"
 
     @staticmethod
     def _resolve_range(

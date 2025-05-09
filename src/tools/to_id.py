@@ -9,13 +9,14 @@ from pathlib import Path
 import click
 import yaml
 from graphql import (
-    GraphQLField,
+    GraphQLEnumType,
+    GraphQLNamedType,
     GraphQLObjectType,
 )
 
 from idgen.idgen import fnv1_32_wrapper
 from idgen.spec import IDGenerationSpec
-from tools.utils import load_schema
+from tools.utils import get_all_named_types, load_schema
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -39,56 +40,38 @@ def load_unit_lookup(units_file: Path) -> dict[str, str]:
     return unit_lookup
 
 
-def iter_all_nodes(
-    schema: GraphQLObjectType,
-    unit_lookup: dict[str, str],
-    current_path: str = "",
-    visited=None,
+def iter_all_id_specs(
+    named_types: list[GraphQLNamedType], unit_lookup: dict[str, str]
 ) -> Generator[IDGenerationSpec, None, None]:
-    """
-    Recursively yield fully qualified names (FQNs) for all fields in a GraphQLObjectType,
-    traversing all the way down nested object types.
-
-    Args:
-        schema (GraphQLObjectType): The GraphQL object type to traverse.
-        current_path (str): The current FQN prefix.
-        visited (set): Set of visited (type, path) to avoid infinite recursion.
-
-    Yields:
-        tuple[str, GraphQLObjectType]: The FQN of each field and the type of the field.
-    """
-
-    if visited is None:
-        visited = set()
-
-    for field_name, field in schema.fields.items():
-        # Skip the id field
-        if field_name.lower() == "id":
+    # Only care about enums, objects and their fields
+    for named_type in named_types:
+        if named_type.name in ("Query", "Mutation"):
             continue
 
-        assert isinstance(field_name, str)
-        assert isinstance(field, GraphQLField)
-
-        id_spec = IDGenerationSpec.from_field(
-            prefix=current_path,
-            field_name=field_name,
-            field=field,
-            unit_lookup=unit_lookup,
-        )
-
-        field_type = id_spec._field_type.field_type
-
-        yield id_spec
-
-        # Avoid infinite recursion on circular references
-        if isinstance(field_type, GraphQLObjectType) and id_spec.name not in visited:
-            visited.add(id_spec.name)
-            yield from iter_all_nodes(
-                schema=field_type,
-                unit_lookup=unit_lookup,
-                current_path=id_spec.name,
-                visited=visited,
+        if isinstance(named_type, GraphQLEnumType):
+            logging.debug(f"Processing enum: {named_type.name}")
+            id_spec = IDGenerationSpec.from_enum(
+                field=named_type,
             )
+            yield id_spec
+
+        elif isinstance(named_type, GraphQLObjectType):
+            logging.debug(f"Processing object: {named_type.name}")
+            # Get the ID of all fields in the object
+            for field_name, field in named_type.fields.items():
+                if field_name.lower() == "id":
+                    continue
+
+                id_spec = IDGenerationSpec.from_field(
+                    parent_name=f"{named_type.name}",
+                    field_name=field_name,
+                    field=field,
+                    unit_lookup=unit_lookup,
+                )
+
+                # Only yield realization fields
+                if id_spec.is_realization():
+                    yield id_spec
 
 
 @click.command()
@@ -109,23 +92,21 @@ def main(schema: Path, units_file: Path, output: Path, strict_mode: bool, dry_ru
 
     unit_lookup = load_unit_lookup(units_file)
 
+    all_named_types = get_all_named_types(graphql_schema)
+
     node_ids = {}
     existing_ids = set()
+    for id_spec in iter_all_id_specs(named_types=all_named_types, unit_lookup=unit_lookup):
+        generated_id = fnv1_32_wrapper(id_spec, strict_mode=strict_mode)
 
-    # Start from the root Query type and recursively traverse all paths
-    if graphql_schema.query_type is not None:
-        for node in iter_all_nodes(graphql_schema.query_type, unit_lookup=unit_lookup):
-            if node.is_realization():
-                generated_id = fnv1_32_wrapper(node, strict_mode=strict_mode)
+        if generated_id in existing_ids:
+            logging.warning(f"Duplicate ID found: {generated_id} for {id_spec.name}")
+            sys.exit(1)
 
-                if generated_id in existing_ids:
-                    logging.warning(f"Duplicate ID found: {generated_id} for {node.name}")
-                    sys.exit(1)
-                else:
-                    existing_ids.add(generated_id)
+        existing_ids.add(generated_id)
+        node_ids[id_spec.name] = generated_id
 
-                node_ids[node.name] = generated_id
-                logging.debug(f"Type path: {node.name} -> {node.data_type} -> {generated_id}")
+        logging.debug(f"Type path: {id_spec.name} -> {id_spec.data_type} -> {generated_id}")
 
     # Write the schema to the output file
     if not dry_run and output:
