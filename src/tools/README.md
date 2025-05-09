@@ -220,3 +220,146 @@ Instead of modeling a huge monolithic model, GraphQL schemas can be specified in
 Then, specific elements from different sub models can be stiched together to form the composed model with the structure needed.
 To learn more about it, please refer to the [official documentation of the GraphQL Schema Definition Language](https://graphql.org/learn/federation/).
 > TODO: This is part of the feature roadmap.
+
+
+## ID Exporter
+
+The ID exporter traverses a GraphQL schema and generates deterministic, unique hash IDs for schema elements. These IDs reflect changes in metadata that would constitute breaking changes.
+
+### How It Works
+
+1. **Schema Traversal**: The exporter traverses the GraphQL schema, processing each type and field.
+2. **Spec Generation**: For each field, an `IDGenerationSpec` is created containing:
+   - Name: Fully qualified name of the field
+   - Data Type: Scalar type of the field
+   - Unit: Unit of measurement (if applicable)
+   - Allowed Values: For enum types
+   - Minimum/Maximum: Range constraints (if applicable)
+3. **ID Generation**: A 32-bit FNV-1a hash is generated from these properties.
+
+### Example
+
+Given a simple schema like:
+
+```graphql
+type Vehicle {
+  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+  adas: Vehicle_ADAS
+}
+
+type Vehicle_ADAS {
+  isAutoPowerOptimize: Boolean
+}
+```
+
+The ID exporter generates:
+
+```json
+{
+  "Vehicle.averageSpeed": "0x9B020962",
+  "Vehicle_ADAS.isAutoPowerOptimize": "0x1B10735A"
+}
+```
+
+For detailed information about the ID generation mechanism, refer to the [IDGen README](../idgen/README.md).
+
+## Concept URI Exporter
+
+The Concept URI exporter traverses a GraphQL schema and generates URIs for concept definitions. These URIs represent the conceptual elements in the schema, independent of their specific realizations.
+
+### How It Works
+
+1. **Schema Traversal**: The exporter traverses the GraphQL schema, identifying objects, fields, and enums.
+2. **URI Generation**: For each element, a concept URI is generated using a prefix and name.
+3. **JSON-LD Output**: The results are formatted as JSON-LD, with proper context and relationships between concepts.
+
+### Features
+
+- Skips ID fields and the Query type
+- Captures object-field relationships
+- Identifies nested object relationships
+- Formats output as valid JSON-LD with proper @context
+
+### Example
+
+Given a schema snippet:
+
+```graphql
+type Vehicle {
+  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+  adas: Vehicle_ADAS
+}
+
+type Vehicle_ADAS {
+  activeAutonomyLevel: Vehicle_ADAS_ActiveAutonomyLevel_Enum
+  isAutoPowerOptimize: Boolean
+}
+
+enum Vehicle_ADAS_ActiveAutonomyLevel_Enum {
+  SAE_0
+  SAE_5
+}
+```
+
+The concept URI exporter generates:
+
+```json
+{
+  "@context": {
+    "ns": "https://example.org/vss#",
+    "type": "@type",
+    "hasField": {
+      "@id": "https://example.org/vss#hasField",
+      "@type": "@id"
+    },
+    "hasNestedObject": {
+      "@id": "https://example.org/vss#hasNestedObject",
+      "@type": "@id"
+    },
+    "Object": "https://example.org/vss#Object",
+    "Enum": "https://example.org/vss#Enum",
+    "Field": "https://example.org/vss#Field"
+  },
+  "@graph": [
+    {
+      "@id": "ns:Vehicle",
+      "@type": "Object",
+      "hasField": ["ns:Vehicle.averageSpeed"]
+    },
+    {
+      "@id": "ns:Vehicle_ADAS",
+      "@type": "Object",
+      "hasField": [
+        "ns:Vehicle_ADAS.activeAutonomyLevel",
+        "ns:Vehicle_ADAS.isAutoPowerOptimize"
+      ]
+    },
+    {
+      "@id": "ns:Vehicle.averageSpeed",
+      "@type": "Field"
+    },
+    {
+      "@id": "ns:Vehicle_ADAS.activeAutonomyLevel",
+      "@type": "Field"
+    },
+    {
+      "@id": "ns:Vehicle_ADAS.isAutoPowerOptimize",
+      "@type": "Field"
+    },
+    {
+      "@id": "ns:Vehicle_ADAS_ActiveAutonomyLevel_Enum",
+      "@type": "Enum"
+    },
+    {
+      "@id": "ns:Vehicle.adas",
+      "hasNestedObject": "ns:Vehicle_ADAS"
+    }
+  ]
+}
+```
+
+This JSON-LD output shows that:
+- `Vehicle` is an object type with a field
+- `Vehicle.adas` has a nested object relationship with `Vehicle_ADAS`
+- `Vehicle_ADAS` is an object type with two fields
+- `Vehicle_ADAS_ActiveAutonomyLevel_Enum` is an enum type
