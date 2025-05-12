@@ -318,7 +318,8 @@ The concept URI exporter generates:
     },
     "Object": "https://example.org/vss#Object",
     "Enum": "https://example.org/vss#Enum",
-    "Field": "https://example.org/vss#Field"
+    "Field": "https://example.org/vss#Field",
+    "ObjectField": "https://example.org/vss#ObjectField"
   },
   "@graph": [
     {
@@ -352,6 +353,7 @@ The concept URI exporter generates:
     },
     {
       "@id": "ns:Vehicle.adas",
+      "@type": "ObjectField",
       "hasNestedObject": "ns:Vehicle_ADAS"
     }
   ]
@@ -360,6 +362,99 @@ The concept URI exporter generates:
 
 This JSON-LD output shows that:
 - `Vehicle` is an object type with a field
-- `Vehicle.adas` has a nested object relationship with `Vehicle_ADAS`
+- `Vehicle.adas` has a nested object relationship with `Vehicle_ADAS` and is typed as `ObjectField`
 - `Vehicle_ADAS` is an object type with two fields
 - `Vehicle_ADAS_ActiveAutonomyLevel_Enum` is an enum type
+
+## Spec History Registry
+
+The Spec History Registry is a tool for tracking changes in schema realizations over time. It maintains a history of realization IDs for each concept, enabling traceability and auditability of schema evolution.
+
+### How It Works
+
+1. **Initialization**: The registry is initialized with concept URIs and their corresponding IDs.
+2. **Tracking**: For each field in the schema, a `specHistory` property tracks the history of IDs with timestamps.
+3. **Updates**: When schema changes occur, new IDs are appended to the history, maintaining a chronological record.
+
+### Features
+
+- Preserves the full history of realization IDs for each concept
+- Records timestamps for each change
+- Detects and logs new concepts and updated IDs
+- Maintains valid JSON-LD structure
+
+### Example
+
+When initialized with the concept URIs and IDs, the registry creates a JSON-LD file with specHistory:
+
+```json
+{
+  "@context": {
+    "ns": "https://example.org/vss#",
+    "specHistory": {
+      "@id": "https://example.org/vss#specHistory",
+      "@container": "@list"
+    },
+    "hasNestedObject": {
+      "@id": "https://example.org/vss#hasNestedObject",
+      "@type": "@id"
+    },
+    "Object": "https://example.org/vss#Object",
+    "Enum": "https://example.org/vss#Enum",
+    "Field": "https://example.org/vss#Field",
+    "ObjectField": "https://example.org/vss#ObjectField"
+  },
+  "@graph": [
+    {
+      "@id": "ns:Vehicle.averageSpeed",
+      "@type": "Field",
+      "specHistory": [
+        {
+          "id": "0x9B020962",
+          "timestamp": "2023-07-20T14:35:12.345678"
+        }
+      ]
+    },
+    {
+      "@id": "ns:Vehicle.adas",
+      "@type": "ObjectField",
+      "hasNestedObject": "ns:Vehicle_ADAS"
+    }
+  ]
+}
+```
+
+#### Update Example
+
+When a field's implementation changes (resulting in a new ID), the specHistory is updated with the new entry:
+
+```json
+{
+  "@id": "ns:Vehicle.averageSpeed",
+  "@type": "Field",
+  "specHistory": [
+    {
+      "id": "0x9B020962",
+      "timestamp": "2023-07-20T14:35:12.345678"
+    },
+    {
+      "id": "0xA2C48D71",
+      "timestamp": "2023-08-15T09:22:45.123456"
+    }
+  ]
+}
+```
+
+This history shows that the implementation of `Vehicle.averageSpeed` changed on August 15, 2023, with a new realization ID. The registry maintains this chronological record for all concepts.
+
+### Usage
+
+For initialization:
+```bash
+python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids concept_ids.json --output spec_history.json --init
+```
+
+For updates:
+```bash
+python src/tools/to_spec_history.py --concept-uri new_concept_uri.json --ids new_concept_ids.json --spec-history spec_history.json --output updated_spec_history.json --update
+```

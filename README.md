@@ -38,13 +38,35 @@ Use the provided scripts in the tools/ directory to export GraphQL schemas to di
 ### ID Generation
 
 `to_id.py` script can be used for ID generation of a given graphql schema.
-It generates a yaml output that has the fqn of a node and the ID of it as the key.
+It generates a json output that has the fqn of a node and the ID of it as the key.
 
 ```bash
-uv run python src/tools/to_id.py <path_to_schema.graphql> <path_to_units.yaml> output.yaml
+uv run python src/tools/to_id.py <path_to_schema.graphql> <path_to_units.yaml> -o output.json
 ```
 
 For further information check out the [idgen readme](src/idgen/README.md).
+
+### Concept URI Generation
+
+The `to_concept_uri.py` script generates JSON-LD document representing the conceptual structure of a GraphQL schema. It creates URIs for all objects, fields, and enums in the schema, expressing their relationships in a semantic way.
+
+```bash
+python -m src.tools.to_concept_uri <path_to_schema.graphql> -o concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
+```
+
+### Spec History Generation
+
+The `to_spec_history.py` script tracks changes in schema realizations over time. It maintains a history of realization IDs for each concept, enabling traceability of schema evolution.
+
+```bash
+# Initialize a new spec history
+python -m src.tools.to_spec_history --concept-uri concept_uri.json --ids concept_ids.json --output spec_history.json --init
+
+# Update an existing spec history
+python -m src.tools.to_spec_history --concept-uri new_concept_uri.json --ids new_concept_ids.json --spec-history spec_history.json --output updated_spec_history.json --update
+```
+
+For more details on concept URI and spec history generation, refer to the [Tools README](src/tools/README.md).
 
 ### Further information
 For detailed instructions on how to use the repository, refer to the [Usage Guide](docs/usage_guide.md).
