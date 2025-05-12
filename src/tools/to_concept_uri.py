@@ -12,6 +12,7 @@ from graphql import (
     GraphQLObjectType,
 )
 
+from concept.models import ConceptUriModel, ConceptUriNode, create_jsonld_context
 from tools.utils import get_all_named_types, load_schema
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,69 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]):
     return concepts
 
 
+def create_concept_uri_model(concepts: Concepts, namespace: str, prefix: str) -> ConceptUriModel:
+    """Create a ConceptUriModel from Concepts.
+
+    Args:
+        concepts: The Concepts object with fields, enums, objects, and nested objects
+        namespace: The namespace URI
+        prefix: The prefix for the URIs
+
+    Returns:
+        A ConceptUriModel representing the concepts
+    """
+    # Create the JSON-LD context
+    context = create_jsonld_context(namespace)
+
+    # Create all nodes
+    graph: list[ConceptUriNode] = []
+
+    # Helper function to create a URI
+    def uri(name: str) -> str:
+        return f"{prefix}:{name}"
+
+    # Object nodes
+    for type_name, fields in concepts.objects.items():
+        graph.append(
+            ConceptUriNode(
+                id=uri(type_name),
+                type="Object",
+                hasField=[uri(field) for field in fields],
+            )
+        )
+
+    # Field nodes
+    for field_id in concepts.fields:
+        graph.append(
+            ConceptUriNode(
+                id=uri(field_id),
+                type="Field",
+            )
+        )
+
+    # Enum nodes
+    for enum in concepts.enums:
+        graph.append(
+            ConceptUriNode(
+                id=uri(enum),
+                type="Enum",
+            )
+        )
+
+    # Nested object relationships
+    for field_id, object_type in concepts.nested_objects.items():
+        graph.append(
+            ConceptUriNode(
+                id=uri(field_id),
+                type="ObjectField",
+                hasNestedObject=uri(object_type),
+            )
+        )
+
+    # Create and return the model
+    return ConceptUriModel(context=context, graph=graph)
+
+
 @click.command()
 @click.argument("schema", type=click.Path(exists=True), required=True)
 @click.option(
@@ -95,13 +159,11 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]):
     default="ns",
     help="The prefix to use for the URIs",
 )
-@click.option("--dry-run/--no-dry-run", default=False)
 def main(
     schema: Path,
     output: Path | None,
     namespace: str,
     prefix: str,
-    dry_run: bool,
 ):
     """Generate concept URIs for a GraphQL schema.
 
@@ -113,52 +175,20 @@ def main(
     # Load the schema
     graphql_schema = load_schema(schema)
 
+    # Process the schema to get concepts
     concepts = iter_all_concepts(get_all_named_types(graphql_schema))
 
-    def uri(name: str) -> str:
-        return f"{prefix}:{name}"
+    # Create concept URI model
+    concept_uri_model = create_concept_uri_model(concepts, namespace, prefix)
 
-    # Prepare JSON-LD output
-    jsonld_output = {
-        "@context": {
-            prefix: namespace,
-            "type": "@type",
-            "hasField": {"@id": f"{namespace}hasField", "@type": "@id"},
-            "hasNestedObject": {"@id": f"{namespace}hasNestedObject", "@type": "@id"},
-            "Object": f"{namespace}Object",
-            "Enum": f"{namespace}Enum",
-            "Field": f"{namespace}Field",
-        },
-        "@graph": [
-            # Object nodes
-            *[
-                {
-                    "@id": uri(type_name),
-                    "@type": "Object",
-                    "hasField": [uri(field) for field in fields],
-                }
-                for type_name, fields in concepts.objects.items()
-            ],
-            # Field nodes
-            *[{"@id": uri(field), "@type": "Field"} for field in concepts.fields],
-            # Enum nodes
-            *[{"@id": uri(enum), "@type": "Enum"} for enum in concepts.enums],
-            # Nested object relationships
-            *[
-                {"@id": uri(field), "hasNestedObject": uri(object_type)}
-                for field, object_type in concepts.nested_objects.items()
-            ],
-        ],
-    }
-
-    # Write or print the output
-    if not dry_run and output:
+    # Output options
+    if output:
         with open(output, "w", encoding="utf-8") as output_file:
             logging.info(f"Writing data to '{output}'")
-            json.dump(jsonld_output, output_file, indent=2)
+            json.dump(concept_uri_model.to_json_ld(), output_file, indent=2)
     else:
         print("-" * 80)
-        print(json.dumps(jsonld_output, indent=2))
+        print(json.dumps(concept_uri_model.to_json_ld(), indent=2))
 
 
 if __name__ == "__main__":
