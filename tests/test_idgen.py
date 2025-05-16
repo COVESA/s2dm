@@ -1,4 +1,5 @@
 import ast
+from collections.abc import Callable
 
 import pytest
 from faker import Faker
@@ -6,8 +7,9 @@ from graphql import GraphQLNamedType
 from hypothesis import given
 
 from idgen.idgen import fnv1_32_wrapper
-from idgen.spec import IDGenerationSpec
+from idgen.models import IDGenerationSpec
 from tests.conftest import (
+    EchoDict,
     MockFieldData,
     mock_named_types_strategy,
 )
@@ -17,8 +19,8 @@ from tools.to_id import iter_all_id_specs
 @given(named_types_and_fields=mock_named_types_strategy())
 def test_id_spec_generation_of_all_fields_from_graphql_schema(
     named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]],
-    mock_unit_lookup: dict,
-):
+    mock_unit_lookup: EchoDict,
+) -> None:
     """Test that ID generation spec can be generated from a GraphQL schema."""
     named_types, fields = named_types_and_fields
     expected_id_specs = {field.expected_id_spec() for field in fields}
@@ -34,8 +36,8 @@ def test_id_spec_generation_of_all_fields_from_graphql_schema(
 def test_id_generation_is_deterministic_across_iterations(
     named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]],
     strict_mode: bool,
-    mock_unit_lookup: dict,
-):
+    mock_unit_lookup: EchoDict,
+) -> None:
     """Test that ID generation is deterministic across iterations."""
 
     named_types, _ = named_types_and_fields
@@ -60,8 +62,8 @@ def test_id_generation_is_deterministic_across_iterations(
 def test_id_generation_is_unique_accros_schema(
     named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]],
     strict_mode: bool,
-    mock_unit_lookup: dict,
-):
+    mock_unit_lookup: EchoDict,
+) -> None:
     """Test that ID generation produces unique IDs across the schema fields."""
 
     named_types, _ = named_types_and_fields
@@ -75,10 +77,12 @@ def test_id_generation_is_unique_accros_schema(
 
 
 @pytest.mark.parametrize("strict_mode", [True, False])
-def test_id_generation_changes_with_field_changes_for_enum_field_allowed_values(strict_mode: bool, faker: Faker):
+def test_id_generation_changes_with_field_changes_for_enum_field_allowed_values(
+    strict_mode: bool, faker: Faker
+) -> None:
     """Test that ID generation changes with allowed values."""
 
-    changes_to_test = [
+    changes_to_test: list[Callable[[list[str]], str | None]] = [
         # Adding a new value
         lambda lst: lst.append(faker.unique.word()),
         # Removing a value
@@ -112,7 +116,7 @@ def test_id_generation_changes_with_field_changes_for_enum_field_allowed_values(
 @pytest.mark.parametrize("field_to_change", ["name", "data_type", "unit", "minimum", "maximum"])
 def test_id_generation_changes_with_field_changes_for_non_enum_field(
     strict_mode: bool, field_to_change: str, faker: Faker
-):
+) -> None:
     """Test that ID generation changes with field changes."""
 
     mock_field_data = MockFieldData.non_enum_field_data(faker)
@@ -126,7 +130,7 @@ def test_id_generation_changes_with_field_changes_for_non_enum_field(
     if field_to_change in ["name", "data_type", "unit"]:
         new_field_value = "New" + getattr(id_spec, field_to_change)
     elif field_to_change in ["minimum", "maximum"]:
-        new_field_value = faker.random_int(min=id_spec.minimum or 1, max=id_spec.maximum or 100)
+        new_field_value = faker.random_int(min=int(id_spec.minimum or 1), max=int(id_spec.maximum or 100))
     else:
         raise ValueError(f"Invalid field to change: {field_to_change}")
 

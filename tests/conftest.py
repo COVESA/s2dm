@@ -1,29 +1,34 @@
+from collections import UserDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 import pytest
 from ariadne import gql
 from faker import Faker
 from graphql import (
+    GraphQLNamedType,
+    GraphQLSchema,
     build_schema,
 )
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
-from idgen.spec import IDGenerationSpec
+from idgen.models import IDGenerationSpec
 from tools.utils import ensure_query, get_all_named_types
 
 SCALAR_TYPES = ["String", "Int", "Float", "Boolean"]
 
 
-class EchoDict(dict):
+class EchoDict(UserDict[str, str]):
     """A dictionary that echoes the key as the value."""
 
-    def __missing__(self, key):
+    def __missing__(self, key: str) -> str:
         return key
 
 
 @pytest.fixture(scope="session")
-def mock_unit_lookup():
+def mock_unit_lookup() -> EchoDict:
     return EchoDict()
 
 
@@ -111,7 +116,9 @@ class MockFieldData:
 
 
 @composite
-def mock_graphql_schema_strategy(draw):
+def mock_graphql_schema_strategy(
+    draw: Callable[[st.SearchStrategy[Any]], Any],
+) -> tuple[GraphQLSchema, list[MockFieldData]]:
     """Generate a random GraphQL schema with random types and fields."""
     faker = Faker()
 
@@ -147,6 +154,8 @@ def mock_graphql_schema_strategy(draw):
 
 
 @composite
-def mock_named_types_strategy(draw):
+def mock_named_types_strategy(
+    draw: Callable[[st.SearchStrategy[Any]], Any],
+) -> tuple[list[GraphQLNamedType], list[MockFieldData]]:
     schema, fields = draw(mock_graphql_schema_strategy())
     return get_all_named_types(schema), fields

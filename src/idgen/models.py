@@ -51,10 +51,6 @@ class FieldTypeWrapper:
         return isinstance(self._field_type, GraphQLObjectType)
 
 
-def to_capitalized(name: str) -> str:
-    return name[0].upper() + name[1:]
-
-
 @dataclass(frozen=True)
 class IDGenerationSpec:
     """Collection of fields and methods required for ID generation
@@ -213,7 +209,7 @@ class IDGenerationSpec:
 
         surrounding_type = original_field_type
         while surrounding_type.is_list_type():
-            field_type_name = f"list[{field_type_name}]"
+            field_type_name = f"{field_type_name}[]"
             surrounding_type = FieldTypeWrapper(surrounding_type._field_type.of_type)
 
         return field_type_name
