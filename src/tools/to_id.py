@@ -15,7 +15,7 @@ from graphql import (
 )
 
 from idgen.idgen import fnv1_32_wrapper
-from idgen.spec import IDGenerationSpec
+from idgen.models import IDGenerationSpec
 from tools.utils import get_all_named_types, load_schema
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

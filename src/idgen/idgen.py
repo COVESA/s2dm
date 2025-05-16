@@ -1,6 +1,6 @@
 import logging
 
-from idgen.spec import IDGenerationSpec
+from idgen.models import IDGenerationSpec
 
 logger = logging.getLogger(__name__)
 

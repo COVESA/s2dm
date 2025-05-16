@@ -375,6 +375,7 @@ The Spec History Registry is a tool for tracking changes in schema realizations 
 1. **Initialization**: The registry is initialized with concept URIs and their corresponding IDs.
 2. **Tracking**: For each field in the schema, a `specHistory` property tracks the history of IDs with timestamps.
 3. **Updates**: When schema changes occur, new IDs are appended to the history, maintaining a chronological record.
+4. **Type Definition History**: The tool also saves the complete type definition for any new or updated concept to individual files in a history directory.
 
 ### Features
 
@@ -382,6 +383,7 @@ The Spec History Registry is a tool for tracking changes in schema realizations 
 - Records timestamps for each change
 - Detects and logs new concepts and updated IDs
 - Maintains valid JSON-LD structure
+- Saves GraphQL type definitions to individual files for historical reference
 
 ### Example
 
@@ -411,7 +413,11 @@ When initialized with the concept URIs and IDs, the registry creates a JSON-LD f
       "specHistory": [
         {
           "id": "0x9B020962",
-          "timestamp": "2023-07-20T14:35:12.345678"
+          "timestamp": "2025-05-14T10:22:00.000000"
+        },
+        {
+          "id": "0xA2C48D71",
+          "timestamp": "2025-05-14T10:22:30.000000"
         }
       ]
     },
@@ -424,37 +430,36 @@ When initialized with the concept URIs and IDs, the registry creates a JSON-LD f
 }
 ```
 
-#### Update Example
+This history shows that the implementation of `Vehicle.averageSpeed` changed on May 14, 2025, with new realization IDs. The registry maintains this chronological record for all concepts.
 
-When a field's implementation changes (resulting in a new ID), the specHistory is updated with the new entry:
+Additionally, the tool saves the complete type definition for each concept to a file in the history directory. The files are named according to the pattern `<type_name>_<YYYYMMDDHHMM>_<id>.graphql`, where:
+- `<type_name>` is the name of the GraphQL type
+- `<YYYYMMDDHHMM>` is the timestamp in UTC time
+- `<id>` is the concept ID
 
-```json
-{
-  "@id": "ns:Vehicle.averageSpeed",
-  "@type": "Field",
-  "specHistory": [
-    {
-      "id": "0x9B020962",
-      "timestamp": "2023-07-20T14:35:12.345678"
-    },
-    {
-      "id": "0xA2C48D71",
-      "timestamp": "2023-08-15T09:22:45.123456"
-    }
-  ]
-}
+For example:
+
+```
+history/
+├── Vehicle_202505011111_0x9B020962.graphql
+└── Vehicle_202505022222_0xA2C48D71.graphql
 ```
 
-This history shows that the implementation of `Vehicle.averageSpeed` changed on August 15, 2023, with a new realization ID. The registry maintains this chronological record for all concepts.
+These files contain the complete GraphQL type definitions, allowing you to review how the type structure has changed over time. Files generated in the same batch operation will have the same timestamp.
 
 ### Usage
 
 For initialization:
 ```bash
-python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids concept_ids.json --output spec_history.json --init
+python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids concept_ids.json --schema schema.graphql --output spec_history.json --init
 ```
 
 For updates:
 ```bash
-python src/tools/to_spec_history.py --concept-uri new_concept_uri.json --ids new_concept_ids.json --spec-history spec_history.json --output updated_spec_history.json --update
+python src/tools/to_spec_history.py --concept-uri new_concept_uri.json --ids new_concept_ids.json --schema schema.graphql --spec-history spec_history.json --output updated_spec_history.json --update
+```
+
+To specify a custom history directory (default is "./history"):
+```bash
+python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids concept_ids.json --schema schema.graphql --output spec_history.json --history-dir custom_history_dir --init
 ```

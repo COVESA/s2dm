@@ -15,7 +15,12 @@ from graphql import (
     is_list_type,
     is_non_null_type,
 )
-from graphql.type import GraphQLField, GraphQLNamedType, GraphQLObjectType, GraphQLSchema
+from graphql.type import (
+    GraphQLField,
+    GraphQLNamedType,
+    GraphQLObjectType,
+    GraphQLSchema,
+)
 from graphql.utilities import print_schema
 
 
@@ -36,8 +41,8 @@ def read_file(file_path: Path) -> str:
         return file.read()
 
 
-def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
-    """Load and build a GraphQL schema from a file or folder."""
+def build_schema_str(graphql_schema_path: Path) -> str:
+    """Build a GraphQL schema from a file or folder."""
     # Load and merge schemas from the directory
     schema_str = load_schema_from_path(graphql_schema_path)
 
@@ -61,13 +66,22 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     # TODO: Improve this part with schema merge function with a whole directory.
     # TODO: For example: with Ariadne https://ariadnegraphql.org/docs/modularization#defining-schema-in-graphql-files
     schema_str = (
-        custom_directives_str + "\n" +
-        common_types_str + "\n" +
-        custom_scalar_types_str + "\n" +
-        schema_str + "\n" +
-        unit_enums_str
+        custom_directives_str
+        + "\n"
+        + common_types_str
+        + "\n"
+        + custom_scalar_types_str
+        + "\n"
+        + schema_str
+        + "\n"
+        + unit_enums_str
     )
+    return schema_str
 
+
+def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
+    """Load and build a GraphQL schema from a file or folder."""
+    schema_str = build_schema_str(graphql_schema_path)
     schema = build_schema(schema_str)  # Convert GraphQL SDL to a GraphQLSchema object
     logging.info("Successfully loaded the given GraphQL schema file.")
     logging.debug(f"Read schema: \n{print_schema(schema)}")
@@ -90,7 +104,11 @@ def ensure_query(schema: GraphQLSchema) -> GraphQLSchema:
         logging.info("The provided schema has no Query type.")
         query_fields = {"ping": GraphQLField(GraphQLString)}  # Add here other generic fields if needed
         query_type = GraphQLObjectType(name="Query", fields=query_fields)
-        new_schema = GraphQLSchema(query=query_type, types=schema.type_map.values(), directives=schema.directives)
+        new_schema = GraphQLSchema(
+            query=query_type,
+            types=schema.type_map.values(),
+            directives=schema.directives,
+        )
         logging.info("A generic Query type to the schema was added.")
         logging.debug(f"New schema: \n{print_schema(new_schema)}")
 
@@ -116,7 +134,9 @@ def get_all_named_types(schema: GraphQLSchema) -> list[GraphQLNamedType]:
     ]
 
 
-def get_all_object_types(named_types: list[GraphQLNamedType]) -> list[GraphQLObjectType]:
+def get_all_object_types(
+    named_types: list[GraphQLNamedType],
+) -> list[GraphQLObjectType]:
     """
     Extracts all object types from the provided GraphQL schema.
     Args:
@@ -132,13 +152,14 @@ def get_all_objects_with_directive(objects: list[GraphQLObjectType], directive_n
     return [o for o in objects if has_directive(o, directive_name)]
 
 
-def get_all_expanded_instance_tags(schema: GraphQLSchema) -> dict[GraphQLObjectType, list[str]]:
+def get_all_expanded_instance_tags(
+    schema: GraphQLSchema,
+) -> dict[GraphQLObjectType, list[str]]:
     all_expanded_instance_tags: dict[GraphQLObjectType, list[str]] = {}
     for object in get_all_objects_with_directive(get_all_object_types(get_all_named_types(schema)), "instanceTag"):
         all_expanded_instance_tags[object] = expand_instance_tag(object)
 
     logging.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
-
 
     return all_expanded_instance_tags
 
@@ -319,6 +340,7 @@ def print_field_sdl(field: GraphQLField) -> str:
         field_sdl += f" {directives}"
     return field_sdl
 
+
 def is_valid_instance_tag_field(field: GraphQLField, schema: GraphQLSchema) -> bool:
     """
     Check if the output type of a given field is a valid instanceTag.
@@ -330,7 +352,7 @@ def is_valid_instance_tag_field(field: GraphQLField, schema: GraphQLSchema) -> b
 
     Returns:
         bool: True if the field's output type is a valid instanceTag, False otherwise.
-    """    
+    """
     output_type = schema.get_type(get_named_type(field.type).name)
     return isinstance(output_type, GraphQLObjectType) and has_directive(output_type, "instanceTag")
 
@@ -355,6 +377,7 @@ def has_valid_instance_tag_field(object_type: GraphQLObjectType, schema: GraphQL
         logging.debug(f"instanceTag? {False}")
         return False
 
+
 def get_instance_tag_object(object_type: GraphQLObjectType, schema: GraphQLSchema) -> GraphQLObjectType | None:
     """
     Get the valid instance tag object type used in a valid instance tag field.
@@ -371,7 +394,10 @@ def get_instance_tag_object(object_type: GraphQLObjectType, schema: GraphQLSchem
         return schema.get_type(get_named_type(field.type).name)
     return None
 
-def get_instance_tag_dict(instance_tag_object: GraphQLObjectType) -> dict[str, list[str]]:
+
+def get_instance_tag_dict(
+    instance_tag_object: GraphQLObjectType,
+) -> dict[str, list[str]]:
     """
     Given a valid instance tag object type, return the list of all enum values by level.
 

@@ -56,14 +56,17 @@ python -m src.tools.to_concept_uri <path_to_schema.graphql> -o concept_uri.json 
 
 ### Spec History Generation
 
-The `to_spec_history.py` script tracks changes in schema realizations over time. It maintains a history of realization IDs for each concept, enabling traceability of schema evolution.
+The `to_spec_history.py` script tracks changes in schema realizations over time. It maintains a history of realization IDs for each concept, enabling traceability of schema evolution. It can also save the complete GraphQL type definitions to history files when new or updated IDs are detected.
 
 ```bash
 # Initialize a new spec history
-python -m src.tools.to_spec_history --concept-uri concept_uri.json --ids concept_ids.json --output spec_history.json --init
+python -m src.tools.to_spec_history --concept-uri concept_uri.json --ids concept_ids.json --schema schema.graphql --output spec_history.json --init
 
 # Update an existing spec history
-python -m src.tools.to_spec_history --concept-uri new_concept_uri.json --ids new_concept_ids.json --spec-history spec_history.json --output updated_spec_history.json --update
+python -m src.tools.to_spec_history --concept-uri new_concept_uri.json --ids new_concept_ids.json --schema schema.graphql --spec-history spec_history.json --output updated_spec_history.json --update
+
+# Specify a custom directory for type definition history files (default is "./history")
+python -m src.tools.to_spec_history --concept-uri concept_uri.json --ids concept_ids.json --schema schema.graphql --output spec_history.json --history-dir custom_history_dir --init
 ```
 
 For more details on concept URI and spec history generation, refer to the [Tools README](src/tools/README.md).
