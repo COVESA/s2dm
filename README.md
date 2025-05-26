@@ -74,6 +74,47 @@ For more details on concept URI and spec history generation, refer to the [Tools
 ### Further information
 For detailed instructions on how to use the repository, refer to the [Usage Guide](docs/usage_guide.md).
 
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration and testing. Tests are automatically run on all branches when code is pushed or pull requests are created.
+
+### Workflow
+
+The project uses a single CI workflow (`ci.yml`) that runs:
+
+1. **Pre-commit Checks** (on Ubuntu):
+   - Runs all pre-commit hooks
+   - Uses Python 3.11
+
+2. **Test Suite** (Matrix Build):
+   - Operating Systems: Ubuntu, macOS, Windows
+   - Python Versions: 3.11, 3.12
+   - Includes:
+     - Ruff linting and formatting
+     - MyPy type checking
+     - Pytest with coverage reporting
+
+### Running Tests Locally
+
+To run the tests locally, ensure you have `uv` installed and run:
+
+```bash
+# Install dependencies
+uv pip install -e .
+uv pip install --group dev
+
+# Run pre-commit hooks
+uv tool run pre-commit run --all-files
+
+# Run tests with coverage
+uv run pytest --cov=src/s2dm --cov-report=term-missing
+
+# Run linting and type checking
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy .
+```
+
 ## Contributing
 
 See [here](docs/CONTRIBUTING.md) if you would like to contribute.
