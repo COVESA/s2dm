@@ -3,7 +3,6 @@
 The model of a vehicle's Seat.
 """
 type Seat {
-  instanceTag: InCabinArea2x2!
 
   """
   Heating or Cooling requested for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
