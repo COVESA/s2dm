@@ -1,0 +1,467 @@
+directive @range(min: Float, max: Float) on FIELD_DEFINITION                                                                   
+                                                                                                                                                   
+                    directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION                                                                 
+                                                                                                                                                   
+                    directive @noDuplicates on FIELD_DEFINITION                                                                                    
+                                                                                                                                                   
+                    directive @instanceTag on OBJECT                                                                                               
+                                                                                                                                                   
+                    directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT                                             
+                                                                                                                                                   
+                    enum TwoRowsInCabinEnum {                                                                                                      
+                      ROW1                                                                                                                         
+                      ROW2                                                                                                                         
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum TwoColumnsInCabinEnum {                                                                                                   
+                      DRIVERSIDE                                                                                                                   
+                      PASSENGERSIDE                                                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum ThreeColumnsInCabinEnum {                                                                                                 
+                      DRIVERSIDE                                                                                                                   
+                      MIDDLE                                                                                                                       
+                      PASSENGERSIDE                                                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type InCabinArea2x2 {                                                                                                          
+                      row: TwoRowsInCabinEnum                                                                                                      
+                      column: TwoColumnsInCabinEnum                                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type InCabinArea2x3 {                                                                                                          
+                      row: TwoRowsInCabinEnum                                                                                                      
+                      column: ThreeColumnsInCabinEnum                                                                                              
+                    }                                                                                                                              
+                                                                                                                                                   
+                    input InCabinArea2x2Input {                                                                                                    
+                      row: TwoRowsInCabinEnum                                                                                                      
+                      column: TwoColumnsInCabinEnum                                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    input InCabinArea2x3Input {                                                                                                    
+                      row: TwoRowsInCabinEnum                                                                                                      
+                      column: ThreeColumnsInCabinEnum                                                                                              
+                    }                                                                                                                              
+                                                                                                                                                   
+                    scalar Int8 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#byte")                                                         
+                                                                                                                                                   
+                    scalar UInt8 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedByte")                                                
+                                                                                                                                                   
+                    scalar Int16 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#short")                                                       
+                                                                                                                                                   
+                    scalar UInt16 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedShort")                                              
+                                                                                                                                                   
+                    scalar UInt32 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedInt")                                                
+                                                                                                                                                   
+                    scalar Int64 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#long")                                                        
+                                                                                                                                                   
+                    scalar UInt64 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedLong")                                               
+                                                                                                                                                   
+                    """All in-cabin components, including doors."""                                                                                
+                    type Cabin {                                                                                                                   
+                      seats: [Seat]                                                                                                                
+                                                                                                                                                   
+                      """The position of the driver seat in row 1."""                                                                              
+                      driverPosition: DriverPositionEnum                                                                                           
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum DriverPositionEnum {                                                                                                      
+                      LEFT                                                                                                                         
+                      MIDDLE                                                                                                                       
+                      RIGHT                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum TenRowsInCabinEnum {                                                                                                      
+                      ROW1                                                                                                                         
+                      ROW2                                                                                                                         
+                      ROW3                                                                                                                         
+                      ROW4                                                                                                                         
+                      ROW5                                                                                                                         
+                      ROW6                                                                                                                         
+                      ROW7                                                                                                                         
+                      ROW8                                                                                                                         
+                      ROW9                                                                                                                         
+                      ROW10                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type ManySeatsInstanceTag {                                                                                                    
+                      row: TenRowsInCabinEnum                                                                                                      
+                      column: ThreeColumnsInCabinEnum                                                                                              
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type Person {                                                                                                                  
+                      name: String!                                                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type DrivingJourney {                                                                                                          
+                      vehicle: Vehicle!                                                                                                            
+                      occupants: [SeatOccupancy]                                                                                                   
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type SeatOccupancy {                                                                                                           
+                      occupant: Person!                                                                                                            
+                      seat: Seat!                                                                                                                  
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type ChargingSession {                                                                                                         
+                      vehicle: Vehicle!                                                                                                            
+                      paidBy: Person                                                                                                               
+                      chargingStation: chargingStation                                                                                             
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type chargingStation {                                                                                                         
+                      id: ID!                                                                                                                      
+                    }                                                                                                                              
+                                                                                                                                                   
+                    type Query {                                                                                                                   
+                      vehicle(vin: String!): Vehicle                                                                                               
+                      seat(instanceTag: InCabinArea2x2Input!): Seat                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """The model of a vehicle's Seat."""                                                                                           
+                    type Seat {                                                                                                                    
+                      """                                                                                                                          
+                      Heating or Cooling requested for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum            
+                    heating.                                                                                                                       
+                      """                                                                                                                          
+                      heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8                                                                     
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 =                     
+                    Lowermost position supported.                                                                                                  
+                      """                                                                                                                          
+                      height(unit: Length_Unit_Enum = MILLIMETER): UInt16                                                                          
+                                                                                                                                                   
+                      """Seat backward switch engaged."""                                                                                          
+                      isBackwardSwitchEngaged: Boolean                                                                                             
+                                                                                                                                                   
+                      """Is the belt engaged."""                                                                                                   
+                      isBelted: Boolean                                                                                                            
+                                                                                                                                                   
+                      """Cooler switch for Seat heater."""                                                                                         
+                      isCoolerSwitchEngaged: Boolean                                                                                               
+                                                                                                                                                   
+                      """Decrease massage level switch engaged."""                                                                                 
+                      isDecreaseMassageLevelSwitchEngaged: Boolean                                                                                 
+                                                                                                                                                   
+                      """Seat down switch engaged."""                                                                                              
+                      isDownSwitchEngaged: Boolean                                                                                                 
+                                                                                                                                                   
+                      """Seat forward switch engaged."""                                                                                           
+                      isForwardSwitchEngaged: Boolean                                                                                              
+                                                                                                                                                   
+                      """Increase massage level switch engaged."""                                                                                 
+                      isIncreaseMassageLevelSwitchEngaged: Boolean                                                                                 
+                                                                                                                                                   
+                      """Does the seat have a passenger in it."""                                                                                  
+                      isOccupied: Boolean                                                                                                          
+                                                                                                                                                   
+                      """Tilt backward switch engaged."""                                                                                          
+                      isTiltBackwardSwitchEngaged: Boolean                                                                                         
+                                                                                                                                                   
+                      """Tilt forward switch engaged."""                                                                                           
+                      isTiltForwardSwitchEngaged: Boolean                                                                                          
+                                                                                                                                                   
+                      """Seat up switch engaged."""                                                                                                
+                      isUpSwitchEngaged: Boolean                                                                                                   
+                                                                                                                                                   
+                      """Warmer switch for Seat heater."""                                                                                         
+                      isWarmerSwitchEngaged: Boolean                                                                                               
+                                                                                                                                                   
+                      """Seat massage level. 0 = off. 100 = max massage."""                                                                        
+                      massage(unit: Relation_Unit_Enum = PERCENT): UInt8 @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")             
+                                                                                                                                                   
+                      """Seat massage level. 0 = off. 100 = max massage."""                                                                        
+                      massageLevel(unit: Relation_Unit_Enum = PERCENT): UInt8                                                                      
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 =                   
+                    Frontmost position supported.                                                                                                  
+                      """                                                                                                                          
+                      position(unit: Length_Unit_Enum = MILLIMETER): UInt16                                                                        
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 =              
+                    Lowermost position supported.                                                                                                  
+                      """                                                                                                                          
+                      seatBeltHeight(unit: Length_Unit_Enum = MILLIMETER): UInt16                                                                  
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and                  
+                    vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is               
+                    tilted backward.                                                                                                               
+                      """                                                                                                                          
+                      tilt(unit: Angle_Unit_Enum = DEGREE): Float                                                                                  
+                      airbag: Airbag                                                                                                               
+                      backrest: Backrest                                                                                                           
+                      headrest: Headrest                                                                                                           
+                      seating: Seating                                                                                                             
+                      instanceTag: ManySeatsInstanceTag                                                                                            
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """Airbag signals."""                                                                                                          
+                    type Airbag {                                                                                                                  
+                      """                                                                                                                          
+                      Airbag deployment status. True = Airbag deployed. False = Airbag not deployed.                                               
+                      """                                                                                                                          
+                      isDeployed: Boolean                                                                                                          
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """Describes signals related to the backrest of the seat."""                                                                   
+                    type Backrest {                                                                                                                
+                      """Is switch for less lumbar support engaged."""                                                                             
+                      isLessLumbarSupportSwitchEngaged: Boolean                                                                                    
+                                                                                                                                                   
+                      """Is switch for less side bolster support engaged."""                                                                       
+                      isLessSideBolsterSupportSwitchEngaged: Boolean                                                                               
+                                                                                                                                                   
+                      """Lumbar down switch engaged."""                                                                                            
+                      isLumbarDownSwitchEngaged: Boolean                                                                                           
+                                                                                                                                                   
+                      """Lumbar up switch engaged."""                                                                                              
+                      isLumbarUpSwitchEngaged: Boolean                                                                                             
+                                                                                                                                                   
+                      """Is switch for more lumbar support engaged."""                                                                             
+                      isMoreLumbarSupportSwitchEngaged: Boolean                                                                                    
+                                                                                                                                                   
+                      """Is switch for more side bolster support engaged."""                                                                       
+                      isMoreSideBolsterSupportSwitchEngaged: Boolean                                                                               
+                                                                                                                                                   
+                      """Backrest recline backward switch engaged."""                                                                              
+                      isReclineBackwardSwitchEngaged: Boolean                                                                                      
+                                                                                                                                                   
+                      """Backrest recline forward switch engaged."""                                                                               
+                      isReclineForwardSwitchEngaged: Boolean                                                                                       
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 =                     
+                    Lowermost position supported.                                                                                                  
+                      """                                                                                                                          
+                      lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8                                                                     
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.                                          
+                      """                                                                                                                          
+                      lumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float                                                                     
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative               
+                    degrees for forward recline. Positive degrees for backward recline.                                                            
+                      """                                                                                                                          
+                      recline(unit: Angle_Unit_Enum = DEGREE): Float                                                                               
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.                              
+                      """                                                                                                                          
+                      sideBolsterSupport(unit: Relation_Unit_Enum = PERCENT): Float                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """Headrest settings."""                                                                                                       
+                    type Headrest {                                                                                                                
+                      """                                                                                                                          
+                      Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.                  
+                      """                                                                                                                          
+                      angle(unit: Angle_Unit_Enum = DEGREE): Float                                                                                 
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.                          
+                      """                                                                                                                          
+                      height(unit: Length_Unit_Enum = MILLIMETER): UInt8                                                                           
+                                                                                                                                                   
+                      """Head rest backward switch engaged."""                                                                                     
+                      isBackwardSwitchEngaged: Boolean                                                                                             
+                                                                                                                                                   
+                      """Head rest down switch engaged."""                                                                                         
+                      isDownSwitchEngaged: Boolean                                                                                                 
+                                                                                                                                                   
+                      """Head rest forward switch engaged."""                                                                                      
+                      isForwardSwitchEngaged: Boolean                                                                                              
+                                                                                                                                                   
+                      """Head rest up switch engaged."""                                                                                           
+                      isUpSwitchEngaged: Boolean                                                                                                   
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """Describes signals related to the seat bottom of the seat."""                                                                
+                    type Seating {                                                                                                                 
+                      """Is switch to decrease seating length engaged."""                                                                          
+                      isBackwardSwitchEngaged: Boolean                                                                                             
+                                                                                                                                                   
+                      """Is switch to increase seating length engaged."""                                                                          
+                      isForwardSwitchEngaged: Boolean                                                                                              
+                                                                                                                                                   
+                      """                                                                                                                          
+                      Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).              
+                      """                                                                                                                          
+                      length(unit: Length_Unit_Enum = MILLIMETER): UInt16                                                                          
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """High-level vehicle data."""                                                                                                 
+                    type Vehicle {                                                                                                                 
+                      id: VehicleIdentification!                                                                                                   
+                      cabin: Cabin                                                                                                                 
+                      journeyHistory: [DrivingJourney!]                                                                                            
+                      chargingHistory: [ChargingSession!]                                                                                          
+                    }                                                                                                                              
+                                                                                                                                                   
+                    """Attributes that identify a vehicle."""                                                                                      
+                    type VehicleIdentification {                                                                                                   
+                      """                                                                                                                          
+                      17-character Vehicle Identification Number (VIN) as defined by ISO 3779.                                                     
+                      """                                                                                                                          
+                      vin: String!                                                                                                                 
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Acceleration_Unit_Enum {                                                                                                  
+                      CENTIMETERS_PER_SECOND_SQUARED                                                                                               
+                      METERS_PER_SECOND_SQUARED                                                                                                    
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Angle_Unit_Enum {                                                                                                         
+                      DEGREE                                                                                                                       
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Angularspeed_Unit_Enum {                                                                                                  
+                      DEGREE_PER_SECOND                                                                                                            
+                      RADIANS_PER_SECOND                                                                                                           
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Datetime_Unit_Enum {                                                                                                      
+                      ISO_8601                                                                                                                     
+                      UNIX_TIMESTAMP                                                                                                               
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Distancepervolume_Unit_Enum {                                                                                             
+                      KILOMETERS_PER_LITER                                                                                                         
+                      MILES_PER_GALLON                                                                                                             
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Duration_Unit_Enum {                                                                                                      
+                      DAYS                                                                                                                         
+                      HOUR                                                                                                                         
+                      MILLISECOND                                                                                                                  
+                      MINUTE                                                                                                                       
+                      MONTHS                                                                                                                       
+                      SECOND                                                                                                                       
+                      WEEKS                                                                                                                        
+                      YEARS                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Electriccharge_Unit_Enum {                                                                                                
+                      AMPERE_HOURS                                                                                                                 
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Electriccurrent_Unit_Enum {                                                                                               
+                      AMPERE                                                                                                                       
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Energyconsumptionperdistance_Unit_Enum {                                                                                  
+                      KILOWATT_HOURS_PER_100_KILOMETERS                                                                                            
+                      WATT_HOUR_PER_KM                                                                                                             
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Force_Unit_Enum {                                                                                                         
+                      KILO_NEWTON                                                                                                                  
+                      NEWTON                                                                                                                       
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Frequency_Unit_Enum {                                                                                                     
+                      BEATS_PER_MINUTE                                                                                                             
+                      CYCLES_PER_MINUTE                                                                                                            
+                      HERTZ                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Illuminance_Unit_Enum {                                                                                                   
+                      LUX                                                                                                                          
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Length_Unit_Enum {                                                                                                        
+                      CENTIMETER                                                                                                                   
+                      INCH                                                                                                                         
+                      KILOMETER                                                                                                                    
+                      METER                                                                                                                        
+                      MILLIMETER                                                                                                                   
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Mass_Unit_Enum {                                                                                                          
+                      GRAM                                                                                                                         
+                      KILOGRAM                                                                                                                     
+                      POUND                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Massperdistance_Unit_Enum {                                                                                               
+                      GRAMS_PER_KILOMETER                                                                                                          
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Masspertime_Unit_Enum {                                                                                                   
+                      GRAMS_PER_SECOND                                                                                                             
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Power_Unit_Enum {                                                                                                         
+                      HORSEPOWER                                                                                                                   
+                      KILOWATT                                                                                                                     
+                      WATT                                                                                                                         
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Pressure_Unit_Enum {                                                                                                      
+                      KILOPASCAL                                                                                                                   
+                      MILLIBAR                                                                                                                     
+                      PASCAL                                                                                                                       
+                      POUNDS_PER_SQUARE_INCH                                                                                                       
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Rating_Unit_Enum {                                                                                                        
+                      STARS                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Relation_Unit_Enum {                                                                                                      
+                      DECIBEL                                                                                                                      
+                      DECIBEL_MILLIWATT                                                                                                            
+                      NANO_METER_PER_KILOMETER                                                                                                     
+                      PERCENT                                                                                                                      
+                      RATIO                                                                                                                        
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Resistance_Unit_Enum {                                                                                                    
+                      OHM                                                                                                                          
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Rotationalspeed_Unit_Enum {                                                                                               
+                      REVOLUTIONS_PER_MINUTE                                                                                                       
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Temperature_Unit_Enum {                                                                                                   
+                      DEGREE_CELSIUS                                                                                                               
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Torque_Unit_Enum {                                                                                                        
+                      NEWTON_METER                                                                                                                 
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Velocity_Unit_Enum {                                                                                                      
+                      KILOMETER_PER_HOUR                                                                                                           
+                      METERS_PER_SECOND                                                                                                            
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Voltage_Unit_Enum {                                                                                                       
+                      VOLT                                                                                                                         
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Volume_Unit_Enum {                                                                                                        
+                      CUBIC_CENTIMETERS                                                                                                            
+                      LITER                                                                                                                        
+                      MILLILITER                                                                                                                   
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Volumeflowrate_Unit_Enum {                                                                                                
+                      LITER_PER_HOUR                                                                                                               
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Volumeperdistance_Unit_Enum {                                                                                             
+                      LITER_PER_100_KILOMETERS                                                                                                     
+                      MILLILITER_PER_100_KILOMETERS                                                                                                
+                    }                                                                                                                              
+                                                                                                                                                   
+                    enum Work_Unit_Enum {                                                                                                          
+                      KILOWATT_HOURS                                                                                                               
+                    } 
