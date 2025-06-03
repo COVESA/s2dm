@@ -432,17 +432,17 @@ When initialized with the concept URIs and IDs, the registry creates a JSON-LD f
 
 This history shows that the implementation of `Vehicle.averageSpeed` changed on May 14, 2025, with new realization IDs. The registry maintains this chronological record for all concepts.
 
-Additionally, the tool saves the complete type definition for each concept to a file in the history directory. The files are named according to the pattern `<type_name>_<YYYYMMDDHHMM>_<id>.graphql`, where:
+Additionally, the tool saves the complete type definition for each concept to a file in the history directory. The files are named according to the pattern `<type_name>_<YYYYMMDDHHMMSS>_<id>.graphql`, where:
 - `<type_name>` is the name of the GraphQL type
-- `<YYYYMMDDHHMM>` is the timestamp in UTC time
+- `<YYYYMMDDHHMMSS>` is the timestamp in UTC time
 - `<id>` is the concept ID
 
 For example:
 
 ```
 history/
-├── Vehicle_202505011111_0x9B020962.graphql
-└── Vehicle_202505022222_0xA2C48D71.graphql
+├── Vehicle_20250501111111_0x9B020962.graphql
+└── Vehicle_20250502222222_0xA2C48D71.graphql
 ```
 
 These files contain the complete GraphQL type definitions, allowing you to review how the type structure has changed over time. Files generated in the same batch operation will have the same timestamp.
