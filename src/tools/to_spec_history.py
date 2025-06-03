@@ -48,9 +48,9 @@ def generate_history_filename(type_name: str, id_value: str, timestamp: datetime
         id_value: The ID value for the concept
         timestamp: The timestamp to use
     Returns:
-        Filename in the format <type_name>_<YYYYMMDDHHMM>_<id>.graphql
+        Filename in the format <type_name>_<YYYYMMDDHHMMSS>_<id>.graphql
     """
-    timestamp_str = timestamp.strftime("%Y%m%d%H%M")
+    timestamp_str = timestamp.strftime("%Y%m%d%H%M%S")
     return f"{type_name}_{timestamp_str}_{id_value}.graphql"
 
 
