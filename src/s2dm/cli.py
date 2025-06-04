@@ -5,7 +5,6 @@ import rich_click as click
 from rich.pretty import pprint
 from rich.traceback import install
 
-from tools.iris import get_iris, write_yaml
 from tools.to_shacl import translate_to_shacl
 from tools.to_vspec import translate_to_vspec
 
@@ -127,18 +126,6 @@ def vspec(schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     result = translate_to_vspec(schema)
     output.write_text(result)
-
-# IRIs
-# ----------
-@export.command
-@schema_option
-@output_option
-@click.option("--namespace", "-n", required=True, help="The namespace")
-def iris(schema: Path, namespace: str, output: Path) -> None:
-    """Generate Internationalized Resource Identifiers (IRIs) from a given GraphQL schema."""
-    result = get_iris(schema, namespace)
-    pprint(result)
-    write_yaml(result, output)
 
 cli.add_command(export)
 
