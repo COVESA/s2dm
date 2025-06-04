@@ -1,5 +1,23 @@
 # Tools
+## Overview
+### For data modelers
+For a user who is working with a domain model specified with the `S2DM` approach, the Command Line Interface (CLI) is the way to go.
+The CLI offers so far the following commands:
+- [`export`](#export-command)
+> TODO: Add and describe other commands once they are available.
 
+### For `S2DM` developers
+Developers can refer to other scripts available in this repository, such as:
+- `utils`
+- [Identifiers](#identifiers)
+> TODO: Add and describe other useful tools or scripts once they are available.
+
+### Composing an schema from modular files
+Instead of modeling a huge monolithic model, GraphQL schemas can be specified in multiple small ones (aka., sub graphs).
+Then, specific elements from different sub models can be stiched together to form the composed model with the structure needed.
+To learn more about it, please refer to the [official documentation of the GraphQL Schema Definition Language](https://graphql.org/learn/federation/).
+
+The general workflow looks like this:
 ```mermaid
 graph LR
   subgraph Conceptual layer - S2DM
@@ -24,44 +42,87 @@ graph LR
   Exporter --YAML--> App_YAML
   Exporter --JSON schema--> App_JSON
 ```
-
-## Composer
-
-### Modularization
 The tool can load multiple GraphQL schema files at once, as long as they are located in the same directory. This is currently done in the `utils` module with the [load function of the `Ariadne` package](https://ariadnegraphql.org/docs/modularization), which validates the syntax of every loaded file.
 Therefore, it is possible to split a domain model into multiple smaller files. Such modularity is recommended to facilitate the further extension and maintenance of the domain model.
 For example, in the figure shown above, schemas `1`, `2`, ..., `N` are merged into one before calling the exporter.
 
-### Model validator
-> TODO: Mechanisms to assess the integrity of the model. Examples: unique names, proper use of directives, completeness of types used within the model, correct construction of unique identifiers, etc.
 
-### Arbitrary selection of concepts
-> TODO: Mecahanism to arbitrarily select a sub set of the specification with only the desired concepts. Example: via the use of GraphQL introspection.
 
-## Exporters
-### General information about exporters
-A model done with the GraphQL SDL represents an specification.
-The actual implementation of it is out of the scope.
-However, to facilitate the implementation, the exporter tool parses the specified model and creates the artifact that is needed by the system in the physical layer.
+## export command
+The exporter command parses the specified model and creates the artifact that is needed by the system in the physical layer.
+```shell
+s2dm export <some_supported_format> ...
+```
 
 #### Available exporters
 The tools can currently export a given model into:
-* SHACL - `tools/to_shacl.py`
+* [VSPEC](#vspec-exporter) - `tools/to_vspec.py`
+* [SHACL](#shacl-exporter) - `tools/to_shacl.py`
 
 #### Supported field cases by exporter
 > See `docs/MODELING_GUIDE.md` for more information on cases for fields and the custom directives, such as @noDuplicates.
 
-| Case | `outputType`| SHACL|
-|----------|----------|----------|
-| **Nullable Singular Field**   | `NamedType`   | ✅ |
-| **Non-Nullable Singular Field**   | `NamedType!`   | ✅ |
-| **Nullable List Field**   | `[NamedType]`   | ❌ |
-| **Non-Nullable List Field**   | `[NamedType]!`   | ❌ |
-| **Nullable List of Non-Nullable Elements**   | `[NamedType!]`   | ❌ |
-| **Non-Nullable List of Non-Nullable Elements**   | `[NamedType!]!`   | ❌ |
-| **Nullable Set Field**   | `[NamedType] @noDuplicates` | ✅ |
-| **Non-Nullable Set Field**   | `[NamedType]! @noDuplicates`   | ✅|
+| Case | `outputType`| VSPEC | SHACL|
+|----------|----------|----------|----------|
+| **Nullable Singular Field**   | `NamedType`   | ✅ | ✅ |
+| **Non-Nullable Singular Field**   | `NamedType!`   | ✅ | ✅ |
+| **Nullable List Field**   | `[NamedType]`   | ✅ | ❌ |
+| **Non-Nullable List Field**   | `[NamedType]!`   | ✅ | ❌ |
+| **Nullable List of Non-Nullable Elements**   | `[NamedType!]`   | ✅ | ❌ |
+| **Non-Nullable List of Non-Nullable Elements**   | `[NamedType!]!`   | ✅ | ❌ |
+| **Nullable Set Field**   | `[NamedType] @noDuplicates` | ❌ |✅ |
+| **Non-Nullable Set Field**   | `[NamedType]! @noDuplicates`   | ❌ |✅|
 
+### VSPEC exporter
+This exporter translates the given GraphQL schema to the [Vehicle Signal Specification (VSS)](https://covesa.github.io/vehicle_signal_specification/) format (i.e., a YAML-like file with a custom syntax known as `VSPEC`).
+
+For example, considering the following GraphQL schema:
+```gql
+type Vehicle {
+  cabin: Cabin
+}
+
+type Cabin {
+  seats: [Seat]
+}
+
+type Seat {
+  instanceTag: InCabinArea2x2
+  position(unit: Length_Unit_Enum = MILLIMETER): UInt16 
+    @metadata(vssType: "actuator")
+}
+```
+
+It results in this `vspec`:
+```yaml
+Vehicle:
+  description: ...
+  type: branch
+
+Vehicle.Cabin:
+  description: ...
+  type: branch
+
+Vehicle.Cabin.Seat:
+  description: ...
+  instances:
+  - [ROW1, ROW2]
+  - [DRIVERSIDE, PASSENGERSIDE]
+  type: branch
+
+Vehicle.Cabin.Seat.position:
+  datatype: uint16
+  description: ...
+  type: actuator
+  unit: mm
+```
+
+For an extended example of this conversion, please see the [examples](examples/).
+
+You can call the help for usage reference like this:
+```bash
+s2dm export vspec --help
+```
 
 ### SHACL exporter
 This exporter translates the given GraphQL schema to [SHACL](https://www.w3.org/TR/shacl/).
@@ -213,76 +274,56 @@ Please, refer to the CLI help for usage reference.
 s2dm shacl --help
 ```
 
-### JSON schema exporter
-
-## Composer
-Instead of modeling a huge monolithic model, GraphQL schemas can be specified in multiple small ones (aka., sub graphs).
-Then, specific elements from different sub models can be stiched together to form the composed model with the structure needed.
-To learn more about it, please refer to the [official documentation of the GraphQL Schema Definition Language](https://graphql.org/learn/federation/).
-> TODO: This is part of the feature roadmap.
 
 
-## ID Exporter
+## Identifiers
+With the asumption that specification files will be hosted in a certain Git repository, the tools include functions to support the proper identification of concepts and their metadata to facilite their evolution.
+The identification process is based on the following principles, which are describes in the rest of this subsection:
+* Concepts of interest (e.g., object types or fields) must have unique identifiers for the intended meaning. This is solved by the [creation of URIs for the concepts](#creation-of-uris-for-the-concepts).
+* A concept can have multiple different realizations (i.e., incarnations) depending on the used metadata. For example, different datatypes, units, etc. This is true for the evolution of the model. However, it is assumed that the latests realization documented is the valid one. This is solved by the [creation of hashed IDs based on specified metadata](#creation-of-hashed-ids-based-on-metadata).
+* A history of concepts and their realizations over time must be explicitly given as part of the model evolution. This is solved by combining concepts' URIs and their realizations into an [spec history registry](#spec-history-registry).
 
-The ID exporter traverses a GraphQL schema and generates deterministic, unique hash IDs for schema elements. These IDs reflect changes in metadata that would constitute breaking changes.
+### Creation of URIs for the concepts
+Each concept in the GraphQL schema is assigned a Uniform Resource Identifier (URI) independent of its realization.
+> We refer as `realization` to the fact that a particular concept can be incarnated with some specific metadata. For instance, `Window.position` might be the concept that means the actual location in the vertical axis of the window. It might be realized with the datatype `integer`.
+If the same concept would use `float` intead, only its realization (i.e., its incarnation) will change while it will conceptually remain unchanged.
 
-### How It Works
-
-1. **Schema Traversal**: The exporter traverses the GraphQL schema, processing each type and field.
-2. **Spec Generation**: For each field, an `IDGenerationSpec` is created containing:
-   - Name: Fully qualified name of the field
-   - Data Type: Scalar type of the field
-   - Unit: Unit of measurement (if applicable)
-   - Allowed Values: For enum types
-   - Minimum/Maximum: Range constraints (if applicable)
-3. **ID Generation**: A 32-bit FNV-1a hash is generated from these properties.
-
-### Example
-
-Given a simple schema like:
-
-```graphql
-type Vehicle {
-  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
-  adas: Vehicle_ADAS
-}
-
-type Vehicle_ADAS {
-  isAutoPowerOptimize: Boolean
-}
+The URI has the pattern:
 ```
-
-The ID exporter generates:
-
-```json
-{
-  "Vehicle.averageSpeed": "0x9B020962",
-  "Vehicle_ADAS.isAutoPowerOptimize": "0x1B10735A"
-}
+{ns}:{SomeObjectName}.{someFieldname}
 ```
+Here, `ns` is an arbitrary prefix for a particular namespace.
 
-For detailed information about the ID generation mechanism, refer to the [IDGen README](../idgen/README.md).
+For instance, some URIs might be:
+```
+ns:Window  # URI for the Window concept
+ns:Window.position  # URI for the window position
+...
+```
+This structure is aligned with the core principle in the semantic web, in which every resource has a future-proof identifier.
 
-## Concept URI Exporter
+The `to_concept_uri.py` script generates JSON-LD document representing the conceptual structure of the given GraphQL schema, but with the URIs. 
+Hence, it creates URIs for all objects, fields, and enums in the schema.
 
-The Concept URI exporter traverses a GraphQL schema and generates URIs for concept definitions. These URIs represent the conceptual elements in the schema, independent of their specific realizations.
 
-### How It Works
+
+
+#### How It Works
 
 1. **Schema Traversal**: The exporter traverses the GraphQL schema, identifying objects, fields, and enums.
 2. **URI Generation**: For each element, a concept URI is generated using a prefix and name.
 3. **JSON-LD Output**: The results are formatted as JSON-LD, with proper context and relationships between concepts.
 
-### Features
+#### Features
 
 - Skips ID fields and the Query type
 - Captures object-field relationships
 - Identifies nested object relationships
 - Formats output as valid JSON-LD with proper @context
 
-### Example
+#### Example
 
-Given a schema snippet:
+Given a GraphQL schema snippet:
 
 ```graphql
 type Vehicle {
@@ -366,9 +407,51 @@ This JSON-LD output shows that:
 - `Vehicle_ADAS` is an object type with two fields
 - `Vehicle_ADAS_ActiveAutonomyLevel_Enum` is an enum type
 
-## Spec History Registry
+### Creation of hashed IDs based on specified metadata 
+The ID exporter `to_id.py` traverses a GraphQL schema and generates deterministic, unique hash IDs for schema elements. 
+If a breaking change is introduced in the specification, it will result in a different ID.
 
-The Spec History Registry is a tool for tracking changes in schema realizations over time. It maintains a history of realization IDs for each concept, enabling traceability and auditability of schema evolution.
+#### How It Works
+
+1. **Schema Traversal**: The exporter traverses the GraphQL schema, processing each type and field.
+2. **Spec Generation**: For each field, an `IDGenerationSpec` is created containing:
+   - Name: Fully qualified name of the field
+   - Data Type: Scalar type of the field
+   - Unit: Unit of measurement (if applicable)
+   - Allowed Values: For enum types
+   - Minimum/Maximum: Range constraints (if applicable)
+3. **ID Generation**: A 32-bit FNV-1a hash is generated from these properties.
+
+#### Example
+
+Given a GraphQL schema like:
+
+```graphql
+type Vehicle {
+  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+  adas: Vehicle_ADAS
+}
+
+type Vehicle_ADAS {
+  isAutoPowerOptimize: Boolean
+}
+```
+
+The ID exporter generates a json output that has the element's name as the key and its ID as the value, like:
+
+```json
+{
+  "Vehicle.averageSpeed": "0x9B020962",
+  "Vehicle_ADAS.isAutoPowerOptimize": "0x1B10735A"
+}
+```
+
+For detailed information about the ID generation mechanism, refer to the [IDGen README](../idgen/README.md).
+
+
+### Spec History Registry
+
+The `to_spec_history.py` script tracks changes in schema realizations over time. It maintains a history of realization IDs for each concept, enabling traceability of schema evolution. It can also save the complete GraphQL type definitions to history files when new or updated IDs are detected.
 
 ### How It Works
 
@@ -463,3 +546,10 @@ To specify a custom history directory (default is "./history"):
 ```bash
 python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids concept_ids.json --schema schema.graphql --output spec_history.json --history-dir custom_history_dir --init
 ```
+
+## TBD: Other planned functions or features
+### Model validator
+> TODO: Mechanisms to assess the integrity of the model. Examples: unique names, proper use of directives, completeness of types used within the model, correct construction of unique identifiers, etc.
+
+### Arbitrary selection of concepts
+> TODO: Mecahanism to arbitrarily select a sub set of the specification with only the desired concepts. Example: via the use of GraphQL introspection.
