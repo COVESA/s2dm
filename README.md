@@ -25,4 +25,3 @@ For instructions on how to model the data of a particular domain following the `
 ## Contributing
 
 See [here](docs/CONTRIBUTING.md) if you would like to contribute.
-

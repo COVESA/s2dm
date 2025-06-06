@@ -120,25 +120,23 @@ SCALAR_DATATYPE_MAP = {
     "UInt64": "uint64",
 }
 
-"""
-TODO: Replace the mapping with the classes of graphql-core and the actual datatypes from the VSS tools.
-SCALAR_DATATYPE_MAP = {
-    # Built-in scalar types
-    GraphQLInt: Datatypes.INT32[0],
-    GraphQLFloat: Datatypes.FLOAT[0],
-    GraphQLString: Datatypes.STRING[0],
-    GraphQLBoolean: Datatypes.BOOLEAN[0],
-    GraphQLID: Datatypes.STRING[0],
-    # TODO: Add custom scalar types
-    ?: Datatypes.INT8[0],
-    ?: Datatypes.UINT8[0],
-    ?: Datatypes.INT16[0],
-    ?: Datatypes.UINT16[0],
-    ?: Datatypes.UINT32[0],
-    ?: Datatypes.INT64[0],
-    ?: Datatypes.UINT64[0],
-}
-"""
+# TODO: Replace the mapping with the classes of graphql-core and the actual datatypes from the VSS tools.
+# SCALAR_DATATYPE_MAP = {
+# # Built-in scalar types
+# GraphQLInt: Datatypes.INT32[0],
+# GraphQLFloat: Datatypes.FLOAT[0],
+# GraphQLString: Datatypes.STRING[0],
+# GraphQLBoolean: Datatypes.BOOLEAN[0],
+# GraphQLID: Datatypes.STRING[0],
+# # TODO: Add custom scalar types
+# ?: Datatypes.INT8[0],
+# ?: Datatypes.UINT8[0],
+# ?: Datatypes.INT16[0],
+# ?: Datatypes.UINT16[0],
+# ?: Datatypes.UINT32[0],
+# ?: Datatypes.INT64[0],
+# ?: Datatypes.UINT64[0],
+# }
 
 
 class CustomDumper(yaml.Dumper):

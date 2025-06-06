@@ -4,7 +4,7 @@ type TestTypeModifiers {
     defaultType: ExampleType
     defaultWithInstances: ExampleTypeWithInstances
 
-    
+
     # field.case.NON_NULL
     nonNullScalar: Boolean!
     nonNull: ExampleType!
@@ -19,12 +19,12 @@ type TestTypeModifiers {
     nonNullListScalar: [Boolean]!
     nonNullList: [ExampleType]!
     nonNullListWithInstances: [ExampleTypeWithInstances]!
-    
+
     # field.case.LIST_NON_NULL
     listNonNullScalar: [Boolean!]
     listNonNull: [ExampleType!]
     listNonNullWithInstances: [ExampleTypeWithInstances!]
-    
+
     # field.case.NON_NULL_LIST_NON_NULL
     nonNullListNonNullScalar: [Boolean!]!
     nonNullListNonNull: [ExampleType!]!
@@ -39,7 +39,7 @@ type TestTypeModifiers {
     #setNonNullScalar: [Boolean!] @noDuplicates
     #setNonNull: [ExampleType!] @noDuplicates
     #setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates
-    
+
 }
 
 type ExampleType {

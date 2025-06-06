@@ -383,4 +383,3 @@ type Window {
   position: Int
 }
 ````
-

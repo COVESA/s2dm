@@ -13,7 +13,6 @@ from graphql import (
 )
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
-
 from idgen.models import IDGenerationSpec
 from tools.utils import ensure_query, get_all_named_types
 
