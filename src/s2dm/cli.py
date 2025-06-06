@@ -1,4 +1,6 @@
 import logging
+import os
+
 from pathlib import Path
 
 import rich_click as click
@@ -7,6 +9,7 @@ from rich.traceback import install
 from s2dm import __version__, log
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.vspec import translate_to_vspec
+from s2dm.exporters.graphql_inspector import GraphQLInspector
 
 schema_option = click.option(
     "--schema",
@@ -40,7 +43,8 @@ output_option = click.option(
     help="Log file",
 )
 @click.version_option(__version__)
-def cli(log_level: str, log_file: Path | None) -> None:
+@click.pass_context
+def cli(ctx, log_level: str, log_file: Path | None) -> None:
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
     log.addHandler(console_handler)
@@ -55,13 +59,27 @@ def cli(log_level: str, log_file: Path | None) -> None:
     if log_level == "DEBUG":
         _ = install(show_locals=True)
 
+    ctx.ensure_object(dict)
+    ctx.obj["log_level"] = log_level
+    ctx.obj["log_file"] = log_file
+
 
 @click.group()
-def export() -> None:
+@click.pass_context
+def export(ctx):
     """Export commands."""
     pass
 
 
+@click.group()
+@click.pass_context
+def inspector(ctx):
+    """ "GraphQL inspector commands."""
+    pass
+
+
+# SHACL
+# ----------
 @export.command
 @schema_option
 @output_option
@@ -125,6 +143,8 @@ def shacl(
     _ = result.serialize(destination=output, format=serialization_format)
 
 
+# YAML
+# ----------
 @export.command
 @schema_option
 @output_option
@@ -134,7 +154,40 @@ def vspec(schema: Path, output: Path) -> None:
     _ = output.write_text(result)
 
 
+@inspector.command
+@schema_option
+@output_option
+@click.pass_context
+def validate(ctx, schema: Path, output: Path):
+    log_level = ctx.obj.get("log_level", "INFO")
+    inspector = GraphQLInspector(schema, log_level=log_level)
+    validation_result = inspector.validate()
+    print(f"{validation_result=}")
+
+
+@inspector.command
+@schema_option
+@output_option
+@click.option(
+    "--val-schema",
+    "-v",
+    type=click.Path(exists=True),
+    required=True,
+    help="The GraphQL schema file to validate against",
+)
+@click.pass_context
+def diff(ctx, schema: Path, val_schema: Path, output: Path):
+    inspector = GraphQLInspector(schema, log_level=ctx.obj["log_level"])
+
+    # ToDo(NW): do we want to validate before diff?
+    # validation_result = inspector.validate()
+    diff_result = inspector.diff(val_schema)
+
+    print(f"{diff_result=}")
+
+
 cli.add_command(export)
+cli.add_command(inspector)
 
 if __name__ == "__main__":
     cli()
