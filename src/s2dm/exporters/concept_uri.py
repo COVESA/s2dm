@@ -4,10 +4,9 @@ from pathlib import Path
 
 import click
 
-from concept.services import create_concept_uri_model, iter_all_concepts
-from tools.utils import get_all_named_types, load_schema
-
-logger = logging.getLogger(__name__)
+from s2dm import log
+from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
+from s2dm.exporters.utils import get_all_named_types, load_schema
 
 
 @click.command()
@@ -53,7 +52,7 @@ def main(
     # Output options
     if output:
         with open(output, "w", encoding="utf-8") as output_file:
-            logger.info(f"Writing data to '{output}'")
+            log.info(f"Writing data to '{output}'")
             json.dump(concept_uri_model.to_json_ld(), output_file, indent=2)
     else:
         print("-" * 80)

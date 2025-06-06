@@ -7,137 +7,137 @@ type Seat {
   """
   Heating or Cooling requested for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
   """
-  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8 
-    @range(min: -100, max: 100) 
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+    @range(min: -100, max: 100)
     @metadata(vssType: "actuator")
 
   """
   Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported.
   """
-  height(unit: Length_Unit_Enum = MILLIMETER): UInt16 
-    @metadata(vssType: "actuator") 
-    
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt16
+    @metadata(vssType: "actuator")
+
   """
   Seat backward switch engaged.
   """
-  isBackwardSwitchEngaged: Boolean 
+  isBackwardSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Position)", 
+      comment: "Affects the property (SingleSeat.Position)",
       vssType: "actuator")
 
   """Is the belt engaged."""
-  isBelted: Boolean 
+  isBelted: Boolean
     @metadata(vssType: "actuator")
 
   """
   Cooler switch for Seat heater.
   """
-  isCoolerSwitchEngaged: Boolean 
+  isCoolerSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Heating)", 
+      comment: "Affects the property (SingleSeat.Heating)",
       vssType: "actuator")
 
   """
   Decrease massage level switch engaged.
   """
-  isDecreaseMassageLevelSwitchEngaged: Boolean 
+  isDecreaseMassageLevelSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.MassageLevel)", 
+      comment: "Affects the property (SingleSeat.MassageLevel)",
       vssType: "actuator")
 
   """
   Seat down switch engaged.
   """
-  isDownSwitchEngaged: Boolean 
+  isDownSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Height)", 
+      comment: "Affects the property (SingleSeat.Height)",
       vssType: "actuator")
 
   """
   Seat forward switch engaged.
   """
-  isForwardSwitchEngaged: Boolean 
+  isForwardSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Position)", 
+      comment: "Affects the property (SingleSeat.Position)",
       vssType: "actuator")
 
   """
   Increase massage level switch engaged.
   """
-  isIncreaseMassageLevelSwitchEngaged: Boolean 
+  isIncreaseMassageLevelSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.MassageLevel)", 
+      comment: "Affects the property (SingleSeat.MassageLevel)",
       vssType: "actuator")
 
   """Does the seat have a passenger in it."""
-  isOccupied: Boolean 
+  isOccupied: Boolean
     @metadata(vssType: "sensor")
 
   """
   Tilt backward switch engaged.
   """
-  isTiltBackwardSwitchEngaged: Boolean 
+  isTiltBackwardSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Tilt)", 
+      comment: "Affects the property (SingleSeat.Tilt)",
       vssType: "actuator")
 
   """
   Tilt forward switch engaged.
   """
-  isTiltForwardSwitchEngaged: Boolean 
+  isTiltForwardSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Tilt)", 
+      comment: "Affects the property (SingleSeat.Tilt)",
       vssType: "actuator")
 
   """
   Seat up switch engaged.
   """
-  isUpSwitchEngaged: Boolean 
+  isUpSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Height)", 
+      comment: "Affects the property (SingleSeat.Height)",
       vssType: "actuator")
 
   """
   Warmer switch for Seat heater.
   """
-  isWarmerSwitchEngaged: Boolean 
+  isWarmerSwitchEngaged: Boolean
     @metadata(
-      comment: "Affects the property (SingleSeat.Heating)", 
+      comment: "Affects the property (SingleSeat.Heating)",
       vssType: "actuator")
 
   """
   Seat massage level. 0 = off. 100 = max massage.
   """
-  massage(unit: Relation_Unit_Enum = PERCENT): UInt8 
-    @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel") 
-    @range(max: 100) 
+  massage(unit: Relation_Unit_Enum = PERCENT): UInt8
+    @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")
+    @range(max: 100)
     @metadata(vssType: "actuator")
 
   """
   Seat massage level. 0 = off. 100 = max massage.
   """
-  massageLevel(unit: Relation_Unit_Enum = PERCENT): UInt8 
-    @range(max: 100) 
+  massageLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+    @range(max: 100)
     @metadata(vssType: "actuator")
 
   """
   Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported.
   """
-  position(unit: Length_Unit_Enum = MILLIMETER): UInt16 
+  position(unit: Length_Unit_Enum = MILLIMETER): UInt16
     @metadata(vssType: "actuator")
 
   """
   Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 = Lowermost position supported.
   """
-  seatBeltHeight(unit: Length_Unit_Enum = MILLIMETER): UInt16 
+  seatBeltHeight(unit: Length_Unit_Enum = MILLIMETER): UInt16
     @metadata(vssType: "actuator")
 
   """
   Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward.
   """
-  tilt(unit: Angle_Unit_Enum = DEGREE): Float 
+  tilt(unit: Angle_Unit_Enum = DEGREE): Float
     @metadata(
-      comment: "In VSS it is assumed that tilting a seat affects both seating (seat bottom) and backrest, i.e. the angle between seating and backrest will not be affected when changing Tilt.", 
+      comment: "In VSS it is assumed that tilting a seat affects both seating (seat bottom) and backrest, i.e. the angle between seating and backrest will not be affected when changing Tilt.",
       vssType: "actuator")
 
   airbag: Airbag

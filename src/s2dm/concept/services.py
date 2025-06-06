@@ -5,15 +5,14 @@ from typing import Any
 
 from graphql import GraphQLEnumType, GraphQLList, GraphQLNamedType, GraphQLObjectType
 
-from concept.models import (
+from s2dm import log
+from s2dm.concept.models import (
     Concepts,
     ConceptUriModel,
     ConceptUriNode,
     SpecHistoryModel,
     SpecHistoryNode,
 )
-
-logger = logging.getLogger(__name__)
 
 
 def load_json_file(file_path: Path) -> dict:
@@ -89,7 +88,7 @@ def convert_concept_uri_to_spec_history(
             if concept_name in concept_ids:
                 spec_node.initialize_history(concept_ids[concept_name])
             else:
-                logger.warning(f"No ID found for concept: {concept_name}")
+                log.warning(f"No ID found for concept: {concept_name}")
 
         spec_nodes.append(spec_node)
 

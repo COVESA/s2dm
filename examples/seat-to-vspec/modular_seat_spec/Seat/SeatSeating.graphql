@@ -1,14 +1,14 @@
 """
 Describes signals related to the seat bottom of the seat.
 """
-type Seating 
+type Seating
   @metadata(
     comment: "Seating is here considered as the part of the seat that supports the thighs. Additional cushions (if any) for support of lower legs is not covered by this branch."
   ) {
   """
   Is switch to decrease seating length engaged.
   """
-  isBackwardSwitchEngaged: Boolean 
+  isBackwardSwitchEngaged: Boolean
     @metadata(
       comment: "Affects the property (SingleSeat.Seating.Length)"
       vssType: "actuator"

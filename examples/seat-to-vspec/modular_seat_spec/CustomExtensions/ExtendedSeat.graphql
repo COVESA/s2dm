@@ -16,13 +16,8 @@ enum TenRowsInCabinEnum {
     ROW10
 }
 
-# Example of a custom instance tag 
+# Example of a custom instance tag
 type ManySeatsInstanceTag @instanceTag {
     row: TenRowsInCabinEnum
     column: ThreeColumnsInCabinEnum
 }
-
-
-
-
-

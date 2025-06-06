@@ -1,22 +1,18 @@
-import logging
 import re
 from datetime import UTC, datetime
 from pathlib import Path
 
 import click
 
-from concept.models import ConceptUriModel, SpecHistoryModel
-from concept.services import (
+from s2dm import log
+from s2dm.concept.models import ConceptUriModel, SpecHistoryModel
+from s2dm.concept.services import (
     convert_concept_uri_to_spec_history,
     load_json_file,
     save_spec_history,
     update_spec_history_from_concept_uris,
 )
-from tools.utils import build_schema_str
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from s2dm.exporters.utils import build_schema_str
 
 
 def extract_type_definition(content: str, type_name: str) -> str | None:
@@ -36,7 +32,7 @@ def extract_type_definition(content: str, type_name: str) -> str | None:
     if match:
         return match.group(0)
 
-    logger.warning(f"Could not find type definition for {type_name} in schema")
+    log.warning(f"Could not find type definition for {type_name} in schema")
     return None
 
 
@@ -83,7 +79,7 @@ def save_type_definition(
     with open(file_path, "w") as f:
         f.write(type_def)
 
-    logger.info(f"Saved type definition for {parent_type} to {file_path}")
+    log.info(f"Saved type definition for {parent_type} to {file_path}")
 
 
 def process_type_definitions(
@@ -102,7 +98,7 @@ def process_type_definitions(
         schema_path: Path to the GraphQL schema file
         history_dir: Directory to save type definitions in
     """
-    logger.info(f"Processing type definitions for {len(new_concepts)} new and {len(updated_ids)} updated concepts")
+    log.info(f"Processing type definitions for {len(new_concepts)} new and {len(updated_ids)} updated concepts")
 
     # Use the same timestamp for all files in this batch
     timestamp = datetime.now(UTC)
@@ -114,7 +110,7 @@ def process_type_definitions(
 
     for concept_name in concepts_to_process:
         if concept_name not in concept_ids:
-            logger.warning(f"No ID found for concept {concept_name}, skipping")
+            log.warning(f"No ID found for concept {concept_name}, skipping")
             continue
 
         # Extract parent type from concept name (format: "parent.field" or "enum_type")
@@ -127,7 +123,7 @@ def process_type_definitions(
             # Save to history file
             save_type_definition(id_value, parent_type, type_def, history_dir, timestamp)
         else:
-            logger.warning(f"Could not extract type definition for {parent_type}")
+            log.warning(f"Could not extract type definition for {parent_type}")
 
 
 @click.command()
@@ -205,10 +201,10 @@ def main(
 
     if init:
         # Initialize a new spec history
-        logger.info(f"Initializing new spec history from {concept_uri} and {ids}")
+        log.info(f"Initializing new spec history from {concept_uri} and {ids}")
         result = convert_concept_uri_to_spec_history(concept_uri_model, concept_ids)
         save_spec_history(result, output)
-        logger.info(f"Spec history initialized and saved to {output}")
+        log.info(f"Spec history initialized and saved to {output}")
 
         # Save type definitions for all concepts if schema is provided
         process_type_definitions(list(concept_ids.keys()), [], concept_ids, schema, history_dir)
@@ -219,7 +215,7 @@ def main(
     if not spec_history:
         raise click.UsageError("--spec-history is required when using --update")
 
-    logger.info(f"Updating spec history {spec_history} with {concept_uri} and {ids}")
+    log.info(f"Updating spec history {spec_history} with {concept_uri} and {ids}")
 
     # Load and validate the existing spec history
     existing_history_data = load_json_file(spec_history)
@@ -230,13 +226,13 @@ def main(
 
     # Log changes
     if new_concepts:
-        logger.info(f"Added {len(new_concepts)} new concepts:")
+        log.info(f"Added {len(new_concepts)} new concepts:")
         for new_concept in new_concepts:
-            logger.info(f"  {new_concept}")
+            log.info(f"  {new_concept}")
     if updated_ids:
-        logger.info(f"Updated IDs for {len(updated_ids)} concepts:")
+        log.info(f"Updated IDs for {len(updated_ids)} concepts:")
         for updated_id in updated_ids:
-            logger.info(f"  {updated_id}")
+            log.info(f"  {updated_id}")
 
     # Process type definitions if schema is provided and we have new or updated concepts
     if new_concepts or updated_ids:
@@ -244,14 +240,10 @@ def main(
 
     if output:
         save_spec_history(existing_history, output)
-        logger.info(f"Updated spec history saved to {output}")
+        log.info(f"Updated spec history saved to {output}")
     else:
         print(existing_history.model_dump(by_alias=True))
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise
+    main()
