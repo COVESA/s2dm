@@ -12,7 +12,7 @@ from graphql import (
 from rdflib import RDF, BNode, Graph, Literal, Namespace
 
 from s2dm import log
-from s2dm.tools.utils import (
+from s2dm.exporters.utils import (
     FieldCase,
     get_all_expanded_instance_tags,
     get_all_named_types,

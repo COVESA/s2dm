@@ -13,9 +13,9 @@ from graphql import (
 )
 
 from s2dm import log
+from s2dm.exporters.utils import get_all_named_types, load_schema
 from s2dm.idgen.idgen import fnv1_32_wrapper
 from s2dm.idgen.models import IDGenerationSpec
-from s2dm.tools.utils import get_all_named_types, load_schema
 
 
 def str_to_screaming_snake_case(text: str) -> str:

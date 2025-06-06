@@ -12,7 +12,7 @@ from s2dm.concept.services import (
     save_spec_history,
     update_spec_history_from_concept_uris,
 )
-from s2dm.tools.utils import build_schema_str
+from s2dm.exporters.utils import build_schema_str
 
 
 def extract_type_definition(content: str, type_name: str) -> str | None:

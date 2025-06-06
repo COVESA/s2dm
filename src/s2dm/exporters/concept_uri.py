@@ -6,7 +6,7 @@ import click
 
 from s2dm import log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
-from s2dm.tools.utils import get_all_named_types, load_schema
+from s2dm.exporters.utils import get_all_named_types, load_schema
 
 
 @click.command()

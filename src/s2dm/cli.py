@@ -5,8 +5,8 @@ import rich_click as click
 from rich.traceback import install
 
 from s2dm import __version__, log
-from s2dm.tools.to_shacl import translate_to_shacl
-from s2dm.tools.to_vspec import translate_to_vspec
+from s2dm.exporters.shacl import translate_to_shacl
+from s2dm.exporters.vspec import translate_to_vspec
 
 schema_option = click.option(
     "--schema", "-s", type=click.Path(exists=True), required=True, help="The GraphQL schema file"
