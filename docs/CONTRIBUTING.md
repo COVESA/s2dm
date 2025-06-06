@@ -1,7 +1,7 @@
 # Contributing to Simplified Semantic Data Modeling
-> **NOTE:** This document explains how to contribute to the data modeling approach itself.
-If you want to contribute to a certain data specification of a particular domain, then follow the [modeling guide](docs/MODELING_GUIDE.md) instead.
 
+This document explains how to contribute to the data modeling approach itself.
+If you want to contribute to a certain data specification of a particular domain, then follow the [modeling guide](docs/MODELING_GUIDE.md) instead.
 
 ## Development Environment
 
@@ -74,3 +74,4 @@ Use `ruff format` to format all files in the currenct directory
   # major,minor,patch
   bump-my-version bump minor
   ```
+
