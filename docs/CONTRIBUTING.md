@@ -68,10 +68,9 @@ Use `ruff format` to format all files in the currenct directory
 
 ### Versioning
 
-- This tool is using [semantic versioning](https://semver.org/spec/v2.0.0.html). [CHANGELOG.md](./CHANGELOG.md) should be updated on every source code change.
+- This tool is using [semantic versioning](https://semver.org/spec/v2.0.0.html). [CHANGELOG.md](../CHANGELOG.md) should be updated on every source code change.
 - A new version can be bumped with the support of [bump-my-version](https://github.com/callowayproject/bump-my-version), which is a `dev` dependency:
   ```bash
   # major,minor,patch
   bump-my-version bump minor
   ```
-

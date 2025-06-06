@@ -1,13 +1,9 @@
-import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, field_validator
-
-# Configure logger
-logger = logging.getLogger(__name__)
 
 NodeType = TypeVar("NodeType", bound="ConceptBaseModel")
 

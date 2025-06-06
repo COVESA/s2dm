@@ -245,8 +245,7 @@ class FieldCase(Enum):
     )
     LIST_NON_NULL = FieldCaseMetadata(
         description=(
-            "An array of elements. The array itself can be null but the elements cannot. "
-            "EXAMPLE -> field: [NamedType!]"
+            "An array of elements. The array itself can be null but the elements cannot. EXAMPLE -> field: [NamedType!]"
         ),
         value_cardinality=Cardinality(min=1, max=None),
         list_cardinality=Cardinality(min=0, max=1),

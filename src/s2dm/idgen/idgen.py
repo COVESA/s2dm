@@ -1,8 +1,4 @@
-import logging
-
-from idgen.models import IDGenerationSpec
-
-logger = logging.getLogger(__name__)
+from s2dm.idgen.models import IDGenerationSpec
 
 
 def fnv1_32_hash(identifier: bytes) -> int:
