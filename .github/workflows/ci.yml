@@ -1,92 +1,37 @@
-name: CI
+name: ci
 
 on:
-  push:
-    branches: ["**"] # Run on all branches
   pull_request:
-    branches: ["**"] # Run on all pull requests
+    branches:
+      - main
 
 jobs:
-  pre-commit:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
-      - name: Install uv
+      - name: uv
         uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
 
-      - name: Install pre-commit
+      - name: sync
         run: |
-          uv tool install pre-commit
+          uv sync
 
-      - name: Run pre-commit
+      - name: pre-commit
         run: |
-          uv tool run pre-commit run --all-files
+          uv run pre-commit run --all-files
 
-  test:
-    needs: pre-commit # Run tests only after pre-commit passes
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.12"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-          enable-cache: true
-
-      - name: Set up virtual environment
+      - name: mypy
         run: |
-          uv venv --python ${{ matrix.python-version }}
+          uv run mypy src
 
-      - name: Activate virtual environment (Unix)
-        if: runner.os != 'Windows'
+      - name: test
         run: |
-          echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
-          echo ".venv/bin" >> $GITHUB_PATH
-
-      - name: Activate virtual environment (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          echo "VIRTUAL_ENV=.venv" >> $env:GITHUB_ENV
-          echo ".venv\Scripts" >> $env:GITHUB_PATH
-
-      - name: Install dependencies
-        run: |
-          uv pip install -e .
-          uv pip install --group dev
-
-      - name: Run linting and type checking
-        run: |
-          uv run ruff check .
-
-      - name: Run tests with coverage
-        run: |
-          uv run pytest --cov=src/s2dm --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage reports
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
+          uv run nox

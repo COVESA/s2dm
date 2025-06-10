@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 
 from graphql import (
@@ -11,9 +10,8 @@ from graphql import (
     GraphQLType,
 )
 
-from tools.utils import get_directive_arguments, has_directive
-
-logger = logging.getLogger(__name__)
+from s2dm import log
+from s2dm.tools.utils import get_directive_arguments, has_directive
 
 
 class FieldTypeWrapper:
@@ -111,7 +109,7 @@ class IDGenerationSpec:
             f"max: {self.maximum if self.maximum is not None else ''}"
         ).encode()
 
-        logger.debug(f"{node_identifier=}")
+        log.debug(f"{node_identifier=}")
 
         if strict_mode:
             return node_identifier

@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import click
@@ -12,7 +11,8 @@ from graphql import (
 )
 from rdflib import RDF, BNode, Graph, Literal, Namespace
 
-from tools.utils import (
+from s2dm import log
+from s2dm.exporters.utils import (
     FieldCase,
     get_all_expanded_instance_tags,
     get_all_named_types,
@@ -30,7 +30,6 @@ SUPPORTED_FIELD_CASES = {
     FieldCase.SET,
     FieldCase.SET_NON_NULL,
 }
-logging.debug(f"export shacl supports these field cases:\n{SUPPORTED_FIELD_CASES}")
 
 # Namespaces and prefixes
 SH = Namespace("http://www.w3.org/ns/shacl#")
@@ -75,18 +74,18 @@ def translate_to_shacl(
 
     named_types = get_all_named_types(schema)
     object_types = get_all_object_types(named_types)
-    logging.debug(f"Object types: {object_types}")
+    log.debug(f"Object types: {object_types}")
     instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
-    logging.debug(f"Instance Tag Objects: {instance_tag_objects}")
+    log.debug(f"Instance Tag Objects: {instance_tag_objects}")
     INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
-    logging.debug(f"Expanded tags from spec: {INSTANCE_TAGS}")
+    log.debug(f"Expanded tags from spec: {INSTANCE_TAGS}")
 
     for object_type in object_types:
         if object_type.name == "Query":
-            logging.debug("Skipping Query object type.")
+            log.debug("Skipping Query object type.")
             continue
         if has_directive(object_type, "instanceTag"):
-            logging.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
+            log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
             continue
         process_object_type(object_type, graph, schema)
 
@@ -95,7 +94,7 @@ def translate_to_shacl(
 
 def process_object_type(object_type: GraphQLObjectType, graph: Graph, schema: GraphQLSchema):
     """Process a GraphQL object type and generate the corresponding SHACL triples."""
-    logging.info(f"Processing object type '{object_type.name}'.")
+    log.info(f"Processing object type '{object_type.name}'.")
     shape_node = SHAPES_NAMESPACE[object_type.name]
     graph.add((shape_node, RDF.type, SH.NodeShape))
     graph.add((shape_node, SH.name, Literal(object_type.name)))
@@ -161,21 +160,21 @@ def process_field(field_name: str, field: GraphQLField, shape_node, graph: Graph
 
     # Log the field definition as it appears in the GraphQL SDL
     # field_sdl = get_sdl_str(field)
-    logging.info(f"Processing field... '{print_field_sdl(field)}'")
-    logging.debug(f"Field case: {field_case}")
+    log.info(f"Processing field... '{print_field_sdl(field)}'")
+    log.debug(f"Field case: {field_case}")
 
     if field_case not in SUPPORTED_FIELD_CASES:
-        logging.warning(
+        log.warning(
             f"Field case '{field_case.name}' is currently not supported by this exporter.\n"
             f"Supported field cases are: {[case.name for case in SUPPORTED_FIELD_CASES]}"
         )
-        logging.info(f"Skipping field '{field_name}'")
+        log.info(f"Skipping field '{field_name}'")
         return
     else:
         if (
             field_name == "instanceTag"
         ):  # TODO: Consider handling the instanceTag field differently instead of skipping it
-            logging.debug(
+            log.debug(
                 f"Skipping field '{field_name}'. It is a reserved field and its likely already "
                 f"processed as expanded instances."
             )
@@ -185,7 +184,7 @@ def process_field(field_name: str, field: GraphQLField, shape_node, graph: Graph
             value_cardinality = field_case.value.value_cardinality
 
             unwrapped_field_type = get_named_type(field.type)  # GraphQL type without modifiers [] or !
-            logging.debug(f"Unwrapped field type: {unwrapped_field_type}")
+            log.debug(f"Unwrapped field type: {unwrapped_field_type}")
             if isinstance(unwrapped_field_type, GraphQLScalarType):
                 create_property_shape_with_literal(field_name, field, shape_node, graph, value_cardinality)
             elif is_list_type(field.type):
