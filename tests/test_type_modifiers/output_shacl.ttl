@@ -59,4 +59,3 @@ shapes:ExampleTypeWithInstances a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:path model:anotherField ] ;
     sh:targetClass model:ExampleTypeWithInstances .
-
