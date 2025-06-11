@@ -338,8 +338,12 @@ def main(
     schema: Path,
     output: Path,
 ):
-    result = translate_to_vspec(schema, output)
-    logging.info(f"Result:\n{result}")
+    logging.info(f"Translating schema '{schema}' to VSPEC and writing to '{output}'")
+    result = translate_to_vspec(schema)
+    with open(output, "w") as f:
+        f.write(result)
+    logging.info(f"VSPEC written to '{output}'")
+
 
 if __name__ == "__main__":
     main()
