@@ -1,5 +1,3 @@
-
-
 [project]
 name = "s2dm"
 dynamic = ["version"]
@@ -51,7 +49,9 @@ dev = [
     "bump-my-version>=0.28.1",
     "faker>=37.1.0",
     "hypothesis>=6.131.9",
+    "poethepoet>=0.35.0",
 ]
+
 [tool.mypy]
 files = ["src/s2dm"]
 show_error_codes = true
@@ -61,7 +61,6 @@ enable_error_code = ["redundant-expr", "truthy-bool"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov --cov-report=xml:coverage.xml"
-
 
 [tool.ruff]
 line-length = 120
@@ -74,3 +73,191 @@ current_version = "0.1.0"
 
 [[tool.bumpversion.files]]
 filename = "./src/s2dm/__init__.py"
+
+# Core Development Tasks
+[tool.poe.tasks.test]
+cmd = "uv run pytest"
+help = "Run the tests with pytest"
+
+[tool.poe.tasks.test-cov]
+cmd = "uv run pytest --cov=src/s2dm --cov-report=html --cov-report=term"
+help = "Run tests with coverage and generate HTML/terminal reports"
+
+[tool.poe.tasks.format]
+help = "Auto-format Python code with Ruff"
+sequence = [
+    { cmd = "uv run ruff format ." },
+    { cmd = "uv run ruff check . --fix" },
+]
+ignore_fail = "return_non_zero"
+
+[tool.poe.tasks.lint]
+help = "Lint code with Ruff, mypy"
+sequence = [
+    { cmd = "uv run mypy src" },
+    { cmd = "uv run ruff format --check ." },
+    { cmd = "uv run ruff check ." },
+    { cmd = "uv run mypy src" }
+]
+ignore_fail = "return_non_zero"
+
+[tool.poe.tasks.check]
+help = "Run all code quality checks (lint, type-check, test)"
+sequence = ["lint", "test"]
+
+# Environment Setup
+[tool.poe.tasks.install]
+help = "Install dependencies and setup pre-commit hooks"
+sequence = [
+    { shell = "uv sync" },
+    { cmd = "uv run pre-commit install" },
+    { shell = "mkdir -p _output" },
+]
+
+# S2DM Tools (with arguments and default values)
+[tool.poe.tasks.export-id]
+help = "Generate concept IDs from GraphQL schema"
+cmd = "uv run python src/tools/to_id.py ${schema} ${yaml_file} -o ${output}"
+
+    [tool.poe.tasks.export-id.args.schema]
+    help = "Path to the GraphQL schema file"
+    default = "examples/spec-history-registry/sample.graphql"
+
+    [tool.poe.tasks.export-id.args.yaml_file]
+    help = "Path to the units YAML file"
+    default = "examples/spec-history-registry/units.yaml"
+
+    [tool.poe.tasks.export-id.args.output]
+    help = "Path to the output JSON file"
+    default = "_output/concept_ids.json"
+
+[tool.poe.tasks.export-concept-uri]
+help = "Generate concept URIs from GraphQL schema"
+cmd = "uv run python src/tools/to_concept_uri.py ${schema} -o ${output} --namespace ${namespace} --prefix ns"
+
+    [tool.poe.tasks.export-concept-uri.args.schema]
+    help = "Path to the GraphQL schema file"
+    default = "examples/spec-history-registry/sample.graphql"
+
+    [tool.poe.tasks.export-concept-uri.args.output]
+    help = "Path to the output JSON-LD file"
+    default = "_output/concept_uri.json"
+
+    [tool.poe.tasks.export-concept-uri.args.namespace]
+    help = "The namespace for the URIs"
+    default = "https://example.org/vss#"
+
+[tool.poe.tasks.export-vspec]
+help = "Generate VSPEC from GraphQL schema using tools"
+cmd = "uv run python src/tools/to_vspec.py ${schema} ${output}"
+
+    [tool.poe.tasks.export-vspec.args.schema]
+    help = "Path to the GraphQL schema file"
+    default = "examples/spec-history-registry/sample.graphql"
+
+    [tool.poe.tasks.export-vspec.args.output]
+    help = "Path to the output VSPEC file"
+    default = "_output/tools_sample.vspec"
+
+[tool.poe.tasks.export-shacl]
+help = "Generate SHACL shapes from GraphQL schema using tools"
+cmd = "uv run python src/tools/to_shacl.py ${schema} ${output} ttl http://example.org/shapes# shapes http://example.org/ontology# model"
+
+    [tool.poe.tasks.export-shacl.args.schema]
+    help = "Path to the GraphQL schema file"
+    default = "examples/spec-history-registry/sample.graphql"
+
+    [tool.poe.tasks.export-shacl.args.output]
+    help = "Path to the output SHACL file"
+    default = "_output/tools_sample.ttl"
+
+
+[tool.poe.tasks.export-spec-history]
+help = "Generate specification history from concept URIs and IDs"
+cmd = "uv run python src/tools/to_spec_history.py --concept-uri ${concept_uri} --ids ${ids_file} --schema ${schema} --init --output ${output}"
+
+    [tool.poe.tasks.export-spec-history.args.concept_uri]
+    help = "Path to the concept URI JSON-LD file"
+    default = "_output/concept_uri.json"
+
+    [tool.poe.tasks.export-spec-history.args.ids_file]
+    help = "Path to the IDs JSON file"
+    default = "_output/concept_ids.json"
+
+    [tool.poe.tasks.export-spec-history.args.schema]
+    help = "Path to the GraphQL schema file"
+    default = "examples/spec-history-registry/sample.graphql"
+
+    [tool.poe.tasks.export-spec-history.args.output]
+    help = "Path to the output specification history file"
+    default = "_output/spec_history.json"
+
+# Tool Collections
+[tool.poe.tasks.export-all]
+help = "Run all available tools"
+sequence = [
+    { cmd = "mkdir -p _output" },
+    { ref = "export-id" },
+    { ref = "export-concept-uri" },
+    { ref = "export-vspec" },
+    { ref = "export-shacl" },
+    { ref = "export-spec-history" },
+]
+
+# Development Utilities
+[tool.poe.tasks.clean]
+help = "Clean generated files and caches"
+shell = """
+    rm -rf dist/ build/ *.egg-info/ .coverage htmlcov/ .pytest_cache/ .mypy_cache/ _output/ history/
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.pyc" -delete
+"""
+
+[tool.poe.tasks.purge]
+help = "Clean all generated files including virtual environment"
+shell = """
+    rm -rf dist/ build/ *.egg-info/ .coverage htmlcov/ .pytest_cache/ .mypy_cache/ _output/ history/
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.pyc" -delete
+    rm -rf .venv/
+"""
+
+# Build and Package
+[tool.poe.tasks.build]
+help = "Build the package wheel and sdist"
+sequence = [
+    { cmd = "mkdir -p _output" },
+    { cmd = "uv build" },
+]
+
+# Comprehensive Workflows
+[tool.poe.tasks.dev]
+help = "Complete development workflow: setup, format, check, test"
+sequence = [
+    { ref = "install" },
+    { ref = "format" },
+    { ref = "check" },
+    { ref = "test-cov" },
+]
+
+[tool.poe.tasks.ci]
+help = "Run CI pipeline: format check, lint, type-check, test with comprehensive coverage"
+sequence = [
+    { cmd = "uv run ruff format --check ." },
+    { cmd = "uv run ruff check ." },
+    { cmd = "uv run mypy src" },
+    { cmd = "uv run pytest --cov=src/s2dm --cov-report term-missing --cov-report lcov --cov-report xml --cov-fail-under=70" },
+]
+ignore_fail = "return_non_zero"
+
+[tool.poe.tasks.all]
+help = "Run complete workflow: setup, format, check, test, export and build"
+sequence = [
+    { ref = "install" },
+    { ref = "format" },
+    { ref = "test-cov" },
+    { ref = "ci" },
+    { ref = "export-all" },
+    { ref = "build" },
+]
+ignore_fail = "return_non_zero"
