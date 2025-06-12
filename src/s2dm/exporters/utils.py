@@ -15,12 +15,7 @@ from graphql import (
     is_list_type,
     is_non_null_type,
 )
-from graphql.type import (
-    GraphQLField,
-    GraphQLNamedType,
-    GraphQLObjectType,
-    GraphQLSchema,
-)
+from graphql.type import GraphQLField, GraphQLNamedType, GraphQLObjectType, GraphQLSchema, GraphQLWrappingType
 from graphql.utilities import print_schema
 
 
@@ -48,19 +43,19 @@ def build_schema_str(graphql_schema_path: Path) -> str:
 
     # Read custom directives from file
     custom_directives_file = os.path.join(os.path.dirname(__file__), "..", "spec", "custom_directives.graphql")
-    custom_directives_str = read_file(custom_directives_file)
+    custom_directives_str = read_file(Path(custom_directives_file))
 
     # Read common types from file
     common_types_file = os.path.join(os.path.dirname(__file__), "..", "spec", "common_types.graphql")
-    common_types_str = read_file(common_types_file)
+    common_types_str = read_file(Path(common_types_file))
 
     # Read custom scalar types from file
     custom_scalar_types_file = os.path.join(os.path.dirname(__file__), "..", "spec", "custom_scalars.graphql")
-    custom_scalar_types_str = read_file(custom_scalar_types_file)
+    custom_scalar_types_str = read_file(Path(custom_scalar_types_file))
 
     # Read unit enums from file
     unit_enums_file = os.path.join(os.path.dirname(__file__), "..", "spec", "unit_enums.graphql")
-    unit_enums_str = read_file(unit_enums_file)
+    unit_enums_str = read_file(Path(unit_enums_file))
 
     # Build schema with custom directives
     # TODO: Improve this part with schema merge function with a whole directory.
@@ -127,11 +122,7 @@ def get_all_named_types(schema: GraphQLSchema) -> list[GraphQLNamedType]:
     Returns:
         list[GraphQLNamedType]: A list of all named types in the schema.
     """
-    return [
-        type_
-        for type_ in schema.type_map.values()
-        if isinstance(type_, GraphQLNamedType) and not type_.name.startswith("__")
-    ]
+    return [type_ for type_ in schema.type_map.values() if not type_.name.startswith("__")]
 
 
 def get_all_object_types(
@@ -202,15 +193,15 @@ def get_directive_arguments(field: GraphQLField, directive_name: str) -> dict[st
     if field.ast_node and field.ast_node.directives:
         for directive in field.ast_node.directives:
             if directive.name.value == directive_name:
-                return {arg.name.value: arg.value.value for arg in directive.arguments}
-    logging.debug(f"Directive '{directive_name}' not found in field '{field.ast_node.name.value}'.")
+                return {arg.name.value: arg.value.value for arg in directive.arguments if hasattr(arg.value, "value")}
+    logging.debug(f"Directive '{directive_name}' not found in field '{field}'.")
     return {}
 
 
 @dataclass
 class Cardinality:
-    min: int
-    max: int
+    min: int | None
+    max: int | None
 
 
 @dataclass
@@ -276,13 +267,13 @@ def get_field_case(field: GraphQLField) -> FieldCase:
         without custom directives.
     """
     if is_non_null_type(field.type):
-        if is_list_type(field.type.of_type):
-            if is_non_null_type(field.type.of_type.of_type):
+        if is_list_type(field.type) and isinstance(field.type, GraphQLWrappingType):
+            if is_non_null_type(field.type.of_type) and isinstance(field.type.of_type, GraphQLWrappingType):
                 return FieldCase.NON_NULL_LIST_NON_NULL
             return FieldCase.NON_NULL_LIST
         return FieldCase.NON_NULL
     if is_list_type(field.type):
-        if is_non_null_type(field.type.of_type):
+        if isinstance(field.type, GraphQLWrappingType) and is_non_null_type(field.type.of_type):
             return FieldCase.LIST_NON_NULL
         return FieldCase.LIST
     return FieldCase.DEFAULT
@@ -308,9 +299,8 @@ def get_field_case_extended(field: GraphQLField) -> FieldCase:
             return FieldCase.SET_NON_NULL
         else:
             raise ValueError(
-                f"Wrong output type and/or modifiers specified for the field:\n"
-                f"{field.ast_node.name.value}: {field.type}\n"
-                f"Please, correct the GraphQL schema."
+                f"Wrong output type and/or modifiers specified for the field: {field}. "
+                "Please, correct the GraphQL schema."
             )
     else:
         return base_case
@@ -328,15 +318,17 @@ def has_directive(element: GraphQLObjectType | GraphQLField, directive_name: str
 def has_valid_cardinality(field: GraphQLField) -> bool:
     """Check possible missmatch between GraphQL not null and custom @cardinality directive."""
     # TODO: Add a check to avoid discrepancy between GraphQL not null and custom @cardinality directive.
-    pass
+    return False  # Placeholder for future implementation
 
 
 def print_field_sdl(field: GraphQLField) -> str:
     """Print the field definition as it appears in the GraphQL SDL."""
-    field_sdl = f"{field.ast_node.name.value}: {field.type}"
-    if field.ast_node and field.ast_node.directives:
-        directives = " ".join([f"@{directive.name.value}" for directive in field.ast_node.directives])
-        field_sdl += f" {directives}"
+    field_sdl = ""
+    if field.ast_node:
+        field_sdl = f"{field.ast_node.name.value}: {field.type}"
+        if field.ast_node.directives:
+            directives = " ".join([f"@{directive.name.value}" for directive in field.ast_node.directives])
+            field_sdl += f" {directives}"
     return field_sdl
 
 
@@ -390,7 +382,9 @@ def get_instance_tag_object(object_type: GraphQLObjectType, schema: GraphQLSchem
     """
     if has_valid_instance_tag_field(object_type, schema):
         field = object_type.fields["instanceTag"]
-        return schema.get_type(get_named_type(field.type).name)
+        instance_tag_type = schema.get_type(get_named_type(field.type).name)
+        if isinstance(instance_tag_type, GraphQLObjectType):
+            return instance_tag_type
     return None
 
 
