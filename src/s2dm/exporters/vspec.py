@@ -1,5 +1,7 @@
 import logging
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import click
 import yaml
@@ -142,12 +144,12 @@ SCALAR_DATATYPE_MAP = {
 class CustomDumper(yaml.Dumper):
     """Custom YAML dumper to add extra line breaks at the top level."""
 
-    def write_line_break(self, data=None):
+    def write_line_break(self, data: str | None = None) -> None:
         super().write_line_break(data)
         if len(self.indents) == 1:  # Only add extra line break at the top level
             super().write_line_break()
 
-    def represent_list(self, data):
+    def represent_list(self, data: Iterable[Any]) -> yaml.SequenceNode:
         # Check if the list is an inner list (nested list)
         if all(isinstance(item, str) for item in data):
             # Serialize inner lists in flow style
@@ -174,7 +176,7 @@ def translate_to_vspec(schema_path: Path) -> str:
     logging.debug(f"Instance Tag Objects: {instance_tag_objects}")
     global INSTANCE_TAGS
     INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
-    nested_types = []  # List to collect nested structures to reconstruct the path
+    nested_types: list[tuple[str, str]] = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
     for object_type in object_types:
         if object_type.name == "Query":
@@ -215,11 +217,11 @@ def translate_to_vspec(schema_path: Path) -> str:
     return yaml.dump(yaml_dict, default_flow_style=False, Dumper=CustomDumper, sort_keys=True)
 
 
-def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -> dict:
+def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -> dict[str, dict[str, Any]]:
     """Process a GraphQL object type and generate the corresponding YAML."""
     logging.info(f"Processing object type '{object_type.name}'.")
 
-    obj_dict = {
+    obj_dict: dict[str, Any] = {
         "type": "branch",
     }
     if object_type.description:
@@ -236,27 +238,48 @@ def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -
 
 
 def process_field(
-    field_name: str, field: GraphQLField, object_type: GraphQLObjectType, schema: GraphQLSchema, nested_types: list
-) -> dict:
+    field_name: str,
+    field: GraphQLField,
+    object_type: GraphQLObjectType,
+    schema: GraphQLSchema,
+    nested_types: list[tuple[str, str]],
+) -> dict[str, dict[str, Any]]:
     """Process a GraphQL field and generate the corresponding YAML."""
     logging.info(f"Processing field '{field_name}'.")
     concat_field_name = f"{object_type.name}.{field_name}"
 
     output_type = get_named_type(field.type)
     if isinstance(output_type, GraphQLScalarType):
-        field_dict = {
+        field_dict: dict[str, Any] = {
             "description": field.description if field.description else "",
             "datatype": SCALAR_DATATYPE_MAP[output_type.name],
         }
         # TODO: Fix numbers that are appearing with quotes as strings.
-        if has_directive(field, "range"):
-            range_directive = field.ast_node.directives[0]
-            min_arg = next((arg.value.value for arg in range_directive.arguments if arg.name.value == "min"), None)
-            max_arg = next((arg.value.value for arg in range_directive.arguments if arg.name.value == "max"), None)
-            if min_arg is not None:
-                field_dict["min"] = int(min_arg)
-            if max_arg is not None:
-                field_dict["max"] = int(max_arg)
+        if has_directive(field, "range") and field.ast_node and field.ast_node.directives:
+            range_directive = next(
+                (directive for directive in field.ast_node.directives if directive.name.value == "range"), None
+            )
+            if range_directive:
+                min_arg = next(
+                    (
+                        arg.value.value
+                        for arg in range_directive.arguments
+                        if arg.name.value == "min" and hasattr(arg.value, "value")
+                    ),
+                    None,
+                )
+                max_arg = next(
+                    (
+                        arg.value.value
+                        for arg in range_directive.arguments
+                        if arg.name.value == "max" and hasattr(arg.value, "value")
+                    ),
+                    None,
+                )
+                if min_arg is not None:
+                    field_dict["min"] = int(min_arg)
+                if max_arg is not None:
+                    field_dict["max"] = int(max_arg)
 
         # TODO: Map the unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
         if "unit" in field.args:
@@ -265,13 +288,17 @@ def process_field(
                 field_dict["unit"] = UNITS_DICT[unit_arg]
 
         if has_directive(field, "metadata"):
-            metadata_directive = next(
-                (directive for directive in field.ast_node.directives if directive.name.value == "metadata"), None
-            )
+            metadata_directive = None
+            if field.ast_node and field.ast_node.directives:
+                metadata_directive = next(
+                    (directive for directive in field.ast_node.directives if directive.name.value == "metadata"), None
+                )
 
             metadata_args = {}
-            for arg in metadata_directive.arguments:
-                metadata_args[arg.name.value] = arg.value.value
+            if metadata_directive and metadata_directive.arguments:
+                for arg in metadata_directive.arguments:
+                    if hasattr(arg.value, "value"):  # Ensure arg.value has the 'value' attribute
+                        metadata_args[arg.name.value] = arg.value.value
 
             comment = metadata_args.get("comment")
             vss_type = metadata_args.get("vssType")
@@ -286,23 +313,31 @@ def process_field(
         # nested_types.append(f"{object_type.name}.{output_type}({field_name})")
         nested_types.append((object_type.name, output_type.name))
         logging.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
-        return process_object_type(get_named_type(field.type), schema)  # Nested object type, process it recursively
+        named_type = get_named_type(field.type)
+        if isinstance(named_type, GraphQLObjectType):
+            return process_object_type(named_type, schema)  # Nested object type, process it recursively
+        else:
+            logging.debug(f"Skipping nested type '{named_type}' as it is not a GraphQLObjectType.")
+            return {}
     elif isinstance(output_type, GraphQLEnumType):
         field_dict = {
             "description": field.description if field.description else "",
             "datatype": "string",  # TODO: Consider that VSS allows any datatype for enums.
-            "allowed": [value.value for value in field.type.values.values()],
+            "allowed": [value.value for value in field.type.values.values()]
+            if isinstance(field.type, GraphQLEnumType)
+            else [],
             "type": "attribute",  # TODO: Get this from the @metadata directive.
         }
         return {concat_field_name: field_dict}
 
     else:
         logging.debug(f"Skipping in the output: field '{field_name}' with output type '{type(field.type).__name__}'.")
+        return {}
 
 
-def reconstruct_paths(nested_types):
+def reconstruct_paths(nested_types: list[tuple[str, str]]) -> list[str]:
     # Dictionary to store the graph structure
-    graph = {}
+    graph: dict[str, list[str]] = {}
     for parent, child in nested_types:
         if parent not in graph:
             graph[parent] = []
@@ -317,7 +352,7 @@ def reconstruct_paths(nested_types):
     unique_paths = set()
 
     # Recursive function to build paths
-    def build_paths(current, path):
+    def build_paths(current: str, path: list[str]) -> None:
         # Add the current path to the unique paths set
         unique_paths.add(".".join(path))
 
@@ -340,9 +375,12 @@ def reconstruct_paths(nested_types):
 def main(
     schema: Path,
     output: Path,
-):
-    result = translate_to_vspec(schema, output)
+) -> None:
+    result = translate_to_vspec(schema)
     logging.info(f"Result:\n{result}")
+    with open(output, "w", encoding="utf-8") as output_file:
+        logging.info(f"Writing data to '{output}'")
+        output_file.write(result)
 
 
 if __name__ == "__main__":
