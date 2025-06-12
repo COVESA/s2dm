@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import click
@@ -10,9 +9,11 @@ from graphql import (
     get_named_type,
     is_list_type,
 )
-from rdflib import RDF, BNode, Graph, Literal, Namespace
+from rdflib import RDF, BNode, Graph, Literal, Namespace, URIRef
 
-from tools.utils import (
+from s2dm import log
+from s2dm.exporters.utils import (
+    Cardinality,
     FieldCase,
     get_all_expanded_instance_tags,
     get_all_named_types,
@@ -30,7 +31,6 @@ SUPPORTED_FIELD_CASES = {
     FieldCase.SET,
     FieldCase.SET_NON_NULL,
 }
-logging.debug(f"export shacl supports these field cases:\n{SUPPORTED_FIELD_CASES}")
 
 # Namespaces and prefixes
 SH = Namespace("http://www.w3.org/ns/shacl#")
@@ -47,7 +47,7 @@ INSTANCE_TAGS = None
 GRAPHQL_SCALAR_TO_XSD = {"Int": "integer", "Float": "float", "String": "string", "Boolean": "boolean", "ID": "string"}
 
 
-def get_xsd_datatype(scalar: GraphQLScalarType) -> str:
+def get_xsd_datatype(scalar: GraphQLScalarType) -> URIRef:
     return XSD[GRAPHQL_SCALAR_TO_XSD[scalar.name]]
 
 
@@ -75,30 +75,32 @@ def translate_to_shacl(
 
     named_types = get_all_named_types(schema)
     object_types = get_all_object_types(named_types)
-    logging.debug(f"Object types: {object_types}")
+    log.debug(f"Object types: {object_types}")
     instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
-    logging.debug(f"Instance Tag Objects: {instance_tag_objects}")
+    log.debug(f"Instance Tag Objects: {instance_tag_objects}")
     INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
-    logging.debug(f"Expanded tags from spec: {INSTANCE_TAGS}")
+    log.debug(f"Expanded tags from spec: {INSTANCE_TAGS}")
 
     for object_type in object_types:
         if object_type.name == "Query":
-            logging.debug("Skipping Query object type.")
+            log.debug("Skipping Query object type.")
             continue
         if has_directive(object_type, "instanceTag"):
-            logging.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
+            log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
             continue
         process_object_type(object_type, graph, schema)
 
     return graph
 
 
-def process_object_type(object_type: GraphQLObjectType, graph: Graph, schema: GraphQLSchema):
+def process_object_type(object_type: GraphQLObjectType, graph: Graph, schema: GraphQLSchema) -> None:
     """Process a GraphQL object type and generate the corresponding SHACL triples."""
-    logging.info(f"Processing object type '{object_type.name}'.")
+    log.info(f"Processing object type '{object_type.name}'.")
+    assert SHAPES_NAMESPACE is not None, "SHAPES_NAMESPACE must be initialized before use."
     shape_node = SHAPES_NAMESPACE[object_type.name]
     graph.add((shape_node, RDF.type, SH.NodeShape))
     graph.add((shape_node, SH.name, Literal(object_type.name)))
+    assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
     graph.add((shape_node, SH.targetClass, MODEL_NAMESPACE[object_type.name]))
     if object_type.description:
         graph.add((shape_node, SH.description, Literal(object_type.description)))
@@ -120,62 +122,76 @@ def get_instance_tag_object(object: GraphQLObjectType) -> GraphQLObjectType | No
     return None
 
 
-def get_expanded_instances(object: GraphQLObjectType) -> list:
-    pass
-
-
 def create_property_shape_with_literal(
-    field_name, field: GraphQLField, shape_node, graph: Graph, value_cardinality=None
-):
+    field_name: str, field: GraphQLField, shape_node: URIRef, graph: Graph, value_cardinality: Cardinality | None = None
+) -> None:
+    assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
     property_path = MODEL_NAMESPACE[f"{field_name}"]
     property_node = BNode()
     graph.add((shape_node, SH.property, property_node))
     graph.add((property_node, SH.name, Literal(field_name)))
     graph.add((property_node, SH.path, property_path))
     graph.add((property_node, SH.nodeKind, SH.Literal))
-    graph.add((property_node, SH.datatype, get_xsd_datatype(get_named_type(field.type))))
-    if value_cardinality.min:
-        graph.add((property_node, SH.minCount, Literal(value_cardinality.min, datatype=XSD.integer)))
-    if value_cardinality.max:
-        graph.add((property_node, SH.maxCount, Literal(value_cardinality.max, datatype=XSD.integer)))
+    scalar_type = get_named_type(field.type)
+    if not isinstance(scalar_type, GraphQLScalarType):
+        raise TypeError(f"Expected GraphQLScalarType, got {type(scalar_type).__name__}")
+    graph.add((property_node, SH.datatype, get_xsd_datatype(scalar_type)))
+
+    if value_cardinality:
+        if value_cardinality.min:
+            graph.add((property_node, SH.minCount, Literal(value_cardinality.min, datatype=XSD.integer)))
+        if value_cardinality.max:
+            graph.add((property_node, SH.maxCount, Literal(value_cardinality.max, datatype=XSD.integer)))
 
 
-def create_property_shape_with_iri(property_name, output_type_name, shape_node, graph: Graph, value_cardinality=None):
+def create_property_shape_with_iri(
+    property_name: str,
+    output_type_name: str,
+    shape_node: URIRef,
+    graph: Graph,
+    value_cardinality: Cardinality | None = None,
+) -> None:
     property_node = BNode()
+    assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
     property_path = MODEL_NAMESPACE["has"]
     graph.add((shape_node, SH.property, property_node))
     graph.add((property_node, SH.name, Literal(property_name)))
     graph.add((property_node, SH.path, property_path))
     graph.add((property_node, SH.nodeKind, SH.IRI))
+    assert SHAPES_NAMESPACE is not None, "SHAPES_NAMESPACE must be initialized before use."
+    assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
     graph.add((property_node, SH.node, SHAPES_NAMESPACE[output_type_name]))
     graph.add((property_node, SH["class"], MODEL_NAMESPACE[output_type_name]))
-    if value_cardinality.min:
-        graph.add((property_node, SH.minCount, Literal(value_cardinality.min, datatype=XSD.integer)))
-    if value_cardinality.max:
-        graph.add((property_node, SH.maxCount, Literal(value_cardinality.max, datatype=XSD.integer)))
+    if value_cardinality:
+        if value_cardinality.min:
+            graph.add((property_node, SH.minCount, Literal(value_cardinality.min, datatype=XSD.integer)))
+        if value_cardinality.max:
+            graph.add((property_node, SH.maxCount, Literal(value_cardinality.max, datatype=XSD.integer)))
 
 
-def process_field(field_name: str, field: GraphQLField, shape_node, graph: Graph, schema: GraphQLSchema):
+def process_field(
+    field_name: str, field: GraphQLField, shape_node: URIRef, graph: Graph, schema: GraphQLSchema
+) -> None:
     """Process a field of a GraphQL object type and generate the corresponding SHACL triples."""
     field_case = get_field_case_extended(field)
 
     # Log the field definition as it appears in the GraphQL SDL
     # field_sdl = get_sdl_str(field)
-    logging.info(f"Processing field... '{print_field_sdl(field)}'")
-    logging.debug(f"Field case: {field_case}")
+    log.info(f"Processing field... '{print_field_sdl(field)}'")
+    log.debug(f"Field case: {field_case}")
 
     if field_case not in SUPPORTED_FIELD_CASES:
-        logging.warning(
+        log.warning(
             f"Field case '{field_case.name}' is currently not supported by this exporter.\n"
             f"Supported field cases are: {[case.name for case in SUPPORTED_FIELD_CASES]}"
         )
-        logging.info(f"Skipping field '{field_name}'")
+        log.info(f"Skipping field '{field_name}'")
         return
     else:
         if (
             field_name == "instanceTag"
         ):  # TODO: Consider handling the instanceTag field differently instead of skipping it
-            logging.debug(
+            log.debug(
                 f"Skipping field '{field_name}'. It is a reserved field and its likely already "
                 f"processed as expanded instances."
             )
@@ -185,27 +201,30 @@ def process_field(field_name: str, field: GraphQLField, shape_node, graph: Graph
             value_cardinality = field_case.value.value_cardinality
 
             unwrapped_field_type = get_named_type(field.type)  # GraphQL type without modifiers [] or !
-            logging.debug(f"Unwrapped field type: {unwrapped_field_type}")
+            log.debug(f"Unwrapped field type: {unwrapped_field_type}")
             if isinstance(unwrapped_field_type, GraphQLScalarType):
                 create_property_shape_with_literal(field_name, field, shape_node, graph, value_cardinality)
             elif is_list_type(field.type):
-                instance_tag_object = get_instance_tag_object(unwrapped_field_type)
-                if not instance_tag_object:
-                    create_property_shape_with_iri(
-                        unwrapped_field_type.name, unwrapped_field_type.name, shape_node, graph, value_cardinality
-                    )
-                    return
-                else:
-                    instance_tags = INSTANCE_TAGS[instance_tag_object]
-                    for tag in instance_tags:
+                if isinstance(unwrapped_field_type, GraphQLObjectType):
+                    instance_tag_object = get_instance_tag_object(unwrapped_field_type)
+                    if not instance_tag_object:
                         create_property_shape_with_iri(
-                            f"{unwrapped_field_type.name}.{tag}",
-                            unwrapped_field_type.name,
-                            shape_node,
-                            graph,
-                            value_cardinality,
+                            unwrapped_field_type.name, unwrapped_field_type.name, shape_node, graph, value_cardinality
                         )
-                    return
+                        return
+                    else:
+                        if INSTANCE_TAGS is None:
+                            raise ValueError("INSTANCE_TAGS is not initialized.")
+                        instance_tags = INSTANCE_TAGS[instance_tag_object]
+                        for tag in instance_tags:
+                            create_property_shape_with_iri(
+                                f"{unwrapped_field_type.name}.{tag}",
+                                unwrapped_field_type.name,
+                                shape_node,
+                                graph,
+                                value_cardinality,
+                            )
+                        return
             else:
                 create_property_shape_with_iri(
                     unwrapped_field_type.name, unwrapped_field_type.name, shape_node, graph, value_cardinality
@@ -228,7 +247,7 @@ def main(
     shapes_namespace_prefix: str,
     model_namespace: str,
     model_namespace_prefix: str,
-):
+) -> None:
     shacl_graph = translate_to_shacl(
         schema, shapes_namespace, shapes_namespace_prefix, model_namespace, model_namespace_prefix
     )

@@ -5,15 +5,15 @@ import pytest
 from faker import Faker
 from graphql import GraphQLNamedType
 from hypothesis import given
-
 from idgen.idgen import fnv1_32_wrapper
 from idgen.models import IDGenerationSpec
+from tools.to_id import iter_all_id_specs
+
 from tests.conftest import (
     EchoDict,
     MockFieldData,
     mock_named_types_strategy,
 )
-from tools.to_id import iter_all_id_specs
 
 
 @given(named_types_and_fields=mock_named_types_strategy())

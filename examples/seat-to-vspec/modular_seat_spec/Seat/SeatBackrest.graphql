@@ -13,7 +13,7 @@ type Backrest {
   """
   Lumbar down switch engaged.
   """
-  isLumbarDownSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.LumbarSupport)", vssType:"actuator")  
+  isLumbarDownSwitchEngaged: Boolean @metadata(comment:"Affects the property (SingleSeat.Backrest.LumbarSupport)", vssType:"actuator")
 
   """
   Lumbar up switch engaged.
@@ -53,9 +53,9 @@ type Backrest {
   """
   Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline.
   """
-  recline(unit: Angle_Unit_Enum = DEGREE): Float 
+  recline(unit: Angle_Unit_Enum = DEGREE): Float
     @metadata(
-      comment:"Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.", 
+      comment:"Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.",
       vssType: "actuator")
 
   """
