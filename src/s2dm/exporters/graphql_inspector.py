@@ -3,7 +3,6 @@ import logging
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from s2dm import log
 
 
 class GraphQLInspector:
@@ -12,15 +11,20 @@ class GraphQLInspector:
 
     def _run_command(self, command: str, *args, **kwargs) -> dict:
         """Execute command with comprehensive logging"""
-        cmd = ["graphql-inspector", command, self.schema_path] + list(args)
+        if command == "diff":
+            cmd = ["graphql-inspector", command, str(self.schema_path)] + [str(a) for a in args]
+        elif command == "valiate":
+            cmd = ["graphql-inspector", command] + [str(a) for a in args] + [str(self.schema_path)]
+        else:
+            raise ValueError(f"Unknown command: {command}")
 
-        log.debug(f"COMMAND: {' '.join(cmd)}")
+        logging.debug(f"COMMAND: {' '.join(cmd)}")
 
         start_time = datetime.now()
 
         try:
             # Log the attempt
-            log.debug("Starting subprocess...")
+            logging.debug("Starting subprocess...")
 
             process: subprocess.Popen = subprocess.Popen(
                 cmd,
@@ -32,7 +36,7 @@ class GraphQLInspector:
                 **kwargs,
             )
 
-            log.debug(f"Process started with PID: {process.pid}")
+            # logging.debug(f"Process started with PID: {process.pid}")
 
             # Capture output in real-time
             stdout_lines = []
@@ -47,14 +51,14 @@ class GraphQLInspector:
                 if stdout_line:
                     line = stdout_line.strip()
                     stdout_lines.append(line)
-                    log.debug(f"STDOUT: {line}")
+                    logging.debug(f"STDOUT: {line}")
 
                 # Read and log stderr
                 stderr_line = process.stderr.readline()
                 if stderr_line:
                     line = stderr_line.strip()
                     stderr_lines.append(line)
-                    log.debug(f"STDERR: {line}")
+                    logging.debug(f"STDERR: {line}")
 
             # Get any remaining output
             remaining_stdout, remaining_stderr = process.communicate()
@@ -63,13 +67,13 @@ class GraphQLInspector:
                 for line in remaining_stdout.strip().split("\n"):
                     if line:
                         stdout_lines.append(line)
-                        log.debug(f"STDOUT: {line}")
+                        logging.debug(f"STDOUT: {line}")
 
             if remaining_stderr:
                 for line in remaining_stderr.strip().split("\n"):
                     if line:
                         stderr_lines.append(line)
-                        log.debug(f"STDERR: {line}")
+                        logging.debug(f"STDERR: {line}")
 
             end_time = datetime.now()
             duration = (end_time - start_time).total_seconds()
@@ -84,10 +88,10 @@ class GraphQLInspector:
                 "end_time": end_time.isoformat(),
             }
 
-            log.debug(f"Process completed in {duration:.2f}s with return code: {process.returncode}")
+            logging.debug(f"Process completed in {duration:.2f}s with return code: {process.returncode}")
 
             # Log the full result
-            log.debug(f"FULL_RESULT: {json.dumps(result, indent=2)}")
+            logging.debug(f"FULL_RESULT: {json.dumps(result, indent=2)}")
 
             return result
 
@@ -95,31 +99,15 @@ class GraphQLInspector:
             end_time = datetime.now()
             duration = (end_time - start_time).total_seconds()
 
-            log.debug(f"Exception after {duration:.2f}s: {e}")
-            log.debug(f"Exception type: {type(e).__name__}")
+            logging.debug(f"Exception after {duration:.2f}s: {e}")
+            logging.debug(f"Exception type: {type(e).__name__}")
 
             raise
 
-    def validate(self) -> dict:
+    def validate(self, query: str) -> dict:
         """Validate schema with logging"""
-        log.info("Starting schema validation...")
-        result = self._run_command("validate")
-
-        if result["returncode"] == 0:
-            log.info("✅ Schema validation PASSED")
-        else:
-            log.error("❌ Schema validation FAILED")
-
-        return result
+        return self._run_command("validate", query)
 
     def diff(self, other_schema: Path) -> dict:
         """Compare schemas with logging"""
-        log.info(f"Comparing schemas: {self.schema_path} vs {other_schema}")
-        result = self._run_command("diff", other_schema)
-
-        if result["returncode"] == 0:
-            log.info("✅ Schema comparison completed")
-        else:
-            log.error("❌ Schema comparison failed")
-
-        return result
+        return self._run_command("diff", str(other_schema))

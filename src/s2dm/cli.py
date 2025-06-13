@@ -1,6 +1,4 @@
 import logging
-import os
-
 from pathlib import Path
 
 import rich_click as click
@@ -45,15 +43,15 @@ output_option = click.option(
 @click.version_option(__version__)
 @click.pass_context
 def cli(ctx, log_level: str, log_file: Path | None) -> None:
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
-    log.addHandler(console_handler)
-
-    if log_file:
-        file_handler = logging.FileHandler(log_file, mode="w")
-        file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
-        log.addHandler(file_handler)
-
+    # Only add handlers if there are none
+    if not log.handlers:
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
+        log.addHandler(console_handler)
+        if log_file:
+            file_handler = logging.FileHandler(log_file, mode="w")
+            file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
+            log.addHandler(file_handler)
     log.setLevel(log_level)
     logging.getLogger().setLevel(log_level)
     if log_level == "DEBUG":
@@ -159,10 +157,16 @@ def vspec(schema: Path, output: Path) -> None:
 @output_option
 @click.pass_context
 def validate(ctx, schema: Path, output: Path):
-    log_level = ctx.obj.get("log_level", "INFO")
-    inspector = GraphQLInspector(schema, log_level=log_level)
+    """ToDo"""
+    input_temp_path = create_tempfile_to_composed_schema(schema)
+    inspector = GraphQLInspector(input_temp_path, log_level=ctx.obj.get("log_level", "INFO"))
     validation_result = inspector.validate()
-    print(f"{validation_result=}")
+
+    console = Console()
+    if validation_result["returncode"] == 0:
+        console.print(validation_result["stdout"])
+    else:
+        console.print(validation_result["stderr"])
 
 
 @inspector.command
@@ -177,13 +181,21 @@ def validate(ctx, schema: Path, output: Path):
 )
 @click.pass_context
 def diff(ctx, schema: Path, val_schema: Path, output: Path):
-    inspector = GraphQLInspector(schema, log_level=ctx.obj["log_level"])
+    """ToDo"""
+    logging.info(f"Comparing schemas: {schema} and {val_schema}")
 
-    # ToDo(NW): do we want to validate before diff?
-    # validation_result = inspector.validate()
-    diff_result = inspector.diff(val_schema)
+    input_temp_path = create_tempfile_to_composed_schema(schema)
+    inspector = GraphQLInspector(input_temp_path, log_level=ctx.obj["log_level"])
 
-    print(f"{diff_result=}")
+    val_temp_path = create_tempfile_to_composed_schema(val_schema)
+    diff_result = inspector.diff(val_temp_path)
+
+    console = Console()
+    if diff_result["returncode"] == 0:
+        console.print(diff_result["stdout"])
+    else:
+        console.print(diff_result["stdout"])
+        console.print(diff_result["stderr"])
 
 
 cli.add_command(export)
