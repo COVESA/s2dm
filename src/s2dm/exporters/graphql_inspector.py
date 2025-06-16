@@ -10,6 +10,7 @@ class InspectorCommands(Enum):
     DIFF = "diff"
     VALIDATE = "validate"
     INTROSPECT = "introspect"
+    SIMILAR = "similar"
 
 
 class GraphQLInspector:
@@ -18,15 +19,12 @@ class GraphQLInspector:
 
     def _run_command(self, command: InspectorCommands, *args, **kwargs) -> dict[str, str]:
         """Execute command with comprehensive logging"""
-        if command == InspectorCommands.DIFF:
+        if command in [InspectorCommands.DIFF, InspectorCommands.INTROSPECT, InspectorCommands.SIMILAR]:
             cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
         elif command == InspectorCommands.VALIDATE:
             cmd = ["graphql-inspector", command.value] + [str(a) for a in args] + [str(self.schema_path)]
-        elif command == InspectorCommands.INTROSPECT:
-            cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
         else:
             raise ValueError(f"Unknown command: {command.value}")
-
         logging.debug(f"COMMAND: {' '.join(cmd)}")
 
         start_time = datetime.now()
@@ -126,3 +124,7 @@ class GraphQLInspector:
     def introspect(self):
         """Introspect schema."""
         return self._run_command(InspectorCommands.INTROSPECT)
+
+    def similar(self):
+        """Similar table"""
+        return self._run_command(InspectorCommands.SIMILAR)

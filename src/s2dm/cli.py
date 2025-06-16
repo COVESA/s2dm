@@ -83,7 +83,7 @@ def cli(ctx, log_level: str, log_file: Path | None) -> None:
 @click.group()
 @click.pass_context
 def check(ctx: click.Context) -> None:
-    """Check commands for multiple input types"""
+    """Check commands for multiple input types."""
     pass
 
 
@@ -98,6 +98,13 @@ def diff(ctx: click.Context) -> None:
 @click.pass_context
 def export(ctx: click.Context):
     """Export commands."""
+    pass
+
+
+@click.group()
+@click.pass_context
+def stats(ctx: click.Context):
+    """Stats commands."""
     pass
 
 
@@ -173,7 +180,7 @@ def shacl(
     _ = result.serialize(destination=output, format=serialization_format)
 
 
-# YAML
+# Export -> yaml
 # ----------
 @export.command
 @schema_option
@@ -184,6 +191,8 @@ def vspec(schema: Path, output: Path) -> None:
     _ = output.write_text(result)
 
 
+# Check -> version bump
+# ----------
 @check.command
 @schema_option
 @click.option(
@@ -221,6 +230,8 @@ def version_bump(ctx: click.Context, schema: Path, previous_schema: Path) -> Non
             logging.info("Detected breaking changes, major version bump needed. Please run diff to get more details")
 
 
+# Validate -> graphql
+# ----------
 @validate.command(name="graphql")
 @schema_option
 @output_option(required=False)
@@ -242,6 +253,8 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> N
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
+# Diff -> graphql
+# ----------
 @diff.command(name="graphql")
 @schema_option
 @output_option(required=False)
@@ -254,7 +267,7 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> N
 )
 @click.pass_context
 def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Path | None) -> None:
-    """ToDo"""
+    """Diff for two GraphQL schemas."""
     logging.info(f"Comparing schemas: {schema} and {val_schema}")
 
     input_temp_path = create_tempfile_to_composed_schema(schema)
@@ -275,9 +288,54 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
+# Stats -> graphQL
+# ----------
+@stats.command(name="graphql")
+@schema_option
+@click.pass_context
+def stats_graphql(ctx: click.Context, schema: Path) -> None:
+    """Get stats of schema."""
+    gql_schema = load_schema(schema)
+
+    # Count types by kind
+    type_map = gql_schema.type_map
+    type_counts = {
+        "object": 0,
+        "enum": 0,
+        "scalar": 0,
+        "interface": 0,
+        "union": 0,
+        "input_object": 0,
+        "custom_types": {},
+    }
+    for t in type_map.values():
+        name = getattr(t, "name", "")
+        if name.startswith("__"):
+            continue
+        kind = type(t).__name__
+        if kind == "GraphQLObjectType":
+            type_counts["object"] += 1
+        elif kind == "GraphQLEnumType":
+            type_counts["enum"] += 1
+        elif kind == "GraphQLScalarType":
+            type_counts["scalar"] += 1
+        elif kind == "GraphQLInterfaceType":
+            type_counts["interface"] += 1
+        elif kind == "GraphQLUnionType":
+            type_counts["union"] += 1
+        elif kind == "GraphQLInputObjectType":
+            type_counts["input_object"] += 1
+        # Detect custom types e.g. (not built-in scalars)
+        if kind == "GraphQLScalarType" and name not in ("Int", "Float", "String", "Boolean", "ID"):
+            type_counts["custom_types"][name] = type_counts["custom_types"].get(name, 0) + 1
+
+    logging.info(f"Type counts: {type_counts}")
+
+
 cli.add_command(check)
 cli.add_command(diff)
 cli.add_command(export)
+cli.add_command(stats)
 cli.add_command(validate)
 
 if __name__ == "__main__":
