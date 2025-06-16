@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -9,21 +10,38 @@ from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.exporters.graphql_inspector import GraphQLInspector
 
-schema_option = click.option(
-    "--schema",
-    "-s",
-    type=click.Path(exists=True),
-    required=True,
-    help="The GraphQL schema file",
-)
 
-output_option = click.option(
-    "--output",
-    "-o",
-    type=click.Path(dir_okay=False, writable=True, path_type=Path),
-    required=True,
-    help="Output file",
-)
+# Define the common options
+def schema_option(f):
+    return click.option("--schema", "-s", type=click.Path(exists=True), required=True, help="The GraphQL schema file")(
+        f
+    )
+
+
+def output_option(f=None, *, required=True):
+    def decorator(func):
+        return click.option(
+            "--output",
+            "-o",
+            type=click.Path(dir_okay=False, writable=True, path_type=Path),
+            required=required,
+            help="Output file",
+        )(func)
+
+    if f is None:
+        return decorator
+    return decorator(f)
+
+
+# Pretty print JSON with sorted keys and indentation, preserving newlines in string values
+# Convert dict values with newlines to lists of lines for better readability
+def pretty_print_dict_json(result: dict):
+    def multiline_str_representer(obj):
+        if isinstance(obj, str) and "\n" in obj:
+            return obj.splitlines()
+        return obj
+
+    return {k: multiline_str_representer(v) for k, v in result.items()}
 
 
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
@@ -71,8 +89,15 @@ def export(ctx):
 
 @click.group()
 @click.pass_context
-def inspector(ctx):
-    """ "GraphQL inspector commands."""
+def diff(ctx) -> None:
+    """Diff commands for multiple input types."""
+    pass
+
+
+@click.group()
+@click.pass_context
+def validate(ctx) -> None:
+    """Diff commands for multiple input types."""
     pass
 
 
@@ -152,15 +177,15 @@ def vspec(schema: Path, output: Path) -> None:
     _ = output.write_text(result)
 
 
-@inspector.command
+@validate.command(name="graphql")
 @schema_option
-@output_option
+@output_option(required=False)
 @click.pass_context
-def validate(ctx, schema: Path, output: Path):
+def validate_graphql(ctx: click.Context, schema: Path, query: Path, output: Path | None) -> None:
     """ToDo"""
-    input_temp_path = create_tempfile_to_composed_schema(schema)
-    inspector = GraphQLInspector(input_temp_path, log_level=ctx.obj.get("log_level", "INFO"))
-    validation_result = inspector.validate()
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
+    inspector = GraphQLInspector(schema_temp_path)
+    validation_result = inspector.validate(str(schema_temp_path))
 
     console = Console()
     if validation_result["returncode"] == 0:
@@ -168,10 +193,14 @@ def validate(ctx, schema: Path, output: Path):
     else:
         console.print(validation_result["stderr"])
 
+    if output:
+        processed = pretty_print_dict_json(validation_result)
+        output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
-@inspector.command
+
+@diff.command(name="graphql")
 @schema_option
-@output_option
+@output_option(required=False)
 @click.option(
     "--val-schema",
     "-v",
@@ -180,12 +209,12 @@ def validate(ctx, schema: Path, output: Path):
     help="The GraphQL schema file to validate against",
 )
 @click.pass_context
-def diff(ctx, schema: Path, val_schema: Path, output: Path):
+def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Path | None) -> None:
     """ToDo"""
     logging.info(f"Comparing schemas: {schema} and {val_schema}")
 
     input_temp_path = create_tempfile_to_composed_schema(schema)
-    inspector = GraphQLInspector(input_temp_path, log_level=ctx.obj["log_level"])
+    inspector = GraphQLInspector(input_temp_path)
 
     val_temp_path = create_tempfile_to_composed_schema(val_schema)
     diff_result = inspector.diff(val_temp_path)
@@ -197,9 +226,14 @@ def diff(ctx, schema: Path, val_schema: Path, output: Path):
         console.print(diff_result["stdout"])
         console.print(diff_result["stderr"])
 
+    if output:
+        processed = pretty_print_dict_json(diff_result)
+        output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
+
 
 cli.add_command(export)
-cli.add_command(inspector)
+cli.add_command(diff)
+cli.add_command(validate)
 
 if __name__ == "__main__":
     cli()

@@ -1,22 +1,31 @@
 import json
 import logging
 import subprocess
+from enum import Enum
 from datetime import datetime
 from pathlib import Path
 
 
+class InspectorCommands(Enum):
+    DIFF = "diff"
+    VALIDATE = "validate"
+    INTROSPECT = "introspect"
+
+
 class GraphQLInspector:
-    def __init__(self, schema_path: Path, log_level=logging.INFO):
+    def __init__(self, schema_path: Path) -> None:
         self.schema_path = schema_path
 
-    def _run_command(self, command: str, *args, **kwargs) -> dict:
+    def _run_command(self, command: InspectorCommands, *args, **kwargs) -> dict[str, str]:
         """Execute command with comprehensive logging"""
-        if command == "diff":
-            cmd = ["graphql-inspector", command, str(self.schema_path)] + [str(a) for a in args]
-        elif command == "valiate":
-            cmd = ["graphql-inspector", command] + [str(a) for a in args] + [str(self.schema_path)]
+        if command == InspectorCommands.DIFF.value:
+            cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
+        elif command == InspectorCommands.VALIDATE.value:
+            cmd = ["graphql-inspector", command.value] + [str(a) for a in args] + [str(self.schema_path)]
+        elif command == InspectorCommands.INTROSPECT:
+            cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
         else:
-            raise ValueError(f"Unknown command: {command}")
+            raise ValueError(f"Unknown command: {command.value}")
 
         logging.debug(f"COMMAND: {' '.join(cmd)}")
 
@@ -47,16 +56,16 @@ class GraphQLInspector:
                     break
 
                 # Read and log stdout
-                stdout_line = process.stdout.readline()
-                if stdout_line:
-                    line = stdout_line.strip()
+                stdout = process.stdout.read()
+                if stdout:
+                    line = stdout.strip()
                     stdout_lines.append(line)
                     logging.debug(f"STDOUT: {line}")
 
                 # Read and log stderr
-                stderr_line = process.stderr.readline()
-                if stderr_line:
-                    line = stderr_line.strip()
+                stderr = process.stderr.read()
+                if stderr:
+                    line = stdout.strip()
                     stderr_lines.append(line)
                     logging.debug(f"STDERR: {line}")
 
@@ -106,8 +115,12 @@ class GraphQLInspector:
 
     def validate(self, query: str) -> dict:
         """Validate schema with logging"""
-        return self._run_command("validate", query)
+        return self._run_command(InspectorCommands.VALIDATE, query)
 
     def diff(self, other_schema: Path) -> dict:
         """Compare schemas with logging"""
-        return self._run_command("diff", str(other_schema))
+        return self._run_command(InspectorCommands.DIFF, str(other_schema))
+
+    def introspect(self):
+        """Introspect schema"""
+        return self._run_command(InspectorCommands.INTROSPECT)
