@@ -82,21 +82,28 @@ def cli(ctx, log_level: str, log_file: Path | None) -> None:
 
 @click.group()
 @click.pass_context
-def export(ctx):
-    """Export commands."""
+def check(ctx: click.Context) -> None:
+    """Check commands for multiple input types"""
     pass
 
 
 @click.group()
 @click.pass_context
-def diff(ctx) -> None:
+def diff(ctx: click.Context) -> None:
     """Diff commands for multiple input types."""
     pass
 
 
 @click.group()
 @click.pass_context
-def validate(ctx) -> None:
+def export(ctx: click.Context):
+    """Export commands."""
+    pass
+
+
+@click.group()
+@click.pass_context
+def validate(ctx: click.Context) -> None:
     """Diff commands for multiple input types."""
     pass
 
@@ -177,15 +184,52 @@ def vspec(schema: Path, output: Path) -> None:
     _ = output.write_text(result)
 
 
+@check.command
+@schema_option
+@click.option(
+    "--previous-schema",
+    "-ps",
+    type=click.Path(exists=True),
+    required=True,
+    help="The GraphQL schema file to validate against",
+)
+@click.pass_context
+def version_bump(ctx: click.Context, schema: Path, previous_schema: Path) -> None:
+    """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
+
+    No changes: No bump needed
+    Changes but no breaking changes: Patch or minor version bump needed
+    Breaking changes: Major version bump needed
+    """
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
+    inspector = GraphQLInspector(schema_temp_path)
+
+    previous_schema_temp_path = create_tempfile_to_composed_schema(previous_schema)
+    diff_result = inspector.diff(previous_schema_temp_path)
+
+    if diff_result["returncode"] == 0:
+        logging.debug(f"diff_result in check = {diff_result}")
+        if "No changes detected" in diff_result["stdout"]:
+            logging.info("No version bump needed")
+        elif "No breaking changes detected" in diff_result["stdout"]:
+            logging.info("Minor or patch version bump needed!")
+        else:
+            logging.error("Unknown state, please check your input with 'diff' tool.")
+    else:
+        logging.debug(f"diff_result in check = {diff_result}")
+        if "Detected" in diff_result["stdout"] and "breaking changes" in diff_result["stdout"]:
+            logging.info("Detected breaking changes, major version bump needed. Please run diff to get more details")
+
+
 @validate.command(name="graphql")
 @schema_option
 @output_option(required=False)
 @click.pass_context
-def validate_graphql(ctx: click.Context, schema: Path, query: Path, output: Path | None) -> None:
+def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> None:
     """ToDo"""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
-    validation_result = inspector.validate(str(schema_temp_path))
+    validation_result = inspector.introspect()
 
     console = Console()
     if validation_result["returncode"] == 0:
@@ -231,8 +275,9 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
-cli.add_command(export)
+cli.add_command(check)
 cli.add_command(diff)
+cli.add_command(export)
 cli.add_command(validate)
 
 if __name__ == "__main__":
