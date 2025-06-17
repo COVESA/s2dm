@@ -5,7 +5,8 @@ from typing import Any
 
 from graphql import GraphQLEnumType, GraphQLList, GraphQLNamedType, GraphQLObjectType
 
-from concept.models import (
+from s2dm import log
+from s2dm.concept.models import (
     Concepts,
     ConceptUriModel,
     ConceptUriNode,
@@ -13,15 +14,36 @@ from concept.models import (
     SpecHistoryNode,
 )
 
-logger = logging.getLogger(__name__)
 
+def load_json_file(file_path: Path) -> dict[str, Any]:
+    """Load a JSON file and return its contents.
 
-def load_json_file(file_path: Path) -> dict:
+    Args:
+        file_path: Path to the JSON file to load
+
+    Returns:
+        Dictionary containing the JSON file contents
+
+    Raises:
+        ValueError: If the loaded content is not a dictionary
+    """
     with open(file_path) as f:
-        return json.load(f)
+        data = json.load(f)
+
+    # Ensure the loaded data is a dictionary
+    if not isinstance(data, dict):
+        raise ValueError(f"Expected JSON object in {file_path}, got {type(data).__name__}")
+
+    return data
 
 
 def save_spec_history(spec_history: SpecHistoryModel, file_path: Path) -> None:
+    """Save a spec history model to a JSON-LD file.
+
+    Args:
+        spec_history: The spec history model to save
+        file_path: Path where to save the file
+    """
     with open(file_path, "w") as f:
         # Use by_alias=True to ensure proper JSON-LD attribute names (@id, @type, etc.)
         json.dump(spec_history.to_json_ld(), f, indent=2)
@@ -89,7 +111,7 @@ def convert_concept_uri_to_spec_history(
             if concept_name in concept_ids:
                 spec_node.initialize_history(concept_ids[concept_name])
             else:
-                logger.warning(f"No ID found for concept: {concept_name}")
+                log.warning(f"No ID found for concept: {concept_name}")
 
         spec_nodes.append(spec_node)
 
@@ -105,6 +127,7 @@ def update_spec_history_from_concept_uris(
     """Update this spec history from concept URIs and IDs.
 
     Args:
+        spec_history: The spec history to update
         concept_uris: The concept URIs model
         concept_ids: The concept IDs
 
@@ -237,7 +260,15 @@ def generate_concept_uri(
     return f"{prefix}:{name}"
 
 
-def iter_all_concepts(named_types: list[GraphQLNamedType]):
+def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
+    """Extract all concepts from GraphQL named types.
+
+    Args:
+        named_types: List of GraphQL named types to process
+
+    Returns:
+        Concepts object containing all extracted concepts
+    """
     concepts = Concepts()
     for named_type in named_types:
         if named_type.name in ("Query", "Mutation"):
@@ -264,7 +295,9 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]):
                     internal_type = field.type
                     while hasattr(internal_type, "of_type"):
                         internal_type = internal_type.of_type
-                    concepts.nested_objects[field_fqn] = internal_type.name
+                    # Get the name from the internal type if it has one
+                    if hasattr(internal_type, "name"):
+                        concepts.nested_objects[field_fqn] = internal_type.name
                 else:
                     # field uses a scalar type or enum type
                     concepts.objects[named_type.name].append(field_fqn)

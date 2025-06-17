@@ -1,19 +1,31 @@
-import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Protocol, TypeVar
 
 from pydantic import BaseModel, field_validator
 
-# Configure logger
-logger = logging.getLogger(__name__)
 
-NodeType = TypeVar("NodeType", bound="ConceptBaseModel")
+class HasId(Protocol):
+    """Protocol for objects that have an id attribute."""
+
+    id: str
+
+
+NodeType = TypeVar("NodeType", bound=HasId)
 
 
 @dataclass
 class Concepts:
+    """Data class containing all the concepts extracted from a GraphQL schema.
+
+    Args:
+        fields: List of field names
+        enums: List of enum names
+        objects: Dictionary mapping object names to their field lists
+        nested_objects: Dictionary mapping field names to object type names
+    """
+
     fields: list[str] = field(default_factory=list)
     enums: list[str] = field(default_factory=list)
     objects: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
@@ -32,7 +44,7 @@ class JsonLDSerializable(BaseModel):
         ),
     }
 
-    def to_json_ld(self) -> dict[str, str]:
+    def to_json_ld(self) -> dict[str, Any]:
         """Serialize model to JSON-LD format with consistent options.
 
         This is the preferred method to use when serializing any model
@@ -63,25 +75,48 @@ class JsonLDSerializable(BaseModel):
 
 # Concept models
 class ConceptBaseModel(JsonLDSerializable, Generic[NodeType]):
-    """A base model for concepts."""
+    """A base model for concepts.
+
+    Args:
+        context: JSON-LD context dictionary
+        graph: List of nodes in the graph
+    """
 
     context: dict[str, Any]
     graph: list[NodeType]
 
     def get_node_by_id(self, node_id: str) -> NodeType | None:
-        """Get a node by its ID."""
+        """Get a node by its ID.
+
+        Args:
+            node_id: The ID of the node to find
+
+        Returns:
+            The node with the given ID, or None if not found
+        """
         for node in self.graph:
             if node.id == node_id:
                 return node
         return None
 
     def get_concept_map(self) -> dict[str, NodeType]:
-        """Create a map of node IDs to nodes."""
+        """Create a map of node IDs to nodes.
+
+        Returns:
+            Dictionary mapping node IDs to node objects
+        """
         return {node.id: node for node in self.graph}
 
 
 class ConceptUriNode(JsonLDSerializable):
-    """A node in the concept URI graph."""
+    """A node in the concept URI graph.
+
+    Args:
+        id: The unique identifier for this node
+        type: The type of the node (Object, Field, Enum, etc.)
+        hasField: List of field IDs for object nodes
+        hasNestedObject: ID of nested object for field nodes
+    """
 
     id: str
     type: str
@@ -89,25 +124,42 @@ class ConceptUriNode(JsonLDSerializable):
     hasNestedObject: str | None = None
 
     def get_concept_name(self) -> str:
-        """Extract the concept name from the URI."""
+        """Extract the concept name from the URI.
+
+        Returns:
+            The concept name (last part after the colon)
+        """
         return self.id.split(":")[-1]
 
     def is_field(self) -> bool:
-        """Check if this node is a Field type."""
+        """Check if this node is a Field type.
+
+        Returns:
+            True if the node type is "Field"
+        """
         return self.type == "Field"
 
     def should_have_history(self) -> bool:
-        """Check if this node should have history (Field or Enum)."""
+        """Check if this node should have history (Field or Enum).
+
+        Returns:
+            True if the node type is "Field" or "Enum"
+        """
         return self.type in ("Field", "Enum")
 
 
 class ConceptUriModel(ConceptBaseModel[ConceptUriNode]):
-    """The core concept URI model."""
+    """The core concept URI model containing concept URI nodes."""
 
 
 # Spec History models
 class SpecHistoryEntry(JsonLDSerializable):
-    """A single entry in the spec history."""
+    """A single entry in the spec history.
+
+    Args:
+        id: The ID value for this history entry
+        timestamp: ISO format timestamp when this entry was created
+    """
 
     id: str
     timestamp: str
@@ -115,7 +167,17 @@ class SpecHistoryEntry(JsonLDSerializable):
     @field_validator("timestamp")
     @classmethod
     def validate_timestamp(cls, v: str) -> str:
-        """Validate that the timestamp is in ISO format."""
+        """Validate that the timestamp is in ISO format.
+
+        Args:
+            v: The timestamp string to validate
+
+        Returns:
+            The validated timestamp string
+
+        Raises:
+            ValueError: If timestamp is not in ISO format
+        """
         try:
             datetime.fromisoformat(v)
         except ValueError as err:
@@ -124,22 +186,40 @@ class SpecHistoryEntry(JsonLDSerializable):
 
     @classmethod
     def create(cls, id_value: str) -> "SpecHistoryEntry":
-        """Create a new spec history entry with the current timestamp."""
+        """Create a new spec history entry with the current timestamp.
+
+        Args:
+            id_value: The ID value for this entry
+
+        Returns:
+            A new SpecHistoryEntry with current timestamp
+        """
         return cls(id=id_value, timestamp=datetime.now().isoformat())
 
 
 class SpecHistoryNode(ConceptUriNode):
-    """A node in the spec history graph with history information."""
+    """A node in the spec history graph with history information.
+
+    Args:
+        specHistory: List of history entries for this node
+    """
 
     specHistory: list[SpecHistoryEntry] | None = None
 
     def initialize_history(self, id_value: str) -> None:
-        """Initialize the spec history with the given ID."""
+        """Initialize the spec history with the given ID.
+
+        Args:
+            id_value: The initial ID value for the history
+        """
         if self.should_have_history():
             self.specHistory = [SpecHistoryEntry.create(id_value)]
 
     def add_history_entry(self, id_value: str) -> bool:
         """Add a new entry to the spec history if it's different from the latest one.
+
+        Args:
+            id_value: The new ID value to add
 
         Returns:
             bool: True if a new entry was added, False otherwise.
