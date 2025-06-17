@@ -5,10 +5,10 @@ import pytest
 from faker import Faker
 from graphql import GraphQLNamedType
 from hypothesis import given
-from idgen.idgen import fnv1_32_wrapper
-from idgen.models import IDGenerationSpec
-from tools.to_id import iter_all_id_specs
 
+from s2dm.exporters.id import iter_all_id_specs
+from s2dm.idgen.idgen import fnv1_32_wrapper
+from s2dm.idgen.models import IDGenerationSpec
 from tests.conftest import (
     EchoDict,
     MockFieldData,
