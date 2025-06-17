@@ -203,8 +203,12 @@ def main(
         # Initialize a new spec history
         log.info(f"Initializing new spec history from {concept_uri} and {ids}")
         result = convert_concept_uri_to_spec_history(concept_uri_model, concept_ids)
-        save_spec_history(result, output)
-        log.info(f"Spec history initialized and saved to {output}")
+
+        if output:
+            save_spec_history(result, output)
+            log.info(f"Spec history initialized and saved to {output}")
+        else:
+            print(result.model_dump(by_alias=True))
 
         # Save type definitions for all concepts if schema is provided
         process_type_definitions(list(concept_ids.keys()), [], concept_ids, schema, history_dir)

@@ -9,7 +9,11 @@ from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.vspec import translate_to_vspec
 
 schema_option = click.option(
-    "--schema", "-s", type=click.Path(exists=True), required=True, help="The GraphQL schema file"
+    "--schema",
+    "-s",
+    type=click.Path(exists=True),
+    required=True,
+    help="The GraphQL schema file",
 )
 
 output_option = click.option(
@@ -30,7 +34,11 @@ output_option = click.option(
     help="Log level",
     show_default=True,
 )
-@click.option("--log-file", type=click.Path(dir_okay=False, writable=True, path_type=Path), help="Log file")
+@click.option(
+    "--log-file",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Log file",
+)
 @click.version_option(__version__)
 def cli(log_level: str, log_file: Path | None) -> None:
     console_handler = logging.StreamHandler()
@@ -49,7 +57,7 @@ def cli(log_level: str, log_file: Path | None) -> None:
 
 
 @click.group()
-def export():
+def export() -> None:
     """Export commands."""
     pass
 
@@ -108,7 +116,11 @@ def shacl(
 ) -> None:
     """Generate SHACL shapes from a given GraphQL schema."""
     result = translate_to_shacl(
-        schema, shapes_namespace, shapes_namespace_prefix, model_namespace, model_namespace_prefix
+        schema,
+        shapes_namespace,
+        shapes_namespace_prefix,
+        model_namespace,
+        model_namespace_prefix,
     )
     _ = result.serialize(destination=output, format=serialization_format)
 

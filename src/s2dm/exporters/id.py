@@ -65,8 +65,8 @@ def iter_all_id_specs(
                     unit_lookup=unit_lookup,
                 )
 
-                # Only yield realization fields
-                if id_spec.is_realization():
+                # Only yield leaf fields
+                if id_spec.is_leaf_field():
                     yield id_spec
 
 
@@ -80,7 +80,22 @@ def iter_all_id_specs(
 )
 @click.option("--strict-mode/--no-strict-mode", default=False)
 @click.option("--dry-run/--no-dry-run", default=False)
-def main(schema: Path, units_file: Path, output: Path, strict_mode: bool, dry_run: bool):
+def main(
+    schema: Path,
+    units_file: Path,
+    output: Path | None,
+    strict_mode: bool,
+    dry_run: bool,
+) -> None:
+    """Generate IDs for GraphQL schema fields and enums.
+
+    Args:
+        schema: Path to the GraphQL schema file
+        units_file: Path to the units YAML file
+        output: Optional output file path
+        strict_mode: Whether to use strict mode for ID generation
+        dry_run: Whether to perform a dry run without writing files
+    """
     log.info(f"Using units file '{units_file}', input is '{schema}', and output is '{output}'")
 
     # Pass the schema content to build_schema
@@ -105,7 +120,7 @@ def main(schema: Path, units_file: Path, output: Path, strict_mode: bool, dry_ru
         log.debug(f"Type path: {id_spec.name} -> {id_spec.data_type} -> {generated_id}")
 
     # Write the schema to the output file
-    if not dry_run and output:
+    if not dry_run and output is not None:
         with open(output, "w", encoding="utf-8") as output_file:
             log.info(f"Writing data to '{output}'")
             json.dump(node_ids, output_file, indent=2)
