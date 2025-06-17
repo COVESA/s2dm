@@ -1,6 +1,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import rich_click as click
 from rich.console import Console
@@ -12,35 +13,47 @@ from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.utils import create_tempfile_to_composed_schema, load_schema
 from s2dm.exporters.vspec import translate_to_vspec
 
-
-# Define the common options
-def schema_option(f):
-    return click.option("--schema", "-s", type=click.Path(exists=True), required=True, help="The GraphQL schema file")(
-        f
-    )
-
-
-def output_option(f=None, *, required=True):
-    def decorator(func):
-        return click.option(
-            "--output",
-            "-o",
-            type=click.Path(dir_okay=False, writable=True, path_type=Path),
-            required=required,
-            help="Output file",
-        )(func)
-
-    if f is None:
-        return decorator
-    return decorator(f)
+schema_option = click.option(
+    "--schema",
+    "-s",
+    type=click.Path(exists=True),
+    required=True,
+    help="The GraphQL schema file",
+)
 
 
-# Pretty print JSON with sorted keys and indentation, preserving newlines in string values
-# Convert dict values with newlines to lists of lines for better readability
-def pretty_print_dict_json(result: dict):
-    def multiline_str_representer(obj):
+output_option = click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output file",
+)
+
+optional_output_option = click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    required=False,
+    help="Output file",
+)
+
+
+def pretty_print_dict_json(result: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively pretty-print a dict for JSON output:
+    - Converts string values with newlines to lists of lines.
+    - Processes nested dicts and lists.
+    Returns a new dict suitable for pretty JSON output.
+    """
+
+    def multiline_str_representer(obj: Any) -> Any:
         if isinstance(obj, str) and "\n" in obj:
             return obj.splitlines()
+        elif isinstance(obj, dict):
+            return {k: multiline_str_representer(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [multiline_str_representer(i) for i in obj]
         return obj
 
     return {k: multiline_str_representer(v) for k, v in result.items()}
@@ -61,58 +74,46 @@ def pretty_print_dict_json(result: dict):
     help="Log file",
 )
 @click.version_option(__version__)
-@click.pass_context
-def cli(ctx, log_level: str, log_file: Path | None) -> None:
-    # Only add handlers if there are none
-    if not log.handlers:
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
-        log.addHandler(console_handler)
-        if log_file:
-            file_handler = logging.FileHandler(log_file, mode="w")
-            file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
-            log.addHandler(file_handler)
+def cli(log_level: str, log_file: Path | None) -> None:
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
+    log.addHandler(console_handler)
+    if log_file:
+        file_handler = logging.FileHandler(log_file, mode="w")
+        file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
+        log.addHandler(file_handler)
     log.setLevel(log_level)
     logging.getLogger().setLevel(log_level)
     if log_level == "DEBUG":
         _ = install(show_locals=True)
 
-    ctx.ensure_object(dict)
-    ctx.obj["log_level"] = log_level
-    ctx.obj["log_file"] = log_file
-
 
 @click.group()
-@click.pass_context
-def check(ctx: click.Context) -> None:
+def check() -> None:
     """Check commands for multiple input types."""
     pass
 
 
 @click.group()
-@click.pass_context
-def diff(ctx: click.Context) -> None:
+def diff() -> None:
     """Diff commands for multiple input types."""
     pass
 
 
 @click.group()
-@click.pass_context
-def export(ctx: click.Context):
+def export() -> None:
     """Export commands."""
     pass
 
 
 @click.group()
-@click.pass_context
-def stats(ctx: click.Context):
+def stats() -> None:
     """Stats commands."""
     pass
 
 
 @click.group()
-@click.pass_context
-def validate(ctx: click.Context) -> None:
+def validate() -> None:
     """Diff commands for multiple input types."""
     pass
 
@@ -204,8 +205,7 @@ def vspec(schema: Path, output: Path) -> None:
     required=True,
     help="The GraphQL schema file to validate against",
 )
-@click.pass_context
-def version_bump(ctx: click.Context, schema: Path, previous_schema: Path) -> None:
+def version_bump(schema: Path, previous_schema: Path) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     No changes: No bump needed
@@ -236,9 +236,8 @@ def version_bump(ctx: click.Context, schema: Path, previous_schema: Path) -> Non
 # ----------
 @validate.command(name="graphql")
 @schema_option
-@output_option(required=False)
-@click.pass_context
-def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> None:
+@optional_output_option
+def validate_graphql(schema: Path, output: Path | None) -> None:
     """ToDo"""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
@@ -259,7 +258,7 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> N
 # ----------
 @diff.command(name="graphql")
 @schema_option
-@output_option(required=False)
+@optional_output_option
 @click.option(
     "--val-schema",
     "-v",
@@ -267,8 +266,7 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> N
     required=True,
     help="The GraphQL schema file to validate against",
 )
-@click.pass_context
-def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Path | None) -> None:
+def diff_graphql(schema: Path, val_schema: Path, output: Path | None) -> None:
     """Diff for two GraphQL schemas."""
     logging.info(f"Comparing schemas: {schema} and {val_schema}")
 
@@ -294,14 +292,13 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
 # ----------
 @stats.command(name="graphql")
 @schema_option
-@click.pass_context
-def stats_graphql(ctx: click.Context, schema: Path) -> None:
+def stats_graphql(schema: Path) -> None:
     """Get stats of schema."""
     gql_schema = load_schema(schema)
 
     # Count types by kind
     type_map = gql_schema.type_map
-    type_counts = {
+    type_counts: dict[str, Any] = {
         "object": 0,
         "enum": 0,
         "scalar": 0,
