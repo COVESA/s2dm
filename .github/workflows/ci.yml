@@ -30,7 +30,7 @@ jobs:
 
       - name: mypy
         run: |
-          uv run mypy src
+          uv run mypy src/ tests/
 
       - name: test
         run: |
