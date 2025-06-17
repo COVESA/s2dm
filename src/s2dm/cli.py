@@ -3,12 +3,14 @@ import logging
 from pathlib import Path
 
 import rich_click as click
+from rich.console import Console
 from rich.traceback import install
 
 from s2dm import __version__, log
-from s2dm.exporters.shacl import translate_to_shacl
-from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.exporters.graphql_inspector import GraphQLInspector
+from s2dm.exporters.shacl import translate_to_shacl
+from s2dm.exporters.utils import create_tempfile_to_composed_schema, load_schema
+from s2dm.exporters.vspec import translate_to_vspec
 
 
 # Define the common options
