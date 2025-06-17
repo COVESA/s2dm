@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" itemscope itemtype="http://schema.org/Article">
+  <head><script src="/s2dm/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=s2dm/livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="generator" content="Hugo 0.129.0">
+    <meta name="generator" content="Relearn 6.0.0">
+    <meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+    <meta name="description" content="S2DM Examples This directory contains example files and commands to demonstrate how to use the S2DM tools with a sample GraphQL schema.
+Sample Files sample.graphql - A comprehensive GraphQL schema demonstrating vehicle data modeling Uses units.yaml for unit definitions Running the Tools Follow these commands in order to generate all the necessary files for the example:
+1. ID Generation Generate unique identifiers for schema elements:
+# From the repository root uv run python src/tools/to_id.">
+    <meta name="author" content="">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:description" content="S2DM Examples This directory contains example files and commands to demonstrate how to use the S2DM tools with a sample GraphQL schema.
+Sample Files sample.graphql - A comprehensive GraphQL schema demonstrating vehicle data modeling Uses units.yaml for unit definitions Running the Tools Follow these commands in order to generate all the necessary files for the example:
+1. ID Generation Generate unique identifiers for schema elements:
+# From the repository root uv run python src/tools/to_id.">
+    <meta property="og:url" content="http://localhost:1313/s2dm/examples/spec-history-registry/readme/index.html">
+    <meta property="og:site_name" content="S2DM">
+    <meta property="og:description" content="S2DM Examples This directory contains example files and commands to demonstrate how to use the S2DM tools with a sample GraphQL schema.
+Sample Files sample.graphql - A comprehensive GraphQL schema demonstrating vehicle data modeling Uses units.yaml for unit definitions Running the Tools Follow these commands in order to generate all the necessary files for the example:
+1. ID Generation Generate unique identifiers for schema elements:
+# From the repository root uv run python src/tools/to_id.">
+    <meta property="og:locale" content="en-us">
+    <meta property="og:type" content="article">
+    <meta property="article:section" content="Examples">
+    <meta itemprop="description" content="S2DM Examples This directory contains example files and commands to demonstrate how to use the S2DM tools with a sample GraphQL schema.
+Sample Files sample.graphql - A comprehensive GraphQL schema demonstrating vehicle data modeling Uses units.yaml for unit definitions Running the Tools Follow these commands in order to generate all the necessary files for the example:
+1. ID Generation Generate unique identifiers for schema elements:
+# From the repository root uv run python src/tools/to_id.">
+    <meta itemprop="wordCount" content="367">
+    <title></title><link rel="shortcut icon" href="/s2dm/images/fav.png" type="image/x-icon" />
+
+    <link href="/s2dm/css/fontawesome-all.min.css?1750167321" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/s2dm/css/fontawesome-all.min.css?1750167321" rel="stylesheet"></noscript>
+    <link href="/s2dm/css/nucleus.css?1750167321" rel="stylesheet">
+    <link href="/s2dm/css/auto-complete.css?1750167321" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/s2dm/css/auto-complete.css?1750167321" rel="stylesheet"></noscript>
+    <link href="/s2dm/css/perfect-scrollbar.min.css?1750167321" rel="stylesheet">
+    <link href="/s2dm/css/fonts.css?1750167321" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/s2dm/css/fonts.css?1750167321" rel="stylesheet"></noscript>
+    <link href="/s2dm/css/theme.css?1750167321" rel="stylesheet">
+    <link href="/s2dm/css/theme-green.css?1750167321" rel="stylesheet" id="R-variant-style">
+    <link href="/s2dm/css/chroma-learn.css?1750167321" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/s2dm/css/variant.css?1750167321" rel="stylesheet">
+    <link href="/s2dm/css/print.css?1750167321" rel="stylesheet" media="print">
+    <script src="/s2dm/js/variant.js?1750167321"></script>
+    <script>
+      window.relearn = window.relearn || {};
+      window.relearn.relBasePath='..\/..\/..';
+      window.relearn.relBaseUri='..\/..\/..\/..';
+      window.relearn.absBaseUri='http:\/\/localhost:1313\/s2dm';
+      window.index_js_url="/s2dm/index.search.js";
+      // variant stuff
+      window.variants && variants.init( [ 'green' ] );
+      // translations
+      window.T_Copy_to_clipboard = `Copy to clipboard`;
+      window.T_Copied_to_clipboard = `Copied to clipboard!`;
+      window.T_Copy_link_to_clipboard = `Copy link to clipboard`;
+      window.T_Link_copied_to_clipboard = `Copied link to clipboard!`;
+      window.T_Reset_view = `Reset view`;
+      window.T_View_reset = `View reset!`;
+      window.T_No_results_found = `No results found for "{0}"`;
+      window.T_N_results_found = `{1} results found for "{0}"`;
+    </script>
+  </head>
+  <body class="mobile-support html disableInlineCopyToClipboard" data-url="/s2dm/examples/spec-history-registry/readme/index.html">
+    <div id="R-body" class="default-animation">
+      <div id="R-body-overlay"></div>
+      <nav id="R-topbar">
+        <div class="topbar-wrapper">
+          <div class="topbar-sidebar-divider"></div>
+          <div class="topbar-area topbar-area-start" data-area="start">
+            <div class="topbar-button topbar-button-sidebar" data-content-empty="disable" data-width-s="show" data-width-m="hide" data-width-l="hide"><button class="topbar-control" onclick="toggleNav()" type="button" title="Menu (CTRL&#43;ALT&#43;n)"><i class="fa-fw fas fa-bars"></i></button>
+            </div>
+            <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
+              <div class="topbar-content">
+                <div class="topbar-content-wrapper"><nav class="TableOfContents">
+  <ul>
+    <li><a href="#sample-files">Sample Files</a></li>
+    <li><a href="#running-the-tools">Running the Tools</a>
+      <ul>
+        <li><a href="#1-id-generation">1. ID Generation</a></li>
+        <li><a href="#2-concept-uri-generation">2. Concept URI Generation</a></li>
+        <li><a href="#3-spec-history-generation">3. Spec History Generation</a></li>
+        <li><a href="#updating-spec-history">Updating Spec History</a></li>
+      </ul>
+    </li>
+    <li><a href="#expected-output-files">Expected Output Files</a></li>
+  </ul>
+</nav>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/s2dm/index.html"><span itemprop="name">S2DM</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/s2dm/examples/index.html"><span itemprop="name">Examples</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li>
+          </ol>
+          <div class="topbar-area topbar-area-end" data-area="end">
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/s2dm/examples/index.html" title="Examples (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            </div>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/s2dm/license/index.html" title="License (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            </div>
+            <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
+              <div class="topbar-content">
+                <div class="topbar-content-wrapper">
+                  <div class="topbar-area topbar-area-more" data-area="more">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div id="R-main-overlay"></div>
+      <main id="R-body-inner" class="highlightable default" tabindex="-1">
+        <div class="flex-block-wrapper">
+          <article class="default">
+            <header class="headline">
+            </header>
+
+<h1 id=""></h1>
+
+<h1 id="s2dm-examples">S2DM Examples</h1>
+<p>This directory contains example files and commands to demonstrate how to use the S2DM tools with a sample GraphQL schema.</p>
+<h2 id="sample-files">Sample Files</h2>
+<ul>
+<li><code>sample.graphql</code> - A comprehensive GraphQL schema demonstrating vehicle data modeling</li>
+<li>Uses <code>units.yaml</code> for unit definitions</li>
+</ul>
+<h2 id="running-the-tools">Running the Tools</h2>
+<p>Follow these commands in order to generate all the necessary files for the example:</p>
+<h3 id="1-id-generation">1. ID Generation</h3>
+<p>Generate unique identifiers for schema elements:</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># From the repository root</span>
+</span></span><span style="display:flex;"><span>uv run python src/tools/to_id.py examples/sample.graphql examples/units.yaml -o examples/concept_ids.json</span></span></code></pre></div><p>This creates <code>examples/concept_ids.json</code> with deterministic IDs for each field in the schema.</p>
+<h3 id="2-concept-uri-generation">2. Concept URI Generation</h3>
+<p>Generate semantic URIs for all concepts in the schema:</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># From the repository root</span>
+</span></span><span style="display:flex;"><span>uv run python src/tools/to_concept_uri.py examples/sample.graphql -o examples/concept_uri.json --namespace <span style="color:#e6db74">&#34;https://example.org/vss#&#34;</span> --prefix <span style="color:#e6db74">&#34;ns&#34;</span></span></span></code></pre></div><p>This creates <code>examples/concept_uri.json</code> with JSON-LD formatted concept definitions.</p>
+<h3 id="3-spec-history-generation">3. Spec History Generation</h3>
+<p>Initialize a specification history registry to track schema evolution:</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Initialize spec history (first time)</span>
+</span></span><span style="display:flex;"><span>uv run python src/tools/to_spec_history.py --concept-uri examples/concept_uri.json --ids examples/concept_ids.json --schema examples/sample.graphql --output examples/spec_history.json --history-dir examples/history --init</span></span></code></pre></div><p>This creates:</p>
+<ul>
+<li><code>examples/spec_history.json</code> - JSON-LD file tracking realization history for each concept</li>
+<li><code>examples/history/</code> directory - Individual GraphQL type definition files with timestamps</li>
+</ul>
+<h3 id="updating-spec-history">Updating Spec History</h3>
+<p>Let&rsquo;s now use the updated &ldquo;sample_updated.graphql&rdquo; file to generate a new spec history.</p>
+<p>The changes are:</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>▶ diff examples/sample.graphql examples/sample_updated.graphql
+</span></span><span style="display:flex;"><span>13a14
+</span></span><span style="display:flex;"><span>&gt;   COLLISION_PREVENTION
+</span></span><span style="display:flex;"><span>28c29
+</span></span><span style="display:flex;"><span>&lt;   averageSpeed<span style="color:#f92672">(</span>unit: Velocity_Unit_Enum <span style="color:#f92672">=</span> KILOMETER_PER_HOUR<span style="color:#f92672">)</span>: Float
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>&gt;   averageSpeed<span style="color:#f92672">(</span>unit: Velocity_Unit_Enum <span style="color:#f92672">=</span> KILOMETER_PER_HOUR<span style="color:#f92672">)</span>: Int
+</span></span><span style="display:flex;"><span>54c55
+</span></span><span style="display:flex;"><span>&lt;   distance<span style="color:#f92672">(</span>unit: Length_Unit_Enum <span style="color:#f92672">=</span> METER<span style="color:#f92672">)</span>: Float
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>&gt;   distance<span style="color:#f92672">(</span>unit: Length_Unit_Enum <span style="color:#f92672">=</span> METER<span style="color:#f92672">)</span>: Int</span></span></code></pre></div><ol>
+<li>
+<p>Added a new enum value <code>COLLISION_PREVENTION</code> to the <code>Vehicle_ADAS_ObstacleDetection_WarningType_Enum</code>. This will now change the allowed values of <code>Vehicle_ADAS_ObstacleDetection.warningType</code></p>
+</li>
+<li>
+<p>Changed <code>Vehicle.averageSpeed</code> from <code>Float</code> -&gt; <code>Int</code></p>
+</li>
+<li>
+<p>Changed <code>Vehicle_ADAS_ObstacleDetection.distance</code> from <code>Float</code> -&gt; <code>Int</code></p>
+</li>
+</ol>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Let&#39;s regenerate IDs and concept URIs:</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>uv run python src/tools/to_id.py examples/sample_updated.graphql examples/units.yaml -o examples/concept_ids_updated.json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>uv run python src/tools/to_concept_uri.py examples/sample_updated.graphql -o examples/concept_uri_updated.json --namespace <span style="color:#e6db74">&#34;https://example.org/vss#&#34;</span> --prefix <span style="color:#e6db74">&#34;ns&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>uv run python src/tools/to_spec_history.py --concept-uri examples/concept_uri_updated.json --ids examples/concept_ids_updated.json --schema examples/sample_updated.graphql --spec-history examples/spec_history.json --output examples/spec_history_updated.json --history-dir examples/history --update</span></span></code></pre></div><h2 id="expected-output-files">Expected Output Files</h2>
+<p>After running all commands, you&rsquo;ll have:</p>
+<div class="highlight wrap-code"><pre tabindex="0"><code>examples/
+├── README.md
+├── sample.graphql
+├── concept_ids.json # Field IDs
+├── concept_ids_updated.json # Field IDs updated
+├── concept_uri.json # Concept definitions
+├── concept_uri_updated.json # Concept definitions updated
+├── spec_history.json # Evolution history
+├── spec_history_updated.json # Evolution history updated
+└── history/ # Type definition snapshots
+    ├── Vehicle_YYYYMMDDHHMMSS_0xXXXXXXXX.graphql
+    ├── Vehicle_ADAS_YYYYMMDDHHMMSS_0xXXXXXXXX.graphql
+    └── ... (other types)</code></pre></div>
+            <footer class="footline">
+            </footer>
+          </article>
+        </div>
+      </main>
+    </div>
+    <aside id="R-sidebar" class="default-animation">
+      <div id="R-header-topbar" class="default-animation"></div>
+      <div id="R-header-wrapper" class="default-animation">
+        <div id="R-header" class="default-animation">
+<a id="logo" href="http://localhost:1313/s2dm/">
+  <img src="/s2dm/images/S2DM.png">
+</a>
+
+        </div>
+
+        <search><form action="/s2dm/search.html" method="get">
+          <div class="searchbox default-animation">
+            <button class="search-detail" type="submit" title="Search (CTRL+ALT+f)"><i class="fas fa-search"></i></button>
+            <label class="a11y-only" for="R-search-by">Search</label>
+            <input data-search-input id="R-search-by" name="search-by" class="search-by" type="search" placeholder="Search...">
+            <button class="search-clear" type="button" data-search-clear="" title="Clear search"><i class="fas fa-times" title="Clear search"></i></button>
+          </div>
+        </form></search>
+        <script>
+          var contentLangs=['en'];
+        </script>
+        <script src="/s2dm/js/auto-complete.js?1750167321" defer></script>
+        <script src="/s2dm/js/lunr/lunr.min.js?1750167321" defer></script>
+        <script src="/s2dm/js/lunr/lunr.stemmer.support.min.js?1750167321" defer></script>
+        <script src="/s2dm/js/lunr/lunr.multi.min.js?1750167321" defer></script>
+        <script src="/s2dm/js/lunr/lunr.en.min.js?1750167321" defer></script>
+        <script src="/s2dm/js/search.js?1750167321" defer></script>
+      </div>
+      <div id="R-homelinks" class="default-animation">
+        <hr class="padding">
+      </div>
+      <div id="R-content-wrapper" class="highlightable">
+        <div id="R-topics">
+          <ul class="enlarge morespace collapsible-menu">
+          <li data-nav-id="/s2dm/approach/index.html" class=""><a class="padding" href="/s2dm/approach/index.html">Approach</a></li>
+          <li data-nav-id="/s2dm/guides/index.html" class=""><a class="padding" href="/s2dm/guides/index.html">Guides</a><ul id="R-subsections-c156c14d1955521782d3060e8021c0fd" class="morespace collapsible-menu">
+          <li data-nav-id="/s2dm/guides/contributing/index.html" class=""><a class="padding" href="/s2dm/guides/contributing/index.html">Contributing Guide</a></li>
+          <li data-nav-id="/s2dm/guides/modeling/index.html" class=""><a class="padding" href="/s2dm/guides/modeling/index.html">Modeling</a></li></ul></li>
+          <li data-nav-id="/s2dm/examples/index.html" class="parent "><a class="padding" href="/s2dm/examples/index.html">Examples</a><ul id="R-subsections-09293e995b11754c4445aab5dfe0a859" class="morespace collapsible-menu">
+          <li data-nav-id="/s2dm/examples/spec-history-registry/readme/index.html" class="active"><a class="padding" href="/s2dm/examples/spec-history-registry/readme/index.html"></a></li></ul></li>
+          <li data-nav-id="/s2dm/license/index.html" class=""><a class="padding" href="/s2dm/license/index.html">License</a></li>
+          </ul>
+        </div>
+        <div id="R-shortcuts">
+          <div class="nav-title padding">More</div>
+          <ul class="space">
+            <li><a class="padding" href="https://github.com/covesa/s2dm"><i class='fab fa-github'></i> Github repo</a></li>
+          </ul>
+        </div>
+        <div class="padding footermargin footerLangSwitch footerVariantSwitch footerVisitedLinks footerFooter showFooter"></div>
+        <div id="R-menu-footer">
+          <hr class="padding default-animation footerLangSwitch footerVariantSwitch footerVisitedLinks footerFooter showFooter">
+          <div id="R-prefooter" class="footerLangSwitch footerVariantSwitch footerVisitedLinks">
+            <ul>
+              <li id="R-select-language-container" class="footerLangSwitch">
+                <div class="padding menu-control">
+                  <i class="fa-fw fas fa-language"></i>
+                  <span>&nbsp;</span>
+                  <div class="control-style">
+                    <label class="a11y-only" for="R-select-language">Language</label>
+                    <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/s2dm/examples/spec-history-registry/readme/index.html" lang="en-us" selected></option>
+                    </select>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+              </li>
+              <li id="R-select-variant-container" class="footerVariantSwitch">
+                <div class="padding menu-control">
+                  <i class="fa-fw fas fa-paint-brush"></i>
+                  <span>&nbsp;</span>
+                  <div class="control-style">
+                    <label class="a11y-only" for="R-select-variant">Theme</label>
+                    <select id="R-select-variant" onchange="window.variants && variants.changeVariant( this.value );">
+                      <option id="R-select-variant-green" value="green" selected>Green</option>
+                    </select>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+                <script>window.variants && variants.markSelectedVariant();</script>
+              </li>
+              <li class="footerVisitedLinks">
+                <div class="padding menu-control">
+                  <i class="fa-fw fas fa-history"></i>
+                  <span>&nbsp;</span>
+                  <div class="control-style">
+                    <button onclick="clearHistory();">Clear History</button>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div id="R-footer" class="footerFooter showFooter"><center>
+    
+    <a class="github-button" href="https://github.com/covesa/s2dm/archive/master.zip" data-icon="octicon-cloud-download" aria-label="Download covesa/s2dm on GitHub">Download</a>
+
+    
+    <a class="github-button" href="https://github.com/covesa/s2dm" data-icon="octicon-star" data-show-count="true" aria-label="Star covesa/s2dm on GitHub">Star</a>
+
+    
+    <a class="github-button" href="https://github.com/covesa/s2dm/fork" data-icon="octicon-repo-forked" data-show-count="true" aria-label="Fork covesa/s2dm on GitHub">Fork</a>
+
+</center>
+
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+          </div>
+        </div>
+      </div>
+    </aside>
+    <script src="/s2dm/js/clipboard.min.js?1750167321" defer></script>
+    <script src="/s2dm/js/perfect-scrollbar.min.js?1750167321" defer></script>
+    <script src="/s2dm/js/theme.js?1750167321" defer></script>
+  </body>
+</html>

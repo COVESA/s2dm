@@ -7,14 +7,12 @@ publishDir = "../docs"
   # Change default color scheme with a variant one. Can be "red", "blue", "green".
   themeVariant = "green"
   disableInlineCopyToClipBoard = true
-  editURL = "https://covesa.github.io/s2dm/edit/master/docs-gen/content/"
   disableLandingPageButton = true
-
 
 [[menu.shortcuts]]
 name = "<i class='fab fa-github'></i> Github repo"
 identifier = "ds"
-url = "https://covesa.github.io/s2dm"
+url = "https://github.com/covesa/s2dm"
 weight = 10
 
 # Generation of JSON index to allow search

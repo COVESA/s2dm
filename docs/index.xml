@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>S2DM</title>
+    <link>http://localhost:1313/s2dm/index.html</link>
+    <description>Simplified Semantic Data Modeling (S2DM) Welcome to the Simplified Semantic Data Modeling (S2DM) repository. S2DM is an approach for modeling data of multiple domains. It is simple in the sense that any Subject Matter Expert (SME) could contribute to a controlled vocabulary with minimal data modeling expertise. Likewise, it is semantic in the sense that it specifies meaningful data structures, their cross-domain relationships, and arbitrary classification schemes.&#xA;Disclaimer: Bear in mind the word Simplified in the name.</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/s2dm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Approach</title>
+      <link>http://localhost:1313/s2dm/approach/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/s2dm/approach/index.html</guid>
+      <description>Simplified Semantic Data Modeling (S2DM) - Approach Primer Table of Contents Background Why do we need such an approach? Subject Matter Experts are often NOT data modeling experts Vehicle Signal Specification has been an alternative but requires improvements Design principles Problem Requirements Goal Artifact Proposed solution approach General workflow Idea (1): Maintain Entity and Property sets Idea (2): Maintain a set of reusable labels Idea (3): Construct unique IDs Idea (4): Allow arbitrary hierarchies for different classification criteria Other ideas Examples Special considerations Special cross references Model versioning Background Why do we need such an approach?</description>
+    </item>
+    <item>
+      <title>Guides</title>
+      <link>http://localhost:1313/s2dm/guides/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/s2dm/guides/index.html</guid>
+      <description>Welcome to the guides section for Simplified Semantic Data Modeling (S2DM). Below are two key guides to help you get started:&#xA;Contributing Guide Learn how to contribute to the development of Simplified Semantic Data Modeling, including setting up your development environment, running tests, and maintaining code quality.&#xA;Modeling Guide Understand how to create and contribute to data specifications for specific domains using the Simplified Semantic Data Modeling approach.</description>
+    </item>
+    <item>
+      <title>Examples</title>
+      <link>http://localhost:1313/s2dm/examples/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/s2dm/examples/index.html</guid>
+      <description>Below are some examples of how the Simplified Semantic Data Modeling (S2DM) approach can be applied in different areas or use cases. Each example is linked to its corresponding folder in the repository for further exploration.&#xA;Example Use Cases Multiple Classification Schemes: Enabling multiple classification schemes using SKOS. Multiple Domains: Covering cross-references across different domains. Seat Capabilities: Specifying possible operations linked to seat-related objects or entities. Seat to VSS Mapping: Mapping modular seat specifications to the Vehicle Signal Specification (VSS).</description>
+    </item>
+    <item>
+      <title>License</title>
+      <link>http://localhost:1313/s2dm/license/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/s2dm/license/index.html</guid>
+      <description>Warning DISCLAIMER: The following information about open source licensing shall not be considered legal advice. For advice on licensing, COVESA suggests that you contact your open source officer or legal counsel.&#xA;Which license applies VSS as well as the VSS-tools are covered by the Mozilla Public License 2.0 (MPL-2.0). The MPL-2.0 is an OSI approved Open Source license that gives you a lot of freedom using VSS in your products, or for (academic) research.</description>
+    </item>
+  </channel>
+</rss>
