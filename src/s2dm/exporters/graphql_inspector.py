@@ -4,6 +4,7 @@ import subprocess
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 
 class InspectorCommands(Enum):
@@ -17,7 +18,12 @@ class GraphQLInspector:
     def __init__(self, schema_path: Path) -> None:
         self.schema_path = schema_path
 
-    def _run_command(self, command: InspectorCommands, *args, **kwargs) -> dict[str, str]:
+    def _run_command(
+        self: "GraphQLInspector",
+        command: InspectorCommands,
+        *args: Any,
+        **kwargs: Any,
+    ) -> dict[str, float | str | int | Any]:
         """Execute command with comprehensive logging"""
         if command in [InspectorCommands.DIFF, InspectorCommands.INTROSPECT, InspectorCommands.SIMILAR]:
             cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
@@ -33,7 +39,7 @@ class GraphQLInspector:
             # Log the attempt
             logging.debug("Starting subprocess...")
 
-            process: subprocess.Popen = subprocess.Popen(
+            process = subprocess.Popen(  # ignore: type [type-arg]
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -113,18 +119,18 @@ class GraphQLInspector:
 
             raise
 
-    def validate(self, query: str) -> dict:
+    def validate(self, query: str) -> dict[str, Any]:
         """Validate schema with logging"""
         return self._run_command(InspectorCommands.VALIDATE, query)
 
-    def diff(self, other_schema: Path) -> dict:
+    def diff(self, other_schema: Path) -> dict[str, Any]:
         """Compare schemas with logging"""
         return self._run_command(InspectorCommands.DIFF, str(other_schema))
 
-    def introspect(self):
+    def introspect(self) -> dict[str, Any]:
         """Introspect schema."""
         return self._run_command(InspectorCommands.INTROSPECT)
 
-    def similar(self):
+    def similar(self) -> dict[str, Any]:
         """Similar table"""
         return self._run_command(InspectorCommands.SIMILAR)
