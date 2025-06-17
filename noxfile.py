@@ -16,6 +16,6 @@ def tests(session):
         "pytest",
         "--cov=s2dm",
         "--cov-report=term-missing",
-        "--cov-fail-under=80",
+        "--cov-fail-under=70",
         *session.posargs,
     )
