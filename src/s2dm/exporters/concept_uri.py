@@ -4,10 +4,9 @@ from pathlib import Path
 
 import click
 
-from concept.services import create_concept_uri_model, iter_all_concepts
-from tools.utils import get_all_named_types, load_schema
-
-logger = logging.getLogger(__name__)
+from s2dm import log
+from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
+from s2dm.exporters.utils import get_all_named_types, load_schema
 
 
 @click.command()
@@ -33,11 +32,17 @@ def main(
     output: Path | None,
     namespace: str,
     prefix: str,
-):
+) -> None:
     """Generate concept URIs for a GraphQL schema.
 
     The script will generate concept URIs for all objects, fields, and enums in the schema,
     excluding cross-references and ID fields. The URIs will be output in JSON-LD format.
+
+    Args:
+        schema: Path to the GraphQL schema file
+        output: Optional output file path
+        namespace: The namespace for the URIs
+        prefix: The prefix to use for the URIs
     """
     logging.info(f"Processing schema '{schema}'")
 
@@ -53,7 +58,7 @@ def main(
     # Output options
     if output:
         with open(output, "w", encoding="utf-8") as output_file:
-            logger.info(f"Writing data to '{output}'")
+            log.info(f"Writing data to '{output}'")
             json.dump(concept_uri_model.to_json_ld(), output_file, indent=2)
     else:
         print("-" * 80)

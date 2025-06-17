@@ -6,14 +6,14 @@ from faker import Faker
 from graphql import GraphQLNamedType
 from hypothesis import given
 
-from idgen.idgen import fnv1_32_wrapper
-from idgen.models import IDGenerationSpec
+from s2dm.exporters.id import iter_all_id_specs
+from s2dm.idgen.idgen import fnv1_32_wrapper
+from s2dm.idgen.models import IDGenerationSpec
 from tests.conftest import (
     EchoDict,
     MockFieldData,
     mock_named_types_strategy,
 )
-from tools.to_id import iter_all_id_specs
 
 
 @given(named_types_and_fields=mock_named_types_strategy())
@@ -25,7 +25,7 @@ def test_id_spec_generation_of_all_fields_from_graphql_schema(
     named_types, fields = named_types_and_fields
     expected_id_specs = {field.expected_id_spec() for field in fields}
 
-    all_id_specs = set(iter_all_id_specs(named_types, mock_unit_lookup))
+    all_id_specs = set(iter_all_id_specs(named_types, mock_unit_lookup))  # type: ignore [arg-type]
 
     for expected_id_spec in expected_id_specs:
         assert expected_id_spec in all_id_specs
@@ -42,7 +42,7 @@ def test_id_generation_is_deterministic_across_iterations(
 
     named_types, _ = named_types_and_fields
 
-    all_id_specs = set(iter_all_id_specs(named_types, mock_unit_lookup))
+    all_id_specs = set(iter_all_id_specs(named_types, mock_unit_lookup))  # type: ignore [arg-type]
 
     first_iteration_ids = {}
     for id_spec in all_id_specs:
@@ -69,7 +69,7 @@ def test_id_generation_is_unique_accros_schema(
     named_types, _ = named_types_and_fields
 
     ids = {}
-    for id_spec in iter_all_id_specs(named_types, mock_unit_lookup):
+    for id_spec in iter_all_id_specs(named_types, mock_unit_lookup):  # type: ignore [arg-type]
         field_id = fnv1_32_wrapper(id_spec, strict_mode=strict_mode)
         ids[id_spec.name] = field_id
 
