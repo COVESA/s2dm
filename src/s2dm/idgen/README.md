@@ -83,8 +83,6 @@ We decided to use the GraphQL type name directly as the fully qualified name (FQ
 - It simplifies the resolution process
 - It maintains consistency with GraphQL's type system
 
-For more details on this decision, see [Issue #32](https://atc-github.azure.cloud.bmw/q555872/s2dm/issues/32).
-
 ## Usage
 
 ```python
@@ -181,4 +179,3 @@ LOG_LEVEL=debug uv run python src/tools/to_id.py -o output.json test.graphql uni
 ## References
 
 - [COVESA VSS Tools ID Documentation](https://github.com/COVESA/vss-tools/blob/master/docs/id.md)
-- [Issue #32: ID Generation Design](https://atc-github.azure.cloud.bmw/q555872/s2dm/issues/32)
