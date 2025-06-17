@@ -32,11 +32,17 @@ def main(
     output: Path | None,
     namespace: str,
     prefix: str,
-):
+) -> None:
     """Generate concept URIs for a GraphQL schema.
 
     The script will generate concept URIs for all objects, fields, and enums in the schema,
     excluding cross-references and ID fields. The URIs will be output in JSON-LD format.
+
+    Args:
+        schema: Path to the GraphQL schema file
+        output: Optional output file path
+        namespace: The namespace for the URIs
+        prefix: The prefix to use for the URIs
     """
     logging.info(f"Processing schema '{schema}'")
 
