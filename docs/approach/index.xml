@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Approach :: S2DM</title>
+    <link>http://localhost:1313/s2dm/approach/index.html</link>
+    <description>Simplified Semantic Data Modeling (S2DM) - Approach Primer Table of Contents Background Why do we need such an approach? Subject Matter Experts are often NOT data modeling experts Vehicle Signal Specification has been an alternative but requires improvements Design principles Problem Requirements Goal Artifact Proposed solution approach General workflow Idea (1): Maintain Entity and Property sets Idea (2): Maintain a set of reusable labels Idea (3): Construct unique IDs Idea (4): Allow arbitrary hierarchies for different classification criteria Other ideas Examples Special considerations Special cross references Model versioning Background Why do we need such an approach?</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/s2dm/approach/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
