@@ -86,19 +86,19 @@ We decided to use the GraphQL type name directly as the fully qualified name (FQ
 ## Usage
 
 ```python
-from idgen.spec import IDGenerationSpec
-from idgen.idgen import fnv1_32_wrapper
+from s2dm.idgen.models import IDGenerationSpec
+from s2dm.idgen.idgen import fnv1_32_wrapper
 
 # Create a spec from a GraphQL field
-spec = IDGenerationSpec.from_field(
-    prefix="Window",
-    field_name="position",
-    field=graphql_field,
-    unit_lookup=unit_lookup
+id_spec = IDGenerationSpec.from_field(
+    parent_name=f"{named_type.name}",
+    field_name=field_name,
+    field=field,
+    unit_lookup=unit_lookup,
 )
 
 # Generate ID
-id = fnv1_32_wrapper(spec, strict_mode=True)
+id = fnv1_32_wrapper(id_spec, strict_mode=True)
 ```
 
 ## Example
