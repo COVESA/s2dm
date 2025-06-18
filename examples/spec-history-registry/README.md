@@ -17,7 +17,7 @@ Generate unique identifiers for schema elements:
 
 ```bash
 # From the repository root
-uv run python src/tools/to_id.py examples/sample.graphql examples/units.yaml -o examples/concept_ids.json
+uv run python src/s2dm/exporters/id.py examples/spec-history-registry/sample.graphql examples/spec-history-registry/units.yaml -o examples/concept_ids.json
 ```
 
 This creates `examples/concept_ids.json` with deterministic IDs for each field in the schema.
@@ -28,7 +28,7 @@ Generate semantic URIs for all concepts in the schema:
 
 ```bash
 # From the repository root
-uv run python src/tools/to_concept_uri.py examples/sample.graphql -o examples/concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
+uv run python src/s2dm/exporters/concept_uri.py examples/spec-history-registry/sample.graphql -o examples/concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
 ```
 
 This creates `examples/concept_uri.json` with JSON-LD formatted concept definitions.
@@ -39,10 +39,11 @@ Initialize a specification history registry to track schema evolution:
 
 ```bash
 # Initialize spec history (first time)
-uv run python src/tools/to_spec_history.py --concept-uri examples/concept_uri.json --ids examples/concept_ids.json --schema examples/sample.graphql --output examples/spec_history.json --history-dir examples/history --init
+uv run python src/s2dm/exporters/spec_history.py --concept-uri examples/concept_uri.json --ids examples/concept_ids.json --schema examples/spec-history-registry/sample.graphql --output examples/spec_history.json --history-dir examples/history --init
 ```
 
 This creates:
+
 - `examples/spec_history.json` - JSON-LD file tracking realization history for each concept
 - `examples/history/` directory - Individual GraphQL type definition files with timestamps
 
@@ -72,7 +73,6 @@ The changes are:
 
 3. Changed `Vehicle_ADAS_ObstacleDetection.distance` from `Float` -> `Int`
 
-
 ```bash
 # Let's regenerate IDs and concept URIs:
 
@@ -86,6 +86,7 @@ uv run python src/tools/to_spec_history.py --concept-uri examples/concept_uri_up
 ## Expected Output Files
 
 After running all commands, you'll have:
+
 ```
 examples/
 ├── README.md
