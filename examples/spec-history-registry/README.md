@@ -54,7 +54,7 @@ Let's now use the updated "sample_updated.graphql" file to generate a new spec h
 The changes are:
 
 ```bash
-▶ diff examples/sample.graphql examples/sample_updated.graphql
+▶ diff examples/spec-history-registry/sample.graphql examples/spec-history-registry/sample_updated.graphql
 13a14
 >   COLLISION_PREVENTION
 28c29
@@ -76,29 +76,39 @@ The changes are:
 ```bash
 # Let's regenerate IDs and concept URIs:
 
-uv run python src/tools/to_id.py examples/sample_updated.graphql examples/units.yaml -o examples/concept_ids_updated.json
+uv run python src/s2dm/exporters/id.py examples/spec-history-registry/sample_updated.graphql examples/spec-history-registry/units.yaml -o examples/concept_ids_updated.json
 
-uv run python src/tools/to_concept_uri.py examples/sample_updated.graphql -o examples/concept_uri_updated.json --namespace "https://example.org/vss#" --prefix "ns"
+uv run python src/s2dm/exporters/concept_uri.py examples/spec-history-registry/sample_updated.graphql -o examples/concept_uri_updated.json --namespace "https://example.org/vss#" --prefix "ns"
 
-uv run python src/tools/to_spec_history.py --concept-uri examples/concept_uri_updated.json --ids examples/concept_ids_updated.json --schema examples/sample_updated.graphql --spec-history examples/spec_history.json --output examples/spec_history_updated.json --history-dir examples/history --update
+uv run python src/s2dm/exporters/spec_history.py --concept-uri examples/concept_uri_updated.json --ids examples/concept_ids_updated.json --schema examples/spec-history-registry/sample_updated.graphql --spec-history examples/spec_history.json --output examples/spec_history_updated.json --history-dir examples/history --update
 ```
 
 ## Expected Output Files
 
 After running all commands, you'll have:
 
-```
-examples/
-├── README.md
-├── sample.graphql
-├── concept_ids.json # Field IDs
-├── concept_ids_updated.json # Field IDs updated
-├── concept_uri.json # Concept definitions
-├── concept_uri_updated.json # Concept definitions updated
-├── spec_history.json # Evolution history
-├── spec_history_updated.json # Evolution history updated
-└── history/ # Type definition snapshots
-    ├── Vehicle_YYYYMMDDHHMMSS_0xXXXXXXXX.graphql
-    ├── Vehicle_ADAS_YYYYMMDDHHMMSS_0xXXXXXXXX.graphql
-    └── ... (other types)
+```bash
+
+
+examples
+├── concept_ids.json
+├── concept_ids_updated.json
+├── concept_uri.json
+├── concept_uri_updated.json
+├── history
+│   ├── Acceleration_Unit_Enum_20250618092822_0x48805230.graphql
+│   ├── Angle_Unit_Enum_20250618092822_0x32CF16AC.graphql
+│   ├── Angularspeed_Unit_Enum_20250618092822_0xBD584F20.graphql
+│   ├── Datetime_Unit_Enum_20250618092822_0x3438A1BC.graphql
+│   ├── Distancepervolume_Unit_Enum_20250618092822_0x06B888B9.graphql
+│   ├── Duration_Unit_Enum_20250618092822_0xAAD783F9.graphql
+│   ├── Electriccharge_Unit_Enum_20250618092822_0xBEF59642.graphql
+...
+├── spec_history.json
+├── spec-history-registry
+│   ├── README.md
+│   ├── sample.graphql
+│   ├── sample_updated.graphql
+│   └── units.yaml
+└── spec_history_updated.json
 ```
