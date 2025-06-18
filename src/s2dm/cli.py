@@ -401,8 +401,91 @@ def registry_init(
 # Registry -> Update
 @registry.command(name="update")
 @schema_option
-def registry_update(schema: Path) -> None:
-    pass
+@click.option(
+    "--units",
+    "-u",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to your units.yaml",
+)
+@click.option(
+    "--spec-history",
+    "-sh",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to the previously generated spec history file",
+)
+@optional_output_option
+@click.option(
+    "--concept-namespace",
+    default="https://example.org/vss#",
+    help="The namespace for the concept URIs",
+)
+@click.option(
+    "--concept-prefix",
+    default="ns",
+    help="The prefix to use for the concept URIs",
+)
+@click.pass_context
+def registry_update(
+    ctx: click.Context,
+    schema: Path,
+    units: Path,
+    spec_history: Path,
+    output: Path | None,
+    concept_namespace: str,
+    concept_prefix: str,
+) -> None:
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+
+    # Generate concept IDs
+    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
+    concept_ids = id_exporter.run()
+
+    # Generate concept URIs
+    graphql_schema = load_schema(schema)
+    all_named_types = get_all_named_types(graphql_schema)
+    concepts = iter_all_concepts(all_named_types)
+    concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
+    concept_uris = concept_uri_model.to_json_ld()
+
+    # Write concept_uris and concept_ids to temp files if needed, or pass as objects if supported
+    with (
+        tempfile.NamedTemporaryFile("w+", suffix=".json", delete=True) as concept_uri_file,
+        tempfile.NamedTemporaryFile("w+", suffix=".json", delete=True) as concept_ids_file,
+    ):
+        json.dump(concept_uris, concept_uri_file)
+        concept_uri_file.flush()
+        json.dump(concept_ids, concept_ids_file)
+        concept_ids_file.flush()
+
+        # Determine history_dir based on output path if output is given, else default to "history"
+        if output:
+            output_real = output.resolve()
+            history_dir = output_real.parent / "history"
+        else:
+            history_dir = Path("history")
+
+        spec_history_exporter = SpecHistoryExporter(
+            concept_uri=Path(concept_uri_file.name),
+            ids=Path(concept_ids_file.name),
+            schema=schema,
+            init=False,
+            spec_history=spec_history,
+            output=output,
+            history_dir=history_dir,
+        )
+        spec_history_result = spec_history_exporter.run()
+
+    if ctx.obj.get("VERBOSE"):
+        console = Console()
+        console.rule("[bold blue]Concept IDs")
+        console.print(concept_ids)
+        console.rule("[bold blue]Concept URIs")
+        console.print(concept_uris)
+        console.rule("[bold blue]Spec history (updated)")
+        console.print(spec_history_result)
 
 
 # Stats -> graphQL
