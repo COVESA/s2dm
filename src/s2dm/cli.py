@@ -1,6 +1,5 @@
 import json
 import logging
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -359,34 +358,19 @@ def registry_init(
     concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
     concept_uris = concept_uri_model.to_json_ld()
 
-    # Generate initial spec history
-    # Write concept_uris and concept_ids to temp files if needed, or pass as objects if supported
-    with (
-        tempfile.NamedTemporaryFile("w+", suffix=".json", delete=True) as concept_uri_file,
-        tempfile.NamedTemporaryFile("w+", suffix=".json", delete=True) as concept_ids_file,
-    ):
-        json.dump(concept_uris, concept_uri_file)
-        concept_uri_file.flush()
-        json.dump(concept_ids, concept_ids_file)
-        concept_ids_file.flush()
+    # Determine history_dir based on output path if output is given, else default to "history"
+    if output:
+        output_real = output.resolve()
+        history_dir = output_real.parent / "history"
+    else:
+        history_dir = Path("history")
 
-        # Determine history_dir based on output path if output is given, else default to "history"
-        if output:
-            output_real = output.resolve()
-            history_dir = output_real.parent / "history"
-        else:
-            history_dir = Path("history")
-
-        spec_history_exporter = SpecHistoryExporter(
-            concept_uri=Path(concept_uri_file.name),
-            ids=Path(concept_ids_file.name),
-            schema=schema,
-            init=True,
-            spec_history=None,
-            output=output,
-            history_dir=history_dir,
-        )
-        spec_history = spec_history_exporter.run()
+    spec_history_exporter = SpecHistoryExporter(
+        schema=schema,
+        output=output,
+        history_dir=history_dir,
+    )
+    spec_history_result = spec_history_exporter.init_spec_history_model(concept_uris, concept_ids, concept_uri_model)
 
     if ctx.obj.get("VERBOSE"):
         console = Console()
@@ -394,8 +378,8 @@ def registry_init(
         console.print(concept_ids)
         console.rule("[bold blue]Concept URIs")
         console.print(concept_uris)
-        console.rule("[bold blue]Spec history")
-        console.print(spec_history)
+        console.rule("[bold blue]Spec history (updated)")
+        console.print(spec_history_result)
 
 
 # Registry -> Update
@@ -450,33 +434,24 @@ def registry_update(
     concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
     concept_uris = concept_uri_model.to_json_ld()
 
-    # Write concept_uris and concept_ids to temp files if needed, or pass as objects if supported
-    with (
-        tempfile.NamedTemporaryFile("w+", suffix=".json", delete=True) as concept_uri_file,
-        tempfile.NamedTemporaryFile("w+", suffix=".json", delete=True) as concept_ids_file,
-    ):
-        json.dump(concept_uris, concept_uri_file)
-        concept_uri_file.flush()
-        json.dump(concept_ids, concept_ids_file)
-        concept_ids_file.flush()
+    # Determine history_dir based on output path if output is given, else default to "history"
+    if output:
+        output_real = output.resolve()
+        history_dir = output_real.parent / "history"
+    else:
+        history_dir = Path("history")
 
-        # Determine history_dir based on output path if output is given, else default to "history"
-        if output:
-            output_real = output.resolve()
-            history_dir = output_real.parent / "history"
-        else:
-            history_dir = Path("history")
-
-        spec_history_exporter = SpecHistoryExporter(
-            concept_uri=Path(concept_uri_file.name),
-            ids=Path(concept_ids_file.name),
-            schema=schema,
-            init=False,
-            spec_history=spec_history,
-            output=output,
-            history_dir=history_dir,
-        )
-        spec_history_result = spec_history_exporter.run()
+    spec_history_exporter = SpecHistoryExporter(
+        schema=schema,
+        output=output,
+        history_dir=history_dir,
+    )
+    spec_history_result = spec_history_exporter.update_spec_history_model(
+        concept_uris=concept_uris,
+        concept_ids=concept_ids,
+        concept_uri_model=concept_uri_model,
+        spec_history_path=spec_history,
+    )
 
     if ctx.obj.get("VERBOSE"):
         console = Console()

@@ -2,6 +2,7 @@ import logging
 import re
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -18,11 +19,7 @@ from s2dm.exporters.utils import build_schema_str
 class SpecHistoryExporter:
     def __init__(
         self,
-        concept_uri: Path,
-        ids: Path,
         schema: Path,
-        init: bool,
-        spec_history: Path | None,
         output: Path | None,
         history_dir: Path,
     ):
@@ -36,11 +33,7 @@ class SpecHistoryExporter:
             output: Path to the output spec history JSON-LD file
             history_dir: Directory to store type history files
         """
-        self.concept_uri = concept_uri
-        self.ids = ids
         self.schema = schema
-        self.init = init
-        self.spec_history = spec_history
         self.output = output
         self.history_dir = history_dir
 
@@ -138,9 +131,11 @@ class SpecHistoryExporter:
             else:
                 logging.warning(f"Could not extract type definition for {parent_type}")
 
-    def run(self) -> SpecHistoryModel:
+    def init_spec_history_model(
+        self, concept_uris: dict[str, Any], concept_ids: dict[str, Any], concept_uri_model: ConceptUriModel
+    ) -> SpecHistoryModel:
         """
-        Generate or update a spec history registry to track changes in concept realizations.
+        Generate a first spec history registry to track changes in concept realizations.
 
         This method tracks the history of realization IDs for each concept over time.
         It can either initialize a new spec history or update an existing one.
@@ -157,27 +152,44 @@ class SpecHistoryExporter:
         - A GraphQL schema file (self.schema)
         - Optionally, a directory to store type history (self.history_dir, default: "./history")
         """
-        # Load the concept URIs and IDs
-        concept_uris_data = load_json_file(self.concept_uri)
-        concept_ids = load_json_file(self.ids)
-        concept_uri_model = ConceptUriModel.model_validate(concept_uris_data)
+        logging.debug(f"Initializing new spec history from {concept_uris} and {concept_ids}")
+        result = convert_concept_uri_to_spec_history(concept_uri_model, concept_ids)
+        if self.output:
+            save_spec_history(result, self.output)
+            logging.info(f"Spec history initialized and saved to {self.output}")
+        else:
+            logging.debug(result.model_dump(by_alias=True))
+        self.process_type_definitions(list(concept_ids.keys()), [], concept_ids, self.schema, self.history_dir)
+        return result
 
-        if self.init:
-            logging.debug(f"Initializing new spec history from {self.concept_uri} and {self.ids}")
-            result = convert_concept_uri_to_spec_history(concept_uri_model, concept_ids)
-            if self.output:
-                save_spec_history(result, self.output)
-                logging.info(f"Spec history initialized and saved to {self.output}")
-            else:
-                logging.debug(result.model_dump(by_alias=True))
-            self.process_type_definitions(list(concept_ids.keys()), [], concept_ids, self.schema, self.history_dir)
-            return result
+    def update_spec_history_model(
+        self,
+        concept_uris: dict[str, Any],
+        concept_ids: dict[str, Any],
+        concept_uri_model: ConceptUriModel,
+        spec_history_path: Path,
+    ) -> SpecHistoryModel:
+        """
+        Update a spec history registry to track changes in concept realizations.
 
-        if not self.spec_history:
-            raise click.UsageError("--spec-history is required when using --update")
+        This method tracks the history of realization IDs for each concept over time.
+        It can either initialize a new spec history or update an existing one.
 
-        logging.info(f"Updating spec history {self.spec_history} with {self.concept_uri} and {self.ids}")
-        existing_history_data = load_json_file(self.spec_history)
+        For update provide:
+        - A concept URI file (self.concept_uri)
+        - An IDs file (self.ids)
+        - An output path (self.output)
+        - An existing spec history file (self.spec_history)
+
+        For saving type definitions:
+        - A GraphQL schema file (self.schema)
+        - Optionally, a directory to store type history (self.history_dir, default: "./history")
+        """
+        if spec_history_path is None:
+            raise click.UsageError("spec history is required when using --update")
+
+        logging.info(f"Updating spec history {spec_history_path} with {concept_uris} and {concept_ids}")
+        existing_history_data = load_json_file(spec_history_path)
         existing_history = SpecHistoryModel.model_validate(existing_history_data)
         new_concepts, updated_ids = update_spec_history_from_concept_uris(
             existing_history, concept_uri_model, concept_ids
@@ -199,6 +211,40 @@ class SpecHistoryExporter:
             logging.info(existing_history.model_dump(by_alias=True))
 
         return existing_history
+
+    def run(
+        self, concept_uris_path: Path, concept_ids_path: Path, init: bool, spec_history_path: Path | None = None
+    ) -> SpecHistoryModel:
+        """
+        Generate or update a spec history registry to track changes in concept realizations.
+
+        This method tracks the history of realization IDs for each concept over time.
+        It can either initialize a new spec history or update an existing one.
+
+        For initialization (init == True), provide:
+        - A concept URI file (self.concept_uri)
+        - An IDs file (self.ids)
+        - An output path (self.output)
+
+        For updates (init == False), also provide:
+        - An existing spec history file (self.spec_history)
+
+        For saving type definitions:
+        - A GraphQL schema file (self.schema)
+        - Optionally, a directory to store type history (self.history_dir, default: "./history")
+        """
+        # Load the concept URIs and IDs
+        concept_uris_data = load_json_file(concept_uris_path)
+        concept_ids = load_json_file(concept_ids_path)
+        concept_uri_model = ConceptUriModel.model_validate(concept_uris_data)
+
+        if init:
+            return self.init_spec_history_model(concept_uris_data, concept_ids, concept_uri_model)
+
+        if not spec_history_path:
+            raise click.UsageError("spec history is required when using update")
+
+        return self.update_spec_history_model(concept_uris_data, concept_ids, concept_uri_model, spec_history_path)
 
 
 @click.command()
@@ -252,15 +298,16 @@ def main(
 ) -> None:
     """CLI entrypoint: instantiate SpecHistoryExporter and run."""
     exporter = SpecHistoryExporter(
-        concept_uri=concept_uri,
-        ids=ids,
         schema=schema,
-        init=init,
-        spec_history=spec_history,
         output=output,
         history_dir=history_dir,
     )
-    spec_history_model = exporter.run()
+    spec_history_model = exporter.run(
+        concept_uris_path=concept_uri,
+        concept_ids_path=ids,
+        init=init,
+        spec_history_path=spec_history,
+    )
     logging.info(f"{spec_history_model=}")
 
 

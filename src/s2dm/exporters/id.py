@@ -4,6 +4,7 @@ import re
 import sys
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import click
 import yaml
@@ -84,7 +85,7 @@ class IDExporter:
                     if id_spec.is_leaf_field():
                         yield id_spec
 
-    def run(self) -> dict[str, str] | None:
+    def run(self) -> dict[str, Any]:
         """Generate IDs for GraphQL schema fields and enums."""
         logging.info(f"Using units file '{self.units_file}', input is '{self.schema}', and output is '{self.output}'")
 
