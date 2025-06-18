@@ -143,7 +143,7 @@ def main(
     node_ids = exporter.run()
 
     console = Console()
-    console.rule("[bold blue]Node IDs")
+    console.rule("[bold blue]Concept IDs")
     console.print(node_ids)
 
 
