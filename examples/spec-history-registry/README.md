@@ -7,7 +7,27 @@ This directory contains example files and commands to demonstrate how to use the
 - `sample.graphql` - A comprehensive GraphQL schema demonstrating vehicle data modeling
 - Uses `units.yaml` for unit definitions
 
-## Running the Tools
+## Running the tools (S2DM)
+
+**This is the recommended way.**
+
+Run init to initialize your first spec history file
+
+```bash
+uv run s2dm registry init -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o spec_history/spec_history.json
+```
+
+and run update to update your previously generated spec history file
+
+```bash
+uv run s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -u examples/spec-history-registry/units.yaml -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
+```
+
+Great now you have your updated files including a history dir
+
+## Running the Tools (Manually)
+
+**Only follow the manual process if you are interested in having any of the processed files like ID files or URI files.**
 
 Follow these commands in order to generate all the necessary files for the example:
 
