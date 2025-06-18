@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from s2dm.exporters.graphql_inspector import GraphQLInspector
 from s2dm.exporters.utils import create_tempfile_to_composed_schema
+from s2dm.tools.graphql_inspector import GraphQLInspector
 
 DATA_DIR: Path = Path(__file__).parent / "data"
 SCHEMA1: Path = DATA_DIR / "schema1.graphql"

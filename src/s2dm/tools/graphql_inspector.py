@@ -40,7 +40,6 @@ class GraphQLInspector:
         start_time = datetime.now()
 
         try:
-            # Log the attempt
             logging.debug("Starting subprocess...")
 
             process = subprocess.Popen(  # ignore: type [type-arg]
@@ -53,7 +52,7 @@ class GraphQLInspector:
                 **kwargs,
             )
 
-            # logging.debug(f"Process started with PID: {process.pid}")
+            logging.debug(f"Process started with PID: {process.pid}")
 
             # Capture output in real-time
             stdout_lines = []
@@ -109,7 +108,6 @@ class GraphQLInspector:
 
             logging.debug(f"Process completed in {duration:.2f}s with return code: {process.returncode}")
 
-            # Log the full result
             logging.debug(f"FULL_RESULT: {json.dumps(result, indent=2)}")
 
             return result

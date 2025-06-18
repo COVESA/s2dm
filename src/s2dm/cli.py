@@ -8,10 +8,10 @@ from rich.console import Console
 from rich.traceback import install
 
 from s2dm import __version__, log
-from s2dm.exporters.graphql_inspector import GraphQLInspector
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.utils import create_tempfile_to_composed_schema, load_schema
 from s2dm.exporters.vspec import translate_to_vspec
+from s2dm.tools.graphql_inspector import GraphQLInspector
 
 schema_option = click.option(
     "--schema",
@@ -328,7 +328,9 @@ def stats_graphql(schema: Path) -> None:
         if kind == "GraphQLScalarType" and name not in ("Int", "Float", "String", "Boolean", "ID"):
             type_counts["custom_types"][name] = type_counts["custom_types"].get(name, 0) + 1
 
-    logging.info(f"Type counts: {type_counts}")
+    console = Console()
+    console.rule("[bold blue]GraphQL Schema Type Counts")
+    console.print(type_counts)
 
 
 cli.add_command(check)
