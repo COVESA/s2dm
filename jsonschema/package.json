@@ -1,0 +1,29 @@
+{
+  "name": "s2dm-gql-2-jsonschema",
+  "version": "1.0.0",
+  "description": "S2DM GraphQL to JSON Schema converter",
+  "main": "dist/index.js",
+  "bin": {
+    "s2dm-gql2jsonschema": "./dist/index.js"
+  },
+  "scripts": {
+    "start": "ts-node index.ts",
+    "build": "tsc",
+    "prepublish": "npm run build",
+    "link": "npm link"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@graphql-tools/utils": "^10.8.6",
+    "commander": "^14.0.0",
+    "graphql": "^16.11.0",
+    "graphql-2-json-schema": "^0.10.0"
+  },
+  "devDependencies": {
+    "@types/json-schema": "^7.0.15",
+    "@types/lodash": "^4.17.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
