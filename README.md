@@ -1,3 +1,5 @@
+![Status - Incubating](https://img.shields.io/static/v1?label=Status&message=Incubating&color=FEFF3A&style=for-the-badge)
+
 <h2 align="center">
  Simplified Semantic Data Modeling (S2DM)
 </h2>
