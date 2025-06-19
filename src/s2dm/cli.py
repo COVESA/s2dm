@@ -12,8 +12,14 @@ from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
-from s2dm.exporters.utils import create_tempfile_to_composed_schema, get_all_named_types, load_schema
+from s2dm.exporters.utils import (
+    create_tempfile_to_composed_schema,
+    get_all_named_types,
+    get_all_object_types,
+    load_schema,
+)
 from s2dm.exporters.vspec import translate_to_vspec
+from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
 
 schema_option = click.option(
@@ -256,6 +262,35 @@ def version_bump(schema: Path, previous_schema: Path) -> None:
         logging.debug(f"diff_result in check = {diff_result}")
         if "Detected" in diff_result["stdout"] and "breaking changes" in diff_result["stdout"]:
             logging.info("Detected breaking changes, major version bump needed. Please run diff to get more details")
+
+
+@check.command(name="constraints")
+@schema_option
+@click.pass_context
+def check_constraints(ctx: click.Context, schema: Path) -> None:
+    """
+    Enforce intended use of custom directives and naming conventions.
+    Checks:
+    - instanceTag field and object rules
+    - @range and @cardinality min/max
+    - Naming conventions (TBD)
+    """
+    gql_schema = load_schema(schema)
+    named_types = get_all_named_types(gql_schema)
+    objects = get_all_object_types(named_types)
+
+    constraint_checker = ConstraintChecker(gql_schema)
+    errors = constraint_checker.run(objects)
+
+    if errors:
+        console = Console()
+        console.rule("[bold red]Constraint Violations")
+        for err in errors:
+            console.print(f"[red]- {err}")
+        raise SystemExit(1)
+    else:
+        console = Console()
+        console.print("[green]All constraints passed!")
 
 
 # Validate -> graphql
