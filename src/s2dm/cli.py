@@ -300,7 +300,7 @@ def check_constraints(ctx: click.Context, schema: Path) -> None:
 @optional_output_option
 @click.pass_context
 def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> None:
-    """ToDo"""
+    """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     validation_result = inspector.introspect()
@@ -385,6 +385,7 @@ def registry_init(
     concept_namespace: str,
     concept_prefix: str,
 ) -> None:
+    """Initialize your spec history with the given schema."""
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -461,6 +462,7 @@ def registry_update(
     concept_namespace: str,
     concept_prefix: str,
 ) -> None:
+    """Update a given spec history file with your new schema."""
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
 
