@@ -133,6 +133,16 @@ class GraphQLInspector:
         """Introspect schema."""
         return self._run_command(InspectorCommands.INTROSPECT)
 
-    def similar(self) -> dict[str, Any]:
+    def similar(self, output: Path | None) -> dict[str, Any]:
         """Similar table"""
-        return self._run_command(InspectorCommands.SIMILAR)
+        if output:
+            return self._run_command(InspectorCommands.SIMILAR, "--write", output)
+        else:
+            return self._run_command(InspectorCommands.SIMILAR)
+
+    def search_keyword(self, keyword: str, output: Path | None) -> dict[str, Any]:
+        """Search single type in schema"""
+        if output:
+            return self._run_command(InspectorCommands.SIMILAR, "-n", keyword, "--write", output)
+        else:
+            return self._run_command(InspectorCommands.SIMILAR, "-n", keyword)

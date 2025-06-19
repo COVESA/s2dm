@@ -125,6 +125,12 @@ def registry() -> None:
 
 
 @click.group()
+def search() -> None:
+    """Search commands e.g. search graphql for one specific type."""
+    pass
+
+
+@click.group()
 def stats() -> None:
     """Stats commands."""
     pass
@@ -463,7 +469,40 @@ def registry_update(
         console.print(spec_history_result)
 
 
-# Stats -> graphQL
+# Search -> GraphQL
+@search.command(name="graphql")
+@schema_option
+@click.option(
+    "--keyword", "-k", required=True, help="Name of the keyword or type you want to search the graphql schema for."
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    required=False,
+    help="Output file, only .json allowed here",
+)
+@click.pass_context
+def search_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path | None) -> None:
+    """Search a keyword in the provided grahql schema."""
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
+    inspector = GraphQLInspector(schema_temp_path)
+    if output:
+        logging.info(f"Search will write file to {output}")
+
+    # if keyword == "all" search all elements otherwise only keyword
+    search_result = inspector.similar(output) if keyword == "all" else inspector.search_keyword(keyword, output)
+
+    if search_result["returncode"] == 1:
+        logging.error(search_result["stderr"])
+
+    console = Console()
+    console.rule(f"[bold blue] Search result for '{keyword}'")
+    if search_result["returncode"] == 0:
+        console.print(search_result["stdout"])
+
+
+# Stats -> GraphQL
 # ----------
 @stats.command(name="graphql")
 @schema_option
@@ -514,6 +553,7 @@ cli.add_command(check)
 cli.add_command(diff)
 cli.add_command(export)
 cli.add_command(registry)
+cli.add_command(search)
 cli.add_command(stats)
 cli.add_command(validate)
 
