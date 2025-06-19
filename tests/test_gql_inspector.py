@@ -57,10 +57,22 @@ def test_diff_with_changes(schema1_tmp: Path, schema2_tmp: Path) -> None:
 
 def test_similar(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
-    result: dict[str, Any] = inspector.similar()
+    result: dict[str, Any] = inspector.similar(output=None)
     assert isinstance(result, dict)
     assert "stdout" in result
     assert result["returncode"] == 0
+
+
+def test_search_keyword(schema1_tmp: Path) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+    # Use a keyword that is likely to exist in the test schema, e.g. "Query"
+    result: dict[str, Any] = inspector.search_keyword("Query", output=None)
+    assert isinstance(result, dict)
+    assert "stdout" in result
+    assert result["returncode"] == 0 or result["returncode"] == 1  # allow not found
+    # Optionally check that the output contains the keyword if found
+    if result["returncode"] == 0:
+        assert "Query" in result["stdout"]
 
 
 # ToDo: add a test for validate if you have a query file
