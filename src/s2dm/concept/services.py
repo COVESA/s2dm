@@ -5,7 +5,6 @@ from typing import Any
 
 from graphql import GraphQLEnumType, GraphQLList, GraphQLNamedType, GraphQLObjectType
 
-from s2dm import log
 from s2dm.concept.models import (
     Concepts,
     ConceptUriModel,
@@ -111,7 +110,7 @@ def convert_concept_uri_to_spec_history(
             if concept_name in concept_ids:
                 spec_node.initialize_history(concept_ids[concept_name])
             else:
-                log.warning(f"No ID found for concept: {concept_name}")
+                logging.warning(f"No ID found for concept: {concept_name}")
 
         spec_nodes.append(spec_node)
 
@@ -122,7 +121,7 @@ def convert_concept_uri_to_spec_history(
 def update_spec_history_from_concept_uris(
     spec_history: SpecHistoryModel,
     concept_uris: ConceptUriModel,
-    concept_ids: dict[str, str],
+    concept_ids: dict[str, Any],
 ) -> tuple[list[str], list[str]]:
     """Update this spec history from concept URIs and IDs.
 

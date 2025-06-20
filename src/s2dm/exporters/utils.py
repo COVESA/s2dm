@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 from dataclasses import dataclass
 from enum import Enum
 from itertools import product
@@ -78,9 +79,23 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     """Load and build a GraphQL schema from a file or folder."""
     schema_str = build_schema_str(graphql_schema_path)
     schema = build_schema(schema_str)  # Convert GraphQL SDL to a GraphQLSchema object
-    logging.info("Successfully loaded the given GraphQL schema file.")
+    logging.info(f"Successfully loaded the given GraphQL schema file in '{graphql_schema_path}'.")
     logging.debug(f"Read schema: \n{print_schema(schema)}")
     return ensure_query(schema)
+
+
+def load_schema_as_str(graphql_schema_path: Path) -> str:
+    """Load and build GraphQL schema but return as str."""
+    return print_schema(load_schema(graphql_schema_path))
+
+
+def create_tempfile_to_composed_schema(graphql_schema_path: Path) -> Path:
+    """Load, build, and create temp file for schema to feed to e.g. GraphQL inspector."""
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".graphql", delete=False) as temp_file:
+        temp_path: str = temp_file.name
+        temp_file.write(load_schema_as_str(graphql_schema_path))
+
+    return Path(temp_path)
 
 
 def ensure_query(schema: GraphQLSchema) -> GraphQLSchema:
