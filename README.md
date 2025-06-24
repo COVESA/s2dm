@@ -27,7 +27,7 @@ To learn more about the background that has led to S2DM, as well as its design p
 
 ## Repository Structure
 
-- [docs/](docs/) - Documentation files.  
+- [docs/](docs/) - Documentation files.
 - [examples/](examples/) - Examples of the application of the `S2DM` approach.
 - [src/](src/) - Source code for tools and utilities supporting the `S2DM` approach.
 

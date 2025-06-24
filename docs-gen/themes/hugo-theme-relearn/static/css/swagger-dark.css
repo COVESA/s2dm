@@ -1680,7 +1680,7 @@ select:-webkit-autofill {
 .swagger-ui textarea {
     background-image: initial;
     background-color: rgb(24, 26, 27);
-    border-color: rgb(59, 64, 66); 
+    border-color: rgb(59, 64, 66);
 }
 .swagger-ui input[type="email"].invalid, .swagger-ui input[type="file"].invalid, .swagger-ui input[type="password"].invalid, .swagger-ui input[type="search"].invalid, .swagger-ui input[type="text"].invalid,
 .swagger-ui textarea.invalid {
@@ -1725,7 +1725,7 @@ select:-webkit-autofill {
 .swagger-ui .checkbox input[type="checkbox"] + label > .item {
     background-image: initial;
     background-color: rgb(37, 40, 42);
-    box-shadow: rgb(37, 40, 42) 0px 0px 0px 2px; 
+    box-shadow: rgb(37, 40, 42) 0px 0px 0px 2px;
 }
 .swagger-ui .checkbox input[type="checkbox"]:checked + label > .item {
     background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTAiIGhlaWdodD0iOCI+PGRlZnM+PGZpbHRlciBpZD0iZGFya3JlYWRlci1pbWFnZS1maWx0ZXIiPjxmZUNvbG9yTWF0cml4IHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwLjI0OSAtMC42MTQgLTAuNjcyIDAuMDAwIDEuMDM1IC0wLjY0NiAwLjI4OCAtMC42NjQgMC4wMDAgMS4wMjAgLTAuNjM2IC0wLjYwOSAwLjI1MCAwLjAwMCAwLjk5NCAwLjAwMCAwLjAwMCAwLjAwMCAxLjAwMCAwLjAwMCIgLz48L2ZpbHRlcj48L2RlZnM+PGltYWdlIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiBmaWx0ZXI9InVybCgjZGFya3JlYWRlci1pbWFnZS1maWx0ZXIpIiB4bGluazpocmVmPSJkYXRhOmltYWdlL3N2Zyt4bWw7Y2hhcnNldD11dGYtOCw8c3ZnIHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiB2aWV3Qm94PSIzIDcgMTAgOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBmaWxsPSIlMjM0MTQ3NEUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTYuMzMzIDE1IDMgMTEuNjY3bDEuMzMzLTEuMzM0IDIgMkwxMS42NjcgNyAxMyA4LjMzM3oiLz48L3N2Zz4iIC8+PC9zdmc+");
@@ -1874,7 +1874,7 @@ select:-webkit-autofill {
     background-color: rgb(20, 22, 23);
 }
 .swagger-ui .topbar a {
-    color: rgb(232, 230, 227); text-decoration-color: initial; 
+    color: rgb(232, 230, 227); text-decoration-color: initial;
 }
 .swagger-ui .topbar .download-url-wrapper input[type="text"] {
     border-color: rgb(83, 135, 53);

@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 import rich_click as click
-from rich.pretty import pprint
 from rich.traceback import install
 
 from tools.to_shacl import translate_to_shacl
@@ -13,13 +12,10 @@ from . import __version__, log
 
 # Define the common options
 def schema_option(f):
-    return click.option(
-        "--schema",
-        "-s",
-        type=click.Path(exists=True),
-        required=True,
-        help="The GraphQL schema file"
-    )(f)
+    return click.option("--schema", "-s", type=click.Path(exists=True), required=True, help="The GraphQL schema file")(
+        f
+    )
+
 
 def output_option(f):
     return click.option(
@@ -27,8 +23,9 @@ def output_option(f):
         "-o",
         type=click.Path(dir_okay=False, writable=True, path_type=Path),
         required=True,
-        help="Output file"
+        help="Output file",
     )(f)
+
 
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
 @click.option(
@@ -56,10 +53,12 @@ def cli(log_level: str, log_file: Path | None) -> None:
     if log_level == "DEBUG":
         _ = install(show_locals=True)
 
+
 @click.group()
 def export():
     """Export commands."""
     pass
+
 
 # SHACL
 # ----------
@@ -67,8 +66,12 @@ def export():
 @schema_option
 @output_option
 @click.option(
-    "--serialization-format", "-f", type=str, default="ttl", help="RDF serialization format of the output file", 
-    show_default=True
+    "--serialization-format",
+    "-f",
+    type=str,
+    default="ttl",
+    help="RDF serialization format of the output file",
+    show_default=True,
 )
 @click.option(
     "--shapes-namespace",
@@ -117,6 +120,7 @@ def shacl(
     )
     result.serialize(destination=output, format=serialization_format)
 
+
 # YAML
 # ----------
 @export.command
@@ -126,6 +130,7 @@ def vspec(schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     result = translate_to_vspec(schema)
     output.write_text(result)
+
 
 cli.add_command(export)
 

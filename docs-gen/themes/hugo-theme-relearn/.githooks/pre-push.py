@@ -13,9 +13,9 @@
 # echo 'execute .githooks/pre-push.py' >> .githooks/hooks.log
 # python3 .githooks/pre-push.py
 
-from datetime import datetime
 import re
 import subprocess
+from datetime import datetime
 
 # This hook is called with the following parameters:
 # $1 -- Name of the remote to which the push is being done
@@ -28,16 +28,25 @@ import subprocess
 # This hook prevents the push of commits that belong to branches starting with
 # an "#" (which are work in progress).
 
+
 def main():
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    local_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], universal_newlines=True).strip()
-    wip_prefix = '^#\\d+(?:\\b.*)$'
+    local_branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], universal_newlines=True
+    ).strip()
+    wip_prefix = "^#\\d+(?:\\b.*)$"
     if re.match(wip_prefix, local_branch):
-        print(f'{time}: Branch "{local_branch}" was not pushed because its name starts with a "#" which marks it as work in progress', file=open(".githooks/hooks.log", "a"))
-        print(f'Branch "{local_branch}" was not pushed because its name starts with a "#" which marks it as work in progress')
+        print(
+            f'{time}: Branch "{local_branch}" was not pushed because its name starts with a "#" which marks it as work in progress',
+            file=open(".githooks/hooks.log", "a"),
+        )
+        print(
+            f'Branch "{local_branch}" was not pushed because its name starts with a "#" which marks it as work in progress'
+        )
         exit(1)
     print(f'{time}: Branch "{local_branch}" was pushed', file=open(".githooks/hooks.log", "a"))
     exit(0)
+
 
 if __name__ == "__main__":
     main()

@@ -11,7 +11,7 @@ if not "%~1"=="" (
 rem Relearn themes exampleSite
 set "themeDir=.."
 if not exist "%themeDir%\layouts\partials\version.txt" (
-    rem other sites stored parallel to Relearn themes directory 
+    rem other sites stored parallel to Relearn themes directory
     set "themeDir=..\hugo-theme-relearn"
 )
 if not exist "%themeDir%\layouts\partials\version.txt" (

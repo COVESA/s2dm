@@ -88,7 +88,7 @@ type Cabin {
 
 type Seat {
   instanceTag: InCabinArea2x2
-  position(unit: Length_Unit_Enum = MILLIMETER): UInt16 
+  position(unit: Length_Unit_Enum = MILLIMETER): UInt16
     @metadata(vssType: "actuator")
 }
 ```
@@ -302,7 +302,7 @@ ns:Window.position  # URI for the window position
 ```
 This structure is aligned with the core principle in the semantic web, in which every resource has a future-proof identifier.
 
-The `to_concept_uri.py` script generates JSON-LD document representing the conceptual structure of the given GraphQL schema, but with the URIs. 
+The `to_concept_uri.py` script generates JSON-LD document representing the conceptual structure of the given GraphQL schema, but with the URIs.
 Hence, it creates URIs for all objects, fields, and enums in the schema.
 
 
@@ -407,8 +407,8 @@ This JSON-LD output shows that:
 - `Vehicle_ADAS` is an object type with two fields
 - `Vehicle_ADAS_ActiveAutonomyLevel_Enum` is an enum type
 
-### Creation of hashed IDs based on specified metadata 
-The ID exporter `to_id.py` traverses a GraphQL schema and generates deterministic, unique hash IDs for schema elements. 
+### Creation of hashed IDs based on specified metadata
+The ID exporter `to_id.py` traverses a GraphQL schema and generates deterministic, unique hash IDs for schema elements.
 If a breaking change is introduced in the specification, it will result in a different ID.
 
 #### How It Works
