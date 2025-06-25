@@ -5,6 +5,7 @@ import rich_click as click
 from rich.traceback import install
 
 from s2dm import __version__, log
+from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.vspec import translate_to_vspec
 
@@ -123,6 +124,20 @@ def shacl(
         model_namespace_prefix,
     )
     _ = result.serialize(destination=output, format=serialization_format)
+
+
+@export.command
+@schema_option
+@output_option
+def jsonschema(schema: Path, output: Path) -> None:
+    """Generate JSON Schema (Draft 2020-12) from a given GraphQL schema."""
+    try:
+        # Convert to JSON Schema
+        translate_to_jsonschema(schema, output)
+
+    except Exception as e:
+        log.error(f"Error converting GraphQL to JSON Schema: {e}")
+        raise click.ClickException(str(e)) from e
 
 
 @export.command

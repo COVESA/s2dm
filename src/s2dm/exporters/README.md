@@ -56,22 +56,23 @@ s2dm export <some_supported_format> ...
 
 #### Available exporters
 The tools can currently export a given model into:
-* [VSPEC](#vspec-exporter) - `tools/to_vspec.py`
-* [SHACL](#shacl-exporter) - `tools/to_shacl.py`
+* [VSPEC](#vspec-exporter) - `exporters/vspec.py`
+* [SHACL](#shacl-exporter) - `exporters/shacl.py`
+* [JSON Schema](#json-schema-exporter) - `exporters/jsonschema.py`
 
 #### Supported field cases by exporter
 > See `docs/MODELING_GUIDE.md` for more information on cases for fields and the custom directives, such as @noDuplicates.
 
-| Case | `outputType`| VSPEC | SHACL|
-|----------|----------|----------|----------|
-| **Nullable Singular Field**   | `NamedType`   | ✅ | ✅ |
-| **Non-Nullable Singular Field**   | `NamedType!`   | ✅ | ✅ |
-| **Nullable List Field**   | `[NamedType]`   | ✅ | ❌ |
-| **Non-Nullable List Field**   | `[NamedType]!`   | ✅ | ❌ |
-| **Nullable List of Non-Nullable Elements**   | `[NamedType!]`   | ✅ | ❌ |
-| **Non-Nullable List of Non-Nullable Elements**   | `[NamedType!]!`   | ✅ | ❌ |
-| **Nullable Set Field**   | `[NamedType] @noDuplicates` | ❌ |✅ |
-| **Non-Nullable Set Field**   | `[NamedType]! @noDuplicates`   | ❌ |✅|
+| Case | `outputType`| VSPEC | SHACL | JSON Schema |
+|----------|----------|----------|----------|----------|
+| **Nullable Singular Field**   | `NamedType`   | ✅ | ✅ | ✅ |
+| **Non-Nullable Singular Field**   | `NamedType!`   | ✅ | ✅ | ✅ |
+| **Nullable List Field**   | `[NamedType]`   | ✅ | ❌ | ✅ |
+| **Non-Nullable List Field**   | `[NamedType]!`   | ✅ | ❌ | ✅ |
+| **Nullable List of Non-Nullable Elements**   | `[NamedType!]`   | ✅ | ❌ | ✅ |
+| **Non-Nullable List of Non-Nullable Elements**   | `[NamedType!]!`   | ✅ | ❌ | ✅ |
+| **Nullable Set Field**   | `[NamedType] @noDuplicates` | ❌ |✅ | ✅ |
+| **Non-Nullable Set Field**   | `[NamedType]! @noDuplicates`   | ❌ |✅| ✅ |
 
 ### VSPEC exporter
 This exporter translates the given GraphQL schema to the [Vehicle Signal Specification (VSS)](https://covesa.github.io/vehicle_signal_specification/) format (i.e., a YAML-like file with a custom syntax known as `VSPEC`).
@@ -274,7 +275,59 @@ Please, refer to the CLI help for usage reference.
 s2dm shacl --help
 ```
 
+### JSON Schema exporter
+This exporter translates the given GraphQL schema to [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12/json-schema-core.html) format.
 
+JSON Schema provides a vocabulary to validate JSON documents, making it useful for:
+- Validating data before processing
+- Documenting data structures
+- Generating forms and UIs
+- Enabling code generation
+
+#### Features
+- Full support for all GraphQL field cases
+- Directive processing (e.g., @range, @cardinality)
+- Property expansion for self-contained schemas
+- Clean output without GraphQL artifacts
+
+#### Example
+Input GraphQL schema:
+```graphql
+directive @range(min: Int, max: Int) on FIELD_DEFINITION
+
+type Query {
+  vehicle: Vehicle
+}
+
+type Vehicle {
+  make: String
+  year: Int @range(min: 1900, max: 2030)
+}
+```
+
+Output JSON Schema:
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Vehicle",
+  "properties": {
+    "make": {
+      "type": "string"
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2030
+    }
+  }
+}
+```
+
+You can call the help for usage reference like this:
+```bash
+s2dm export jsonschema --help
+```
 
 ## Identifiers
 With the asumption that specification files will be hosted in a certain Git repository, the tools include functions to support the proper identification of concepts and their metadata to facilite their evolution.
