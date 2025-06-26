@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -83,17 +84,8 @@ def pretty_print_dict_json(result: dict[str, Any]) -> dict[str, Any]:
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     help="Log file",
 )
-@click.option(
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Enable verbose console output",
-)
 @click.version_option(__version__)
-@click.pass_context
-def cli(ctx: click.Context, log_level: str, log_file: Path | None, verbose: bool) -> None:
-    ctx.ensure_object(dict)
-    ctx.obj["VERBOSE"] = verbose
+def cli(log_level: str, log_file: Path | None) -> None:
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
     log.addHandler(console_handler)
@@ -247,6 +239,8 @@ def vspec(schema: Path, output: Path) -> None:
 def version_bump(schema: Path, previous_schema: Path) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
+    ToDo this needs to be update to use the correct terminology
+
     No changes: No bump needed
     Changes but no breaking changes: Patch or minor version bump needed
     Breaking changes: Major version bump needed
@@ -273,8 +267,7 @@ def version_bump(schema: Path, previous_schema: Path) -> None:
 
 @check.command(name="constraints")
 @schema_option
-@click.pass_context
-def check_constraints(ctx: click.Context, schema: Path) -> None:
+def check_constraints(schema: Path) -> None:
     """
     Enforce intended use of custom directives and naming conventions.
     Checks:
@@ -300,24 +293,22 @@ def check_constraints(ctx: click.Context, schema: Path) -> None:
         console.print("[green]All constraints passed!")
 
 
-# Validate -> graphql
+# validate -> graphql
 # ----------
 @validate.command(name="graphql")
 @schema_option
 @optional_output_option
-@click.pass_context
-def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> None:
+def validate_graphql(schema: Path, output: Path | None) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     validation_result = inspector.introspect()
 
-    if ctx.obj.get("VERBOSE"):
-        console = Console()
-        if validation_result["returncode"] == 0:
-            console.print(validation_result["stdout"])
-        else:
-            console.print(validation_result["stderr"])
+    console = Console()
+    if validation_result["returncode"] == 0:
+        console.print(validation_result["stdout"])
+    else:
+        console.print(validation_result["stderr"])
 
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -325,7 +316,7 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> N
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
-# Diff -> graphql
+# diff -> graphql
 # ----------
 @diff.command(name="graphql")
 @schema_option
@@ -337,8 +328,7 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path | None) -> N
     required=True,
     help="The GraphQL schema file to validate against",
 )
-@click.pass_context
-def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Path | None) -> None:
+def diff_graphql(schema: Path, val_schema: Path, output: Path | None) -> None:
     """Diff for two GraphQL schemas."""
     logging.info(f"Comparing schemas: {schema} and {val_schema}")
 
@@ -348,13 +338,13 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
     val_temp_path = create_tempfile_to_composed_schema(val_schema)
     diff_result = inspector.diff(val_temp_path)
 
-    if ctx.obj.get("VERBOSE"):
-        console = Console()
-        if diff_result["returncode"] == 0:
-            console.print(diff_result["stdout"])
-        else:
-            console.print(diff_result["stdout"])
-            console.print(diff_result["stderr"])
+    console = Console()
+    if diff_result["returncode"] == 0:
+        console.print(diff_result["stdout"])
+    else:
+        console.print(diff_result["stdout"])
+        console.print(diff_result["stderr"])
+        sys.exit(diff_result["returncode"])
 
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -362,7 +352,7 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
-# Registry -> Init
+# registry -> init
 @registry.command(name="init")
 @schema_option
 @click.option(
@@ -383,9 +373,7 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@click.pass_context
 def registry_init(
-    ctx: click.Context,
     schema: Path,
     units: Path,
     output: Path | None,
@@ -421,17 +409,16 @@ def registry_init(
     )
     spec_history_result = spec_history_exporter.init_spec_history_model(concept_uris, concept_ids, concept_uri_model)
 
-    if ctx.obj.get("VERBOSE"):
-        console = Console()
-        console.rule("[bold blue]Concept IDs")
-        console.print(concept_ids)
-        console.rule("[bold blue]Concept URIs")
-        console.print(concept_uris)
-        console.rule("[bold blue]Spec history (updated)")
-        console.print(spec_history_result)
+    console = Console()
+    console.rule("[bold blue]Concept IDs")
+    console.print(concept_ids)
+    console.rule("[bold blue]Concept URIs")
+    console.print(concept_uris)
+    console.rule("[bold blue]Spec history (updated)")
+    console.print(spec_history_result)
 
 
-# Registry -> Update
+# registry -> update
 @registry.command(name="update")
 @schema_option
 @click.option(
@@ -459,9 +446,7 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@click.pass_context
 def registry_update(
-    ctx: click.Context,
     schema: Path,
     units: Path,
     spec_history: Path,
@@ -503,24 +488,22 @@ def registry_update(
         spec_history_path=spec_history,
     )
 
-    if ctx.obj.get("VERBOSE"):
-        console = Console()
-        console.rule("[bold blue]Concept IDs")
-        console.print(concept_ids)
-        console.rule("[bold blue]Concept URIs")
-        console.print(concept_uris)
-        console.rule("[bold blue]Spec history (updated)")
-        console.print(spec_history_result)
+    console = Console()
+    console.rule("[bold blue]Concept IDs")
+    console.print(concept_ids)
+    console.rule("[bold blue]Concept URIs")
+    console.print(concept_uris)
+    console.rule("[bold blue]Spec history (updated)")
+    console.print(spec_history_result)
 
 
-# Search -> GraphQL
+# search -> graphql
 @search.command(name="graphql")
 @schema_option
 @click.option("--type", "-t", required=True, help="Type or field you want to search the graphql schema for.")
 @click.option("--case-insensitive", "-i", is_flag=True, default=False, help="Perform a case-insensitive search.")
 @click.option("--exact", is_flag=True, default=False, help="Perform an exact match search.")
-@click.pass_context
-def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive: bool, exact: bool) -> None:
+def search_graphql(schema: Path, type: str, case_insensitive: bool, exact: bool) -> None:
     """Search for a type or field in the GraphQL schema. If type was found returns type including all fields,
     if fields was found returns only field in parent type"""
 
@@ -552,7 +535,7 @@ def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive
                 console.print(f"[green]{tname}[/green]: {fields}")
 
 
-# Similar -> GraphQL
+# similar -> graphql
 @similar.command(name="graphql")
 @schema_option
 @click.option(
@@ -565,8 +548,7 @@ def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive
     required=False,
     help="Output file, only .json allowed here",
 )
-@click.pass_context
-def similar_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path | None) -> None:
+def similar_graphql(schema: Path, keyword: str, output: Path | None) -> None:
     """Search a keyword in the provided grahql schema. Provide -k all for all similarities across the whole schema."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
@@ -585,12 +567,11 @@ def similar_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path
         console.print(search_result["stdout"])
 
 
-# Stats -> GraphQL
+# stats -> graphql
 # ----------
 @stats.command(name="graphql")
 @schema_option
-@click.pass_context
-def stats_graphql(ctx: click.Context, schema: Path) -> None:
+def stats_graphql(schema: Path) -> None:
     """Get stats of schema."""
     gql_schema = load_schema(schema)
 
@@ -626,10 +607,9 @@ def stats_graphql(ctx: click.Context, schema: Path) -> None:
         if kind == "GraphQLScalarType" and name not in ("Int", "Float", "String", "Boolean", "ID"):
             type_counts["custom_types"][name] = type_counts["custom_types"].get(name, 0) + 1
 
-    if ctx.obj.get("VERBOSE"):
-        console = Console()
-        console.rule("[bold blue]GraphQL Schema Type Counts")
-        console.print(type_counts)
+    console = Console()
+    console.rule("[bold blue]GraphQL Schema Type Counts")
+    console.print(type_counts)
 
 
 cli.add_command(check)
