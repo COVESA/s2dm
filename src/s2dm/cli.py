@@ -17,6 +17,7 @@ from s2dm.exporters.utils import (
     get_all_named_types,
     get_all_object_types,
     load_schema,
+    search_schema,
 )
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
@@ -133,6 +134,12 @@ def registry() -> None:
 @click.group()
 def search() -> None:
     """Search commands e.g. search graphql for one specific type."""
+    pass
+
+
+@click.group()
+def similar() -> None:
+    """Find similar types of a graphql schema"""
     pass
 
 
@@ -509,6 +516,45 @@ def registry_update(
 # Search -> GraphQL
 @search.command(name="graphql")
 @schema_option
+@click.option("--type", "-t", required=True, help="Type or field you want to search the graphql schema for.")
+@click.option("--case-insensitive", "-i", is_flag=True, default=False, help="Perform a case-insensitive search.")
+@click.option("--exact", is_flag=True, default=False, help="Perform an exact match search.")
+@click.pass_context
+def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive: bool, exact: bool) -> None:
+    """Search for a type or field in the GraphQL schema. If type was found returns type including all fields,
+    if fields was found returns only field in parent type"""
+
+    gql_schema = load_schema(schema)
+
+    type_results = search_schema(
+        gql_schema,
+        type_name=type,
+        field_name=None,
+        partial=not exact,
+        case_insensitive=case_insensitive,
+    )
+    field_results = search_schema(
+        gql_schema,
+        type_name=None,
+        field_name=type,
+        partial=not exact,
+        case_insensitive=case_insensitive,
+    )
+    console = Console()
+    console.rule(f"[bold blue] Search results for '{type}'")
+    if not type_results and not field_results:
+        console.print(f"[yellow]No matches found for '{type}'.")
+    else:
+        for tname, fields in type_results.items():
+            console.print(f"[green]{tname}[/green]: {fields}")
+        for tname, fields in field_results.items():
+            if fields:
+                console.print(f"[green]{tname}[/green]: {fields}")
+
+
+# Similar -> GraphQL
+@similar.command(name="graphql")
+@schema_option
 @click.option(
     "--keyword", "-k", required=True, help="Name of the keyword or type you want to search the graphql schema for."
 )
@@ -520,8 +566,8 @@ def registry_update(
     help="Output file, only .json allowed here",
 )
 @click.pass_context
-def search_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path | None) -> None:
-    """Search a keyword in the provided grahql schema."""
+def similar_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path | None) -> None:
+    """Search a keyword in the provided grahql schema. Provide -k all for all similarities across the whole schema."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     if output:
@@ -590,6 +636,7 @@ cli.add_command(check)
 cli.add_command(diff)
 cli.add_command(export)
 cli.add_command(registry)
+cli.add_command(similar)
 cli.add_command(search)
 cli.add_command(stats)
 cli.add_command(validate)
