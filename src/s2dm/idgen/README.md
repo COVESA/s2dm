@@ -83,24 +83,22 @@ We decided to use the GraphQL type name directly as the fully qualified name (FQ
 - It simplifies the resolution process
 - It maintains consistency with GraphQL's type system
 
-For more details on this decision, see [Issue #32](https://atc-github.azure.cloud.bmw/q555872/s2dm/issues/32).
-
 ## Usage
 
 ```python
-from idgen.spec import IDGenerationSpec
-from idgen.idgen import fnv1_32_wrapper
+from s2dm.idgen.models import IDGenerationSpec
+from s2dm.idgen.idgen import fnv1_32_wrapper
 
 # Create a spec from a GraphQL field
-spec = IDGenerationSpec.from_field(
-    prefix="Window",
-    field_name="position",
-    field=graphql_field,
-    unit_lookup=unit_lookup
+id_spec = IDGenerationSpec.from_field(
+    parent_name=f"{named_type.name}",
+    field_name=field_name,
+    field=field,
+    unit_lookup=unit_lookup,
 )
 
 # Generate ID
-id = fnv1_32_wrapper(spec, strict_mode=True)
+id = fnv1_32_wrapper(id_spec, strict_mode=True)
 ```
 
 ## Example
@@ -181,4 +179,3 @@ LOG_LEVEL=debug uv run python src/tools/to_id.py -o output.json test.graphql uni
 ## References
 
 - [COVESA VSS Tools ID Documentation](https://github.com/COVESA/vss-tools/blob/master/docs/id.md)
-- [Issue #32: ID Generation Design](https://atc-github.azure.cloud.bmw/q555872/s2dm/issues/32)

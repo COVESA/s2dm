@@ -4,27 +4,26 @@ from pathlib import Path
 import rich_click as click
 from rich.traceback import install
 
-from tools.to_shacl import translate_to_shacl
-from tools.to_vspec import translate_to_vspec
+from s2dm import __version__, log
+from s2dm.exporters.shacl import translate_to_shacl
+from s2dm.exporters.vspec import translate_to_vspec
 
-from . import __version__, log
+schema_option = click.option(
+    "--schema",
+    "-s",
+    type=click.Path(exists=True),
+    required=True,
+    help="The GraphQL schema file",
+)
 
+output_option = click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output file",
+)
 
-# Define the common options
-def schema_option(f):
-    return click.option("--schema", "-s", type=click.Path(exists=True), required=True, help="The GraphQL schema file")(
-        f
-    )
-
-
-def output_option(f):
-    return click.option(
-        "--output",
-        "-o",
-        type=click.Path(dir_okay=False, writable=True, path_type=Path),
-        required=True,
-        help="Output file",
-    )(f)
 
 
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
@@ -36,7 +35,11 @@ def output_option(f):
     help="Log level",
     show_default=True,
 )
-@click.option("--log-file", type=click.Path(dir_okay=False, writable=True, path_type=Path), help="Log file")
+@click.option(
+    "--log-file",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Log file",
+)
 @click.version_option(__version__)
 def cli(log_level: str, log_file: Path | None) -> None:
     console_handler = logging.StreamHandler()
@@ -55,13 +58,11 @@ def cli(log_level: str, log_file: Path | None) -> None:
 
 
 @click.group()
-def export():
+def export() -> None:
     """Export commands."""
     pass
 
 
-# SHACL
-# ----------
 @export.command
 @schema_option
 @output_option
@@ -116,20 +117,22 @@ def shacl(
 ) -> None:
     """Generate SHACL shapes from a given GraphQL schema."""
     result = translate_to_shacl(
-        schema, shapes_namespace, shapes_namespace_prefix, model_namespace, model_namespace_prefix
+        schema,
+        shapes_namespace,
+        shapes_namespace_prefix,
+        model_namespace,
+        model_namespace_prefix,
     )
-    result.serialize(destination=output, format=serialization_format)
+    _ = result.serialize(destination=output, format=serialization_format)
 
 
-# YAML
-# ----------
 @export.command
 @schema_option
 @output_option
 def vspec(schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     result = translate_to_vspec(schema)
-    output.write_text(result)
+    _ = output.write_text(result)
 
 
 cli.add_command(export)

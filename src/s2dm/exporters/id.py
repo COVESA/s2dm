@@ -1,6 +1,4 @@
 import json
-import logging
-import os
 import re
 import sys
 from collections.abc import Generator
@@ -14,12 +12,10 @@ from graphql import (
     GraphQLObjectType,
 )
 
-from idgen.idgen import fnv1_32_wrapper
-from idgen.models import IDGenerationSpec
-from tools.utils import get_all_named_types, load_schema
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s")
+from s2dm import log
+from s2dm.exporters.utils import get_all_named_types, load_schema
+from s2dm.idgen.idgen import fnv1_32_wrapper
+from s2dm.idgen.models import IDGenerationSpec
 
 
 def str_to_screaming_snake_case(text: str) -> str:
@@ -49,14 +45,14 @@ def iter_all_id_specs(
             continue
 
         if isinstance(named_type, GraphQLEnumType):
-            logging.debug(f"Processing enum: {named_type.name}")
+            log.debug(f"Processing enum: {named_type.name}")
             id_spec = IDGenerationSpec.from_enum(
                 field=named_type,
             )
             yield id_spec
 
         elif isinstance(named_type, GraphQLObjectType):
-            logging.debug(f"Processing object: {named_type.name}")
+            log.debug(f"Processing object: {named_type.name}")
             # Get the ID of all fields in the object
             for field_name, field in named_type.fields.items():
                 if field_name.lower() == "id":
@@ -69,8 +65,8 @@ def iter_all_id_specs(
                     unit_lookup=unit_lookup,
                 )
 
-                # Only yield realization fields
-                if id_spec.is_realization():
+                # Only yield leaf fields
+                if id_spec.is_leaf_field():
                     yield id_spec
 
 
@@ -84,8 +80,23 @@ def iter_all_id_specs(
 )
 @click.option("--strict-mode/--no-strict-mode", default=False)
 @click.option("--dry-run/--no-dry-run", default=False)
-def main(schema: Path, units_file: Path, output: Path, strict_mode: bool, dry_run: bool):
-    logging.info(f"Using units file '{units_file}', input is '{schema}', and output is '{output}'")
+def main(
+    schema: Path,
+    units_file: Path,
+    output: Path | None,
+    strict_mode: bool,
+    dry_run: bool,
+) -> None:
+    """Generate IDs for GraphQL schema fields and enums.
+
+    Args:
+        schema: Path to the GraphQL schema file
+        units_file: Path to the units YAML file
+        output: Optional output file path
+        strict_mode: Whether to use strict mode for ID generation
+        dry_run: Whether to perform a dry run without writing files
+    """
+    log.info(f"Using units file '{units_file}', input is '{schema}', and output is '{output}'")
 
     # Pass the schema content to build_schema
     graphql_schema = load_schema(schema)
@@ -100,18 +111,18 @@ def main(schema: Path, units_file: Path, output: Path, strict_mode: bool, dry_ru
         generated_id = fnv1_32_wrapper(id_spec, strict_mode=strict_mode)
 
         if generated_id in existing_ids:
-            logging.warning(f"Duplicate ID found: {generated_id} for {id_spec.name}")
+            log.warning(f"Duplicate ID found: {generated_id} for {id_spec.name}")
             sys.exit(1)
 
         existing_ids.add(generated_id)
         node_ids[id_spec.name] = generated_id
 
-        logging.debug(f"Type path: {id_spec.name} -> {id_spec.data_type} -> {generated_id}")
+        log.debug(f"Type path: {id_spec.name} -> {id_spec.data_type} -> {generated_id}")
 
     # Write the schema to the output file
-    if not dry_run and output:
+    if not dry_run and output is not None:
         with open(output, "w", encoding="utf-8") as output_file:
-            logging.info(f"Writing data to '{output}'")
+            log.info(f"Writing data to '{output}'")
             json.dump(node_ids, output_file, indent=2)
     else:
         print("-" * 80)

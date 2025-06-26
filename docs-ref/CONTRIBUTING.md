@@ -1,7 +1,7 @@
 # Contributing to Simplified Semantic Data Modeling
-> **NOTE:** This document explains how to contribute to the data modeling approach itself.
-If you want to contribute to a certain data specification of a particular domain, then follow the [modeling guide](docs/MODELING_GUIDE.md) instead.
 
+This document explains how to contribute to the data modeling approach itself.
+If you want to contribute to a certain data specification of a particular domain, then follow the [modeling guide](docs/MODELING_GUIDE.md) instead.
 
 ## Development Environment
 
@@ -68,7 +68,7 @@ Use `ruff format` to format all files in the currenct directory
 
 ### Versioning
 
-- This tool is using [semantic versioning](https://semver.org/spec/v2.0.0.html). [CHANGELOG.md](./CHANGELOG.md) should be updated on every source code change.
+- This tool is using [semantic versioning](https://semver.org/spec/v2.0.0.html). [CHANGELOG.md](../CHANGELOG.md) should be updated on every source code change.
 - A new version can be bumped with the support of [bump-my-version](https://github.com/callowayproject/bump-my-version), which is a `dev` dependency:
   ```bash
   # major,minor,patch
