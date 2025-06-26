@@ -1,6 +1,6 @@
-# VSS Documentation
+# S2DM Documentation
 
-The VSS documentation is realized with GitHub Pages. It is generated from
+The S2DM documentation is realized with GitHub Pages. It is generated from
 the markdown files in the ```/docs-gen``` directory of this repository.
 The static webpage is generated automatically after every PR merged to master
 and deployed into a branch called `gh-pages`.
@@ -13,14 +13,14 @@ but it is not trivial to get a solution that works for all types of internal lin
 
 ## How to link internally
 
-We generally use "Hugo-style links" like `/vehicle_signal_specification/governance/`.
+We generally use "Hugo-style links" like `/s2dm/governance/`.
 They do not work when viewing documentation in Github but are the easiest to use for safe documentation generation.
 
 Some guidelines:
 
-* To link to a file like `rule_set/overlay.md` use `/vehicle_signal_specification/rule_set/overlay/`
-* To link to an index file like `rule_set/_index.md` use `/vehicle_signal_specification/rule_set/`
-* To link to a picture like `static/images/taxonomies.png` use `/vehicle_signal_specification/images/taxonomies.png`
+* To link to a file like `guides/modeling.md` use `/s2dm/guides/modeling/`
+* To link to an index file like `guides/_index.md` use `/s2dm/guides/`
+* To link to a picture like `static/images/fav.png` use `/s2dm/images/fav.png`
 
 Never link directly to a specific page at `github.io` - in the future we might want to keep multiple versions of
 documentation and then links must go to the correct version.
@@ -36,14 +36,13 @@ sudo npm install -g markdown-link-check
 
 What to run:
 ```
-cd vehicle_signal_specification
+cd s2dm
 markdown-link-check *.md
-markdown-link-check vss-tools/*.md
-markdown-link-check vss-tools/docs/*.md
+markdown-link-check guides/*.md
 ```
 
 For generated files (Hugo) links can be checked with [W3C Link Checker](https://validator.w3.org/checklink), running
-on `https://covesa.github.io/vehicle_signal_specification/`. It checks against latest master.
+on `https://covesa.github.io/s2dm/`. It checks against latest master.
 Run check with `Check linked documents recursively`
 
 
@@ -55,8 +54,8 @@ The static page is generated with:
 - [Relearn Theme](https://github.com/McShelby/hugo-theme-relearn)
 
 Please follow the [documentation](https://gohugo.io/documentation/) for installation and further questions around the framework.
-Currently, the HUGO version used for generating VSS documentation is `0.129.0`,
-as controlled by the [buildcheck.yml](https://github.com/COVESA/vehicle_signal_specification/blob/master/.github/workflows/buildcheck.yml)
+Currently, the HUGO version used for generating S2DM documentation is `0.129.0`,
+as controlled by the [buildcheck.yml](https://github.com/COVESA/s2dm/blob/master/.github/workflows/buildcheck.yml)
 
 
 ## Run the documentation server locally
@@ -93,7 +92,7 @@ hugo server -D -s ./docs-gen
 ```
 
 Optional ```-D``` include draft pages as well. Afterwards, you can access the
-page under http://localhost:1313/vehicle_signal_specification.
+page under http://localhost:1313/s2dm.
 
 ## Contribute
 
