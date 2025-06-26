@@ -141,7 +141,6 @@ SCALAR_DATATYPE_MAP = {
 # }
 
 
-
 class CustomDumper(yaml.Dumper):
     """Custom YAML dumper to add extra line breaks at the top level."""
 
@@ -382,7 +381,6 @@ def main(
     with open(output, "w", encoding="utf-8") as output_file:
         logging.info(f"Writing data to '{output}'")
         output_file.write(result)
-
 
 
 if __name__ == "__main__":

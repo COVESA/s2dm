@@ -25,7 +25,6 @@ output_option = click.option(
 )
 
 
-
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
 @click.option(
     "-l",
