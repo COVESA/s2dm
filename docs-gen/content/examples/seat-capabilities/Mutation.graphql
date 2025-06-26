@@ -1,0 +1,16 @@
+type Mutation {
+  """Set seat position (x-axis in mm)"""
+  setSeatPosition(instanceTag: InCabinArea2x2Input!, value: UInt16!): Boolean
+
+  """Set seat height (z-axis in mm)"""
+  setSeatHeight(instanceTag: InCabinArea2x2Input!, value: UInt16!): Boolean
+
+  """Set seat tilt angle in degrees"""
+  setSeatTilt(instanceTag: InCabinArea2x2Input!, value: Float!): Boolean
+
+  """Set massage level (0–100%)"""
+  setSeatMassageLevel(instanceTag: InCabinArea2x2Input!, value: UInt8!): Boolean
+
+  """Set heating/cooling value (-100 to 100%)"""
+  setSeatHeatingCooling(instanceTag: InCabinArea2x2Input!, value: Int8!): Boolean
+}

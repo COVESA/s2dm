@@ -1,0 +1,84 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ns: <http://example.org/vss#> .
+@prefix : <http://example.org/vss-scheme#> .
+
+#################################################################
+# Concept Schemes
+#################################################################
+:VehiclePhysicalMembership a skos:ConceptScheme ;
+    skos:prefLabel "Vehicle Physical Membership" .
+
+:PartMovementType a skos:ConceptScheme ;
+    skos:prefLabel "Part Movement Type" .
+
+:PartMaterial a skos:ConceptScheme ;
+    skos:prefLabel "Part Material" .
+
+:OccupantInterface a skos:ConceptScheme ;
+    skos:prefLabel "Occupant Interface" .
+
+#################################################################
+# Vehicle Physical Membership hierarchy
+#################################################################
+:Vehicle a skos:Concept ; skos:prefLabel "Vehicle" ; skos:inScheme :VehiclePhysicalMembership .
+:Body a skos:Concept ; skos:prefLabel "Body" ; skos:broader :Vehicle ; skos:inScheme :VehiclePhysicalMembership .
+:Cabin a skos:Concept ; skos:prefLabel "Cabin" ; skos:broader :Vehicle ; skos:inScheme :VehiclePhysicalMembership .
+
+:Hood a skos:Concept ; skos:prefLabel "Hood" ; skos:broader :Body ; skos:inScheme :VehiclePhysicalMembership .
+:Trunk a skos:Concept ; skos:prefLabel "Trunk" ; skos:broader :Body ; skos:inScheme :VehiclePhysicalMembership .
+:Mirror a skos:Concept ; skos:prefLabel "Mirror" ; skos:broader :Body ; skos:inScheme :VehiclePhysicalMembership .
+
+:Door a skos:Concept ; skos:prefLabel "Door" ; skos:broader :Cabin ; skos:inScheme :VehiclePhysicalMembership .
+:Seat a skos:Concept ; skos:prefLabel "Seat" ; skos:broader :Cabin ; skos:inScheme :VehiclePhysicalMembership .
+:Dashboard a skos:Concept ; skos:prefLabel "Dashboard" ; skos:broader :Cabin ; skos:inScheme :VehiclePhysicalMembership .
+:SteeringWheel a skos:Concept ; skos:prefLabel "Steering Wheel" ; skos:broader :Cabin ; skos:inScheme :VehiclePhysicalMembership .
+
+:Window a skos:Concept ; skos:prefLabel "Window" ; skos:broader :Door ; skos:inScheme :VehiclePhysicalMembership .
+:Handle a skos:Concept ; skos:prefLabel "Handle" ; skos:broader :Door ; skos:inScheme :VehiclePhysicalMembership .
+:Lock a skos:Concept ; skos:prefLabel "Lock" ; skos:broader :Door ; skos:inScheme :VehiclePhysicalMembership .
+
+#################################################################
+# Part Movement Type hierarchy
+#################################################################
+:FixedPart a skos:Concept ; skos:prefLabel "Fixed Part" ; skos:inScheme :PartMovementType .
+:UnidimensionalMovablePart a skos:Concept ; skos:prefLabel "Unidimensional Movable Part" ; skos:inScheme :PartMovementType .
+:MultidimensionalMovablePart a skos:Concept ; skos:prefLabel "Multidimensional Movable Part" ; skos:inScheme :PartMovementType .
+
+:Dashboard skos:broader :FixedPart .
+:Roof a skos:Concept ; skos:prefLabel "Roof" ; skos:broader :FixedPart ; skos:inScheme :PartMovementType .
+
+:Window skos:broader :UnidimensionalMovablePart .
+:Trunk skos:broader :UnidimensionalMovablePart .
+
+:Seat skos:broader :MultidimensionalMovablePart .
+:Mirror skos:broader :MultidimensionalMovablePart .
+
+#################################################################
+# Part Material hierarchy
+#################################################################
+:GlassedPart a skos:Concept ; skos:prefLabel "Glassed Part" ; skos:inScheme :PartMaterial .
+:PaddedPart a skos:Concept ; skos:prefLabel "Padded Part" ; skos:inScheme :PartMaterial .
+:MetallicPart a skos:Concept ; skos:prefLabel "Metallic Part" ; skos:inScheme :PartMaterial .
+
+:Window skos:broader :GlassedPart .
+:Mirror skos:broader :GlassedPart .
+
+:Seat skos:broader :PaddedPart .
+:Headrest a skos:Concept ; skos:prefLabel "Headrest" ; skos:broader :PaddedPart ; skos:inScheme :PartMaterial .
+
+:Hood skos:broader :MetallicPart .
+:Trunk skos:broader :MetallicPart .
+
+#################################################################
+# Occupant Interface hierarchy
+#################################################################
+:HumanInterfaceSurface a skos:Concept ; skos:prefLabel "Human Interface Surface" ; skos:inScheme :OccupantInterface .
+:ControlElement a skos:Concept ; skos:prefLabel "Control Element" ; skos:inScheme :OccupantInterface .
+
+:Seat skos:broader :HumanInterfaceSurface .
+:SteeringWheel skos:broader :HumanInterfaceSurface .
+:Dashboard skos:broader :HumanInterfaceSurface .
+
+:Lock skos:broader :ControlElement .
+:WindowSwitch a skos:Concept ; skos:prefLabel "Window Switch" ; skos:broader :ControlElement ; skos:inScheme :OccupantInterface .
+:HVACControl a skos:Concept ; skos:prefLabel "HVAC Control" ; skos:broader :ControlElement ; skos:inScheme :OccupantInterface .

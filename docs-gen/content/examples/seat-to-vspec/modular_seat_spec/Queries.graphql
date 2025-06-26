@@ -1,0 +1,4 @@
+type Query {
+  vehicle(vin: String!): Vehicle
+  seat(instanceTag: InCabinArea2x2Input!): Seat
+}

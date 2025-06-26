@@ -1,0 +1,29 @@
+type Person {
+  name: String!
+}
+
+type DrivingJourney {
+    vehicle: Vehicle!
+    occupants: [SeatOccupancy]
+}
+
+type SeatOccupancy {
+    occupant: Person!
+    seat: Seat!
+}
+
+extend type Vehicle {
+    journeyHistory: [DrivingJourney!]
+    chargingHistory: [ChargingSession!]
+}
+
+type ChargingSession {
+    vehicle: Vehicle!
+    paidBy: Person
+    chargingStation: chargingStation
+}
+
+type chargingStation {
+    id: ID!
+    # etc...
+}
