@@ -174,7 +174,7 @@ For example:
 Refer to the [examples folder](/examples/).
 
 ## Special considerations
-The following cases require special treatments. 
+The following cases require special treatments.
 
 ### Dilemma: Property as field or as object type
 
@@ -290,7 +290,7 @@ type AC {
 }
 
 type Sunroof {
-  position: Int  
+  position: Int
 }
 
 type Person {
