@@ -167,3 +167,19 @@ def test_get_instance_tag_object_and_dict(schema_path: Path) -> None:
             tag_dict = utils.get_instance_tag_dict(tag_obj)
             assert isinstance(tag_dict, dict)
         break
+
+
+def test_search_schema(schema_path: Path) -> None:
+    schema = utils.load_schema(schema_path)
+    # Search for a type by name
+    results = utils.search_schema(schema, type_name="Vehicle", partial=True, case_insensitive=False)
+    print(results)
+    assert "Vehicle" in results
+    assert any("averageSpeed" in fields for fields in results.values() if fields)
+    # Search for a field by name (partial, case-insensitive)
+    results_field = utils.search_schema(schema, field_name="averagespeed", partial=True, case_insensitive=True)
+    found = False
+    for _tname, fields in results_field.items():
+        if fields and any("averageSpeed".lower() in f.lower() for f in fields):
+            found = True
+    assert found
