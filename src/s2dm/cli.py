@@ -251,19 +251,19 @@ def version_bump(schema: Path, previous: Path) -> None:
     previous_schema_temp_path = create_tempfile_to_composed_schema(previous)
     diff_result = inspector.diff(previous_schema_temp_path)
 
-    # ToDo use console
+    console = Console()
     if diff_result["returncode"] == 0:
-        logging.debug(f"diff_result in check = {diff_result}")
         if "No changes detected" in diff_result["stdout"]:
-            logging.info("No version bump needed")
+            console.print("[green]No version bump needed")
         elif "No breaking changes detected" in diff_result["stdout"]:
-            logging.info("Minor or patch version bump needed!")
+            console.print("[yellow]Minor or patch version bump needed!")
         else:
-            logging.error("Unknown state, please check your input with 'diff' tool.")
+            console.print("[red]Unknown state, please check your input with 'diff' tool.")
     else:
-        logging.debug(f"diff_result in check = {diff_result}")
         if "Detected" in diff_result["stdout"] and "breaking changes" in diff_result["stdout"]:
-            logging.info("Detected breaking changes, major version bump needed. Please run diff to get more details")
+            console.print(
+                "[red]Detected breaking changes, major version bump needed. Please run diff to get more details"
+            )
 
 
 @check.command(name="constraints")
