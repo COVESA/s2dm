@@ -230,13 +230,13 @@ def vspec(schema: Path, output: Path) -> None:
 @check.command
 @schema_option
 @click.option(
-    "--previous-schema",
-    "-ps",
+    "--previous",
+    "-p",
     type=click.Path(exists=True),
     required=True,
     help="The GraphQL schema file to validate against",
 )
-def version_bump(schema: Path, previous_schema: Path) -> None:
+def version_bump(schema: Path, previous: Path) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     ToDo this needs to be update to use the correct terminology
@@ -248,9 +248,10 @@ def version_bump(schema: Path, previous_schema: Path) -> None:
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
 
-    previous_schema_temp_path = create_tempfile_to_composed_schema(previous_schema)
+    previous_schema_temp_path = create_tempfile_to_composed_schema(previous)
     diff_result = inspector.diff(previous_schema_temp_path)
 
+    # ToDo use console
     if diff_result["returncode"] == 0:
         logging.debug(f"diff_result in check = {diff_result}")
         if "No changes detected" in diff_result["stdout"]:
@@ -297,23 +298,18 @@ def check_constraints(schema: Path) -> None:
 # ----------
 @validate.command(name="graphql")
 @schema_option
-@optional_output_option
-def validate_graphql(schema: Path, output: Path | None) -> None:
+@output_option
+def validate_graphql(schema: Path, output: Path) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
-    validation_result = inspector.introspect()
+    validation_result = inspector.introspect(output)
 
     console = Console()
     if validation_result["returncode"] == 0:
         console.print(validation_result["stdout"])
     else:
         console.print(validation_result["stderr"])
-
-    if output:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        processed = pretty_print_dict_json(validation_result)
-        output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
 # diff -> graphql
@@ -330,13 +326,19 @@ def validate_graphql(schema: Path, output: Path | None) -> None:
 )
 def diff_graphql(schema: Path, val_schema: Path, output: Path | None) -> None:
     """Diff for two GraphQL schemas."""
-    logging.info(f"Comparing schemas: {schema} and {val_schema}")
+    logging.info(f"Comparing schemas: {schema} and {val_schema} and writing output to {output}")
 
     input_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(input_temp_path)
 
     val_temp_path = create_tempfile_to_composed_schema(val_schema)
     diff_result = inspector.diff(val_temp_path)
+
+    if output is not None:
+        logging.info(f"writing file to {output=}")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        processed = pretty_print_dict_json(diff_result)
+        output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
     console = Console()
     if diff_result["returncode"] == 0:
@@ -345,11 +347,6 @@ def diff_graphql(schema: Path, val_schema: Path, output: Path | None) -> None:
         console.print(diff_result["stdout"])
         console.print(diff_result["stderr"])
         sys.exit(diff_result["returncode"])
-
-    if output:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        processed = pretty_print_dict_json(diff_result)
-        output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
 
 # registry -> init
