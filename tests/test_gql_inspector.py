@@ -33,10 +33,17 @@ def schema2_tmp() -> Generator[Path, None, None]:
 
 def test_introspect(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
-    result: dict[str, Any] = inspector.introspect()
+    with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+        output_path = Path(tmpfile.name + ".graphql")
+    result: dict[str, Any] = inspector.introspect(output=output_path)
     assert isinstance(result, dict)
     assert "stdout" in result
     assert result["returncode"] == 0
+    assert output_path.exists()
+    with open(output_path) as f:
+        file_content = f.read()
+    assert "Vehicle" in file_content
+    output_path.unlink()
 
 
 def test_diff_no_changes(schema1_tmp: Path) -> None:
