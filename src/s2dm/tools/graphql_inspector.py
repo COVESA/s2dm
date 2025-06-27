@@ -26,13 +26,9 @@ class GraphQLInspector:
     ) -> dict[str, float | str | int | Any]:
         """Execute command with comprehensive logging"""
         if command in [InspectorCommands.DIFF, InspectorCommands.INTROSPECT, InspectorCommands.SIMILAR]:
-            cmd = ["npm", "run", "graphql-inspect", "--", command.value, str(self.schema_path)] + [str(a) for a in args]
+            cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
         elif command == InspectorCommands.VALIDATE:
-            cmd = (
-                ["npm", "run", "graphql-inspect", "--", command.value]
-                + [str(a) for a in args]
-                + [str(self.schema_path)]
-            )
+            cmd = ["graphql-inspector", command.value] + [str(a) for a in args] + [str(self.schema_path)]
         else:
             raise ValueError(f"Unknown command: {command.value}")
         logging.debug(f"COMMAND: {' '.join(cmd)}")
