@@ -37,43 +37,33 @@ class GraphQLInspector:
             "command": " ".join(cmd),
             "start_time": start_time.isoformat(),
         }
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                **kwargs,
-            )
-            end_time = datetime.now()
-            duration = (end_time - start_time).total_seconds()
-            stdout = result.stdout.strip() if result.stdout else ""
-            stderr = result.stderr.strip() if result.stderr else ""
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            **kwargs,
+        )
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        stdout = result.stdout.strip() if result.stdout else ""
+        stderr = result.stderr.strip() if result.stderr else ""
 
-            if stdout:
-                for line in stdout.split("\n"):
-                    logging.debug(f"STDOUT: {line}")
-            if stderr:
-                for line in stderr.split("\n"):
-                    logging.debug(f"STDERR: {line}")
-            output["returncode"] = result.returncode
-            output["stdout"] = stdout
-            output["stderr"] = stderr
-            output["duration"] = duration
-            output["end_time"] = end_time.isoformat()
-            if result.returncode != 0:
-                logging.warning(f"Command failed with return code {result.returncode}")
-            logging.info(f"Process completed in {duration:.2f}s with return code: {result.returncode}")
-            return output
-        except Exception as e:
-            end_time = datetime.now()
-            duration = (end_time - start_time).total_seconds()
-            logging.error(f"Exception after {duration:.2f}s: {e}")
-            logging.error(f"Exception type: {type(e).__name__}")
-            output["exception"] = str(e)
-            output["exception_type"] = type(e).__name__
-            output["duration"] = duration
-            output["end_time"] = end_time.isoformat()
-            return output
+        if stdout:
+            for line in stdout.split("\n"):
+                logging.debug(f"STDOUT: {line}")
+        if stderr:
+            for line in stderr.split("\n"):
+                logging.debug(f"STDERR: {line}")
+        output["returncode"] = result.returncode
+        output["stdout"] = stdout
+        output["stderr"] = stderr
+        output["duration"] = duration
+        output["end_time"] = end_time.isoformat()
+        if result.returncode != 0:
+            logging.warning(f"Command failed with return code {result.returncode}")
+        logging.info(f"Process completed in {duration:.2f}s with return code: {result.returncode}")
+
+        return output
 
     def validate(self, query: str) -> dict[str, Any]:
         """Validate schema with logging"""
@@ -83,9 +73,9 @@ class GraphQLInspector:
         """Compare schemas with logging"""
         return self._run_command(InspectorCommands.DIFF, str(other_schema))
 
-    def introspect(self) -> dict[str, Any]:
+    def introspect(self, output: Path) -> dict[str, Any]:
         """Introspect schema."""
-        return self._run_command(InspectorCommands.INTROSPECT)
+        return self._run_command(InspectorCommands.INTROSPECT, "--write", output)
 
     def similar(self, output: Path | None) -> dict[str, Any]:
         """Similar table"""
