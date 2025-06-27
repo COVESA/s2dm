@@ -119,7 +119,7 @@ def export() -> None:
 
 @click.group()
 def registry() -> None:
-    """Registry commands e.g for spec history generation and updates"""
+    """Spec history generation/updating"""
     pass
 
 
@@ -558,6 +558,7 @@ def similar_graphql(schema: Path, keyword: str, output: Path | None) -> None:
 
     if search_result["returncode"] == 1:
         logging.error(search_result["stderr"])
+        sys.exit(1)
 
     console = Console()
     console.rule(f"[bold blue] Search result for '{keyword}'")
