@@ -1,3 +1,4 @@
+import tempfile
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -63,6 +64,27 @@ def test_similar(schema1_tmp: Path) -> None:
     assert result["returncode"] == 0
 
 
+@pytest.mark.parametrize("output_to_file", [False, True])
+def test_similar_output(schema1_tmp: Path, output_to_file: bool) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+    output_path = None
+    file_content = None
+    if output_to_file:
+        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            output_path = Path(tmpfile.name + ".json")
+        result = inspector.similar(output=output_path)
+        assert output_path.exists()
+        with open(output_path) as f:
+            file_content = f.read()
+        assert file_content.strip() != ""
+        output_path.unlink()
+    else:
+        result = inspector.similar(output=None)
+    assert isinstance(result, dict)
+    assert "stdout" in result
+    assert result["returncode"] == 0
+
+
 def test_similar_keyword(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
     # Use a keyword that is likely to exist in the test schema, e.g. "Query"
@@ -75,7 +97,31 @@ def test_similar_keyword(schema1_tmp: Path) -> None:
         assert "Vehicle_ADAS" in result["stdout"]
 
 
-# ToDo: add a test for validate if you have a query file
+@pytest.mark.parametrize("output_to_file", [False, True])
+def test_similar_keyword_output(schema1_tmp: Path, output_to_file: bool) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+    keyword = "Vehicle_ADAS"  # Use a keyword likely to exist
+    output_path = None
+    file_content = None
+    if output_to_file:
+        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            output_path = Path(tmpfile.name + ".json")
+        result = inspector.similar_keyword(keyword, output=output_path)
+        assert output_path.exists()
+        with open(output_path) as f:
+            file_content = f.read()
+        assert file_content.strip() != ""
+        output_path.unlink()
+    else:
+        result = inspector.similar_keyword(keyword, output=None)
+    assert isinstance(result, dict)
+    assert "stdout" in result
+    assert result["returncode"] == 0 or result["returncode"] == 1
+    if result["returncode"] == 0:
+        assert keyword in result["stdout"] or (output_to_file and file_content and keyword in file_content)
+
+
+# ToDo: add a test for validate if we have a query file
 # def test_validate(schema1_tmp: Path) -> None:
 #     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
 #     query_file: Path = DATA_DIR / "query.graphql"
