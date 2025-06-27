@@ -1,4 +1,3 @@
-import json
 import logging
 import subprocess
 from datetime import datetime
@@ -23,99 +22,58 @@ class GraphQLInspector:
         command: InspectorCommands,
         *args: Any,
         **kwargs: Any,
-    ) -> dict[str, float | str | int | Any]:
-        """Execute command with comprehensive logging"""
+    ) -> dict[str, Any]:
+        """Execute command with comprehensive logging and improved error handling"""
         if command in [InspectorCommands.DIFF, InspectorCommands.INTROSPECT, InspectorCommands.SIMILAR]:
             cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
         elif command == InspectorCommands.VALIDATE:
             cmd = ["graphql-inspector", command.value] + [str(a) for a in args] + [str(self.schema_path)]
         else:
             raise ValueError(f"Unknown command: {command.value}")
-        logging.debug(f"COMMAND: {' '.join(cmd)}")
 
+        logging.info(f"Running command: {' '.join(cmd)}")
         start_time = datetime.now()
-
+        output: dict[str, Any] = {
+            "command": " ".join(cmd),
+            "start_time": start_time.isoformat(),
+        }
         try:
-            logging.debug("Starting subprocess...")
-
-            process = subprocess.Popen(  # ignore: type [type-arg]
+            result = subprocess.run(
                 cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
-                bufsize=1,
-                universal_newlines=True,
                 **kwargs,
             )
-
-            logging.debug(f"Process started with PID: {process.pid}")
-
-            # Capture output in real-time
-            stdout_lines = []
-            stderr_lines = []
-
-            while True:
-                if process.poll() is not None:
-                    break
-
-                # Read and log stdout
-                if process.stdout:
-                    stdout = process.stdout.read()
-                    if stdout:
-                        line = stdout.strip()
-                        stdout_lines.append(line)
-                        logging.debug(f"STDOUT: {line}")
-
-                # Read and log stderr
-                if process.stderr:
-                    stderr = process.stderr.read()
-                    if stderr:
-                        line = stderr.strip()
-                        stderr_lines.append(line)
-                        logging.debug(f"STDERR: {line}")
-
-            # Get any remaining output
-            remaining_stdout, remaining_stderr = process.communicate()
-
-            if remaining_stdout:
-                for line in remaining_stdout.strip().split("\n"):
-                    if line:
-                        stdout_lines.append(line)
-                        logging.debug(f"STDOUT: {line}")
-
-            if remaining_stderr:
-                for line in remaining_stderr.strip().split("\n"):
-                    if line:
-                        stderr_lines.append(line)
-                        logging.debug(f"STDERR: {line}")
-
             end_time = datetime.now()
             duration = (end_time - start_time).total_seconds()
+            stdout = result.stdout.strip() if result.stdout else ""
+            stderr = result.stderr.strip() if result.stderr else ""
 
-            result = {
-                "command": " ".join(cmd),
-                "returncode": process.returncode,
-                "stdout": "\n".join(stdout_lines),
-                "stderr": "\n".join(stderr_lines),
-                "duration": duration,
-                "start_time": start_time.isoformat(),
-                "end_time": end_time.isoformat(),
-            }
-
-            logging.debug(f"Process completed in {duration:.2f}s with return code: {process.returncode}")
-
-            logging.debug(f"FULL_RESULT: {json.dumps(result, indent=2)}")
-
-            return result
-
+            if stdout:
+                for line in stdout.split("\n"):
+                    logging.debug(f"STDOUT: {line}")
+            if stderr:
+                for line in stderr.split("\n"):
+                    logging.debug(f"STDERR: {line}")
+            output["returncode"] = result.returncode
+            output["stdout"] = stdout
+            output["stderr"] = stderr
+            output["duration"] = duration
+            output["end_time"] = end_time.isoformat()
+            if result.returncode != 0:
+                logging.warning(f"Command failed with return code {result.returncode}")
+            logging.info(f"Process completed in {duration:.2f}s with return code: {result.returncode}")
+            return output
         except Exception as e:
             end_time = datetime.now()
             duration = (end_time - start_time).total_seconds()
-
-            logging.debug(f"Exception after {duration:.2f}s: {e}")
-            logging.debug(f"Exception type: {type(e).__name__}")
-
-            raise
+            logging.error(f"Exception after {duration:.2f}s: {e}")
+            logging.error(f"Exception type: {type(e).__name__}")
+            output["exception"] = str(e)
+            output["exception_type"] = type(e).__name__
+            output["duration"] = duration
+            output["end_time"] = end_time.isoformat()
+            return output
 
     def validate(self, query: str) -> dict[str, Any]:
         """Validate schema with logging"""
@@ -136,7 +94,7 @@ class GraphQLInspector:
         else:
             return self._run_command(InspectorCommands.SIMILAR)
 
-    def search_keyword(self, keyword: str, output: Path | None) -> dict[str, Any]:
+    def similar_keyword(self, keyword: str, output: Path | None) -> dict[str, Any]:
         """Search single type in schema"""
         if output:
             return self._run_command(InspectorCommands.SIMILAR, "-n", keyword, "--write", output)

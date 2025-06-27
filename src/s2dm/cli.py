@@ -549,14 +549,15 @@ def search_graphql(schema: Path, type: str, case_insensitive: bool, exact: bool)
     help="Output file, only .json allowed here",
 )
 def similar_graphql(schema: Path, keyword: str, output: Path | None) -> None:
-    """Search a keyword in the provided grahql schema. Provide -k all for all similarities across the whole schema."""
+    """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
+    whole schema (in %)."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     if output:
         logging.info(f"Search will write file to {output}")
 
     # if keyword == "all" search all elements otherwise only keyword
-    search_result = inspector.similar(output) if keyword == "all" else inspector.search_keyword(keyword, output)
+    search_result = inspector.similar(output) if keyword == "all" else inspector.similar_keyword(keyword, output)
 
     if search_result["returncode"] == 1:
         logging.error(search_result["stderr"])

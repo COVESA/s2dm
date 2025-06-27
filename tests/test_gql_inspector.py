@@ -63,16 +63,16 @@ def test_similar(schema1_tmp: Path) -> None:
     assert result["returncode"] == 0
 
 
-def test_search_keyword(schema1_tmp: Path) -> None:
+def test_similar_keyword(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
     # Use a keyword that is likely to exist in the test schema, e.g. "Query"
-    result: dict[str, Any] = inspector.search_keyword("Query", output=None)
+    result: dict[str, Any] = inspector.similar_keyword("Vehicle_ADAS", output=None)
     assert isinstance(result, dict)
     assert "stdout" in result
     assert result["returncode"] == 0 or result["returncode"] == 1  # allow not found
     # Optionally check that the output contains the keyword if found
     if result["returncode"] == 0:
-        assert "Query" in result["stdout"]
+        assert "Vehicle_ADAS" in result["stdout"]
 
 
 # ToDo: add a test for validate if you have a query file
