@@ -25,8 +25,8 @@ jobs:
       - name: uv
         uses: astral-sh/setup-uv@v4
 
-      - name: npm install
-        run: npm install
+      - name: npm install gql-inspector
+        run: npm i --global @graphql-inspector/cli graphql
 
       - name: sync
         run: |
