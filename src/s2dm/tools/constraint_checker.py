@@ -21,8 +21,8 @@ class ConstraintChecker:
                         max_val = args.get("max")
                         if min_val is not None and max_val is not None and float(min_val) > float(max_val):
                             errors.append(f"[{directive}] {obj.name}.{fname} has min > max ({min_val} > {max_val})")
-                    except Exception:
-                        errors.append(f"[{directive}] {obj.name}.{fname} has invalid min/max values")
+                    except (ValueError, TypeError) as e:
+                        errors.append(f"[{directive}] {obj.name}.{fname} has invalid min/max values: {e}")
 
         return errors
 
