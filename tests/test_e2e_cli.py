@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import CliRunner
@@ -21,6 +22,21 @@ def runner() -> CliRunner:
 @pytest.fixture(scope="module")
 def tmp_outputs(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return tmp_path_factory.mktemp("e2e_outputs")
+
+
+def contains_value(obj: dict[str, Any], target: str) -> bool:
+    """Helper function to recursively search dicts"""
+    if isinstance(obj, dict):
+        for v in obj.values():
+            if contains_value(v, target):
+                return True
+    elif isinstance(obj, list):
+        for item in obj:
+            if contains_value(item, target):
+                return True
+    else:
+        return obj == target
+    return False
 
 
 def test_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
@@ -60,6 +76,32 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     result = runner.invoke(cli, ["export", "vspec", "-s", str(SAMPLE1), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
+
+
+def test_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "concept_uris.json"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "concept-uri",
+            "-s",
+            str(SAMPLE1),
+            "-o",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out) as f:
+        data = json.load(f)
+
+    assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
+
+    # Recursively search for the value 'ns:Vehicle.averageSpeed' in the output
+    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
+        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    )
 
 
 @pytest.mark.parametrize(
