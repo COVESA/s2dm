@@ -6,14 +6,12 @@ from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
-import click
 import yaml
 from graphql import (
     GraphQLEnumType,
     GraphQLNamedType,
     GraphQLObjectType,
 )
-from rich.console import Console
 
 from s2dm.exporters.utils import get_all_named_types, load_schema
 from s2dm.idgen.idgen import fnv1_32_wrapper
@@ -114,39 +112,3 @@ class IDExporter:
                 json.dump(node_ids, output_file, indent=2)
 
         return node_ids
-
-
-@click.command()
-@click.argument("schema", type=click.Path(exists=True), required=True)
-@click.argument("units_file", type=click.Path(exists=True), required=True)
-@click.option(
-    "-o",
-    "--output",
-    type=click.Path(dir_okay=False, writable=True, path_type=Path),
-)
-@click.option("--strict-mode/--no-strict-mode", default=False)
-@click.option("--dry-run/--no-dry-run", default=False)
-def main(
-    schema: Path,
-    units_file: Path,
-    output: Path | None,
-    strict_mode: bool,
-    dry_run: bool,
-) -> None:
-    """CLI entrypoint: instantiate IDExporter and run."""
-    exporter = IDExporter(
-        schema=schema,
-        units_file=units_file,
-        output=output,
-        strict_mode=strict_mode,
-        dry_run=dry_run,
-    )
-    node_ids = exporter.run()
-
-    console = Console()
-    console.rule("[bold blue]Concept IDs")
-    console.print(node_ids)
-
-
-if __name__ == "__main__":
-    main()

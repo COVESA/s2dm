@@ -147,6 +147,34 @@ def validate() -> None:
     pass
 
 
+# Export -> ID
+@export.command(name="id")
+@schema_option
+@click.option(
+    "--units",
+    "-u",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to your units.yaml",
+)
+@optional_output_option
+@click.option("--strict-mode/--no-strict-mode", default=False)
+def export_id(schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
+    """Generate concept IDs for GraphQL schema fields and enums."""
+    exporter = IDExporter(
+        schema=schema,
+        units_file=units,
+        output=output,
+        strict_mode=strict_mode,
+        dry_run=output is None,
+    )
+    node_ids = exporter.run()
+
+    console = Console()
+    console.rule("[bold blue]Concept IDs")
+    console.print(node_ids)
+
+
 # SHACL
 # ----------
 @export.command
