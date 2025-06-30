@@ -23,6 +23,29 @@ def tmp_outputs(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return tmp_path_factory.mktemp("e2e_outputs")
 
 
+def test_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "ids.json"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "id",
+            "-s",
+            str(SAMPLE1),
+            "-u",
+            str(UNITS),
+            "-o",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out) as f:
+        data = json.load(f)
+
+    assert any("Vehicle.averageSpeed" in k for k in data)
+
+
 # ToDo(DA): please update this test to do proper asserts for the shacl exporter
 def test_export_shacl(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "shacl.ttl"
