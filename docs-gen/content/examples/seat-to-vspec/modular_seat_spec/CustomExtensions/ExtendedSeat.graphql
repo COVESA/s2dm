@@ -1,0 +1,23 @@
+extend type Seat {
+    instanceTag: InCabinArea2x2
+}
+
+# Example if a vehicle would have 10 rows
+enum TenRowsInCabinEnum {
+    ROW1
+    ROW2
+    ROW3
+    ROW4
+    ROW5
+    ROW6
+    ROW7
+    ROW8
+    ROW9
+    ROW10
+}
+
+# Example of a custom instance tag
+type ManySeatsInstanceTag @instanceTag {
+    row: TenRowsInCabinEnum
+    column: ThreeColumnsInCabinEnum
+}
