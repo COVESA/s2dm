@@ -99,9 +99,9 @@ def test_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> None:
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
     # Recursively search for the value 'ns:Vehicle.averageSpeed' in the output
-    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
-        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
-    )
+    assert contains_value(
+        data, "ns:Vehicle.averageSpeed"
+    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
 
 
 @pytest.mark.parametrize(
