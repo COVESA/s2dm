@@ -7,55 +7,12 @@ This directory contains example files and commands to demonstrate how to use the
 - `sample.graphql` - A comprehensive GraphQL schema demonstrating vehicle data modeling
 - Uses `units.yaml` for unit definitions
 
-## Running the tools (S2DM)
+## Spec History Generation
 
 Run init to initialize your first spec history file
 
 ```bash
 uv run s2dm registry init -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o spec_history/spec_history.json
-```
-
-and run update to update your previously generated spec history file
-
-```bash
-uv run s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -u examples/spec-history-registry/units.yaml -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
-```
-
-## Running the Tools (Manually)
-
-**Only follow the manual process if you are interested in having any of the processed files like ID files or URI files.**
-
-Follow these commands in order to generate all the necessary files for the example:
-
-### 1. ID Generation
-
-Generate unique identifiers for schema elements:
-
-```bash
-# From the repository root
-uv run python src/s2dm/exporters/id.py examples/spec-history-registry/sample.graphql examples/spec-history-registry/units.yaml -o examples/concept_ids.json
-```
-
-This creates `examples/concept_ids.json` with deterministic IDs for each field in the schema.
-
-### 2. Concept URI Generation
-
-Generate semantic URIs for all concepts in the schema:
-
-```bash
-# From the repository root
-uv run python src/s2dm/exporters/concept_uri.py examples/spec-history-registry/sample.graphql -o examples/concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
-```
-
-This creates `examples/concept_uri.json` with JSON-LD formatted concept definitions.
-
-### 3. Spec History Generation
-
-Initialize a specification history registry to track schema evolution:
-
-```bash
-# Initialize spec history (first time)
-uv run python src/s2dm/exporters/spec_history.py --concept-uri examples/concept_uri.json --ids examples/concept_ids.json --schema examples/spec-history-registry/sample.graphql --output examples/spec_history.json --history-dir examples/history --init
 ```
 
 This creates:
@@ -90,13 +47,7 @@ The changes are:
 3. Changed `Vehicle_ADAS_ObstacleDetection.distance` from `Float` -> `Int`
 
 ```bash
-# Let's regenerate IDs and concept URIs:
-
-uv run python src/s2dm/exporters/id.py examples/spec-history-registry/sample_updated.graphql examples/spec-history-registry/units.yaml -o examples/concept_ids_updated.json
-
-uv run python src/s2dm/exporters/concept_uri.py examples/spec-history-registry/sample_updated.graphql -o examples/concept_uri_updated.json --namespace "https://example.org/vss#" --prefix "ns"
-
-uv run python src/s2dm/exporters/spec_history.py --concept-uri examples/concept_uri_updated.json --ids examples/concept_ids_updated.json --schema examples/spec-history-registry/sample_updated.graphql --spec-history examples/spec_history.json --output examples/spec_history_updated.json --history-dir examples/history --update
+uv run s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -u examples/spec-history-registry/units.yaml -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
 ```
 
 ## Expected Output Files
@@ -128,3 +79,29 @@ examples
 │   └── units.yaml
 └── spec_history_updated.json
 ```
+
+## Extra tools
+
+These tools are embedded in the spec history generation but can also be called separately
+
+### ID Generation
+
+Generate unique identifiers for schema elements:
+
+```bash
+# From the repository root
+uv run s2dm export id -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o examples/concept_ids.json
+```
+
+This creates `examples/concept_ids.json` with deterministic IDs for each field in the schema.
+
+### Concept URI Generation
+
+Generate semantic URIs for all concepts in the schema:
+
+```bash
+# From the repository root
+uv run s2dm export concept-uri -s examples/spec-history-registry/sample.graphql -o examples/concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
+```
+
+This creates `examples/concept_uri.json` with JSON-LD formatted concept definitions.
