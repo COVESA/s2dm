@@ -39,29 +39,6 @@ def contains_value(obj: dict[str, Any], target: str) -> bool:
     return False
 
 
-def test_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
-    out = tmp_outputs / "ids.json"
-    result = runner.invoke(
-        cli,
-        [
-            "export",
-            "id",
-            "-s",
-            str(SAMPLE1),
-            "-u",
-            str(UNITS),
-            "-o",
-            str(out),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert out.exists()
-    with open(out) as f:
-        data = json.load(f)
-
-    assert any("Vehicle.averageSpeed" in k for k in data)
-
-
 # ToDo(DA): please update this test to do proper asserts for the shacl exporter
 def test_export_shacl(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "shacl.ttl"
@@ -76,32 +53,6 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     result = runner.invoke(cli, ["export", "vspec", "-s", str(SAMPLE1), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
-
-
-def test_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> None:
-    out = tmp_outputs / "concept_uris.json"
-    result = runner.invoke(
-        cli,
-        [
-            "export",
-            "concept-uri",
-            "-s",
-            str(SAMPLE1),
-            "-o",
-            str(out),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert out.exists()
-    with open(out) as f:
-        data = json.load(f)
-
-    assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
-
-    # Recursively search for the value 'ns:Vehicle.averageSpeed' in the output
-    assert contains_value(
-        data, "ns:Vehicle.averageSpeed"
-    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
 
 
 @pytest.mark.parametrize(
@@ -158,6 +109,55 @@ def test_diff_graphql(
     with open(out) as f:
         file_content = f.read()
     assert expected_output in file_content or expected_output in result.output
+
+
+def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "concept_uris.json"
+    result = runner.invoke(
+        cli,
+        [
+            "registry",
+            "concept-uri",
+            "-s",
+            str(SAMPLE1),
+            "-o",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out) as f:
+        data = json.load(f)
+
+    assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
+
+    # Recursively search for the value 'ns:Vehicle.averageSpeed' in the output
+    assert contains_value(
+        data, "ns:Vehicle.averageSpeed"
+    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+
+
+def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "ids.json"
+    result = runner.invoke(
+        cli,
+        [
+            "registry",
+            "id",
+            "-s",
+            str(SAMPLE1),
+            "-u",
+            str(UNITS),
+            "-o",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out) as f:
+        data = json.load(f)
+
+    assert any("Vehicle.averageSpeed" in k for k in data)
 
 
 def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:

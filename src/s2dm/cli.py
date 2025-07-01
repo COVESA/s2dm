@@ -147,34 +147,6 @@ def validate() -> None:
     pass
 
 
-# Export -> ID
-@export.command(name="id")
-@schema_option
-@click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
-@optional_output_option
-@click.option("--strict-mode/--no-strict-mode", default=False)
-def export_id(schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
-    """Generate concept IDs for GraphQL schema fields and enums."""
-    exporter = IDExporter(
-        schema=schema,
-        units_file=units,
-        output=output,
-        strict_mode=strict_mode,
-        dry_run=output is None,
-    )
-    node_ids = exporter.run()
-
-    console = Console()
-    console.rule("[bold blue]Concept IDs")
-    console.print(node_ids)
-
-
 # SHACL
 # ----------
 @export.command
@@ -375,6 +347,67 @@ def diff_graphql(schema: Path, val_schema: Path, output: Path | None) -> None:
         console.print(diff_result["stdout"])
         console.print(diff_result["stderr"])
         sys.exit(diff_result["returncode"])
+
+
+# registry -> concept-uri
+@registry.command(name="concept-uri")
+@schema_option
+@optional_output_option
+@click.option(
+    "--namespace",
+    default="https://example.org/vss#",
+    help="The namespace for the URIs",
+)
+@click.option(
+    "--prefix",
+    default="ns",
+    help="The prefix to use for the URIs",
+)
+def export_concept_uri(schema: Path, output: Path | None, namespace: str, prefix: str) -> None:
+    """Generate concept URIs for a GraphQL schema and output as JSON-LD."""
+    graphql_schema = load_schema(schema)
+    concepts = iter_all_concepts(get_all_named_types(graphql_schema))
+    concept_uri_model = create_concept_uri_model(concepts, namespace, prefix)
+    data = concept_uri_model.to_json_ld()
+
+    console = Console()
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with open(output, "w", encoding="utf-8") as output_file:
+            log.info(f"Writing data to '{output}'")
+            json.dump(data, output_file, indent=2)
+        console.print(f"[green]Concept URIs written to {output}")
+
+    console.rule("[bold blue]Concept URIs (JSON-LD)")
+    console.print_json(json.dumps(data, indent=2))
+
+
+# registry -> id
+@registry.command(name="id")
+@schema_option
+@click.option(
+    "--units",
+    "-u",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to your units.yaml",
+)
+@optional_output_option
+@click.option("--strict-mode/--no-strict-mode", default=False)
+def export_id(schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
+    """Generate concept IDs for GraphQL schema fields and enums."""
+    exporter = IDExporter(
+        schema=schema,
+        units_file=units,
+        output=output,
+        strict_mode=strict_mode,
+        dry_run=output is None,
+    )
+    node_ids = exporter.run()
+
+    console = Console()
+    console.rule("[bold blue]Concept IDs")
+    console.print(node_ids)
 
 
 # registry -> init
@@ -637,39 +670,6 @@ def stats_graphql(schema: Path) -> None:
     console = Console()
     console.rule("[bold blue]GraphQL Schema Type Counts")
     console.print(type_counts)
-
-
-# Export -> concept-uri
-@export.command(name="concept-uri")
-@schema_option
-@optional_output_option
-@click.option(
-    "--namespace",
-    default="https://example.org/vss#",
-    help="The namespace for the URIs",
-)
-@click.option(
-    "--prefix",
-    default="ns",
-    help="The prefix to use for the URIs",
-)
-def export_concept_uri(schema: Path, output: Path | None, namespace: str, prefix: str) -> None:
-    """Generate concept URIs for a GraphQL schema and output as JSON-LD."""
-    graphql_schema = load_schema(schema)
-    concepts = iter_all_concepts(get_all_named_types(graphql_schema))
-    concept_uri_model = create_concept_uri_model(concepts, namespace, prefix)
-    data = concept_uri_model.to_json_ld()
-
-    console = Console()
-    if output:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        with open(output, "w", encoding="utf-8") as output_file:
-            log.info(f"Writing data to '{output}'")
-            json.dump(data, output_file, indent=2)
-        console.print(f"[green]Concept URIs written to {output}")
-
-    console.rule("[bold blue]Concept URIs (JSON-LD)")
-    console.print_json(json.dumps(data, indent=2))
 
 
 cli.add_command(check)
