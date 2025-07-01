@@ -12,7 +12,7 @@ This directory contains example files and commands to demonstrate how to use the
 Run init to initialize your first spec history file
 
 ```bash
-uv run s2dm registry init -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o spec_history/spec_history.json
+s2dm registry init -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o spec_history/spec_history.json
 ```
 
 This creates:
@@ -47,7 +47,7 @@ The changes are:
 3. Changed `Vehicle_ADAS_ObstacleDetection.distance` from `Float` -> `Int`
 
 ```bash
-uv run s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -u examples/spec-history-registry/units.yaml -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
+s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -u examples/spec-history-registry/units.yaml -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
 ```
 
 ## Expected Output Files
@@ -55,13 +55,7 @@ uv run s2dm registry update -s examples/spec-history-registry/sample_updated.gra
 After running all commands, you'll have:
 
 ```bash
-
-
 examples
-├── concept_ids.json
-├── concept_ids_updated.json
-├── concept_uri.json
-├── concept_uri_updated.json
 ├── history
 │   ├── Acceleration_Unit_Enum_20250618092822_0x48805230.graphql
 │   ├── Angle_Unit_Enum_20250618092822_0x32CF16AC.graphql
@@ -89,8 +83,7 @@ These tools are embedded in the spec history generation but can also be called s
 Generate unique identifiers for schema elements:
 
 ```bash
-# From the repository root
-uv run s2dm export id -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o examples/concept_ids.json
+s2dm export id -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o examples/concept_ids.json
 ```
 
 This creates `examples/concept_ids.json` with deterministic IDs for each field in the schema.
@@ -100,8 +93,7 @@ This creates `examples/concept_ids.json` with deterministic IDs for each field i
 Generate semantic URIs for all concepts in the schema:
 
 ```bash
-# From the repository root
-uv run s2dm export concept-uri -s examples/spec-history-registry/sample.graphql -o examples/concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
+s2dm export concept-uri -s examples/spec-history-registry/sample.graphql -o examples/concept_uri.json --namespace "https://example.org/vss#" --prefix "ns"
 ```
 
 This creates `examples/concept_uri.json` with JSON-LD formatted concept definitions.
