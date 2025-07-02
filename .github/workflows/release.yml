@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   release:
@@ -92,6 +93,39 @@ jobs:
         if: steps.version.outputs.bump != 'none'
         run: |
           git push origin ${{ github.ref_name }} --tags
+
+      - name: update changelog
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          # Get the new version
+          NEW_VERSION=$(git describe --tags --abbrev=0)
+
+          # Generate changelog with git-cliff
+          LAST_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+          if [ -z "$LAST_TAG" ]; then
+            CHANGELOG=$(git-cliff --latest --strip=header)
+          else
+            CHANGELOG=$(git-cliff ${LAST_TAG}..${NEW_VERSION} --strip=header)
+          fi
+
+          # Update CHANGELOG.md - insert new version above the previous version
+          # Create temporary file with the new changelog entry
+          echo "## [${NEW_VERSION}] - $(date +%Y-%m-%d)" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          echo "${CHANGELOG}" >> temp_changelog.md
+          echo "" >> temp_changelog.md
+
+          # Insert the new changelog entry after the header (line 7) and before the first version entry
+          head -n 7 CHANGELOG.md > updated_changelog.md
+          cat temp_changelog.md >> updated_changelog.md
+          tail -n +8 CHANGELOG.md >> updated_changelog.md
+          mv updated_changelog.md CHANGELOG.md
+          rm temp_changelog.md
+
+          # Commit the updated CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for ${NEW_VERSION}"
+          git push origin ${{ github.ref_name }}
 
       - name: create release
         if: steps.version.outputs.bump != 'none'
