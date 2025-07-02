@@ -82,16 +82,22 @@ jobs:
             echo "No version bump needed"
           fi
 
-      - name: update changelog
+      - name: bump version and update changelog
         if: steps.version.outputs.bump != 'none'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Generate changelog with git-cliff for unreleased changes
+          # Bump version without creating a tag
+          uv run bump-my-version bump ${{ steps.version.outputs.bump }} --no-tag
+
+          # Get the new version from .bumpversion.toml
+          NEW_VERSION="v$(grep -E '^current_version = ' .bumpversion.toml | cut -d'"' -f2)"
+
+          # Generate changelog with git-cliff for the changes since last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
-            CHANGELOG=$(git-cliff --unreleased --strip=header)
+            CHANGELOG=$(git-cliff --latest --strip=header)
           else
             CHANGELOG=$(git-cliff ${LAST_TAG}..HEAD --strip=header)
           fi
@@ -110,14 +116,10 @@ jobs:
 
           # Commit the updated CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md"
+          git commit -m "docs: update CHANGELOG.md for ${NEW_VERSION}"
 
-      - name: bump version
-        if: steps.version.outputs.bump != 'none'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          uv run bump-my-version bump ${{ steps.version.outputs.bump }}
+          # Create the tag on this commit
+          git tag ${NEW_VERSION}
 
       - name: push changes
         if: steps.version.outputs.bump != 'none'
