@@ -94,7 +94,7 @@ jobs:
       - name: push changes
         if: steps.version.outputs.bump != 'none'
         run: |
-          git push origin main --tags
+          git push origin ${{ github.ref_name }} --tags
 
       - name: create release
         if: steps.version.outputs.bump != 'none'
