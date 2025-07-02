@@ -82,30 +82,18 @@ jobs:
             echo "No version bump needed"
           fi
 
-      - name: bump version
+      - name: update changelog
         if: steps.version.outputs.bump != 'none'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          uv run bump-my-version bump ${{ steps.version.outputs.bump }}
-
-      - name: push changes
-        if: steps.version.outputs.bump != 'none'
-        run: |
-          git push origin ${{ github.ref_name }} --tags
-
-      - name: update changelog
-        if: steps.version.outputs.bump != 'none'
-        run: |
-          # Get the new version
-          NEW_VERSION=$(git describe --tags --abbrev=0)
-
-          # Generate changelog with git-cliff
-          LAST_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+          
+          # Generate changelog with git-cliff for unreleased changes
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
-            CHANGELOG=$(git-cliff --latest --strip=header)
+            CHANGELOG=$(git-cliff --unreleased --strip=header)
           else
-            CHANGELOG=$(git-cliff ${LAST_TAG}..${NEW_VERSION} --strip=header)
+            CHANGELOG=$(git-cliff ${LAST_TAG}..HEAD --strip=header)
           fi
 
           # Update CHANGELOG.md - insert new version above the previous version
@@ -122,8 +110,19 @@ jobs:
 
           # Commit the updated CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for ${NEW_VERSION}"
-          git push origin ${{ github.ref_name }}
+          git commit -m "docs: update CHANGELOG.md"
+
+      - name: bump version
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          uv run bump-my-version bump ${{ steps.version.outputs.bump }}
+
+      - name: push changes
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          git push origin ${{ github.ref_name }} --tags
 
       - name: create release
         if: steps.version.outputs.bump != 'none'
