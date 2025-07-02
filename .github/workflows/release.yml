@@ -110,9 +110,7 @@ jobs:
 
           # Update CHANGELOG.md - insert new version above the previous version
           # Create temporary file with the new changelog entry
-          echo "## [${NEW_VERSION}] - $(date +%Y-%m-%d)" > temp_changelog.md
-          echo "" >> temp_changelog.md
-          echo "${CHANGELOG}" >> temp_changelog.md
+          echo "${CHANGELOG}" > temp_changelog.md
           echo "" >> temp_changelog.md
 
           # Insert the new changelog entry after the header (line 7) and before the first version entry
