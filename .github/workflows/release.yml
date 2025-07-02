@@ -30,8 +30,8 @@ jobs:
 
       - name: install git-cliff
         run: |
-          curl -L https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-0.24.3-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          sudo mv git-cliff-0.24.3/git-cliff /usr/local/bin/
+          curl -L https://github.com/orhun/git-cliff/releases/download/v2.9.1/git-cliff-2.9.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv git-cliff-2.9.1/git-cliff /usr/local/bin/
 
       - name: determine version bump
         id: version
