@@ -1,7 +1,9 @@
 from pathlib import Path
+from typing import cast
 
 import click
 from graphql import (
+    GraphQLEnumType,
     GraphQLField,
     GraphQLObjectType,
     GraphQLScalarType,
@@ -9,7 +11,8 @@ from graphql import (
     get_named_type,
     is_list_type,
 )
-from rdflib import RDF, BNode, Graph, Literal, Namespace, URIRef
+from rdflib import RDF, BNode, Graph, Literal, Namespace, Node, URIRef
+from rdflib.collection import Collection
 
 from s2dm import log
 from s2dm.exporters.utils import (
@@ -19,6 +22,7 @@ from s2dm.exporters.utils import (
     get_all_named_types,
     get_all_object_types,
     get_all_objects_with_directive,
+    get_cardinality,
     get_field_case_extended,
     has_directive,
     load_schema,
@@ -123,8 +127,16 @@ def get_instance_tag_object(object: GraphQLObjectType) -> GraphQLObjectType | No
 
 
 def create_property_shape_with_literal(
-    field_name: str, field: GraphQLField, shape_node: URIRef, graph: Graph, value_cardinality: Cardinality | None = None
+    field_name: str,
+    field: GraphQLField,
+    shape_node: URIRef,
+    graph: Graph,
+    value_cardinality: Cardinality | None = None,
+    enum_values: list[str] | None = None,
 ) -> None:
+    scalar_type = get_named_type(field.type)
+    if not isinstance(scalar_type, GraphQLScalarType) and not isinstance(scalar_type, GraphQLEnumType):
+        raise ValueError(f"Expected GraphQLScalarType or GraphQLEnumType, got {type(scalar_type).__name__}")
     assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
     property_path = MODEL_NAMESPACE[f"{field_name}"]
     property_node = BNode()
@@ -132,10 +144,10 @@ def create_property_shape_with_literal(
     graph.add((property_node, SH.name, Literal(field_name)))
     graph.add((property_node, SH.path, property_path))
     graph.add((property_node, SH.nodeKind, SH.Literal))
-    scalar_type = get_named_type(field.type)
-    if not isinstance(scalar_type, GraphQLScalarType):
-        raise TypeError(f"Expected GraphQLScalarType, got {type(scalar_type).__name__}")
-    graph.add((property_node, SH.datatype, get_xsd_datatype(scalar_type)))
+
+    datatype = get_xsd_datatype(scalar_type) if isinstance(scalar_type, GraphQLScalarType) else XSD.string
+
+    graph.add((property_node, SH.datatype, datatype))
 
     if value_cardinality:
         if value_cardinality.min:
@@ -143,73 +155,94 @@ def create_property_shape_with_literal(
         if value_cardinality.max:
             graph.add((property_node, SH.maxCount, Literal(value_cardinality.max, datatype=XSD.integer)))
 
+    if enum_values is not None:
+        # Create an RDF Collection for the enum values
+        enum_list_node = BNode()
+        graph.add((property_node, SH["in"], enum_list_node))
+        enum_literals = [Literal(val) for val in enum_values]
+        Collection(graph, enum_list_node, cast(list[Node], enum_literals))
+
+    if field.description:
+        graph.add((property_node, SH.description, Literal(field.description)))
+
 
 def create_property_shape_with_iri(
-    property_name: str,
-    output_type_name: str,
+    field_name: str,
+    field: GraphQLField,
+    # output_type_name: str,
     shape_node: URIRef,
     graph: Graph,
     value_cardinality: Cardinality | None = None,
 ) -> None:
+    unwrapped_output_type = get_named_type(field.type)  # GraphQL type without modifiers [] or !
+
     property_node = BNode()
     assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
-    property_path = MODEL_NAMESPACE["has"]
+    property_path = MODEL_NAMESPACE["has" + unwrapped_output_type.name]
     graph.add((shape_node, SH.property, property_node))
-    graph.add((property_node, SH.name, Literal(property_name)))
+    graph.add((property_node, SH.name, Literal(field_name)))
     graph.add((property_node, SH.path, property_path))
     graph.add((property_node, SH.nodeKind, SH.IRI))
     assert SHAPES_NAMESPACE is not None, "SHAPES_NAMESPACE must be initialized before use."
     assert MODEL_NAMESPACE is not None, "MODEL_NAMESPACE must be initialized before use."
-    graph.add((property_node, SH.node, SHAPES_NAMESPACE[output_type_name]))
-    graph.add((property_node, SH["class"], MODEL_NAMESPACE[output_type_name]))
+    graph.add((property_node, SH.node, SHAPES_NAMESPACE[unwrapped_output_type.name]))
+    graph.add((property_node, SH["class"], MODEL_NAMESPACE[unwrapped_output_type.name]))
     if value_cardinality:
         if value_cardinality.min:
             graph.add((property_node, SH.minCount, Literal(value_cardinality.min, datatype=XSD.integer)))
         if value_cardinality.max:
             graph.add((property_node, SH.maxCount, Literal(value_cardinality.max, datatype=XSD.integer)))
+
+    if field.description:
+        graph.add((property_node, SH.description, Literal(field.description)))
 
 
 def process_field(
     field_name: str, field: GraphQLField, shape_node: URIRef, graph: Graph, schema: GraphQLSchema
 ) -> None:
     """Process a field of a GraphQL object type and generate the corresponding SHACL triples."""
-    field_case = get_field_case_extended(field)
-
-    # Log the field definition as it appears in the GraphQL SDL
-    # field_sdl = get_sdl_str(field)
     log.info(f"Processing field... '{print_field_sdl(field)}'")
+    field_case = get_field_case_extended(field)
     log.debug(f"Field case: {field_case}")
-
     if field_case not in SUPPORTED_FIELD_CASES:
         log.warning(
             f"Field case '{field_case.name}' is currently not supported by this exporter.\n"
-            f"Supported field cases are: {[case.name for case in SUPPORTED_FIELD_CASES]}"
+            f"Supported field cases are: {[case.name for case in SUPPORTED_FIELD_CASES]}\n"
+            f"Skipping field '{field_name}'."
         )
-        log.info(f"Skipping field '{field_name}'")
         return
     else:
-        if (
-            field_name == "instanceTag"
-        ):  # TODO: Consider handling the instanceTag field differently instead of skipping it
+        if field_name == "instanceTag":
             log.debug(
                 f"Skipping field '{field_name}'. It is a reserved field and its likely already "
                 f"processed as expanded instances."
             )
             return
         else:
-            # TODO: Parse the min and max in the @cardinality directive, implement consistency checking first
-            value_cardinality = field_case.value.value_cardinality
-
+            spec_cardinality = get_cardinality(field)
+            value_cardinality = spec_cardinality if spec_cardinality else field_case.value.value_cardinality
             unwrapped_field_type = get_named_type(field.type)  # GraphQL type without modifiers [] or !
             log.debug(f"Unwrapped field type: {unwrapped_field_type}")
             if isinstance(unwrapped_field_type, GraphQLScalarType):
-                create_property_shape_with_literal(field_name, field, shape_node, graph, value_cardinality)
+                create_property_shape_with_literal(
+                    field_name=field_name,
+                    field=field,
+                    shape_node=shape_node,
+                    graph=graph,
+                    value_cardinality=value_cardinality,
+                )
             elif is_list_type(field.type):
                 if isinstance(unwrapped_field_type, GraphQLObjectType):
                     instance_tag_object = get_instance_tag_object(unwrapped_field_type)
                     if not instance_tag_object:
                         create_property_shape_with_iri(
-                            unwrapped_field_type.name, unwrapped_field_type.name, shape_node, graph, value_cardinality
+                            field_name=field_name,
+                            field=field,
+                            # property_name=unwrapped_field_type.name,
+                            # output_type_name=unwrapped_field_type.name,
+                            shape_node=shape_node,
+                            graph=graph,
+                            value_cardinality=value_cardinality,
                         )
                         return
                     else:
@@ -218,16 +251,30 @@ def process_field(
                         instance_tags = INSTANCE_TAGS[instance_tag_object]
                         for tag in instance_tags:
                             create_property_shape_with_iri(
-                                f"{unwrapped_field_type.name}.{tag}",
-                                unwrapped_field_type.name,
-                                shape_node,
-                                graph,
-                                value_cardinality,
+                                field_name=f"{unwrapped_field_type.name}.{tag}",
+                                field=field,
+                                # unwrapped_field_type.name,
+                                shape_node=shape_node,
+                                graph=graph,
+                                value_cardinality=value_cardinality,
                             )
                         return
+            elif isinstance(unwrapped_field_type, GraphQLEnumType):
+                create_property_shape_with_literal(
+                    field_name,
+                    field,
+                    shape_node,
+                    graph,
+                    value_cardinality,
+                    enum_values=list(unwrapped_field_type.values.keys()),
+                )
             else:
                 create_property_shape_with_iri(
-                    unwrapped_field_type.name, unwrapped_field_type.name, shape_node, graph, value_cardinality
+                    field_name=field_name,
+                    field=field,
+                    shape_node=shape_node,
+                    graph=graph,
+                    value_cardinality=value_cardinality,
                 )
 
 

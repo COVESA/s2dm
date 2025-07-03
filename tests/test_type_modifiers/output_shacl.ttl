@@ -1,61 +1,77 @@
-@prefix model: <http://example.ns/model#> .
+@prefix bmw: <http://groupontology.bmwgroup.net/bmw-ont#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix shapes: <http://example.ns/shapes#> .
+@prefix val: <http://groupontology.bmwgroup.net/validation#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shapes:TestTypeModifiers a sh:NodeShape ;
+val:TestTypeModifiers a sh:NodeShape ;
+    sh:description "Example of an object type with various field modifiers in GraphQL." ;
     sh:name "TestTypeModifiers" ;
-    sh:property [ sh:class model:ExampleType ;
+    sh:property [ sh:class bmw:ExampleType ;
+            sh:description "Example (B.2) NON_NULL with object output type" ;
+            sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:name "ExampleType" ;
-            sh:node shapes:ExampleType ;
+            sh:name "nonNull" ;
+            sh:node val:ExampleType ;
             sh:nodeKind sh:IRI ;
-            sh:path model:has ],
-        [ sh:class model:ExampleTypeWithInstances ;
+            sh:path bmw:hasExampleType ],
+        [ sh:class bmw:ExampleTypeWithInstances ;
+            sh:description "Example (B.3) NON_NULL with object output type with instances" ;
+            sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:name "ExampleTypeWithInstances.B.ONE" ;
-            sh:node shapes:ExampleTypeWithInstances ;
+            sh:name "nonNullWithInstances" ;
+            sh:node val:ExampleTypeWithInstances ;
             sh:nodeKind sh:IRI ;
-            sh:path model:has ],
+            sh:path bmw:hasExampleTypeWithInstances ],
+        [ sh:class bmw:ExampleType ;
+            sh:description "Example (A.2) DEFAULT with object output type" ;
+            sh:maxCount 1 ;
+            sh:name "defaultType" ;
+            sh:node val:ExampleType ;
+            sh:nodeKind sh:IRI ;
+            sh:path bmw:hasExampleType ],
         [ sh:datatype xsd:boolean ;
+            sh:description "Example (B.1) NON_NULL with scalar output type" ;
+            sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:name "setNonNullScalar" ;
+            sh:name "nonNullScalar" ;
             sh:nodeKind sh:Literal ;
-            sh:path model:setNonNullScalar ],
-        [ sh:class model:ExampleTypeWithInstances ;
-            sh:minCount 1 ;
-            sh:name "ExampleTypeWithInstances.A.TWO" ;
-            sh:node shapes:ExampleTypeWithInstances ;
+            sh:path bmw:nonNullScalar ],
+        [ sh:class bmw:ExampleTypeWithInstances ;
+            sh:description "Example (A.3) DEFAULT with object output type with instances" ;
+            sh:maxCount 1 ;
+            sh:name "defaultWithInstances" ;
+            sh:node val:ExampleTypeWithInstances ;
             sh:nodeKind sh:IRI ;
-            sh:path model:has ],
-        [ sh:class model:ExampleTypeWithInstances ;
-            sh:minCount 1 ;
-            sh:name "ExampleTypeWithInstances.B.TWO" ;
-            sh:node shapes:ExampleTypeWithInstances ;
-            sh:nodeKind sh:IRI ;
-            sh:path model:has ],
-        [ sh:class model:ExampleTypeWithInstances ;
-            sh:minCount 1 ;
-            sh:name "ExampleTypeWithInstances.A.ONE" ;
-            sh:node shapes:ExampleTypeWithInstances ;
-            sh:nodeKind sh:IRI ;
-            sh:path model:has ] ;
-    sh:targetClass model:TestTypeModifiers .
+            sh:path bmw:hasExampleTypeWithInstances ],
+        [ sh:datatype xsd:boolean ;
+            sh:description "Example (A.1) DEFAULT with scalar output type" ;
+            sh:maxCount 1 ;
+            sh:name "defaultScalar" ;
+            sh:nodeKind sh:Literal ;
+            sh:path bmw:defaultScalar ] ;
+    sh:targetClass bmw:TestTypeModifiers .
 
-shapes:ExampleType a sh:NodeShape ;
+val:ExampleType a sh:NodeShape ;
     sh:name "ExampleType" ;
     sh:property [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:name "someField" ;
             sh:nodeKind sh:Literal ;
-            sh:path model:someField ] ;
-    sh:targetClass model:ExampleType .
+            sh:path bmw:someField ],
+        [ sh:datatype xsd:string ;
+            sh:in ( "ONE" "TWO" "THREE" "FOUR" "FIVE" ) ;
+            sh:maxCount 1 ;
+            sh:name "someFieldWithEnum" ;
+            sh:nodeKind sh:Literal ;
+            sh:path bmw:someFieldWithEnum ] ;
+    sh:targetClass bmw:ExampleType .
 
-shapes:ExampleTypeWithInstances a sh:NodeShape ;
+val:ExampleTypeWithInstances a sh:NodeShape ;
     sh:name "ExampleTypeWithInstances" ;
     sh:property [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:name "anotherField" ;
             sh:nodeKind sh:Literal ;
-            sh:path model:anotherField ] ;
-    sh:targetClass model:ExampleTypeWithInstances .
+            sh:path bmw:anotherField ] ;
+    sh:targetClass bmw:ExampleTypeWithInstances .

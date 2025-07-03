@@ -1,41 +1,48 @@
+"""Example of an object type with various field modifiers in GraphQL."""
 type TestTypeModifiers {
-    # field.case.DEFAULT
+    # A - field.case.DEFAULT
+    """Example (A.1) DEFAULT with scalar output type"""
     defaultScalar: Boolean
+    """Example (A.2) DEFAULT with object output type"""
     defaultType: ExampleType
+    """Example (A.3) DEFAULT with object output type with instances"""
     defaultWithInstances: ExampleTypeWithInstances
 
 
-    # field.case.NON_NULL
+    # B - field.case.NON_NULL
+    """Example (B.1) NON_NULL with scalar output type"""
     nonNullScalar: Boolean!
+    """Example (B.2) NON_NULL with object output type"""
     nonNull: ExampleType!
+    """Example (B.3) NON_NULL with object output type with instances"""
     nonNullWithInstances: ExampleTypeWithInstances!
 
-    # field.case.LIST
-    listScalar: [Boolean]
-    list: [ExampleType]
-    listWithInstances: [ExampleTypeWithInstances]
+    # C - field.case.LIST
+    #listScalar: [Boolean]
+    #list: [ExampleType]
+    #listWithInstances: [ExampleTypeWithInstances]
 
-    # field.case.NON_NULL_LIST
-    nonNullListScalar: [Boolean]!
-    nonNullList: [ExampleType]!
-    nonNullListWithInstances: [ExampleTypeWithInstances]!
+    # D - field.case.NON_NULL_LIST
+    #nonNullListScalar: [Boolean]!
+    #nonNullList: [ExampleType]!
+    #nonNullListWithInstances: [ExampleTypeWithInstances]!
 
-    # field.case.LIST_NON_NULL
-    listNonNullScalar: [Boolean!]
-    listNonNull: [ExampleType!]
-    listNonNullWithInstances: [ExampleTypeWithInstances!]
+    # E - field.case.LIST_NON_NULL
+    #listNonNullScalar: [Boolean!]
+    #listNonNull: [ExampleType!]
+    #listNonNullWithInstances: [ExampleTypeWithInstances!]
 
-    # field.case.NON_NULL_LIST_NON_NULL
-    nonNullListNonNullScalar: [Boolean!]!
-    nonNullListNonNull: [ExampleType!]!
-    nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]!
+    # F - field.case.NON_NULL_LIST_NON_NULL
+    #nonNullListNonNullScalar: [Boolean!]!
+    #nonNullListNonNull: [ExampleType!]!
+    #nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]!
 
-    # field.case.SET
+    # G - field.case.SET
     #setScalar: [Boolean] @noDuplicates
     #set: [ExampleType] @noDuplicates
     #setWithInstances: [ExampleTypeWithInstances] @noDuplicates
 
-    # field.case.LIST_NON_NULL
+    # H - field.case.SET_NON_NULL
     #setNonNullScalar: [Boolean!] @noDuplicates
     #setNonNull: [ExampleType!] @noDuplicates
     #setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates
@@ -44,6 +51,15 @@ type TestTypeModifiers {
 
 type ExampleType {
     someField: Boolean
+    someFieldWithEnum: SomeEnum
+}
+
+enum SomeEnum {
+    ONE
+    TWO
+    THREE
+    FOUR
+    FIVE
 }
 
 type ExampleTypeWithInstances {

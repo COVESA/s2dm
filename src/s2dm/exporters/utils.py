@@ -315,6 +315,28 @@ def has_directive(element: GraphQLObjectType | GraphQLField, directive_name: str
     return False
 
 
+def get_cardinality(field: GraphQLField) -> Cardinality | None:
+    """
+    Extracts the @cardinality directive arguments from a GraphQL field, if present.
+
+    Args:
+        field (GraphQLField): The field to extract cardinality from.
+
+    Returns:
+        Cardinality | None: The Cardinality if the directive is present, otherwise None.
+    """
+    if has_directive(field, "cardinality"):
+        args = get_directive_arguments(field, "cardinality")
+        min_val = None
+        max_val = None
+        if args:
+            min_val = int(args["min"]) if "min" in args and args["min"] is not None else None
+            max_val = int(args["max"]) if "max" in args and args["max"] is not None else None
+        return Cardinality(min=min_val, max=max_val)
+    else:
+        return None
+
+
 def has_valid_cardinality(field: GraphQLField) -> bool:
     """Check possible missmatch between GraphQL not null and custom @cardinality directive."""
     # TODO: Add a check to avoid discrepancy between GraphQL not null and custom @cardinality directive.
