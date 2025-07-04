@@ -2,9 +2,8 @@ name: Documentation Generation
 
 on:
   push:
-  pull_request:
-  workflow_dispatch:
-  workflow_call:
+    branches:
+      - main
 
 jobs:
   docgen:
@@ -29,7 +28,7 @@ jobs:
 
       - name: Deploy docs
         # Only deploy docs if this was a push to master
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages # The branch the action should deploy to.
