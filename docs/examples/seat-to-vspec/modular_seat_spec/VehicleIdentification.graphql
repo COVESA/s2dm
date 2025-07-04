@@ -1,8 +1,0 @@
-"""Attributes that identify a vehicle."""
-type VehicleIdentification {
-  """
-  17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
-  """
-  vin: String!
-    @metadata(vssType: "attribute")
-}

@@ -1,5 +1,0 @@
-"""High-level vehicle data."""
-type Vehicle {
-  id: VehicleIdentification!
-  cabin: Cabin
-}
