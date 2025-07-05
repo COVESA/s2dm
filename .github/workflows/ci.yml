@@ -12,13 +12,21 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
-      - name: python
+      - name: setup python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: uv
         uses: astral-sh/setup-uv@v4
+
+      - name: npm install gql-inspector
+        run: npm i --global @graphql-inspector/cli graphql
 
       - name: sync
         run: |
