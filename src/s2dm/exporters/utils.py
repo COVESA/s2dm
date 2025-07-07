@@ -178,7 +178,7 @@ def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
         return expanded_tags
 
 
-def get_directive_arguments(field: GraphQLField, directive_name: str) -> dict[str, Any]:
+def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive_name: str) -> dict[str, Any]:
     """
     Extracts the arguments of a specified directive from a GraphQL field.
     Args:
@@ -190,12 +190,12 @@ def get_directive_arguments(field: GraphQLField, directive_name: str) -> dict[st
     Logs:
         Logs a debug message if the specified directive is not found in the field.
     """
-    if field.ast_node and field.ast_node.directives:
-        for directive in field.ast_node.directives:
-            if directive.name.value == directive_name:
-                return {arg.name.value: arg.value.value for arg in directive.arguments if hasattr(arg.value, "value")}
-    logging.debug(f"Directive '{directive_name}' not found in field '{field}'.")
-    return {}
+    if has_directive(element, directive_name) and element.ast_node is not None:
+        directive = next(d for d in element.ast_node.directives if d.name.value == directive_name)
+        return {arg.name.value: arg.value.value for arg in directive.arguments if hasattr(arg.value, "value")}
+    else:
+        logging.debug(f"Directive '{directive_name}' not found in element '{element}'.")
+        return {}
 
 
 @dataclass
@@ -313,6 +313,22 @@ def has_directive(element: GraphQLObjectType | GraphQLField, directive_name: str
             if directive.name.value == directive_name:
                 return True
     return False
+
+
+def get_argument_content(
+    element: GraphQLObjectType | GraphQLField, directive_name: str, argument_name: str
+) -> Any | None:
+    """
+    Extracts the comment from a GraphQL element (field or named type).
+
+    Args:
+        element (GraphQLNamedType | GraphQLField): The GraphQL element to extract the comment from.
+
+    Returns:
+        str | None: The comment if present, otherwise None.
+    """
+    args = get_directive_arguments(element, directive_name)
+    return args.get(argument_name) if args and argument_name in args else None
 
 
 def get_cardinality(field: GraphQLField) -> Cardinality | None:

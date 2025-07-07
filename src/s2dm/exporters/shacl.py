@@ -10,7 +10,7 @@ from graphql import (
     get_named_type,
     is_list_type,
 )
-from rdflib import RDF, SH, XSD, BNode, Graph, Literal, Namespace, Node, URIRef
+from rdflib import RDF, RDFS, SH, XSD, BNode, Graph, Literal, Namespace, Node, URIRef
 from rdflib.collection import Collection
 
 from s2dm import log
@@ -21,6 +21,7 @@ from s2dm.exporters.utils import (
     get_all_named_types,
     get_all_object_types,
     get_all_objects_with_directive,
+    get_argument_content,
     get_cardinality,
     get_field_case_extended,
     has_directive,
@@ -166,6 +167,10 @@ def create_property_shape_with_literal(
     if field.description:
         _ = graph.add((property_node, SH.description, Literal(field.description)))
 
+    comment = get_argument_content(field, "metadata", "comment")
+    if comment and comment != {}:
+        _ = graph.add((property_node, RDFS.comment, Literal(comment)))
+
 
 def create_property_shape_with_iri(
     namespaces: Namespaces,
@@ -217,8 +222,8 @@ Skipping field '{field_name}'."""
     else:
         if field_name == "instanceTag":
             log.debug(
-                f"Skipping field '{field_name}'. It is a reserved field and its likely already ",
-                "processed as expanded instances.",
+                f"Skipping field '{field_name}'. It is a reserved field and its likely already "
+                + "processed as expanded instances.",
             )
             return
         else:
