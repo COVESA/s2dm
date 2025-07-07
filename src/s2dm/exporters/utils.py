@@ -1,4 +1,3 @@
-import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
@@ -17,6 +16,8 @@ from graphql import (
 )
 from graphql.type import GraphQLField, GraphQLNamedType, GraphQLObjectType, GraphQLSchema, GraphQLWrappingType
 from graphql.utilities import print_schema
+
+from s2dm import log
 
 
 def read_file(file_path: Path) -> str:
@@ -78,8 +79,8 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     """Load and build a GraphQL schema from a file or folder."""
     schema_str = build_schema_str(graphql_schema_path)
     schema = build_schema(schema_str)  # Convert GraphQL SDL to a GraphQLSchema object
-    logging.info("Successfully loaded the given GraphQL schema file.")
-    logging.debug(f"Read schema: \n{print_schema(schema)}")
+    log.info("Successfully loaded the given GraphQL schema file.")
+    log.debug(f"Read schema: \n{print_schema(schema)}")
     return ensure_query(schema)
 
 
@@ -96,7 +97,7 @@ def ensure_query(schema: GraphQLSchema) -> GraphQLSchema:
         generic Query type added.
     """
     if not schema.query_type:
-        logging.info("The provided schema has no Query type.")
+        log.info("The provided schema has no Query type.")
         query_fields = {"ping": GraphQLField(GraphQLString)}  # Add here other generic fields if needed
         query_type = GraphQLObjectType(name="Query", fields=query_fields)
         new_schema = GraphQLSchema(
@@ -104,8 +105,8 @@ def ensure_query(schema: GraphQLSchema) -> GraphQLSchema:
             types=schema.type_map.values(),
             directives=schema.directives,
         )
-        logging.info("A generic Query type to the schema was added.")
-        logging.debug(f"New schema: \n{print_schema(new_schema)}")
+        log.info("A generic Query type to the schema was added.")
+        log.debug(f"New schema: \n{print_schema(new_schema)}")
 
         return new_schema
 
@@ -150,13 +151,13 @@ def get_all_expanded_instance_tags(
     for object in get_all_objects_with_directive(get_all_object_types(get_all_named_types(schema)), "instanceTag"):
         all_expanded_instance_tags[object] = expand_instance_tag(object)
 
-    logging.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
+    log.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
 
     return all_expanded_instance_tags
 
 
 def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
-    logging.debug(f"Expanding instanceTag for object: {object.name}")
+    log.debug(f"Expanding instanceTag for object: {object.name}")
     expanded_tags = []
     if not has_directive(object, "instanceTag"):
         raise ValueError(f"Object '{object.name}' does not have an instance tag directive.")
@@ -167,13 +168,13 @@ def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
                 # TODO: Move this check to a validation function for the @instanceTag directive
                 raise TypeError(f"Field '{field_name}' in object '{object.name}' is not an enum.")
             tags_per_enum_field.append(list(field.type.values.keys()))
-        logging.debug(f"Tags per field: {tags_per_enum_field}")
+        log.debug(f"Tags per field: {tags_per_enum_field}")
 
         # Combine tags from different enum fields
         for combination in product(*tags_per_enum_field):
             expanded_tags.append(".".join(combination))  # <-- Character separator can be changed HERE
 
-        logging.debug(f"Expanded tags: {expanded_tags}")
+        log.debug(f"Expanded tags: {expanded_tags}")
 
         return expanded_tags
 
@@ -194,7 +195,7 @@ def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive
         directive = next(d for d in element.ast_node.directives if d.name.value == directive_name)
         return {arg.name.value: arg.value.value for arg in directive.arguments if hasattr(arg.value, "value")}
     else:
-        logging.debug(f"Directive '{directive_name}' not found in element '{element}'.")
+        log.debug(f"Directive '{directive_name}' not found in element '{element}'.")
         return {}
 
 
@@ -399,11 +400,11 @@ def has_valid_instance_tag_field(object_type: GraphQLObjectType, schema: GraphQL
         bool: True if the object type has a valid instanceTag field, False otherwise.
     """
     if "instanceTag" in object_type.fields:
-        logging.debug(f"instanceTag? {True}")
+        log.debug(f"instanceTag? {True}")
         field = object_type.fields["instanceTag"]
         return is_valid_instance_tag_field(field, schema)
     else:
-        logging.debug(f"instanceTag? {False}")
+        log.debug(f"instanceTag? {False}")
         return False
 
 

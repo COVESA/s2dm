@@ -1,5 +1,4 @@
 import json
-import logging
 from pathlib import Path
 
 import click
@@ -44,7 +43,7 @@ def main(
         namespace: The namespace for the URIs
         prefix: The prefix to use for the URIs
     """
-    logging.info(f"Processing schema '{schema}'")
+    log.info(f"Processing schema '{schema}'")
 
     # Load the schema
     graphql_schema = load_schema(schema)
