@@ -1,7 +1,6 @@
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -35,10 +34,9 @@ def test_introspect(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
     with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
         output_path = Path(tmpfile.name + ".graphql")
-    result: dict[str, Any] = inspector.introspect(output=output_path)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert result["returncode"] == 0
+    result = inspector.introspect(output=output_path)
+    assert hasattr(result, "output")
+    assert result.returncode == 0
     assert output_path.exists()
     with open(output_path) as f:
         file_content = f.read()
@@ -48,27 +46,24 @@ def test_introspect(schema1_tmp: Path) -> None:
 
 def test_diff_no_changes(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
-    result: dict[str, Any] = inspector.diff(schema1_tmp)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert result["returncode"] == 0
-    assert "No changes detected" in result["stdout"]
+    result = inspector.diff(schema1_tmp)
+    assert hasattr(result, "output")
+    assert result.returncode == 0
+    assert "No changes detected" in result.output
 
 
 def test_diff_with_changes(schema1_tmp: Path, schema2_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
-    result: dict[str, Any] = inspector.diff(schema2_tmp)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert "Detected" in result["stdout"] or "No changes detected" in result["stdout"]
+    result = inspector.diff(schema2_tmp)
+    assert hasattr(result, "output")
+    assert "Detected" in result.output or "No changes detected" in result.output
 
 
 def test_similar(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
-    result: dict[str, Any] = inspector.similar(output=None)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert result["returncode"] == 0
+    result = inspector.similar(output=None)
+    assert hasattr(result, "output")
+    assert result.returncode == 0
 
 
 @pytest.mark.parametrize("output_to_file", [False, True])
@@ -87,21 +82,19 @@ def test_similar_output(schema1_tmp: Path, output_to_file: bool) -> None:
         output_path.unlink()
     else:
         result = inspector.similar(output=None)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert result["returncode"] == 0
+    assert hasattr(result, "output")
+    assert result.returncode == 0
 
 
 def test_similar_keyword(schema1_tmp: Path) -> None:
     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
     # Use a keyword that is likely to exist in the test schema, e.g. "Query"
-    result: dict[str, Any] = inspector.similar_keyword("Vehicle_ADAS", output=None)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert result["returncode"] == 0 or result["returncode"] == 1  # allow not found
+    result = inspector.similar_keyword("Vehicle_ADAS", output=None)
+    assert hasattr(result, "output")
+    assert result.returncode == 0 or result.returncode == 1  # allow not found
     # Optionally check that the output contains the keyword if found
-    if result["returncode"] == 0:
-        assert "Vehicle_ADAS" in result["stdout"]
+    if result.returncode == 0:
+        assert "Vehicle_ADAS" in result.output
 
 
 @pytest.mark.parametrize("output_to_file", [False, True])
@@ -121,11 +114,10 @@ def test_similar_keyword_output(schema1_tmp: Path, output_to_file: bool) -> None
         output_path.unlink()
     else:
         result = inspector.similar_keyword(keyword, output=None)
-    assert isinstance(result, dict)
-    assert "stdout" in result
-    assert result["returncode"] == 0 or result["returncode"] == 1
-    if result["returncode"] == 0:
-        assert keyword in result["stdout"] or (output_to_file and file_content and keyword in file_content)
+    assert hasattr(result, "output")
+    assert result.returncode == 0 or result.returncode == 1
+    if result.returncode == 0:
+        assert keyword in result.output or (output_to_file and file_content and keyword in file_content)
 
 
 # ToDo: add a test for validate if we have a query file

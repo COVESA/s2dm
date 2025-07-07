@@ -132,9 +132,9 @@ def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> No
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
     # Recursively search for the value 'ns:Vehicle.averageSpeed' in the output
-    assert contains_value(
-        data, "ns:Vehicle.averageSpeed"
-    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
+        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    )
 
 
 def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:

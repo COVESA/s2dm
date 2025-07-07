@@ -252,15 +252,15 @@ def version_bump(schema: Path, previous: Path) -> None:
     diff_result = inspector.diff(previous_schema_temp_path)
 
     console = Console()
-    if diff_result["returncode"] == 0:
-        if "No changes detected" in diff_result["stdout"]:
+    if diff_result.returncode == 0:
+        if "No changes detected" in diff_result.output:
             console.print("[green]No version bump needed")
-        elif "No breaking changes detected" in diff_result["stdout"]:
+        elif "No breaking changes detected" in diff_result.output:
             console.print("[yellow]Minor or patch version bump needed!")
         else:
             console.print("[red]Unknown state, please check your input with 'diff' tool.")
     else:
-        if "Detected" in diff_result["stdout"] and "breaking changes" in diff_result["stdout"]:
+        if "Detected" in diff_result.output and "breaking changes" in diff_result.output:
             console.print(
                 "[red]Detected breaking changes, major version bump needed. Please run diff to get more details"
             )
@@ -283,14 +283,13 @@ def check_constraints(schema: Path) -> None:
     constraint_checker = ConstraintChecker(gql_schema)
     errors = constraint_checker.run(objects)
 
+    console = Console()
     if errors:
-        console = Console()
         console.rule("[bold red]Constraint Violations")
         for err in errors:
             console.print(f"[red]- {err}")
-        raise SystemExit(1)
+        raise sys.exit(1)
     else:
-        console = Console()
         console.print("[green]All constraints passed!")
 
 
@@ -306,10 +305,8 @@ def validate_graphql(schema: Path, output: Path) -> None:
     validation_result = inspector.introspect(output)
 
     console = Console()
-    if validation_result["returncode"] == 0:
-        console.print(validation_result["stdout"])
-    else:
-        console.print(validation_result["stderr"])
+    console.print(validation_result.output)
+    sys.exit(validation_result.returncode)
 
 
 # diff -> graphql
@@ -337,16 +334,12 @@ def diff_graphql(schema: Path, val_schema: Path, output: Path | None) -> None:
     if output is not None:
         logging.info(f"writing file to {output=}")
         output.parent.mkdir(parents=True, exist_ok=True)
-        processed = pretty_print_dict_json(diff_result)
+        processed = pretty_print_dict_json(diff_result.as_dict())
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
     console = Console()
-    if diff_result["returncode"] == 0:
-        console.print(diff_result["stdout"])
-    else:
-        console.print(diff_result["stdout"])
-        console.print(diff_result["stderr"])
-        sys.exit(diff_result["returncode"])
+    console.print(diff_result.output)
+    sys.exit(diff_result.returncode)
 
 
 # registry -> concept-uri
@@ -617,14 +610,10 @@ def similar_graphql(schema: Path, keyword: str, output: Path | None) -> None:
     # if keyword == "all" search all elements otherwise only keyword
     search_result = inspector.similar(output) if keyword == "all" else inspector.similar_keyword(keyword, output)
 
-    if search_result["returncode"] == 1:
-        logging.error(search_result["stderr"])
-        sys.exit(1)
-
     console = Console()
     console.rule(f"[bold blue] Search result for '{keyword}'")
-    if search_result["returncode"] == 0:
-        console.print(search_result["stdout"])
+    console.print(search_result.output)
+    sys.exit(search_result.returncode)
 
 
 # stats -> graphql

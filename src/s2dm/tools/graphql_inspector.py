@@ -1,6 +1,5 @@
 import logging
 import subprocess
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -13,6 +12,25 @@ class InspectorCommands(Enum):
     SIMILAR = "similar"
 
 
+class InspectorOutput:
+    def __init__(
+        self,
+        command: str,
+        returncode: int,
+        output: str,
+    ):
+        self.command = command
+        self.returncode = returncode
+        self.output = output
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "command": self.command,
+            "returncode": self.returncode,
+            "output": self.output,
+        }
+
+
 class GraphQLInspector:
     def __init__(self, schema_path: Path) -> None:
         self.schema_path = schema_path
@@ -22,7 +40,7 @@ class GraphQLInspector:
         command: InspectorCommands,
         *args: Any,
         **kwargs: Any,
-    ) -> dict[str, Any]:
+    ) -> InspectorOutput:
         """Execute command with comprehensive logging and improved error handling"""
         if command in [InspectorCommands.DIFF, InspectorCommands.INTROSPECT, InspectorCommands.SIMILAR]:
             cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
@@ -32,59 +50,53 @@ class GraphQLInspector:
             raise ValueError(f"Unknown command: {command.value}")
 
         logging.info(f"Running command: {' '.join(cmd)}")
-        start_time = datetime.now()
-        output: dict[str, Any] = {
-            "command": " ".join(cmd),
-            "start_time": start_time.isoformat(),
-        }
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             **kwargs,
         )
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
         stdout = result.stdout.strip() if result.stdout else ""
         stderr = result.stderr.strip() if result.stderr else ""
-
-        if stdout:
-            for line in stdout.split("\n"):
-                logging.debug(f"STDOUT: {line}")
+        output = stdout
         if stderr:
-            for line in stderr.split("\n"):
-                logging.debug(f"STDERR: {line}")
-        output["returncode"] = result.returncode
-        output["stdout"] = stdout
-        output["stderr"] = stderr
-        output["duration"] = duration
-        output["end_time"] = end_time.isoformat()
+            if output:
+                output += "\n" + stderr
+            else:
+                output = stderr
+
+        if output:
+            logging.debug(f"OUTPUT:\n{output}")
         if result.returncode != 0:
             logging.warning(f"Command failed with return code {result.returncode}")
-        logging.info(f"Process completed in {duration:.2f}s with return code: {result.returncode}")
+        logging.info(f"Process completed with return code: {result.returncode}")
 
-        return output
+        return InspectorOutput(
+            command=" ".join(cmd),
+            returncode=result.returncode,
+            output=output,
+        )
 
-    def validate(self, query: str) -> dict[str, Any]:
+    def validate(self, query: str) -> InspectorOutput:
         """Validate schema with logging"""
         return self._run_command(InspectorCommands.VALIDATE, query)
 
-    def diff(self, other_schema: Path) -> dict[str, Any]:
+    def diff(self, other_schema: Path) -> InspectorOutput:
         """Compare schemas with logging"""
         return self._run_command(InspectorCommands.DIFF, str(other_schema))
 
-    def introspect(self, output: Path) -> dict[str, Any]:
+    def introspect(self, output: Path) -> InspectorOutput:
         """Introspect schema."""
         return self._run_command(InspectorCommands.INTROSPECT, "--write", output)
 
-    def similar(self, output: Path | None) -> dict[str, Any]:
+    def similar(self, output: Path | None) -> InspectorOutput:
         """Similar table"""
         if output:
             return self._run_command(InspectorCommands.SIMILAR, "--write", output)
         else:
             return self._run_command(InspectorCommands.SIMILAR)
 
-    def similar_keyword(self, keyword: str, output: Path | None) -> dict[str, Any]:
+    def similar_keyword(self, keyword: str, output: Path | None) -> InspectorOutput:
         """Search single type in schema"""
         if output:
             return self._run_command(InspectorCommands.SIMILAR, "-n", keyword, "--write", output)
