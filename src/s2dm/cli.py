@@ -422,7 +422,7 @@ def export_id(ctx: click.Context, schema: Path, units: Path, output: Path | None
     required=True,
     help="Path to your units.yaml",
 )
-@optional_output_option
+@output_option
 @click.option(
     "--concept-namespace",
     default="https://example.org/vss#",
@@ -438,13 +438,12 @@ def registry_init(
     ctx: click.Context,
     schema: Path,
     units: Path,
-    output: Path | None,
+    output: Path,
     concept_namespace: str,
     concept_prefix: str,
 ) -> None:
     """Initialize your spec history with the given schema."""
-    if output:
-        output.parent.mkdir(parents=True, exist_ok=True)
+    output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
     id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
@@ -458,11 +457,8 @@ def registry_init(
     concept_uris = concept_uri_model.to_json_ld()
 
     # Determine history_dir based on output path if output is given, else default to "history"
-    if output:
-        output_real = output.resolve()
-        history_dir = output_real.parent / "history"
-    else:
-        history_dir = Path("history")
+    output_real = output.resolve()
+    history_dir = output_real.parent / "history"
 
     spec_history_exporter = SpecHistoryExporter(
         schema=schema,
@@ -497,7 +493,7 @@ def registry_init(
     required=True,
     help="Path to the previously generated spec history file",
 )
-@optional_output_option
+@output_option
 @click.option(
     "--concept-namespace",
     default="https://example.org/vss#",
@@ -514,13 +510,12 @@ def registry_update(
     schema: Path,
     units: Path,
     spec_history: Path,
-    output: Path | None,
+    output: Path,
     concept_namespace: str,
     concept_prefix: str,
 ) -> None:
     """Update a given spec history file with your new schema."""
-    if output:
-        output.parent.mkdir(parents=True, exist_ok=True)
+    output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
     id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
@@ -534,11 +529,8 @@ def registry_update(
     concept_uris = concept_uri_model.to_json_ld()
 
     # Determine history_dir based on output path if output is given, else default to "history"
-    if output:
-        output_real = output.resolve()
-        history_dir = output_real.parent / "history"
-    else:
-        history_dir = Path("history")
+    output_real = output.resolve()
+    history_dir = output_real.parent / "history"
 
     spec_history_exporter = SpecHistoryExporter(
         schema=schema,
