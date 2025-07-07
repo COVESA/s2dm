@@ -38,14 +38,15 @@ type TestTypeModifiers {
     #nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]!
 
     # G - field.case.SET
-    #setScalar: [Boolean] @noDuplicates
-    #set: [ExampleType] @noDuplicates
-    #setWithInstances: [ExampleTypeWithInstances] @noDuplicates
+    setScalar: [Boolean] @noDuplicates @cardinality(max:5)
+    set: [ExampleType] @noDuplicates @cardinality(max:5)
+    setEnum: [SomeEnum] @noDuplicates @cardinality(max:5)
+    setWithInstances: [ExampleTypeWithInstances] @noDuplicates @cardinality(max:5)
 
     # H - field.case.SET_NON_NULL
-    #setNonNullScalar: [Boolean!] @noDuplicates
-    #setNonNull: [ExampleType!] @noDuplicates
-    #setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates
+    setNonNullScalar: [Boolean!] @noDuplicates @cardinality(max:10)
+    setNonNull: [ExampleType!] @noDuplicates @cardinality(max:10)
+    setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates @cardinality(max:10)
 
 }
 

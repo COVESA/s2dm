@@ -127,7 +127,7 @@ def get_all_named_types(schema: GraphQLSchema) -> list[GraphQLNamedType]:
 
 
 def get_all_object_types(
-    named_types: list[GraphQLNamedType],
+    schema: GraphQLSchema,
 ) -> list[GraphQLObjectType]:
     """
     Extracts all object types from the provided GraphQL schema.
@@ -136,6 +136,7 @@ def get_all_object_types(
     Returns:
         list[GraphQLObjectType]: A list of all object types in the schema.
     """
+    named_types = get_all_named_types(schema)
     return [type_ for type_ in named_types if isinstance(type_, GraphQLObjectType)]
 
 
@@ -148,7 +149,7 @@ def get_all_expanded_instance_tags(
     schema: GraphQLSchema,
 ) -> dict[GraphQLObjectType, list[str]]:
     all_expanded_instance_tags: dict[GraphQLObjectType, list[str]] = {}
-    for object in get_all_objects_with_directive(get_all_object_types(get_all_named_types(schema)), "instanceTag"):
+    for object in get_all_objects_with_directive(get_all_object_types(schema), "instanceTag"):
         all_expanded_instance_tags[object] = expand_instance_tag(object)
 
     log.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
