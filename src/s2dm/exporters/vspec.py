@@ -17,7 +17,6 @@ from s2dm import log
 from s2dm.exporters.utils import (
     FieldCase,
     get_all_expanded_instance_tags,
-    get_all_named_types,
     get_all_object_types,
     get_all_objects_with_directive,
     get_instance_tag_dict,
@@ -166,8 +165,7 @@ def translate_to_vspec(schema_path: Path) -> str:
     """Translate a GraphQL schema to YAML."""
     schema = load_schema(schema_path)
 
-    named_types = get_all_named_types(schema)
-    all_object_types = get_all_object_types(named_types)
+    all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")
     instance_tag_objects = get_all_objects_with_directive(all_object_types, "instanceTag")
     # Remove instance tag objects from object_types
