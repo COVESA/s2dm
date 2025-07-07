@@ -41,17 +41,12 @@ output_option = click.option(
 )
 @click.version_option(__version__)
 def cli(log_level: str, log_file: Path | None) -> None:
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
-    log.addHandler(console_handler)
-
     if log_file:
         file_handler = logging.FileHandler(log_file, mode="w")
         file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
         log.addHandler(file_handler)
 
     log.setLevel(log_level)
-    logging.getLogger().setLevel(log_level)
     if log_level == "DEBUG":
         _ = install(show_locals=True)
 

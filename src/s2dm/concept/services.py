@@ -1,10 +1,10 @@
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
 from graphql import GraphQLEnumType, GraphQLList, GraphQLNamedType, GraphQLObjectType
 
+from s2dm import log
 from s2dm.concept.models import (
     Concepts,
     ConceptUriModel,
@@ -110,7 +110,7 @@ def convert_concept_uri_to_spec_history(
             if concept_name in concept_ids:
                 spec_node.initialize_history(concept_ids[concept_name])
             else:
-                logging.warning(f"No ID found for concept: {concept_name}")
+                log.warning(f"No ID found for concept: {concept_name}")
 
         spec_nodes.append(spec_node)
 
@@ -274,11 +274,11 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
             continue
 
         if isinstance(named_type, GraphQLEnumType):
-            logging.debug(f"Processing enum: {named_type.name}")
+            log.debug(f"Processing enum: {named_type.name}")
             concepts.enums.append(named_type.name)
 
         elif isinstance(named_type, GraphQLObjectType):
-            logging.debug(f"Processing object: {named_type.name}")
+            log.debug(f"Processing object: {named_type.name}")
             # Get the ID of all fields in the object
             for field_name, field in named_type.fields.items():
                 if field_name.lower() == "id":

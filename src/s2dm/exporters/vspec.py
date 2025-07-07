@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -14,6 +13,7 @@ from graphql import (
     get_named_type,
 )
 
+from s2dm import log
 from s2dm.exporters.utils import (
     FieldCase,
     get_all_expanded_instance_tags,
@@ -101,7 +101,6 @@ SUPPORTED_FIELD_CASES = {
     FieldCase.NON_NULL_LIST,
     FieldCase.NON_NULL_LIST_NON_NULL,
 }
-logging.debug(f"export vspec supports these field cases:\n{SUPPORTED_FIELD_CASES}")
 
 INSTANCE_TAGS = None
 
@@ -169,18 +168,18 @@ def translate_to_vspec(schema_path: Path) -> str:
 
     named_types = get_all_named_types(schema)
     all_object_types = get_all_object_types(named_types)
-    logging.debug(f"Object types: {all_object_types}")
+    log.debug(f"Object types: {all_object_types}")
     instance_tag_objects = get_all_objects_with_directive(all_object_types, "instanceTag")
     # Remove instance tag objects from object_types
     object_types = [obj for obj in all_object_types if obj not in instance_tag_objects]
-    logging.debug(f"Instance Tag Objects: {instance_tag_objects}")
+    log.debug(f"Instance Tag Objects: {instance_tag_objects}")
     global INSTANCE_TAGS
     INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
     nested_types: list[tuple[str, str]] = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
     for object_type in object_types:
         if object_type.name == "Query":
-            logging.debug("Skipping Query object type.")
+            log.debug("Skipping Query object type.")
             continue
 
         # Add a VSS branch structure for the object type
@@ -188,7 +187,7 @@ def translate_to_vspec(schema_path: Path) -> str:
             yaml_dict.update(process_object_type(object_type, schema))
         else:
             # TODO: Check if the processed object type is already in the yaml_dict
-            logging.debug(f"Object type '{object_type.name}' already exists in the YAML dictionary. Skipping.")
+            log.debug(f"Object type '{object_type.name}' already exists in the YAML dictionary. Skipping.")
         # Process the fields of the object type
         for field_name, field in object_type.fields.items():
             # Add a VSS leaf structure for the field
@@ -196,13 +195,13 @@ def translate_to_vspec(schema_path: Path) -> str:
             if field_result is not None:
                 yaml_dict.update(field_result)
             else:
-                logging.debug(
+                log.debug(
                     f"Skipping field '{field_name}' in object type '{object_type.name}' as process_field returned None."
                 )
 
-    logging.debug(f"Nested types: {nested_types}")
+    log.debug(f"Nested types: {nested_types}")
     reconstructed_paths = reconstruct_paths(nested_types)
-    logging.debug(f"Reconstructed {reconstructed_paths}")
+    log.debug(f"Reconstructed {reconstructed_paths}")
     # TODO: Think of splitting the yaml dump into two: one for object types and one for fields.
     # Reason: to maintain the same order of the keys in the fields, and also to structure the
     # export better and sorted for easier control of the output.
@@ -219,7 +218,7 @@ def translate_to_vspec(schema_path: Path) -> str:
 
 def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -> dict[str, dict[str, Any]]:
     """Process a GraphQL object type and generate the corresponding YAML."""
-    logging.info(f"Processing object type '{object_type.name}'.")
+    log.info(f"Processing object type '{object_type.name}'.")
 
     obj_dict: dict[str, Any] = {
         "type": "branch",
@@ -229,10 +228,10 @@ def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -
 
     instance_tag_object = get_instance_tag_object(object_type, schema)
     if instance_tag_object:
-        logging.debug(f"Object type '{object_type.name}' has instance tag '{instance_tag_object}'.")
+        log.debug(f"Object type '{object_type.name}' has instance tag '{instance_tag_object}'.")
         obj_dict["instances"] = list(get_instance_tag_dict(instance_tag_object).values())
     else:
-        logging.debug(f"Object type '{object_type.name}' does not have an instance tag.")
+        log.debug(f"Object type '{object_type.name}' does not have an instance tag.")
 
     return {object_type.name: obj_dict}
 
@@ -245,7 +244,7 @@ def process_field(
     nested_types: list[tuple[str, str]],
 ) -> dict[str, dict[str, Any]]:
     """Process a GraphQL field and generate the corresponding YAML."""
-    logging.info(f"Processing field '{field_name}'.")
+    log.info(f"Processing field '{field_name}'.")
     concat_field_name = f"{object_type.name}.{field_name}"
 
     output_type = get_named_type(field.type)
@@ -312,12 +311,12 @@ def process_field(
         # Collect nested structures
         # nested_types.append(f"{object_type.name}.{output_type}({field_name})")
         nested_types.append((object_type.name, output_type.name))
-        logging.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
+        log.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
         named_type = get_named_type(field.type)
         if isinstance(named_type, GraphQLObjectType):
             return process_object_type(named_type, schema)  # Nested object type, process it recursively
         else:
-            logging.debug(f"Skipping nested type '{named_type}' as it is not a GraphQLObjectType.")
+            log.debug(f"Skipping nested type '{named_type}' as it is not a GraphQLObjectType.")
             return {}
     elif isinstance(output_type, GraphQLEnumType):
         field_dict = {
@@ -331,7 +330,7 @@ def process_field(
         return {concat_field_name: field_dict}
 
     else:
-        logging.debug(f"Skipping in the output: field '{field_name}' with output type '{type(field.type).__name__}'.")
+        log.debug(f"Skipping in the output: field '{field_name}' with output type '{type(field.type).__name__}'.")
         return {}
 
 
@@ -377,9 +376,9 @@ def main(
     output: Path,
 ) -> None:
     result = translate_to_vspec(schema)
-    logging.info(f"Result:\n{result}")
+    log.info(f"Result:\n{result}")
     with open(output, "w", encoding="utf-8") as output_file:
-        logging.info(f"Writing data to '{output}'")
+        log.info(f"Writing data to '{output}'")
         output_file.write(result)
 
 
