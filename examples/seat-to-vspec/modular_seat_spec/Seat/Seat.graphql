@@ -27,7 +27,7 @@ type Seat {
 
   """Is the belt engaged."""
   isBelted: Boolean
-    @metadata(vssType: "actuator")
+    @metadata(vssType: "sensor")
 
   """
   Cooler switch for Seat heater.
