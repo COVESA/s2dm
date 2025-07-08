@@ -17,10 +17,14 @@ jobs:
 
       - name: Install hugo
         env:
-          HUGO_VER : 0.129.0
+          HUGO_VER: 0.129.0
         run: |
           curl -LO https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_${HUGO_VER}_linux-amd64.deb
           sudo dpkg -i hugo_${HUGO_VER}_linux-amd64.deb
+
+      - name: Clone theme
+        run: |
+          git clone --depth 1 --branch 8.0.0 https://github.com/McShelby/hugo-theme-relearn/tree/main docs-gen/themes/hugo-theme-relearn
 
       - name: Make docs
         run: |
