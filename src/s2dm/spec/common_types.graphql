@@ -6,6 +6,12 @@ enum TwoRowsInCabinEnum {
   ROW2
 }
 
+enum ThreeRowsInCabinEnum {
+  ROW1
+  ROW2
+  ROW3
+}
+
 enum TwoColumnsInCabinEnum {
   DRIVERSIDE
   PASSENGERSIDE
@@ -28,6 +34,11 @@ type InCabinArea2x3 @instanceTag {
   column: ThreeColumnsInCabinEnum
 }
 
+type InCabinArea3x3 @instanceTag {
+  row: ThreeRowsInCabinEnum
+  column: ThreeColumnsInCabinEnum
+}
+
 # Input types
 input InCabinArea2x2Input {
   row: TwoRowsInCabinEnum
@@ -36,5 +47,10 @@ input InCabinArea2x2Input {
 
 input InCabinArea2x3Input {
   row: TwoRowsInCabinEnum
+  column: ThreeColumnsInCabinEnum
+}
+
+input InCabinArea3x3Input {
+  row: ThreeRowsInCabinEnum
   column: ThreeColumnsInCabinEnum
 }
