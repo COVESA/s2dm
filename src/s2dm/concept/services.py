@@ -121,7 +121,7 @@ def convert_concept_uri_to_spec_history(
 def update_spec_history_from_concept_uris(
     spec_history: SpecHistoryModel,
     concept_uris: ConceptUriModel,
-    concept_ids: dict[str, str],
+    concept_ids: dict[str, Any],
 ) -> tuple[list[str], list[str]]:
     """Update this spec history from concept URIs and IDs.
 

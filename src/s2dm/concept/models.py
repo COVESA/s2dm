@@ -1,35 +1,9 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, field_validator
-
-
-class HasId(Protocol):
-    """Protocol for objects that have an id attribute."""
-
-    id: str
-
-
-NodeType = TypeVar("NodeType", bound=HasId)
-
-
-@dataclass
-class Concepts:
-    """Data class containing all the concepts extracted from a GraphQL schema.
-
-    Args:
-        fields: List of field names
-        enums: List of enum names
-        objects: Dictionary mapping object names to their field lists
-        nested_objects: Dictionary mapping field names to object type names
-    """
-
-    fields: list[str] = field(default_factory=list)
-    enums: list[str] = field(default_factory=list)
-    objects: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    nested_objects: dict[str, str] = field(default_factory=dict)
 
 
 class JsonLDSerializable(BaseModel):
@@ -73,6 +47,32 @@ class JsonLDSerializable(BaseModel):
         return self.model_dump(by_alias=True, exclude_none=True)
 
 
+class HasIdMixin(JsonLDSerializable):
+    """Base class for objects that have an id attribute."""
+
+    id: str
+
+
+NodeType = TypeVar("NodeType", bound=HasIdMixin)
+
+
+@dataclass
+class Concepts:
+    """Data class containing all the concepts extracted from a GraphQL schema.
+
+    Args:
+        fields: List of field names
+        enums: List of enum names
+        objects: Dictionary mapping object names to their field lists
+        nested_objects: Dictionary mapping field names to object type names
+    """
+
+    fields: list[str] = field(default_factory=list)
+    enums: list[str] = field(default_factory=list)
+    objects: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    nested_objects: dict[str, str] = field(default_factory=dict)
+
+
 # Concept models
 class ConceptBaseModel(JsonLDSerializable, Generic[NodeType]):
     """A base model for concepts.
@@ -108,7 +108,7 @@ class ConceptBaseModel(JsonLDSerializable, Generic[NodeType]):
         return {node.id: node for node in self.graph}
 
 
-class ConceptUriNode(JsonLDSerializable):
+class ConceptUriNode(HasIdMixin):
     """A node in the concept URI graph.
 
     Args:
@@ -118,7 +118,6 @@ class ConceptUriNode(JsonLDSerializable):
         hasNestedObject: ID of nested object for field nodes
     """
 
-    id: str
     type: str
     hasField: list[str] | None = None
     hasNestedObject: str | None = None
@@ -153,7 +152,7 @@ class ConceptUriModel(ConceptBaseModel[ConceptUriNode]):
 
 
 # Spec History models
-class SpecHistoryEntry(JsonLDSerializable):
+class SpecHistoryEntry(HasIdMixin):
     """A single entry in the spec history.
 
     Args:
@@ -161,7 +160,6 @@ class SpecHistoryEntry(JsonLDSerializable):
         timestamp: ISO format timestamp when this entry was created
     """
 
-    id: str
     timestamp: str
 
     @field_validator("timestamp")
