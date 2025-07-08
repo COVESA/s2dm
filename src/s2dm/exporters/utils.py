@@ -1,4 +1,5 @@
 import os
+import tempfile
 from dataclasses import dataclass
 from enum import Enum
 from itertools import product
@@ -82,6 +83,20 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     log.info("Successfully loaded the given GraphQL schema file.")
     log.debug(f"Read schema: \n{print_schema(schema)}")
     return ensure_query(schema)
+
+
+def load_schema_as_str(graphql_schema_path: Path) -> str:
+    """Load and build GraphQL schema but return as str."""
+    return print_schema(load_schema(graphql_schema_path))
+
+
+def create_tempfile_to_composed_schema(graphql_schema_path: Path) -> Path:
+    """Load, build, and create temp file for schema to feed to e.g. GraphQL inspector."""
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".graphql", delete=False) as temp_file:
+        temp_path: str = temp_file.name
+        temp_file.write(load_schema_as_str(graphql_schema_path))
+
+    return Path(temp_path)
 
 
 def ensure_query(schema: GraphQLSchema) -> GraphQLSchema:
@@ -449,3 +464,57 @@ def get_instance_tag_dict(
             raise TypeError(f"Field '{field_name}' in object '{instance_tag_object.name}' is not an enum.")
 
     return instance_tag_dict
+
+
+def search_schema(
+    schema: GraphQLSchema,
+    type_name: str | None = None,
+    field_name: str | None = None,
+    partial: bool = False,
+    case_insensitive: bool = False,
+) -> dict[str, list[Any] | None]:
+    """
+    Search for types and/or fields in a GraphQL schema.
+
+    Args:
+        schema (GraphQLSchema): The schema to search.
+        type_name (str, optional): The name (or partial name) of the type to search for.
+        field_name (str, optional): The name (or partial name) of the field to search for within the type(s).
+        partial (bool): If True, allows partial (substring) matches for type and field names.
+        case_insensitive (bool): If True, search is case-insensitive.
+
+    Returns:
+        dict: {type_name: [field_names]} for matches, or just type names if field_name is None.
+    """
+    results: dict[str, list[Any] | None] = {}
+    for tname, t in schema.type_map.items():
+        if tname.startswith("__"):
+            continue
+        tname_cmp = tname.lower() if case_insensitive else tname
+        type_name_cmp = type_name.lower() if (type_name and case_insensitive) else type_name
+        type_match = (
+            type_name is None
+            or (partial and type_name_cmp is not None and type_name_cmp in tname_cmp)
+            or (not partial and type_name_cmp is not None and tname_cmp == type_name_cmp)
+        )
+        if type_match:
+            fields = getattr(t, "fields", None)
+            if callable(fields):
+                fields = fields()
+            if isinstance(fields, dict):
+                if field_name:
+                    field_name_cmp = field_name.lower() if case_insensitive else field_name
+                    matched_fields = [
+                        fname
+                        for fname in fields
+                        if (partial and field_name_cmp in (fname.lower() if case_insensitive else fname))
+                        or (not partial and (fname.lower() if case_insensitive else fname) == field_name_cmp)
+                    ]
+                    if matched_fields:
+                        results[tname] = matched_fields
+                else:
+                    results[tname] = list(fields)
+            else:
+                continue
+
+    return results

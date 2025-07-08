@@ -1,32 +1,12 @@
 import json
 from pathlib import Path
 
-import click
-
 from s2dm import log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
 from s2dm.exporters.utils import get_all_named_types, load_schema
 
 
-@click.command()
-@click.argument("schema", type=click.Path(exists=True), required=True)
-@click.option(
-    "-o",
-    "--output",
-    type=click.Path(dir_okay=False, writable=True, path_type=Path),
-    help="Output file path for the JSON-LD file",
-)
-@click.option(
-    "--namespace",
-    default="https://example.org/vss#",
-    help="The namespace for the URIs",
-)
-@click.option(
-    "--prefix",
-    default="ns",
-    help="The prefix to use for the URIs",
-)
-def main(
+def process_schema(
     schema: Path,
     output: Path | None,
     namespace: str,
@@ -62,7 +42,3 @@ def main(
     else:
         print("-" * 80)
         print(json.dumps(concept_uri_model.to_json_ld(), indent=2))
-
-
-if __name__ == "__main__":
-    main()
