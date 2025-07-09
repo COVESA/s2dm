@@ -2,18 +2,26 @@
 title:  Simplified Semantic Data Modeling (S2DM)
 ---
 
-
-`S2DM` is an approach for modeling data of multiple domains.
-It is **_simple_** in the sense that any Subject Matter Expert (SME) could contribute to a controlled vocabulary with minimal data modeling expertise.
+The _Simplified Semantic Data Modeling_ (`S2DM`) is an approach for modeling data of multiple domains.
+It is **_simple_** in the sense that any _Subject Matter Expert_ (SME) could contribute to a controlled vocabulary with minimal data modeling expertise.
 Likewise, it is **_semantic_** in the sense that it specifies meaningful data structures, their cross-domain relationships, and arbitrary classification schemes.
 
 > [!NOTE]
 > Bear in mind the word `Simplified` in the name.
 > This approach aims to foster the adoption of (some) good data modeling practices.
 > It does not intent to re-invent, nor to replace long-standing standards, such as those of the [Semantic Web](https://www.w3.org/2001/sw/wiki/Main_Page).
-> Hence, this approach does not incorporate advanced reasoning capabilities or the use of comprehensive ontologies typically associated with traditional semantic data modeling.
+> Hence, it does not incorporate advanced reasoning capabilities or comprehensive ontologies typically associated with traditional semantic data modeling.
 
-`S2DM` adopts data modeling best practices and reuses the following elements:
+# SD2M Artifacts
+![Fig:s2dm_role](/s2dm/docs-gen/figures/s2dm_role.svg)
+
+`S2DM` consists of the two main artifacts:
+* **_S2DM data modeling guideline_** - It explains how to formalize the data of a domain with the `S2DM` approach. In other words, how to create the specification files that will constitute the core of the conceptual/logical layer. [Click HERE to start modeling a domain with `S2DM` approach](/s2dm/guides/modeling).
+* **_S2DM Tools_** - Code that support the proper usage of the `S2DM` guideline. It helps with the modeling language validation, identifiers, search functions, exporters, etc. [Click HERE to start using the `S2DM` tools](/s2dm/tools).
+
+
+
+`S2DM` reuses the following elements:
 
 - [GraphQL Schema Definition Language (SDL)](https://graphql.org/learn/schema/).
   It provides a clear, human-readable syntax for defining data structures and relationships, making it easy for SMEs to understand and use without requiring deep technical expertise.
@@ -79,9 +87,7 @@ graph LR
 ```
 
 ## Getting started
-The `S2DM` consists of the following artifacts:
-* **_S2DM data modeling guideline_** - It explains how to formalize the data of a domain with the `S2DM` approach. In other words, how to create the specification files that will constitute the core of the conceptual layer. [Click HERE to start modeling a domain with `S2DM` approach](/s2dm/guides/modeling).
-* **_S2DM Tools_** - Code that support the proper usage of the `S2DM` guideline. It helps with the modeling language validation, identifiers, search functions, exporters, etc. [Click HERE to start using the `S2DM` tools](/s2dm/tools).
+
 
 ## Contributing
 Contributions are welcome. [Click HERE to contribute](/s2dm/guides/contributing) (to the `S2DM` approach itself).
