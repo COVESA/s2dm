@@ -1,9 +1,0 @@
-# Ignore everything by default
-*
-
-# But don't ignore these specific files
-!.gitignore
-!README.md
-!sample.graphql
-!sample_updated.graphql
-!units.yaml
