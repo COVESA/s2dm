@@ -1,3 +1,6 @@
 [submodule "docs-gen/themes/hugo-theme-relearn"]
 	path = docs-gen/themes/hugo-theme-relearn
 	url = https://github.com/McShelby/hugo-theme-relearn.git
+[submodule "docs-gen/themes/hextra"]
+	path = docs-gen/themes/hextra
+	url = https://github.com/imfing/hextra.git

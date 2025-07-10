@@ -1,0 +1,121 @@
+baseURL: "https://covesa.github.io/s2dm"
+title: "S2DM"
+theme: "hextra"
+publishDir: "../docs"
+
+enableRobotsTXT: true
+enableGitInfo: true
+hasCJKLanguage: false
+
+outputs:
+  home: [HTML]
+  page: [HTML]
+  section: [HTML, RSS]
+
+defaultContentLanguage: en
+languages:
+  en:
+    languageName: English
+    weight: 1
+    title: S2DM
+
+module:
+  hugoVersion:
+    extended: true
+    min: "0.146.0"
+
+markup:
+  highlight:
+    noClasses: false
+  goldmark:
+    renderer:
+      unsafe: true
+
+enableInlineShortcodes: true
+
+menu:
+  main:
+    - identifier: modeling-guideline
+      name: Modeling Guideline
+      pageRef: /1-modeling-guideline
+      weight: 1
+    - identifier: tools
+      name: Tools
+      pageRef: /2-tools
+      weight: 2
+    - identifier: examples
+      name: Examples
+      pageRef: /3-examples
+      weight: 3
+    - identifier: spec-examples
+      name: Spec Examples
+      pageRef: /examples
+      weight: 4
+    - identifier: license
+      name: License
+      pageRef: /license
+      weight: 5
+    - name: Search
+      weight: 6
+      params:
+        type: search
+    - name: GitHub
+      weight: 7
+      url: "https://github.com/covesa/s2dm"
+      params:
+        icon: github
+
+params:
+  favicon: "/images/fav.png"
+  description: "S2DM is an approach for modeling data across multiple domains. It is designed to be simple and accessible for Subject Matter Experts (SMEs) while incorporating semantic principles to define meaningful data structures and relationships."
+
+  # Custom CSS
+  customCSS: ["css/custom.css"]
+
+  navbar:
+    displayTitle: true
+    displayLogo: true
+    logo:
+      path: images/S2DM.png
+      # width: 40
+      # height: 20
+    width: wide
+
+  page:
+    width: normal
+
+  theme:
+    default: system
+    displayToggle: true
+
+  footer:
+    enable: true
+    displayCopyright: true
+    displayPoweredBy: true
+    width: normal
+
+  displayUpdatedDate: true
+  dateFormat: "January 2, 2006"
+
+  search:
+    enable: true
+    type: flexsearch
+
+    flexsearch:
+      index: content
+      tokenize: forward
+
+  editURL:
+    enable: true
+    base: "https://github.com/covesa/s2dm/edit/main/docs-gen/content"
+
+  toc:
+    displayTags: true
+
+  highlight:
+    copy:
+      enable: true
+      display: hover
+
+  comments:
+    enable: false
