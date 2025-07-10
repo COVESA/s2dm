@@ -23,6 +23,7 @@ from s2dm.exporters.utils import (
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
+from s2dm.tools.validators import validate_language_tag
 
 schema_option = click.option(
     "--schema",
@@ -115,6 +116,12 @@ def diff() -> None:
 @click.group()
 def export() -> None:
     """Export commands."""
+    pass
+
+
+@click.group()
+def generate() -> None:
+    """Generate commands."""
     pass
 
 
@@ -224,6 +231,47 @@ def vspec(schema: Path, output: Path) -> None:
     result = translate_to_vspec(schema)
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(result)
+
+
+@generate.command
+@schema_option
+@output_option
+@click.option(
+    "--namespace",
+    default="https://example.org/vss#",
+    help="The namespace for the concept URIs",
+)
+@click.option(
+    "--prefix",
+    default="ns",
+    help="The prefix to use for the concept URIs",
+)
+@click.option(
+    "--language",
+    default="en",
+    callback=validate_language_tag,
+    help="BCP 47 language tag for prefLabels",
+    show_default=True,
+)
+def skos_skeleton(
+    schema: Path,
+    output: Path,
+    namespace: str,
+    prefix: str,
+    language: str,
+) -> None:
+    """Generate SKOS skeleton RDF file from GraphQL schema."""
+    from s2dm.exporters.skos import generate_skos_skeleton
+
+    with output.open("w") as output_stream:
+        generate_skos_skeleton(
+            schema_path=schema,
+            output_stream=output_stream,
+            namespace=namespace,
+            prefix=prefix,
+            language=language,
+            validate=True,
+        )
 
 
 # Check -> version bump
@@ -669,6 +717,7 @@ def stats_graphql(ctx: click.Context, schema: Path) -> None:
 cli.add_command(check)
 cli.add_command(diff)
 cli.add_command(export)
+cli.add_command(generate)
 cli.add_command(registry)
 cli.add_command(similar)
 cli.add_command(search)
