@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data modeling guideline :: S2DM</title>
+    <link>https://covesa.github.io/s2dm/1-modeling-guideline/index.html</link>
+    <description></description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://covesa.github.io/s2dm/1-modeling-guideline/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>(1) Objects &amp; Properties</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.1-objects-and-properties/objects_and_properties/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.1-objects-and-properties/objects_and_properties/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>(2) Concept URIs</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.2-concept-uris/concept_uris/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.2-concept-uris/concept_uris/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>(3) Multi hierarchies</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.3-multi-hierarchies/multi_hierarchies/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.3-multi-hierarchies/multi_hierarchies/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>(4) Variant IDs</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.4-variant-ids/variant_ids/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.4-variant-ids/variant_ids/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>(5) Specification registry</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.5-spec-registry/spec_registry/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.5-spec-registry/spec_registry/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>(6) Capabilities</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.6-capabilities/capabilities/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.6-capabilities/capabilities/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>(7) Pre-defined elements</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/1.7-pre-defined-elements/pre_defined_elements/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/1.7-pre-defined-elements/pre_defined_elements/index.html</guid>
+      <description>Units Units are represented as enum values. For example:&#xA;enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.&#xA;[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.</description>
+    </item>
+    <item>
+      <title>Basic principle</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/others/basic_principle/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/others/basic_principle/index.html</guid>
+      <description>Basic principle The idea is that multiple systems in the physical layer (e.g., databases, streaming platforms, applications, etc.) can share the same concepts. However, instead of arbitrarily modeling domains in the physical layer, the purpose is to have a unique way for specifying the concepts of common interest and its organizing principles in such a way that they are reused. This principle is a core part of a data-centric architecture, reducing undesired duplications and software waste when it is systematically applied.</description>
+    </item>
+    <item>
+      <title>Contributing Guide</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/others/contributing/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/others/contributing/index.html</guid>
+      <description>Contributing to Simplified Semantic Data Modeling NOTE: This document explains how to contribute to the data modeling approach itself. If you want to contribute to a certain data specification of a particular domain, then follow the Modeling Guide instead.&#xA;Development Environment S2DM uses uv for packaging and dependency management. To start developing with S2DM, install uv using the recommended method.&#xA;Once uv is installed, install the dependencies with the following command:</description>
+    </item>
+    <item>
+      <title>Approach primer</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/others/approach_primer/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/others/approach_primer/index.html</guid>
+      <description>Simplified Semantic Data Modeling (S2DM) - Approach Primer Table of Contents Background Why do we need such an approach? Subject Matter Experts are often NOT data modeling experts Vehicle Signal Specification has been an alternative but requires improvements Design principles Problem Requirements Goal Artifact Proposed solution approach General workflow Idea (1): Maintain Entity and Property sets Idea (2): Maintain a set of reusable labels Idea (3): Construct unique IDs Idea (4): Allow arbitrary hierarchies for different classification criteria Other ideas Examples Special considerations Special cross references Model versioning Background Why do we need such an approach?</description>
+    </item>
+    <item>
+      <title>Modeling</title>
+      <link>https://covesa.github.io/s2dm/1-modeling-guideline/others/modeling/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/others/modeling/index.html</guid>
+      <description>Under refactoring…&#xA;Modeling Guide NOTE: This document explains how to contribute to an specific model (new or existing). If you want to contribute to the data modeling approach itself, then see the Contributing Guide instead.&#xA;TODO: Work in progress…&#xA;Basic building blocks We re use following established artifacts:&#xA;For the specification of data structures and possible operations on that data, S2DM re uses the GraphQL Schema Definition Language (SDL). The full feature set is available in the official GraphQL specification.</description>
+    </item>
+  </channel>
+</rss>

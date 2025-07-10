@@ -1,28 +1,49 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://covesa.github.io/s2dm/approach/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.1-objects-and-properties/objects_and_properties/index.html</loc>
   </url>
   <url>
-    <loc>https://covesa.github.io/s2dm/guides/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.2-concept-uris/concept_uris/index.html</loc>
   </url>
   <url>
-    <loc>https://covesa.github.io/s2dm/tools/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.3-multi-hierarchies/multi_hierarchies/index.html</loc>
   </url>
   <url>
-    <loc>https://covesa.github.io/s2dm/guides/contributing/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.4-variant-ids/variant_ids/index.html</loc>
   </url>
   <url>
-    <loc>https://covesa.github.io/s2dm/examples/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.5-spec-registry/spec_registry/index.html</loc>
   </url>
   <url>
-    <loc>https://covesa.github.io/s2dm/license/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.6-capabilities/capabilities/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/1.7-pre-defined-elements/pre_defined_elements/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/others/basic_principle/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/others/contributing/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/2-tools/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/3-examples/index.html</loc>
+  </url>
+  <url>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/others/approach_primer/index.html</loc>
   </url>
   <url>
     <loc>https://covesa.github.io/s2dm/categories/index.html</loc>
   </url>
   <url>
-    <loc>https://covesa.github.io/s2dm/guides/modeling/index.html</loc>
+    <loc>https://covesa.github.io/s2dm/1-modeling-guideline/others/modeling/index.html</loc>
   </url>
   <url>
     <loc>https://covesa.github.io/s2dm/index.html</loc>
