@@ -1,0 +1,317 @@
+Vehicle:
+  description: High-level vehicle data.
+  type: branch
+
+Vehicle.Cabin:
+  description: All in-cabin components, including doors.
+  type: branch
+
+Vehicle.Cabin.Seat:
+  description: The model of a vehicle's Seat.
+  instances:
+  - [ROW1, ROW2]
+  - [DRIVERSIDE, PASSENGERSIDE]
+  type: branch
+
+Vehicle.Cabin.Seat.Airbag:
+  description: Airbag signals.
+  type: branch
+
+Vehicle.Cabin.Seat.Airbag.isDeployed:
+  datatype: boolean
+  description: Airbag deployment status. True = Airbag deployed. False = Airbag not
+    deployed.
+  type: sensor
+
+Vehicle.Cabin.Seat.Backrest:
+  description: Describes signals related to the backrest of the seat.
+  type: branch
+
+Vehicle.Cabin.Seat.Backrest.isLessLumbarSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Is switch for less lumbar support engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isLessSideBolsterSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport)
+  datatype: boolean
+  description: Is switch for less side bolster support engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isLumbarDownSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Lumbar down switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isLumbarUpSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Lumbar up switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isMoreLumbarSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.LumbarSupport)
+  datatype: boolean
+  description: Is switch for more lumbar support engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isMoreSideBolsterSupportSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport)
+  datatype: boolean
+  description: Is switch for more side bolster support engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isReclineBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.Recline)
+  datatype: boolean
+  description: Backrest recline backward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.isReclineForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Backrest.Recline)
+  datatype: boolean
+  description: Backrest recline forward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Backrest.lumbarHeight:
+  datatype: uint8
+  description: Height of lumbar support. Position is relative within available movable
+    range of the lumbar support. 0 = Lowermost position supported.
+  type: actuator
+  unit: mm
+
+Vehicle.Cabin.Seat.Backrest.lumbarSupport:
+  datatype: float
+  description: Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost
+    position.
+  max: 100
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Seat.Backrest.recline:
+  comment: Seat z-axis depends on seat tilt. This means that movement of backrest
+    due to seat tilting will not affect Backrest.Recline as long as the angle between
+    Seating and Backrest are constant. Absolute recline relative to vehicle z-axis
+    can be calculated as Tilt + Backrest.Recline.
+  datatype: float
+  description: Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees
+    = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees
+    for backward recline.
+  type: actuator
+  unit: degrees
+
+Vehicle.Cabin.Seat.Backrest.sideBolsterSupport:
+  datatype: float
+  description: Side bolster support. 0 = Minimum support (widest side bolster setting).
+    100 = Maximum support.
+  max: 100
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Seat.Headrest:
+  description: Headrest settings.
+  type: branch
+
+Vehicle.Cabin.Seat.Headrest.angle:
+  datatype: float
+  description: Headrest angle, relative to backrest, 0 degrees if parallel to backrest,
+    Positive degrees = tilted forward.
+  type: actuator
+  unit: degrees
+
+Vehicle.Cabin.Seat.Headrest.height:
+  datatype: uint8
+  description: Position of headrest relative to movable range of the head rest. 0
+    = Bottommost position supported.
+  type: actuator
+  unit: mm
+
+Vehicle.Cabin.Seat.Headrest.isBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Angle)
+  datatype: boolean
+  description: Head rest backward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Headrest.isDownSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Height)
+  datatype: boolean
+  description: Head rest down switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Headrest.isForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Angle)
+  datatype: boolean
+  description: Head rest forward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Headrest.isUpSwitchEngaged:
+  comment: Affects the property (SingleSeat.Headrest.Height)
+  datatype: boolean
+  description: Head rest up switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Seating:
+  description: Describes signals related to the seat bottom of the seat.
+  type: branch
+
+Vehicle.Cabin.Seat.Seating.isBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Seating.Length)
+  datatype: boolean
+  description: Is switch to decrease seating length engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Seating.isForwardSwitchEngaged:
+  datatype: boolean
+  description: Is switch to increase seating length engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.Seating.length:
+  datatype: uint16
+  description: Length adjustment of seating. 0 = Adjustable part of seating in rearmost
+    position (Shortest length of seating).
+  type: actuator
+  unit: mm
+
+Vehicle.Cabin.Seat.heatingCooling:
+  datatype: int8
+  description: Heating or Cooling requested for the Item. -100 = Maximum cooling,
+    0 = Heating/cooling deactivated, 100 = Maximum heating.
+  max: 100
+  min: -100
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Seat.height:
+  datatype: uint16
+  description: Seat position on vehicle z-axis. Position is relative within available
+    movable range of the seating. 0 = Lowermost position supported.
+  type: actuator
+  unit: mm
+
+Vehicle.Cabin.Seat.isBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Position)
+  datatype: boolean
+  description: Seat backward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isBelted:
+  datatype: boolean
+  description: Is the belt engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isCoolerSwitchEngaged:
+  comment: Affects the property (SingleSeat.Heating)
+  datatype: boolean
+  description: Cooler switch for Seat heater.
+  type: actuator
+
+Vehicle.Cabin.Seat.isDecreaseMassageLevelSwitchEngaged:
+  comment: Affects the property (SingleSeat.MassageLevel)
+  datatype: boolean
+  description: Decrease massage level switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isDownSwitchEngaged:
+  comment: Affects the property (SingleSeat.Height)
+  datatype: boolean
+  description: Seat down switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Position)
+  datatype: boolean
+  description: Seat forward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isIncreaseMassageLevelSwitchEngaged:
+  comment: Affects the property (SingleSeat.MassageLevel)
+  datatype: boolean
+  description: Increase massage level switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isOccupied:
+  datatype: boolean
+  description: Does the seat have a passenger in it.
+  type: sensor
+
+Vehicle.Cabin.Seat.isTiltBackwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Tilt)
+  datatype: boolean
+  description: Tilt backward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isTiltForwardSwitchEngaged:
+  comment: Affects the property (SingleSeat.Tilt)
+  datatype: boolean
+  description: Tilt forward switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isUpSwitchEngaged:
+  comment: Affects the property (SingleSeat.Height)
+  datatype: boolean
+  description: Seat up switch engaged.
+  type: actuator
+
+Vehicle.Cabin.Seat.isWarmerSwitchEngaged:
+  comment: Affects the property (SingleSeat.Heating)
+  datatype: boolean
+  description: Warmer switch for Seat heater.
+  type: actuator
+
+Vehicle.Cabin.Seat.massage:
+  datatype: uint8
+  description: Seat massage level. 0 = off. 100 = max massage.
+  max: 100
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Seat.massageLevel:
+  datatype: uint8
+  description: Seat massage level. 0 = off. 100 = max massage.
+  max: 100
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Seat.position:
+  datatype: uint16
+  description: Seat position on vehicle x-axis. Position is relative to the frontmost
+    position supported by the seat. 0 = Frontmost position supported.
+  type: actuator
+  unit: mm
+
+Vehicle.Cabin.Seat.seatBeltHeight:
+  datatype: uint16
+  description: Seat belt position on vehicle z-axis. Position is relative within available
+    movable range of the seat belt. 0 = Lowermost position supported.
+  type: actuator
+  unit: mm
+
+Vehicle.Cabin.Seat.tilt:
+  comment: In VSS it is assumed that tilting a seat affects both seating (seat bottom)
+    and backrest, i.e. the angle between seating and backrest will not be affected
+    when changing Tilt.
+  datatype: float
+  description: Tilting of seat (seating and backrest) relative to vehicle x-axis.
+    0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive
+    degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted
+    backward.
+  type: actuator
+  unit: degrees
+
+Vehicle.Cabin.driverPosition:
+  allowed: [LEFT, MIDDLE, RIGHT]
+  datatype: string
+  description: The position of the driver seat in row 1.
+  type: attribute
+
+Vehicle.VehicleIdentification:
+  description: Attributes that identify a vehicle.
+  type: branch
+
+Vehicle.VehicleIdentification.vin:
+  datatype: string
+  description: 17-character Vehicle Identification Number (VIN) as defined by ISO
+    3779.
+  type: attribute
