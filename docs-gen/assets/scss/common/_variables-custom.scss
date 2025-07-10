@@ -1,0 +1,25 @@
+// Put your custom SCSS variables here
+$primary: $db-bluishCyan-100;
+
+// Dark mode
+// $link-color-dark: aquamarine;
+// $button-color-dark: aquamarine;
+
+:root,
+::backdrop {
+// --sl-color-accent-high: aquamarine;
+}
+
+
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1240px,
+  xxl: 1520px
+);
+
+$font-size-base:              1.2rem;
+$font-size-md:                $font-size-base * 1.125;
+$font-size-xl:                $font-size-base * 1.375;
+

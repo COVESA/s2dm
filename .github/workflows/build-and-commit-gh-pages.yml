@@ -1,0 +1,40 @@
+# on:
+#   push:
+#     branches:
+#       - master
+
+#   workflow_dispatch:
+
+# concurrency:
+#   group: ${{ github.workflow }}
+#   cancel-in-progress: true
+
+# name: build-website
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@master
+
+#     - name: Use Node.js 18.x
+#       uses: actions/setup-node@v1
+#       with:
+#         node-version: '18.x'
+
+#     - name: Build webapp
+#       run: |
+#         make init
+#         rm -rf ./docs-gen/public/
+#         mkdir ./docs-gen/public
+#         make build
+
+#     - name: commit to github pages
+#       uses: peaceiris/actions-gh-pages@v4
+#       # If you're changing the branch from main,
+#       # also change the `master` in `refs/heads/master`
+#       # below accordingly.
+#       if: ${{ github.ref == 'refs/heads/master' }}
+#       with:
+#         deploy_key: ${{ secrets.AHOI_GITHUB_SSH_KEY }}
+#         publish_dir: ./docs-gen/public/
+#         force_orphan: true

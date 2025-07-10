@@ -1,24 +1,27 @@
 ---
-title:  Simplified Semantic Data Modeling (S2DM)
+title: "Simplified Semantic Data Modeling (S2DM)"
+lead: "An approach for modeling data of multiple domains with minimal data modeling expertise"
+draft: false
 ---
 
 The _Simplified Semantic Data Modeling_ (`S2DM`) is an approach for modeling data of multiple domains.
 It is **_simple_** in the sense that any _Subject Matter Expert_ (SME) could contribute to a controlled vocabulary with minimal data modeling expertise.
 Likewise, it is **_semantic_** in the sense that it specifies meaningful data structures, their cross-domain relationships, and arbitrary classification schemes.
 
-> [!NOTE]
-> Bear in mind the word `Simplified` in the name.
-> This approach aims to foster the adoption of (some) good data modeling practices.
-> It does not intent to re-invent, nor to replace long-standing standards, such as those of the [Semantic Web](https://www.w3.org/2001/sw/wiki/Main_Page).
-> Hence, it does not incorporate advanced reasoning capabilities or comprehensive ontologies typically associated with traditional semantic data modeling.
+{{< callout type="note" >}}
+Bear in mind the word `Simplified` in the name.
+This approach aims to foster the adoption of (some) good data modeling practices.
+It does not intent to re-invent, nor to replace long-standing standards, such as those of the [Semantic Web](https://www.w3.org/2001/sw/wiki/Main_Page).
+Hence, it does not incorporate advanced reasoning capabilities or comprehensive ontologies typically associated with traditional semantic data modeling.
+{{< /callout >}}
 
 ## `SD2M` role
-![Fig:s2dm_role](/s2dm/images/s2dm_role.svg)
+![Fig:s2dm_role](images/s2dm_role.svg)
 
 ### `S2DM` artifacts
 `S2DM` consists of two main artifacts:
-* [_**`S2DM` data modeling guideline**_](/s2dm/guides/modeling) - It explains how to formalize the data of a domain with the `S2DM` approach. In other words, how to create the specification files that will constitute the core of the conceptual/logical layer.
-* [_**`S2DM` tools**_](/s2dm/guides/modeling) - Code that support the proper usage of the `S2DM` data modeling guideline. It helps with the modeling language validation, identifiers, search functions, exporters, etc.
+* [_**`S2DM` data modeling guideline**_](modeling-guideline/) - It explains how to formalize the data of a domain with the `S2DM` approach. In other words, how to create the specification files that will constitute the core of the conceptual/logical layer.
+* [_**`S2DM` tools**_](tools/) - Code that support the proper usage of the `S2DM` data modeling guideline. It helps with the modeling language validation, identifiers, search functions, exporters, etc.
 
 ### Building blocks
 `S2DM` artifacts are based on these existing resources:
@@ -34,5 +37,5 @@ Likewise, it is **_semantic_** in the sense that it specifies meaningful data st
   - [Others](https://github.com/COVESA/s2dm/blob/main/pyproject.toml)
 
 ## Getting started
-* You can start modeling your domain by following the [_**`S2DM` data modeling guideline**_](/s2dm/1-modeling-guideline).
-* You can manage, evolve, and maintain your domain model by using the [_**`S2DM` tools**_](/s2dm/2-tools).
+* You can start modeling your domain by following the [_**`S2DM` data modeling guideline**_](modeling-guideline/).
+* You can manage, evolve, and maintain your domain model by using the [_**`S2DM` tools**_](tools/).

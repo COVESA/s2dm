@@ -1,0 +1,41 @@
+// Put your custom SCSS code here
+//
+
+// .bg-dots {
+// margin-top: 0rem;
+// }
+.section-features {
+    // margin-top: -1rem;
+}
+
+.page-nav {
+    display: none !important;
+
+}
+
+.head-button {
+    min-width: 14rem;
+    @media screen and (min-width: 1200px) and (max-width: 1400px) {
+        min-width: 10rem;
+    }
+}
+
+.docs-content p a {
+     text-decoration: underline;
+}
+
+.docs-content li a {
+     text-decoration: underline;
+}
+
+summary {
+
+}
+
+.content article p a {
+    text-decoration: underline;
+}
+
+.content article li a {
+    text-decoration: underline;
+}
