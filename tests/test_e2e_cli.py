@@ -12,6 +12,13 @@ SAMPLE1 = TESTS_DATA / "schema1.graphql"
 SAMPLE2 = TESTS_DATA / "schema2.graphql"
 UNITS = TESTS_DATA / "test_units.yaml"
 
+# Version bump test schemas
+BASE_SCHEMA = TESTS_DATA / "base.graphql"
+NO_CHANGE_SCHEMA = TESTS_DATA / "no-change.graphql"
+NON_BREAKING_SCHEMA = TESTS_DATA / "non-breaking.graphql"
+DANGEROUS_SCHEMA = TESTS_DATA / "dangerous.graphql"
+BREAKING_SCHEMA = TESTS_DATA / "breaking.graphql"
+
 
 @pytest.fixture(scope="module")
 def runner() -> CliRunner:
@@ -56,16 +63,42 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "input_files,expected_output",
+    "schema_file,previous_file,expected_output",
     [
-        ((SAMPLE1, SAMPLE1), "No version bump needed"),
-        ((SAMPLE1, SAMPLE2), "Major version bump"),
+        (NO_CHANGE_SCHEMA, BASE_SCHEMA, "No version bump needed"),
+        (NON_BREAKING_SCHEMA, BASE_SCHEMA, "Patch version bump needed"),
+        (DANGEROUS_SCHEMA, BASE_SCHEMA, "Minor version bump needed"),
+        (BREAKING_SCHEMA, BASE_SCHEMA, "Detected breaking changes, major version bump needed"),
+        # Keep original test cases for backward compatibility
+        (SAMPLE1, SAMPLE1, "No version bump needed"),
+        (SAMPLE1, SAMPLE2, "Detected breaking changes, major version bump needed"),
     ],
 )
-def test_check_version_bump(runner: CliRunner, input_files: tuple[Path, Path], expected_output: str) -> None:
-    result = runner.invoke(cli, ["check", "version-bump", "-s", str(input_files[0]), "--previous", str(input_files[1])])
+def test_check_version_bump(runner: CliRunner, schema_file: Path, previous_file: Path, expected_output: str) -> None:
+    result = runner.invoke(cli, ["check", "version-bump", "-s", str(schema_file), "--previous", str(previous_file)])
     assert result.exit_code == 0, result.output
     assert expected_output.lower() in result.output.lower()
+
+
+@pytest.mark.parametrize(
+    "schema_file,previous_file,expected_type",
+    [
+        (NO_CHANGE_SCHEMA, BASE_SCHEMA, "none"),
+        (NON_BREAKING_SCHEMA, BASE_SCHEMA, "patch"),
+        (DANGEROUS_SCHEMA, BASE_SCHEMA, "minor"),
+        (BREAKING_SCHEMA, BASE_SCHEMA, "major"),
+    ],
+)
+def test_check_version_bump_output_type(
+    runner: CliRunner, schema_file: Path, previous_file: Path, expected_type: str
+) -> None:
+    result = runner.invoke(
+        cli, ["check", "version-bump", "-s", str(schema_file), "--previous", str(previous_file), "--output-type"]
+    )
+    assert result.exit_code == 0, result.output
+    # The output type should be the last line
+    output_lines = result.output.strip().split("\n")
+    assert output_lines[-1] == expected_type
 
 
 # ToDo(DA): can you provide a negative example here?
