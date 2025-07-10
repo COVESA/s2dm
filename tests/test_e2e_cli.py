@@ -62,6 +62,25 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     assert out.exists()
 
 
+def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "skos_skeleton.ttl"
+    result = runner.invoke(cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1), "-o", str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    # Check that the generated file contains basic SKOS vocabulary
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    # Verify SKOS prefixes and vocabulary are present
+    assert "@prefix skos:" in content
+    assert "skos:Concept" in content
+    assert "skos:prefLabel" in content
+
+    # Verify at least one concept from the schema is generated
+    assert "Vehicle" in content
+
+
 @pytest.mark.parametrize(
     "schema_file,previous_file,expected_output",
     [
