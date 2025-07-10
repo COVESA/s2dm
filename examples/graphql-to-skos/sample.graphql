@@ -1,0 +1,29 @@
+"""Vehicle LowVoltageSystemState Enum"""
+enum Vehicle_LowVoltageSystemState_Enum {
+  UNDEFINED
+  LOCK
+  OFF
+  ACC
+  ON
+  START
+}
+
+"""High-level vehicle data."""
+type Vehicle {
+  id: ID!
+  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+  lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
+  adas: Vehicle_ADAS
+}
+
+"""All Advanced Driver Assist Systems data."""
+type Vehicle_ADAS {
+  isAutoPowerOptimize: Boolean
+  obstacleDetection_s: [Vehicle_ADAS_ObstacleDetection]
+}
+
+"""Signals form Obstacle Sensor System."""
+type Vehicle_ADAS_ObstacleDetection {
+  id: ID!
+  isEnabled: Boolean
+}
