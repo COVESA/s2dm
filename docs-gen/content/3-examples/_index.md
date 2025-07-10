@@ -13,4 +13,8 @@ Below are some examples of how the Simplified Semantic Data Modeling (`S2DM`) ap
 - [Seat to VSS Mapping](https://github.com/COVESA/s2dm/tree/main/examples/seat-to-vspec): Mapping modular seat specifications to the Vehicle Signal Specification (VSS).
 - [Specification History Registry](https://github.com/COVESA/s2dm/tree/main/examples/spec-history-registry): Tracking changes and maintaining a registry of specification history.
 
+## CLI Tool Examples
+
+- [Version Bump CLI Examples](version-bump-cli): Demonstrating automated version bumping based on GraphQL schema changes using the `s2dm check version-bump` command.
+
 > If your use case is not covered by the presented examples, feel free to get in touch. If this approach suits your use case, we will add it here.
