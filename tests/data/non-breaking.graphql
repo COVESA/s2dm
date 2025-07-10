@@ -1,0 +1,33 @@
+type Query {
+  vehicle: Vehicle
+}
+
+"""Basic vehicle information."""
+type Vehicle {
+  id: ID!
+  brand: String!
+  model: String!
+  year: Int!
+  color: String
+  engine: Engine
+  # Non-breaking: Added new optional field
+  owner: String
+  # Non-breaking: Added new optional field
+  mileage: Int
+}
+
+"""Engine specifications."""
+type Engine {
+  type: EngineType!
+  displacement: Float
+  horsepower: Int
+  # Non-breaking: Added new optional field
+  fuelEfficiency: Float
+}
+
+enum EngineType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
