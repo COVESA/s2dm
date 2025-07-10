@@ -6,7 +6,7 @@ nox.options.default_venv_backend = "uv"
 
 
 @nox.session(python=PYTHON_VERSIONS)
-def tests(session):
+def tests(session: nox.Session) -> None:
     session.run_install(
         "uv",
         "sync",
