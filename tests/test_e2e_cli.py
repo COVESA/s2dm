@@ -280,6 +280,32 @@ def test_search_graphql(runner: CliRunner, search_term: str, expected_output: st
     assert expected_output.lower() in result.output.lower()
 
 
+def test_search_skos(runner: CliRunner, tmp_outputs: Path) -> None:
+    # First generate a SKOS file
+    skos_file = tmp_outputs / "test_skos.ttl"
+    result = runner.invoke(cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1), "-o", str(skos_file)])
+    assert result.exit_code == 0, result.output
+    assert skos_file.exists()
+
+    # Test searching for "Vehicle" in the generated SKOS file
+    result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "Vehicle"])
+    assert result.exit_code == 0, result.output
+    assert "Vehicle" in result.output
+
+    # Test case-insensitive search
+    result = runner.invoke(
+        cli,
+        ["search", "skos", "-f", str(skos_file), "-t", "vehicle", "--case-insensitive"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "Vehicle" in result.output
+
+    # Test search for something that shouldn't exist
+    result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "NonExistentConcept"])
+    assert result.exit_code == 0, result.output
+    assert "No matches found" in result.output
+
+
 @pytest.mark.parametrize(
     "search_term,expected_returncode,expected_output",
     [("Vehicle", 0, "Vehicle"), ("Seat", 1, "Type 'Seat' doesn't exist")],
