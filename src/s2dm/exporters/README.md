@@ -58,20 +58,21 @@ s2dm export <some_supported_format> ...
 The tools can currently export a given model into:
 * [VSPEC](#vspec-exporter) - `tools/to_vspec.py`
 * [SHACL](#shacl-exporter) - `tools/to_shacl.py`
+* [JSON Schema](#json-schema-exporter) - `exporters/jsonschema/`
 
 #### Supported field cases by exporter
 > See `docs/MODELING_GUIDE.md` for more information on cases for fields and the custom directives, such as @noDuplicates.
 
-| Case | `outputType`| VSPEC | SHACL|
-|----------|----------|----------|----------|
-| **Nullable Singular Field**   | `NamedType`   | ✅ | ✅ |
-| **Non-Nullable Singular Field**   | `NamedType!`   | ✅ | ✅ |
-| **Nullable List Field**   | `[NamedType]`   | ✅ | ❌ |
-| **Non-Nullable List Field**   | `[NamedType]!`   | ✅ | ❌ |
-| **Nullable List of Non-Nullable Elements**   | `[NamedType!]`   | ✅ | ❌ |
-| **Non-Nullable List of Non-Nullable Elements**   | `[NamedType!]!`   | ✅ | ❌ |
-| **Nullable Set Field**   | `[NamedType] @noDuplicates` | ❌ |✅ |
-| **Non-Nullable Set Field**   | `[NamedType]! @noDuplicates`   | ❌ |✅|
+| Case | `outputType`| VSPEC | SHACL| JSON Schema |
+|----------|----------|----------|----------|----------|
+| **Nullable Singular Field**   | `NamedType`   | ✅ | ✅ | ✅ |
+| **Non-Nullable Singular Field**   | `NamedType!`   | ✅ | ✅ | ✅ |
+| **Nullable List Field**   | `[NamedType]`   | ✅ | ❌ | ✅ |
+| **Non-Nullable List Field**   | `[NamedType]!`   | ✅ | ❌ | ✅ |
+| **Nullable List of Non-Nullable Elements**   | `[NamedType!]`   | ✅ | ❌ | ✅ |
+| **Non-Nullable List of Non-Nullable Elements**   | `[NamedType!]!`   | ✅ | ❌ | ✅ |
+| **Nullable Set Field**   | `[NamedType] @noDuplicates` | ❌ |✅ | ✅ |
+| **Non-Nullable Set Field**   | `[NamedType]! @noDuplicates`   | ❌ |✅| ✅ |
 
 ### VSPEC exporter
 This exporter translates the given GraphQL schema to the [Vehicle Signal Specification (VSS)](https://covesa.github.io/vehicle_signal_specification/) format (i.e., a YAML-like file with a custom syntax known as `VSPEC`).
@@ -274,7 +275,130 @@ Please, refer to the CLI help for usage reference.
 s2dm shacl --help
 ```
 
+### JSON Schema exporter
 
+This exporter translates the given GraphQL schema to [JSON Schema](https://json-schema.org/) format.
+
+#### Key Features
+
+- **Complete GraphQL Type Support**: Handles all GraphQL types including scalars, objects, enums, unions, interfaces, and lists
+- **Root Type Filtering**: Use the `--root-type` flag to export only a specific type and its dependencies
+- **Directive Support**: Converts S2DM directives like `@cardinality`, `@range`, and `@noDuplicates` to JSON Schema constraints
+- **Reference-based Output**: Uses JSON Schema `$ref` for type references, creating clean and maintainable schemas
+
+#### Example Transformation
+
+Consider the following GraphQL schema:
+
+```gql
+type Vehicle {
+  vin: String!
+  make: String!
+  model: String
+  year: Int!
+  engine: Engine!
+  features: [String!]!
+  fuelType: FuelType
+}
+
+type Engine {
+  displacement: Float
+  horsepower: Int
+  efficiency: Float @range(min: 0.0, max: 1.0)
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+```
+
+The JSON Schema exporter produces:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "GraphQL Schema",
+  "description": "JSON Schema generated from GraphQL schema",
+  "$defs": {
+    "Vehicle": {
+      "type": "object",
+      "description": "GraphQL object type: Vehicle",
+      "properties": {
+        "vin": {"type": "string"},
+        "make": {"type": "string"},
+        "model": {"type": "string"},
+        "year": {"type": "integer"},
+        "engine": {"$ref": "#/$defs/Engine"},
+        "features": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "fuelType": {"$ref": "#/$defs/FuelType"}
+      }
+    },
+    "Engine": {
+      "type": "object",
+      "description": "GraphQL object type: Engine",
+      "properties": {
+        "displacement": {"type": "number"},
+        "horsepower": {"type": "integer"},
+        "efficiency": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      }
+    },
+    "FuelType": {
+      "type": "string",
+      "enum": ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"],
+      "description": "GraphQL enum type: FuelType"
+    }
+  }
+}
+```
+
+#### Root Type Filtering
+
+Use the `--root-type` flag to export only a specific type and its dependencies:
+
+```bash
+s2dm export jsonschema --schema schema.graphql --output vehicle.json --root-type Vehicle
+```
+
+This creates a JSON Schema that references the Vehicle type as the root:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Vehicle",
+  "$ref": "#/$defs/Vehicle",
+  "$defs": {
+    "Vehicle": { ... },
+    "Engine": { ... },
+    "FuelType": { ... }
+  }
+}
+```
+
+#### Directive Support
+
+S2DM directives are converted to JSON Schema constraints:
+
+- `@cardinality(min: 1, max: 5)` → `"minItems": 1, "maxItems": 5`
+- `@range(min: 0.0, max: 100.0)` → `"minimum": 0.0, "maximum": 100.0`
+- `@noDuplicates` → `"uniqueItems": true`
+- Custom directives → `"x-directiveName": true` or `"x-directiveName": {...}`
+
+You can call the help for usage reference:
+
+```bash
+s2dm export jsonschema --help
+```
 
 ## Identifiers
 With the asumption that specification files will be hosted in a certain Git repository, the tools include functions to support the proper identification of concepts and their metadata to facilite their evolution.

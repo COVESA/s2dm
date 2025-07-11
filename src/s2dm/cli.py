@@ -11,6 +11,7 @@ from rich.traceback import install
 from s2dm import __version__, log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
 from s2dm.exporters.id import IDExporter
+from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils import (
@@ -223,6 +224,21 @@ def vspec(schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     result = translate_to_vspec(schema)
     output.parent.mkdir(parents=True, exist_ok=True)
+    _ = output.write_text(result)
+
+
+@export.command
+@schema_option
+@output_option
+@click.option(
+    "--root-type",
+    "-r",
+    type=str,
+    help="Root type name for the JSON schema",
+)
+def jsonschema(schema: Path, output: Path, root_type: str | None) -> None:
+    """Generate JSON Schema from a given GraphQL schema."""
+    result = translate_to_jsonschema(schema, root_type)
     _ = output.write_text(result)
 
 
@@ -698,6 +714,8 @@ def stats_graphql(ctx: click.Context, schema: Path) -> None:
 
 cli.add_command(check)
 cli.add_command(diff)
+
+
 cli.add_command(export)
 cli.add_command(registry)
 cli.add_command(similar)
