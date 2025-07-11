@@ -17,6 +17,7 @@ dependencies = [
     "rdflib>=7.1.3",
     "pyshacl>=0.30.0",
     "ariadne>=0.24.0",
+    "langcodes>=3.5.0",
 ]
 requires-python = ">=3.11"
 
