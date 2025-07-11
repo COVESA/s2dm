@@ -1,0 +1,30 @@
+type Query {
+  vehicle: Vehicle
+}
+
+"""Basic vehicle information."""
+type Vehicle {
+  id: ID!
+  brand: String!
+  model: String!
+  year: Int!
+  # Breaking: Removed field 'color'
+  engine: Engine
+  # Breaking: Changed field type from String to Int
+  owner: Int
+}
+
+"""Engine specifications."""
+type Engine {
+  type: EngineType!
+  # Breaking: Changed field type from Float to Int
+  displacement: Int
+  horsepower: Int
+}
+
+enum EngineType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  # Breaking: Removed enum value 'HYBRID'
+}

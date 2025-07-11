@@ -1,0 +1,31 @@
+type Query {
+  vehicle: Vehicle
+}
+
+"""Basic vehicle information."""
+type Vehicle {
+  id: ID!
+  brand: String!
+  model: String!
+  year: Int!
+  color: String
+  engine: Engine
+  # Dangerous: Added argument to existing field
+  owner(includeHistory: Boolean = false): String
+}
+
+"""Engine specifications."""
+type Engine {
+  type: EngineType!
+  displacement: Float
+  horsepower: Int
+}
+
+enum EngineType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+  # Dangerous: Added new enum value
+  HYDROGEN
+}

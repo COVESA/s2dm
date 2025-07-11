@@ -237,35 +237,65 @@ def vspec(schema: Path, output: Path) -> None:
     required=True,
     help="The GraphQL schema file to validate against",
 )
+@click.option(
+    "--output-type",
+    is_flag=True,
+    default=False,
+    help="Output the version bump type for pipeline usage",
+)
 @click.pass_context
-def version_bump(ctx: click.Context, schema: Path, previous: Path) -> None:
+def version_bump(ctx: click.Context, schema: Path, previous: Path, output_type: bool) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
-    ToDo this needs to be update to use the correct terminology
-
-    No changes: No bump needed
-    Changes but no breaking changes: Patch or minor version bump needed
-    Breaking changes: Major version bump needed
+    Returns:
+    - None: No changes detected
+    - "patch": Non-breaking changes only (✔ symbols)
+    - "minor": Dangerous changes detected (⚠ symbols)
+    - "major": Breaking changes detected (✖ symbols)
     """
-    schema_temp_path = create_tempfile_to_composed_schema(schema)
-    inspector = GraphQLInspector(schema_temp_path)
-
+    # Note: GraphQL Inspector expects old schema first, then new schema
+    # So we pass previous first, then schema (current)
     previous_schema_temp_path = create_tempfile_to_composed_schema(previous)
-    diff_result = inspector.diff(previous_schema_temp_path)
+    inspector = GraphQLInspector(previous_schema_temp_path)
+
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
+    diff_result = inspector.diff(schema_temp_path)
 
     console = ctx.obj["console"]
+
+    # Determine version bump type based on output analysis
+    version_bump_type = None
+
     if diff_result.returncode == 0:
         if "No changes detected" in diff_result.output:
             console.print("[green]No version bump needed")
+            version_bump_type = None
         elif "No breaking changes detected" in diff_result.output:
-            console.print("[yellow]Minor or patch version bump needed!")
+            # Check for dangerous changes (⚠ symbols)
+            if "⚠" in diff_result.output:
+                console.print("[yellow]Minor version bump needed")
+                version_bump_type = "minor"
+            else:
+                console.print("[green]Patch version bump needed")
+                version_bump_type = "patch"
         else:
             console.print("[red]Unknown state, please check your input with 'diff' tool.")
     else:
         if "Detected" in diff_result.output and "breaking changes" in diff_result.output:
-            console.print(
-                "[red]Detected breaking changes, major version bump needed. Please run diff to get more details"
-            )
+            console.print("[red]Detected breaking changes, major version bump needed")
+            version_bump_type = "major"
+        else:
+            console.print("[red]Unknown error occurred during schema comparison")
+
+    # Output the version bump type for pipeline usage
+    if output_type:
+        if version_bump_type:
+            console.print(version_bump_type)
+        else:
+            console.print("none")
+
+    # Exit with success code
+    sys.exit(0)
 
 
 @check.command(name="constraints")

@@ -1,0 +1,27 @@
+type Query {
+  vehicle: Vehicle
+}
+
+"""Basic vehicle information."""
+type Vehicle {
+  id: ID!
+  brand: String!
+  model: String!
+  year: Int!
+  color: String
+  engine: Engine
+}
+
+"""Engine specifications."""
+type Engine {
+  type: EngineType!
+  displacement: Float
+  horsepower: Int
+}
+
+enum EngineType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
