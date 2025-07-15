@@ -1,9 +1,11 @@
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 
-from s2dm.tools.skos_search import SearchResult, SKOSSearchService
+from s2dm.exporters.skos import SKOSConcept
+from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 
 
 @pytest.fixture
@@ -21,27 +23,30 @@ def sample_skos_ttl() -> str:
 ns:Vehicle a skos:Concept ;
     skos:prefLabel "Vehicle"@en ;
     skos:definition "A motorized conveyance such as a car, truck, or motorcycle" ;
-    skos:note "Definition was inherit from the description of the element https://example.org/vss#Vehicle" ;
-    rdfs:seeAlso ns:Vehicle .
+    skos:note "{vehicle_note}" .
 
 ns:Vehicle_Window a skos:Concept ;
     skos:prefLabel "Vehicle Window"@en ;
     skos:definition "A transparent panel in a vehicle that allows light and air to enter" ;
-    skos:note "Definition was inherit from the description of the element https://example.org/vss#Vehicle_Window" ;
-    rdfs:seeAlso ns:Vehicle_Window .
+    skos:note "{vehicle_window_note}" .
 
 ns:Engine a skos:Concept ;
     skos:prefLabel "Engine"@en ;
     skos:definition "The power unit of a vehicle that converts fuel into mechanical energy" ;
-    skos:note "Definition was inherit from the description of the element https://example.org/vss#Engine" ;
-    rdfs:seeAlso ns:Engine .
+    skos:note "{engine_note}" .
 
 ns:Door a skos:Concept ;
     skos:prefLabel "Door"@en ;
     skos:definition "A movable barrier used to close off an entrance to a vehicle" ;
-    skos:note "Definition was inherit from the description of the element https://example.org/vss#Door" ;
-    rdfs:seeAlso ns:Door .
-"""
+    skos:note "{door_note}" .
+""".format(
+        vehicle_note=SKOSConcept.NOTE_TEMPLATE.format(name="Vehicle", uri="https://example.org/vss#Vehicle"),
+        vehicle_window_note=SKOSConcept.NOTE_TEMPLATE.format(
+            name="Vehicle_Window", uri="https://example.org/vss#Vehicle_Window"
+        ),
+        engine_note=SKOSConcept.NOTE_TEMPLATE.format(name="Engine", uri="https://example.org/vss#Engine"),
+        door_note=SKOSConcept.NOTE_TEMPLATE.format(name="Door", uri="https://example.org/vss#Door"),
+    )
 
 
 @pytest.fixture
@@ -60,7 +65,7 @@ def ttl_file(sample_skos_ttl: str) -> Path:
 
 
 @pytest.fixture
-def search_service(ttl_file: Path) -> SKOSSearchService:
+def search_service(ttl_file: Path) -> Generator[SKOSSearchService, None, None]:
     """Create a SKOSSearchService instance for testing.
 
     Args:
@@ -69,17 +74,17 @@ def search_service(ttl_file: Path) -> SKOSSearchService:
     Returns:
         Configured SKOSSearchService instance
     """
-    return SKOSSearchService(ttl_file)
+    with SKOSSearchService(ttl_file) as service:
+        yield service
 
 
 class TestSKOSSearchService:
     """Test cases for SKOSSearchService class."""
 
-    def test_init_with_valid_file(self, ttl_file: Path) -> None:
+    def test_init_with_valid_file(self, search_service: SKOSSearchService, ttl_file: Path) -> None:
         """Test initialization with a valid TTL file."""
-        service = SKOSSearchService(ttl_file)
-        assert service.ttl_file_path == ttl_file
-        assert len(service.graph) > 0
+        assert search_service.ttl_file_path == ttl_file
+        assert len(search_service.graph) > 0
 
     def test_init_with_nonexistent_file(self) -> None:
         """Test initialization with a non-existent file raises FileNotFoundError."""
@@ -88,17 +93,19 @@ class TestSKOSSearchService:
             SKOSSearchService(nonexistent_file)
 
     def test_init_with_invalid_ttl(self) -> None:
-        """Test initialization with invalid TTL content raises ValueError."""
+        """Test initialization with invalid TTL content raises ValueError when graph is accessed."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".ttl", delete=False) as f:
             f.write("invalid ttl content here")
             invalid_file = Path(f.name)
 
-        with pytest.raises(ValueError, match="Failed to parse TTL file"):
-            SKOSSearchService(invalid_file)
+        with SKOSSearchService(invalid_file) as service, pytest.raises(ValueError, match="Failed to parse TTL file"):
+            # Access the graph property to trigger parsing
+            _ = service.graph
 
     def test_search_keyword_finds_vehicle_matches(self, search_service: SKOSSearchService) -> None:
         """Test keyword search finds vehicle-related matches."""
-        results = search_service.search_keyword("vehicle", ignore_case=True)
+        # Use unlimited search to ensure we get all matches
+        results = search_service.search_keyword("vehicle", ignore_case=True, limit_value=None)
 
         # Should find both "Vehicle" and "Vehicle_Window"
         assert len(results) >= 2
@@ -176,6 +183,96 @@ class TestSKOSSearchService:
         results = search_service.search_keyword("nonexistent_term_xyz")
         assert len(results) == 0
 
+    def test_search_deduplication(self, search_service: SKOSSearchService) -> None:
+        """Test that search results are properly deduplicated."""
+        # Search for a term that might appear in both subject and object
+        results = search_service.search_keyword("Vehicle", ignore_case=True)
+
+        # Check that we don't have duplicate triples with the same match type
+        seen_triples = set()
+        for result in results:
+            triple_key = (result.subject, result.predicate, result.object_value, result.match_type)
+            assert triple_key not in seen_triples, f"Duplicate triple found: {triple_key}"
+            seen_triples.add(triple_key)
+
+            # Should have some results
+        assert len(results) > 0
+
+    @pytest.mark.parametrize(
+        "limit,expected_count",
+        [
+            # Default and numeric limits
+            (10, "limited"),
+            (2, "limited"),
+            (0, 0),
+            ("3", "limited"),
+            ("0", 0),
+        ]
+        + [
+            # Unlimited keywords (sample)
+            (list(NO_LIMIT_KEYWORDS)[0], "unlimited"),
+            (list(NO_LIMIT_KEYWORDS)[1], "unlimited"),
+            (list(NO_LIMIT_KEYWORDS)[0].upper(), "unlimited"),
+        ],
+    )
+    def test_search_keyword_limits(
+        self, search_service: SKOSSearchService, limit: int | str, expected_count: str | int
+    ) -> None:
+        """Test search with various limit values."""
+        # Parse the limit to get the expected values
+        limit_value = search_service.parse_limit(limit)
+
+        # Get reference unlimited count
+        unlimited_results = search_service.search_keyword("example", ignore_case=True, limit_value=None)
+        unlimited_count = len(unlimited_results)
+
+        # Perform test search
+        results = search_service.search_keyword("example", ignore_case=True, limit_value=limit_value)
+
+        # Assert results
+        if expected_count == 0:
+            assert len(results) == 0
+        elif expected_count == "limited":
+            expected_limit = int(limit) if isinstance(limit, str) else limit
+            assert len(results) <= expected_limit
+        elif expected_count == "unlimited":
+            assert len(results) == unlimited_count
+
+    @pytest.mark.parametrize(
+        "limit_value,expected_limit",
+        [
+            # Numeric limits
+            (10, 10),
+            (1, 1),
+            (5, 5),
+            # Zero limits
+            (0, 0),
+            # String numeric limits
+            ("5", 5),
+            ("10", 10),
+            ("0", 0),
+        ]
+        + [
+            # Unlimited keywords (lowercase)
+            (keyword, None)
+            for keyword in NO_LIMIT_KEYWORDS
+        ]
+        + [
+            # Unlimited keywords (uppercase)
+            (keyword.upper(), None)
+            for keyword in NO_LIMIT_KEYWORDS
+        ],
+    )
+    def test_parse_limit_method(
+        self,
+        search_service: SKOSSearchService,
+        limit_value: int | str,
+        expected_limit: int | None,
+    ) -> None:
+        """Test the parse_limit helper method."""
+        limit_result = search_service.parse_limit(limit_value)
+        assert limit_result == expected_limit
+
 
 class TestSearchResultModel:
     """Test cases for SearchResult dataclass."""
@@ -224,7 +321,7 @@ class TestErrorHandling:
             f.write(empty_ttl)
             empty_file = Path(f.name)
 
-        service = SKOSSearchService(empty_file)
-        results = service.search_keyword("anything")
+        with SKOSSearchService(empty_file) as service:
+            results = service.search_keyword("anything")
 
-        assert len(results) == 0
+            assert len(results) == 0

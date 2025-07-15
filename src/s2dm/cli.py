@@ -24,7 +24,7 @@ from s2dm.exporters.utils import (
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
-from s2dm.tools.skos_search import SearchResult, SKOSSearchService
+from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.validators import validate_language_tag
 
 schema_option = click.option(
@@ -289,15 +289,20 @@ def skos_skeleton(
     """Generate SKOS skeleton RDF file from GraphQL schema."""
     from s2dm.exporters.skos import generate_skos_skeleton
 
-    with output.open("w") as output_stream:
-        generate_skos_skeleton(
-            schema_path=schema,
-            output_stream=output_stream,
-            namespace=namespace,
-            prefix=prefix,
-            language=language,
-            validate=True,
-        )
+    try:
+        with output.open("w") as output_stream:
+            generate_skos_skeleton(
+                schema_path=schema,
+                output_stream=output_stream,
+                namespace=namespace,
+                prefix=prefix,
+                language=language,
+                validate=True,
+            )
+    except ValueError as e:
+        raise click.ClickException(f"SKOS generation failed: {e}") from e
+    except OSError as e:
+        raise click.ClickException(f"Failed to write output file: {e}") from e
 
 
 # Check -> version bump
@@ -683,19 +688,30 @@ def search_graphql(console: Console, schema: Path, type: str, case_insensitive: 
                 console.print(f"[green]{tname}[/green]: {fields}")
 
 
-def display_search_results(console: Console, results: list[SearchResult], term: str) -> None:
+def display_search_results(
+    console: Console,
+    results: list[SearchResult],
+    term: str,
+    limit_value: int | None = None,
+) -> None:
     """Display SKOS search results in a formatted way.
 
     Args:
         console: Rich console for output
         results: List of SearchResult objects
         term: The search term that was used
+        limit_value: The parsed limit value (None if unlimited, 0 if zero limit)
     """
     if not results:
         console.print(f"[yellow]No matches found for '{term}'[/yellow]")
         return
 
-    console.print(f"[green]Found {len(results)} match(es) for '{term}':[/green]")
+    # Show result count with limit information
+    result_message = f"[green]Found {len(results)} match(es) for '{term}'"
+    if limit_value is not None and limit_value > 0:
+        result_message += f" (limited to {limit_value})"
+    result_message += ":[/green]"
+    console.print(result_message)
     console.print()
 
     for i, result in enumerate(results, 1):
@@ -703,8 +719,9 @@ def display_search_results(console: Console, results: list[SearchResult], term: 
         concept_name = concept_uri.split("#")[-1] if "#" in concept_uri else concept_uri
         property_type = result.predicate
         value = result.object_value
+        match_type = result.match_type
 
-        console.print(f"[bold cyan]{i}. {concept_name}[/bold cyan]")
+        console.print(f"[bold cyan]{i}. {concept_name}[/bold cyan] [dim]({match_type} match)[/dim]")
         console.print(f"   [dim]URI:[/dim] {concept_uri}")
         console.print(f"   [dim]Property:[/dim] {property_type}")
         console.print(f"   [dim]Value:[/dim] {value}")
@@ -732,30 +749,47 @@ def display_search_results(console: Console, results: list[SearchResult], term: 
     default=False,
     help="Perform case-insensitive search (default: case-sensitive)",
 )
+@click.option(
+    "--limit",
+    "-l",
+    default="10",
+    show_default=True,
+    help=f"Maximum number of results to return. Use {list(NO_LIMIT_KEYWORDS)} for unlimited results.",
+)
 @click.pass_context
-def search_skos(ctx: click.Context, ttl_file: Path, term: str, case_insensitive: bool) -> None:
+def search_skos(ctx: click.Context, ttl_file: Path, term: str, case_insensitive: bool, limit: str) -> None:
     """Search for terms in SKOS concepts using SPARQL.
 
     This command searches through RDF/Turtle files containing SKOS concepts,
     looking for the specified term in concept URIs and object values.
     By default, search is case-sensitive unless --case-insensitive is specified.
 
+    Results are limited to 10 by default. Use --limit to change this number,
+    or specify any of these keywords for unlimited results: NO_LIMIT_KEYWORDS.
+
     The search uses SPARQL to query the RDF graph for subjects and objects
     that contain the search term, focusing on meaningful content while
     excluding predicates from the search scope.
     """
+    console = ctx.obj["console"]
+
     try:
-        service = SKOSSearchService(ttl_file)
-        results = service.search_keyword(term, ignore_case=case_insensitive)
+        with SKOSSearchService(ttl_file) as service:
+            try:
+                limit_value = SKOSSearchService.parse_limit(limit)
+                results = service.search_keyword(term, ignore_case=case_insensitive, limit_value=limit_value)
+            except ValueError as e:
+                console.print(f"[red]Search failed: {e}[/red]")
+                raise click.ClickException(f"SKOS search failed: {e}") from e
+    except FileNotFoundError as e:
+        console.print(f"[red]File not found: {e}[/red]")
+        raise click.ClickException(f"TTL file not found: {e}") from e
+    except ValueError as e:
+        console.print(f"[red]Invalid TTL file: {e}[/red]")
+        raise click.ClickException(f"TTL file parsing failed: {e}") from e
 
-        console = ctx.obj["console"]
-        console.rule(f"[bold blue]SKOS Search Results for '{term}'")
-        display_search_results(console, results, term)
-
-    except Exception as e:
-        console = ctx.obj["console"]
-        console.print(f"[red]Error during search: {e}[/red]")
-        raise click.ClickException(f"SKOS search failed: {e}") from e
+    console.rule(f"[bold blue]SKOS Search Results for '{term}'")
+    display_search_results(console, results, term, limit_value)
 
 
 # similar -> graphql

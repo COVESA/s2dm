@@ -4,12 +4,11 @@ This example demonstrates how to generate SKOS (Simple Knowledge Organization Sy
 
 ## What is SKOS?
 
-SKOS is a W3C standard for representing knowledge organization systems (taxonomies, thesauri, classification schemes) in RDF. It provides properties like:
+SKOS is a W3C standard for representing knowledge organization systems (taxonomies, thesauri, classification schemes) in RDF. The S2DM SKOS exporter generates core properties including:
 
 - `skos:prefLabel` - preferred human-readable labels
 - `skos:definition` - concept definitions
-- `skos:note` - additional notes
-- `rdfs:seeAlso` - related resources
+- `skos:note` - additional notes and provenance information
 
 ## Usage
 
@@ -51,6 +50,7 @@ s2dm search skos --ttl-file examples/graphql-to-skos/output.ttl --term Vehicle
 - `--ttl-file/-f` - Path to TTL/RDF file containing SKOS concepts (required)
 - `--term/-t` - Term to search for in SKOS concepts (required)
 - `--case-insensitive/-i` - Perform case-insensitive search (default: case-sensitive)
+- `--limit/-l` - Maximum number of results to return (default: 10). Use 'inf', 'infinity', '-1', 'no', 'none', 'unlimited', 'all' for unlimited results
 
 ### Search Examples
 
@@ -74,6 +74,16 @@ s2dm search skos -f output.ttl -t "vehicle" --case-insensitive
 s2dm search skos -f output.ttl -t "Advanced Driver"
 ```
 
+**Limit search results:**
+```bash
+s2dm search skos -f output.ttl -t Unit --limit 5
+```
+
+**Unlimited search results:**
+```bash
+s2dm search skos -f output.ttl -t Unit --limit inf
+```
+
 ### How Search Works
 
 The search functionality uses **SPARQL queries** for efficient, scalable searches that work well with large RDF datasets. It performs **case-sensitive matching by default** and looks through:
@@ -86,26 +96,52 @@ The search functionality uses **SPARQL queries** for efficient, scalable searche
 
 ### Search Output
 
-Results show matching concepts with their properties (deduplicated):
+Results show matching concepts with their properties. By default, results are limited to 10 matches:
 
 ```
-════════════════════ SKOS search results for 'Vehicle' ════════════════════
+──────────────────────────────────── SKOS Search Results for 'Vehicle' ─────────────────────────────────────
+Found 10 match(es) for 'Vehicle' (limited to 10):
 
-https://example.org/vss#Vehicle:
-  definition: High-level vehicle data.
-  note: Definition was inherit from the description of the element ns:Vehicle
-  prefLabel: Vehicle
-  seeAlso: https://example.org/vss#Vehicle
-  type: http://www.w3.org/2004/02/skos/core#Concept
+1. Vehicle
+   URI: https://example.org/vss#Vehicle
+   Property: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+   Value: http://www.w3.org/2004/02/skos/core#Concept
 
-https://example.org/vss#Vehicle.averageSpeed:
-  definition:
-  note: Definition was inherit from the description of the element ns:Vehicle.averageSpeed
-  prefLabel: Vehicle.averageSpeed
-  seeAlso: https://example.org/vss#Vehicle.averageSpeed
-  type: http://www.w3.org/2004/02/skos/core#Concept
+2. Vehicle
+   URI: https://example.org/vss#Vehicle
+   Property: http://www.w3.org/2004/02/skos/core#prefLabel
+   Value: Vehicle
 
-Found 42 matching triple(s).
+3. Vehicle.averageSpeed
+   URI: https://example.org/vss#Vehicle.averageSpeed
+   Property: http://www.w3.org/2004/02/skos/core#prefLabel
+   Value: Vehicle.averageSpeed
+
+...
+
+10. Vehicle_LowVoltageSystemState_Enum
+    URI: https://example.org/vss#Vehicle_LowVoltageSystemState_Enum
+    Property: http://www.w3.org/2004/02/skos/core#prefLabel
+    Value: Vehicle_LowVoltageSystemState_Enum
+```
+
+For unlimited results, use the `--limit` option:
+
+```bash
+s2dm search skos -f output.ttl -t Vehicle --limit inf
+```
+
+```
+──────────────────────────────────── SKOS Search Results for 'Vehicle' ─────────────────────────────────────
+Found 22 match(es) for 'Vehicle':
+
+1. Vehicle
+   URI: https://example.org/vss#Vehicle
+   ...
+
+22. Vehicle_LowVoltageSystemState_Enum
+    URI: https://example.org/vss#Vehicle_LowVoltageSystemState_Enum
+    ...
 ```
 
 ### Performance Benefits
@@ -152,14 +188,12 @@ The generated RDF Turtle file will contain:
 ns:Vehicle a skos:Concept ;
     skos:prefLabel "Vehicle"@en ;
     skos:definition "High-level vehicle data." ;
-    skos:note "Definition was inherit from the description of the element ns:Vehicle" ;
-    rdfs:seeAlso ns:Vehicle .
+    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle whose URI is ns:Vehicle." .
 
 ns:Vehicle_ADAS a skos:Concept ;
     skos:prefLabel "Vehicle_ADAS"@en ;
     skos:definition "All Advanced Driver Assist Systems data." ;
-    skos:note "Definition was inherit from the description of the element ns:Vehicle_ADAS" ;
-    rdfs:seeAlso ns:Vehicle_ADAS .
+    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle_ADAS whose URI is ns:Vehicle_ADAS." .
 ```
 
 ### 3. Field Concepts
@@ -167,14 +201,12 @@ ns:Vehicle_ADAS a skos:Concept ;
 ns:Vehicle.averageSpeed a skos:Concept ;
     skos:prefLabel "Vehicle.averageSpeed"@en ;
     skos:definition "" ;
-    skos:note "Definition was inherit from the description of the element ns:Vehicle.averageSpeed" ;
-    rdfs:seeAlso ns:Vehicle.averageSpeed .
+    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle.averageSpeed whose URI is ns:Vehicle.averageSpeed." .
 
 ns:Vehicle.adas a skos:Concept ;
     skos:prefLabel "Vehicle.adas"@en ;
     skos:definition "" ;
-    skos:note "Definition was inherit from the description of the element ns:Vehicle.adas" ;
-    rdfs:seeAlso ns:Vehicle.adas .
+    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle.adas whose URI is ns:Vehicle.adas." .
 ```
 
 ### 4. Enum Concepts
@@ -182,8 +214,7 @@ ns:Vehicle.adas a skos:Concept ;
 ns:Vehicle_LowVoltageSystemState_Enum a skos:Concept ;
     skos:prefLabel "Vehicle_LowVoltageSystemState_Enum"@en ;
     skos:definition "Vehicle LowVoltageSystemState Enum" ;
-    skos:note "Definition was inherit from the description of the element ns:Vehicle_LowVoltageSystemState_Enum" ;
-    rdfs:seeAlso ns:Vehicle_LowVoltageSystemState_Enum .
+    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle_LowVoltageSystemState_Enum whose URI is ns:Vehicle_LowVoltageSystemState_Enum." .
 ```
 
 ## What Gets Generated
