@@ -6,6 +6,7 @@ from typing import TextIO
 from graphql import GraphQLEnumType, GraphQLNamedType, GraphQLObjectType
 from rdflib import Graph, Literal, Namespace
 from rdflib.namespace import RDF, RDFS, SKOS
+from rdflib.term import Node
 
 from s2dm.exporters.utils import get_all_named_types, load_schema
 
@@ -20,6 +21,12 @@ class SKOSConcept:
         language: BCP 47 language tag for the preferred label
         definition: The concept definition/description
     """
+
+    # Class constant for note template
+    NOTE_TEMPLATE = (
+        "Content of SKOS definition was inherited from the description of the "
+        "GraphQL SDL element {name} whose URI is {uri}."
+    )
 
     name: str
     pref_label: str
@@ -46,16 +53,8 @@ class SKOSConcept:
         graph.add((concept_ref, SKOS.definition, Literal(self.definition)))
 
         # Add note with concept URI reference
-        graph.add(
-            (
-                concept_ref,
-                SKOS.note,
-                Literal(f"Definition was inherit from the description of the element {concept_ref}"),
-            )
-        )
-
-        # Add seeAlso reference
-        graph.add((concept_ref, RDFS.seeAlso, concept_ref))
+        note_text = self.NOTE_TEMPLATE.format(name=self.name, uri=concept_ref)
+        graph.add((concept_ref, SKOS.note, Literal(note_text)))
 
 
 def create_skos_graph(namespace: str, prefix: str) -> tuple[Graph, Namespace]:
@@ -134,20 +133,20 @@ def validate_skos_graph(graph: Graph) -> list[str]:
     Returns:
         List of validation error messages (empty if valid)
     """
-    errors = []
+    errors: list[str] = []
 
     # Check that all concepts have required SKOS properties
-    concepts = list(graph.subjects(RDF.type, SKOS.Concept))
+    concepts: list[Node] = list(graph.subjects(RDF.type, SKOS.Concept))
 
     for concept in concepts:
         # Check for required prefLabel
-        pref_labels = list(graph.objects(concept, SKOS.prefLabel))
+        pref_labels: list[Node] = list(graph.objects(concept, SKOS.prefLabel))
         if not pref_labels:
             errors.append(f"Concept {concept} missing required skos:prefLabel")
 
         # Check for definition or note (at least one should be present)
-        definitions = list(graph.objects(concept, SKOS.definition))
-        notes = list(graph.objects(concept, SKOS.note))
+        definitions: list[Node] = list(graph.objects(concept, SKOS.definition))
+        notes: list[Node] = list(graph.objects(concept, SKOS.note))
         if not definitions and not notes:
             errors.append(f"Concept {concept} missing both skos:definition and skos:note")
 

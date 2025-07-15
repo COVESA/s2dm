@@ -8,7 +8,7 @@ from faker import Faker
 from graphql import GraphQLNamedType, build_schema
 from hypothesis import given
 from rdflib import Graph, Literal, Namespace
-from rdflib.namespace import RDF, RDFS, SKOS
+from rdflib.namespace import RDF, SKOS
 
 from s2dm.exporters.skos import (
     SKOSConcept,
@@ -57,7 +57,6 @@ class TestSKOSConceptFormatting:
         assert (concept_ref, SKOS.prefLabel, None) in graph
         assert (concept_ref, SKOS.definition, None) in graph
         assert (concept_ref, SKOS.note, None) in graph
-        assert (concept_ref, RDFS.seeAlso, concept_ref) in graph
 
 
 class TestLanguageValidation:
