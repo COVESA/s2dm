@@ -1,6 +1,5 @@
 ---
 title: Approach primer
-chapter: false
 ---
 
 ## Simplified Semantic Data Modeling (S2DM) - Approach Primer

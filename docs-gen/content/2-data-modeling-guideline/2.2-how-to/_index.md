@@ -1,8 +1,20 @@
 ---
-title: Modeling
+title: How to...?
+weight: 2
+chapter: false
 ---
 
-Under refactoring...
+Under construction..
+
+## ...model an object and/or a field?
+Simply use the GraphQL SDL.
+Object types start with `type` keyword.
+```gql
+type MyObject {
+  someField: String # <-- Built-in scalar as output
+  anotherField: AnotherOutputType # <-- Custom named type as output
+}
+```
 
 ## Modeling Guide
 > **NOTE:** This document explains how to contribute to an specific model (new or existing).

@@ -1,5 +1,5 @@
 ---
-title: (2) Concept URIs
+title: Concept URIs
 weight: 2
 chapter: false
 ---

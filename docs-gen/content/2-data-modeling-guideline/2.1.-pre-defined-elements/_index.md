@@ -1,8 +1,10 @@
 ---
-title: (7) Pre-defined elements
-weight: 7
+title: Pre-defined elements
+weight: 1
 chapter: false
 ---
+
+![fig:s2dm_pre_defined_elements](/s2dm/images/s2dm_pre_def_elements.svg)
 
 ### Units
 Units are represented as enum values. For example:
@@ -21,7 +23,7 @@ A set of commonly used units is provided in the file [`unit_enums.graphql`](http
 > The tentative model that will be used in the future is the [QUDT units](http://www.qudt.org/doc/DOC_VOCAB-UNITS-ALL.html).
 
 
-### Scalars
+### Custom scalars
 Scalars in GraphQL are basically the datatypes to which a `field` resolves.
 GraphQL supports a few built-in scalars such as `Int`, `Float`, `String`, `Boolean`, and `ID`.
 It is possible to define custom ones.
@@ -76,7 +78,9 @@ type Person {
 }
 ```
 
-### Common enumeration sets
+### Common types
+
+#### Common enumeration sets
 In some cases, it is practical to refer to a particular set of values that might fit to multiple use cases.
 For example, the zone inside the cabin of a car could be re used by the `Door` and the `Window`
 It could be modeled as:
@@ -110,3 +114,6 @@ Door {
 }
 ```
 Such common enumeration sets are available in the file `/spec/common_enums.graphql`.
+
+#### Common objects of interest
+Under construction...

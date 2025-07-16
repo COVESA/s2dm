@@ -1,5 +1,5 @@
 ---
-title: (4) Variant IDs
+title: Variant IDs
 weight: 4
 chapter: false
 ---
