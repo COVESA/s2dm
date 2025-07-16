@@ -15,8 +15,8 @@ It does not intent to re-invent, nor to replace long-standing standards, such as
 Hence, it does not incorporate advanced reasoning capabilities or comprehensive ontologies typically associated with traditional semantic data modeling.
 {{< /callout >}}
 
-## `SD2M` role
-![Fig:s2dm_role](images/s2dm_role.svg)
+## `S2DM` role
+![S2DM role diagram](/images/s2dm_role.png)
 
 ### `S2DM` artifacts
 `S2DM` consists of two main artifacts:
