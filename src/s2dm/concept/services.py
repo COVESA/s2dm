@@ -13,6 +13,12 @@ from s2dm.concept.models import (
     SpecHistoryNode,
 )
 
+# Constants for GraphQL type names that should be excluded from processing
+EXCLUDED_TYPE_NAMES = ("Query", "Mutation")
+
+# Field names that should be excluded from concept extraction
+EXCLUDED_FIELD_NAMES = ("id",)
+
 
 def load_json_file(file_path: Path) -> dict[str, Any]:
     """Load a JSON file and return its contents.
@@ -270,7 +276,7 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
     """
     concepts = Concepts()
     for named_type in named_types:
-        if named_type.name in ("Query", "Mutation"):
+        if named_type.name in EXCLUDED_TYPE_NAMES:
             continue
 
         if isinstance(named_type, GraphQLEnumType):
@@ -281,7 +287,7 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
             log.debug(f"Processing object: {named_type.name}")
             # Get the ID of all fields in the object
             for field_name, field in named_type.fields.items():
-                if field_name.lower() == "id":
+                if field_name.lower() in EXCLUDED_FIELD_NAMES:
                     continue
 
                 field_fqn = f"{named_type.name}.{field_name}"
@@ -295,8 +301,9 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
                     while hasattr(internal_type, "of_type"):
                         internal_type = internal_type.of_type
                     # Get the name from the internal type if it has one
-                    if hasattr(internal_type, "name"):
-                        concepts.nested_objects[field_fqn] = internal_type.name
+                    internal_type_name = getattr(internal_type, "name", None)
+                    if internal_type_name:
+                        concepts.nested_objects[field_fqn] = internal_type_name
                 else:
                     # field uses a scalar type or enum type
                     concepts.objects[named_type.name].append(field_fqn)
