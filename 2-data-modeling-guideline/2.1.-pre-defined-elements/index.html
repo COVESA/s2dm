@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" itemscope itemtype="http://schema.org/Article" data-r-output-format="html">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="generator" content="Hugo 0.129.0">
+    <meta name="generator" content="Relearn 7.6.1+4407b4364ab6f7477f7671fbd20c0494bade40ee">
+    <meta name="description" content="Units Units are represented as enum values. For example:
+enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.
+[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.">
+    <meta name="author" content="">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Pre-defined elements :: S2DM">
+    <meta name="twitter:description" content="Units Units are represented as enum values. For example:
+enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.
+[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.">
+    <meta property="og:url" content="https://covesa.github.io/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html">
+    <meta property="og:site_name" content="S2DM">
+    <meta property="og:title" content="Pre-defined elements :: S2DM">
+    <meta property="og:description" content="Units Units are represented as enum values. For example:
+enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.
+[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.">
+    <meta property="og:locale" content="en_us">
+    <meta property="og:type" content="website">
+    <meta itemprop="name" content="Pre-defined elements :: S2DM">
+    <meta itemprop="description" content="Units Units are represented as enum values. For example:
+enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.
+[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.">
+    <meta itemprop="wordCount" content="455">
+    <title>Pre-defined elements :: S2DM</title>
+    <link href="/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.xml" rel="alternate" type="application/rss+xml" title="Pre-defined elements :: S2DM"><link rel="shortcut icon" href="/s2dm/images/fav.png" type="image/x-icon" />
+
+    <link href="/s2dm/fonts/fontawesome/css/fontawesome-all.min.css?1752742883" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/s2dm/fonts/fontawesome/css/fontawesome-all.min.css?1752742883" rel="stylesheet"></noscript>
+    <link href="/s2dm/css/perfect-scrollbar/perfect-scrollbar.min.css?1752742883" rel="stylesheet">
+    <link href="/s2dm/css/theme.min.css?1752742883" rel="stylesheet">
+    <link href="/s2dm/css/format-html.min.css?1752742883" rel="stylesheet" id="R-format-style">
+    <link href="/s2dm/css/auto-complete/auto-complete.min.css?1752742883" rel="stylesheet">
+    <script src="/s2dm/js/auto-complete/auto-complete.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/lunr/lunr.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/lunr/lunr.stemmer.support.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/lunr/lunr.multi.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/lunr/lunr.en.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/search.min.js?1752742883" defer></script>
+    <script>
+      window.relearn = window.relearn || {};
+      // configuration
+      window.relearn.min = `.min`;
+      window.relearn.path='\/2-data-modeling-guideline\/2.1.-pre-defined-elements\/index.html';
+      window.relearn.relBasePath='..\/..';
+      window.relearn.relBaseUri='..\/..\/..';
+      window.relearn.absBaseUri='https:\/\/covesa.github.io\/s2dm';
+      window.relearn.contentLangs=['en'];
+      window.relearn.index_js_url="/s2dm/searchindex.en.js?1752742883";
+      window.relearn.disableAnchorCopy=false;
+      window.relearn.disableAnchorScrolling=false;
+      window.relearn.disableInlineCopyToClipboard=true;
+      window.relearn.enableBlockCodeWrap=true;
+      // legal
+      window.relearn.getItem = (s,n) => {return s.getItem(n)};
+      window.relearn.setItem = (s,n,v) => {return s.setItem(n,v)};
+      window.relearn.removeItem = (s,n) => {return s.removeItem(n)};
+      // variant stuff
+      window.relearn.themevariants = [ 'green' ];
+      window.relearn.customvariantname = "my-custom-variant";
+      window.relearn.changeVariant = function(variant) {
+        var oldVariant = document.documentElement.dataset.rThemeVariant;
+        window.relearn.setItem(window.localStorage, window.relearn.absBaseUri + "/variant", variant);
+        document.documentElement.dataset.rThemeVariant = variant;
+        if (oldVariant != variant) {
+          document.dispatchEvent( new CustomEvent('themeVariantLoaded', { detail: { variant, oldVariant } }) );
+          window.relearn.markVariant();
+        }
+      }
+      window.relearn.markVariant = function() {
+        var variant = window.relearn.getItem(window.localStorage, window.relearn.absBaseUri + "/variant");
+        document.querySelectorAll(".R-variantswitcher select").forEach((select) => {select.value = variant;});
+      }
+      window.relearn.initVariant = function() {
+        var variant = window.relearn.getItem(window.localStorage, window.relearn.absBaseUri + "/variant") ?? "";
+        if( variant == window.relearn.customvariantname ){
+        }else if( !variant || !window.relearn.themevariants.includes(variant) ){
+          variant = window.relearn.themevariants[0];
+          window.relearn.setItem(window.localStorage, window.relearn.absBaseUri + "/variant", variant);
+        }
+        document.documentElement.dataset.rThemeVariant = variant;
+      }
+      window.relearn.initVariant();
+      window.relearn.markVariant();
+      // translations
+      window.T_Copy_to_clipboard = `Copy to clipboard`;
+      window.T_Copied_to_clipboard = `Copied to clipboard!`;
+      window.T_Copy_link_to_clipboard = `Copy link to clipboard`;
+      window.T_Link_copied_to_clipboard = `Copied link to clipboard!`;
+      window.T_Reset_view = `Reset view`;
+      window.T_View_reset = `View reset!`;
+      window.T_No_results_found = `No results found for "{0}"`;
+      window.T_N_results_found = `{1} results found for "{0}"`;
+    </script>
+  </head>
+  <body class="mobile-support html" data-url="/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html">
+    <div id="R-body" class="default-animation">
+      <div id="R-body-overlay"></div>
+      <nav id="R-topbar">
+        <div class="topbar-wrapper">
+          <div class="topbar-sidebar-divider"></div>
+          <div class="topbar-area topbar-area-start" data-area="start">
+            <div class="topbar-button topbar-button-sidebar" data-content-empty="disable" data-width-s="show" data-width-m="hide" data-width-l="hide"><button class="topbar-control" onclick="toggleNav()" type="button" title="Menu (CTRL&#43;ALT&#43;n)"><i class="fa-fw fas fa-bars"></i></button>
+            </div>
+            <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
+              <div class="topbar-content">
+                <div class="topbar-content-wrapper">
+<nav class="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#units">Units</a></li>
+        <li><a href="#custom-scalars">Custom scalars</a></li>
+        <li><a href="#custom-directives">Custom directives</a></li>
+        <li><a href="#common-types">Common types</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList">
+            <li itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement" class=""><a itemprop="item" href="/s2dm/index.html"><span itemprop="name">Simplified Semantic Data Modeling</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li>
+            <li itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement" class=""><a itemprop="item" href="/s2dm/2-data-modeling-guideline/index.html"><span itemprop="name">Data modeling guideline</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li>
+            <li itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement" class=""><span itemprop="name">Pre-defined elements</span><meta itemprop="position" content="3"></li>
+          </ol>
+          <div class="topbar-area topbar-area-end" data-area="end">
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/s2dm/2-data-modeling-guideline/index.html" title="Data modeling guideline (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            </div>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/s2dm/2-data-modeling-guideline/2.2-how-to/index.html" title="How to...? (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            </div>
+            <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
+              <div class="topbar-content">
+                <div class="topbar-content-wrapper">
+                  <div class="topbar-area topbar-area-more" data-area="more">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div id="R-main-overlay"></div>
+      <main id="R-body-inner" class="highlightable 2-data-modeling-guideline" tabindex="-1">
+        <div class="flex-block-wrapper">
+<article class="default">
+  <header class="headline">
+  </header>
+
+<h1 id="pre-defined-elements">Pre-defined elements</h1>
+
+<p><a href="#R-image-c19853c9b02353d154a930a73dd19bcb" class="lightbox-link"><img alt="fig:s2dm_pre_defined_elements" class="lazy lightbox figure-image" loading="lazy" src="/s2dm/images/s2dm_pre_def_elements.svg" style=" height: auto; width: auto;"></a>
+<a href="javascript:history.back();" class="lightbox-back" id="R-image-c19853c9b02353d154a930a73dd19bcb"><img alt="fig:s2dm_pre_defined_elements" class="lazy lightbox lightbox-image" loading="lazy" src="/s2dm/images/s2dm_pre_def_elements.svg"></a></p>
+<h3 id="units">Units</h3>
+<p>Units are represented as enum values. For example:</p>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-graphql" data-lang="graphql"><span style="display:flex;"><span><span style="color:#66d9ef">enum</span> <span style="color:#a6e22e">VelocityUnitEnum</span> {
+</span></span><span style="display:flex;"><span>  KILOMETER_PER_HOUR
+</span></span><span style="display:flex;"><span>  METERS_PER_SECOND
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div>
+<p>The name of the enum itself refers to the quantity kind (e.g., <code>Velocity</code>).
+A set of commonly used units is provided in the file <a href="https://github.com/COVESA/s2dm/blob/main/src/s2dm/spec/unit_enums.graphql" rel="external" target="_blank"><code>unit_enums.graphql</code></a>.</p>
+<blockquote>
+<p>[!NOTE]
+<a href="https://github.com/COVESA/s2dm/issues/43" rel="external" target="_blank">It is planned</a> to adopt and reuse an existing standard data model for units.
+At the moment, the units file is inspired by <a href="https://github.com/COVESA/vehicle_signal_specification/blob/main/spec/units.md" rel="external" target="_blank">COVESA VSS Units file</a>.
+The tentative model that will be used in the future is the <a href="http://www.qudt.org/doc/DOC_VOCAB-UNITS-ALL.html" rel="external" target="_blank">QUDT units</a>.</p>
+</blockquote>
+<h3 id="custom-scalars">Custom scalars</h3>
+<p>Scalars in GraphQL are basically the datatypes to which a <code>field</code> resolves.
+GraphQL supports a few built-in scalars such as <code>Int</code>, <code>Float</code>, <code>String</code>, <code>Boolean</code>, and <code>ID</code>.
+It is possible to define custom ones.
+The file <code>/spec/custom_scalars.graphql</code> contains custom scalars that could be referenced in the model.</p>
+<h3 id="custom-directives">Custom directives</h3>
+<h4 id="instancetag">@instanceTag</h4>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gql" data-lang="gql"><span style="display:flex;"><span><span style="color:#66d9ef">directive</span> <span style="color:#a6e22e">@instanceTag</span> <span style="color:#66d9ef">on</span> <span style="color:#66d9ef">OBJECT</span></span></span></code></pre></div>
+<blockquote>
+<p>TODO: Add description and example</p>
+</blockquote>
+<h4 id="cardinality">@cardinality</h4>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gql" data-lang="gql"><span style="display:flex;"><span><span style="color:#66d9ef">directive</span> <span style="color:#a6e22e">@cardinality</span>(min: <span style="color:#a6e22e">Int</span>, max: <span style="color:#a6e22e">Int</span>) <span style="color:#66d9ef">on</span> <span style="color:#66d9ef">FIELD_DEFINITION</span></span></span></code></pre></div>
+<blockquote>
+<p>TODO: Add description and example</p>
+</blockquote>
+<h4 id="range">@range</h4>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gql" data-lang="gql"><span style="display:flex;"><span><span style="color:#66d9ef">directive</span> <span style="color:#a6e22e">@range</span>(min: <span style="color:#a6e22e">Float</span>, max: <span style="color:#a6e22e">Float</span>) <span style="color:#66d9ef">on</span> <span style="color:#66d9ef">FIELD_DEFINITION</span></span></span></code></pre></div>
+<blockquote>
+<p>TODO: Add description and example</p>
+</blockquote>
+<h4 id="noduplicates">@noDuplicates</h4>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gql" data-lang="gql"><span style="display:flex;"><span><span style="color:#66d9ef">directive</span> <span style="color:#a6e22e">@noDuplicates</span> <span style="color:#66d9ef">on</span> <span style="color:#66d9ef">FIELD_DEFINITION</span></span></span></code></pre></div>
+<p>Considering the following generic object:</p>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gql" data-lang="gql"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">MyObject</span> {
+</span></span><span style="display:flex;"><span>    field: <span style="color:#960050;background-color:#1e0010">&lt;</span><span style="color:#a6e22e">outputType</span><span style="color:#960050;background-color:#1e0010">&gt;</span>
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div>
+<p>By default, the GraphQL SDL let us express the following six combinations for output types in fields:</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Description</th>
+<th><code>outputType</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nullable Singular Field</strong></td>
+<td>A singular element that can also be null.</td>
+<td><code>NamedType</code></td>
+</tr>
+<tr>
+<td><strong>Non-Nullable Singular Field</strong></td>
+<td>A singular element that cannot be null.</td>
+<td><code>NamedType!</code></td>
+</tr>
+<tr>
+<td><strong>Nullable List Field</strong></td>
+<td>An array of elements. The array itself can be null.</td>
+<td><code>[NamedType]</code></td>
+</tr>
+<tr>
+<td><strong>Non-Nullable List Field</strong></td>
+<td>An array of elements. The array itself cannot be null.</td>
+<td><code>[NamedType]!</code></td>
+</tr>
+<tr>
+<td><strong>Nullable List of Non-Nullable Elements</strong></td>
+<td>An array of elements. The array itself can be null but the elements cannot.</td>
+<td><code>[NamedType!]</code></td>
+</tr>
+<tr>
+<td><strong>Non-Nullable List of Non-Nullable Elements</strong></td>
+<td>List and elements in the list cannot be null.</td>
+<td><code>[NamedType!]!</code></td>
+</tr>
+</tbody>
+</table>
+<p>Implicitly, lists here refer to an array of values that could be duplicated.
+In order to explicitly say that the intended content of the array should function as a set of unique values instead, the custom directive @noDuplicates is introduced.</p>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gql" data-lang="gql"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Person</span> {
+</span></span><span style="display:flex;"><span>    nicknamesList: [<span style="color:#a6e22e">String</span>]  <span style="color:#75715e"># Array with possible duplicate values</span>
+</span></span><span style="display:flex;"><span>    nicknamesSet: [<span style="color:#a6e22e">String</span>] <span style="color:#a6e22e">@noDuplicates</span>  <span style="color:#75715e"># Set of unique values</span>
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div>
+<h3 id="common-types">Common types</h3>
+<h4 id="common-enumeration-sets">Common enumeration sets</h4>
+<p>In some cases, it is practical to refer to a particular set of values that might fit to multiple use cases.
+For example, the zone inside the cabin of a car could be re used by the <code>Door</code> and the <code>Window</code>
+It could be modeled as:</p>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-graphql" data-lang="graphql"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">InCabinZone</span> {
+</span></span><span style="display:flex;"><span>    row: <span style="color:#a6e22e">InCabinRowEnum</span>!
+</span></span><span style="display:flex;"><span>    side: <span style="color:#a6e22e">InCabinSide</span>!
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">enum</span> <span style="color:#a6e22e">InCabinRowEnum</span> {
+</span></span><span style="display:flex;"><span>    FRONT
+</span></span><span style="display:flex;"><span>    REAR
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">enum</span> <span style="color:#a6e22e">InCabinSide</span> {
+</span></span><span style="display:flex;"><span>    DRIVER_SIDE
+</span></span><span style="display:flex;"><span>    PASSENGER_SIDE
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div>
+<p>Then, it can be referenced from:</p>
+<div class="highlight wrap-code" dir="auto"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-graphql" data-lang="graphql"><span style="display:flex;"><span>Window {
+</span></span><span style="display:flex;"><span>    instance: <span style="color:#a6e22e">InCabinZone</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Door {
+</span></span><span style="display:flex;"><span>    instance: <span style="color:#a6e22e">InCabinZone</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">...</span>
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div>
+<p>Such common enumeration sets are available in the file <code>/spec/common_enums.graphql</code>.</p>
+<h4 id="common-objects-of-interest">Common objects of interest</h4>
+<p>Under construction&hellip;</p>
+
+  <footer class="footline">
+  </footer>
+</article>
+        </div>
+      </main>
+    </div>
+    <aside id="R-sidebar" class="default-animation">
+      <div id="R-header-topbar" class="default-animation"></div>
+      <div id="R-header-wrapper" class="default-animation">
+        <div id="R-header" class="default-animation">
+<a id="logo" href="https://covesa.github.io/s2dm/">
+  <img src="/s2dm/images/S2DM.png">
+</a>
+
+        </div>
+        <search><form action="/s2dm/search/index.html" method="get">
+          <div class="searchbox default-animation">
+            <button class="search-detail" type="submit" title="Search (CTRL+ALT+f)"><i class="fas fa-search"></i></button>
+            <label class="a11y-only" for="R-search-by">Search</label>
+            <input data-search-input id="R-search-by" name="search-by" class="search-by" type="search" placeholder="Search...">
+            <button class="search-clear" type="button" data-search-clear="" title="Clear search"><i class="fas fa-times" title="Clear search"></i></button>
+          </div>
+        </form></search>
+      </div>
+      <div id="R-homelinks" class="default-animation">
+        <div class="R-menu-divider default-animation">
+          <hr class="padding">
+        </div>
+        <div class="R-sidebarmenu R-shortcutmenu-homelinks">
+          <ul class="space collapsible-menu">
+          </ul>
+        </div>
+        <div class="R-menu-divider default-animation">
+          <hr class="padding">
+        </div>
+        <div class="R-sidebarmenu R-shortcutmenu-headercontrols">
+          <ul class="">
+          </ul>
+        </div>
+        <div class="R-menu-divider default-animation">
+          <hr class="padding">
+        </div>
+      </div>
+      <div id="R-content-wrapper" class="highlightable">
+        <div class="R-sidebarmenu R-shortcutmenu-main">
+          <ul class="enlarge morespace collapsible-menu">
+            <li class="" data-nav-id="/s2dm/1-approach-overview/index.html"><a class="padding" href="/s2dm/1-approach-overview/index.html">Approach overview</a><ul id="R-subsections-ee02f6a2670986bc8db6f733fda00303" class="collapsible-menu"></ul></li>
+            <li class="parent " data-nav-id="/s2dm/2-data-modeling-guideline/index.html"><a class="padding" href="/s2dm/2-data-modeling-guideline/index.html">Data modeling guideline</a><ul id="R-subsections-102eb7c3a103d701205446a216c839a6" class="collapsible-menu">
+            <li class="active " data-nav-id="/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html"><a class="padding" href="/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html">Pre-defined elements</a></li>
+            <li class="" data-nav-id="/s2dm/2-data-modeling-guideline/2.2-how-to/index.html"><a class="padding" href="/s2dm/2-data-modeling-guideline/2.2-how-to/index.html">How to...?</a></li></ul></li>
+            <li class="" data-nav-id="/s2dm/3-tools/index.html"><a class="padding" href="/s2dm/3-tools/index.html">Tools</a><ul id="R-subsections-b9f08d67f79079b4ba6757cc28ab83df" class="collapsible-menu"></ul></li>
+            <li class="" data-nav-id="/s2dm/4-examples/index.html"><a class="padding" href="/s2dm/4-examples/index.html">Examples</a><ul id="R-subsections-41e0389e11286a2e78dbe7055f6b2943" class="collapsible-menu"></ul></li>
+            <li class="" data-nav-id="/s2dm/5-faqs/index.html"><a class="padding" href="/s2dm/5-faqs/index.html">FAQs</a></li>
+            <li class="" data-nav-id="/s2dm/others/index.html"><a class="padding" href="/s2dm/others/index.html">Others</a><ul id="R-subsections-3291402465492e845cacd5b114338f5a" class="collapsible-menu"></ul></li>
+          </ul>
+        </div>
+        <div class="R-sidebarmenu R-shortcutmenu-shortcuts">
+          <div class="nav-title padding">More</div>
+          <ul class="space collapsible-menu">
+            <li class="" data-nav-id="https://github.com/covesa/s2dm"><a class="padding" href="https://github.com/covesa/s2dm" rel="external" target="_blank"><i class='fab fa-github'></i> Github repo</a></li>
+          </ul>
+        </div>
+        <div id="R-footer-margin"></div>
+        <div class="R-menu-divider default-animation">
+          <hr class="padding">
+        </div>
+        <div class="R-sidebarmenu R-shortcutmenu-footercontrols">
+          <ul class="">
+          </ul>
+        </div>
+<div id="R-footer"><center>
+    
+    <a class="github-button" href="https://github.com/covesa/s2dm/archive/master.zip" data-icon="octicon-cloud-download" aria-label="Download covesa/s2dm on GitHub">Download</a>
+
+    
+    <a class="github-button" href="https://github.com/covesa/s2dm" data-icon="octicon-star" data-show-count="true" aria-label="Star covesa/s2dm on GitHub">Star</a>
+
+    
+    <a class="github-button" href="https://github.com/covesa/s2dm/fork" data-icon="octicon-repo-forked" data-show-count="true" aria-label="Fork covesa/s2dm on GitHub">Fork</a>
+
+</center>
+
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+</div>
+      </div>
+    </aside>
+    <script src="/s2dm/js/clipboard/clipboard.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/perfect-scrollbar/perfect-scrollbar.min.js?1752742883" defer></script>
+    <script src="/s2dm/js/theme.min.js?1752742883" defer></script>
+  </body>
+</html>

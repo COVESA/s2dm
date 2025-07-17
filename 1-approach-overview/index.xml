@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Approach overview :: S2DM</title>
+    <link>https://covesa.github.io/s2dm/1-approach-overview/index.html</link>
+    <description>The design of S2DM can be summarized in these parts:&#xA;Objects &amp; Fields – Model the objects of interest (i.e., entities, events, features, etc.) and their fields (i.e., properties). Concept URIs – Concepts from the objects and fields are assigned future-proof URIs. Multi hierarchies – Concept URIs are reused to build arbitrary classification schemes. Variant IDs – Based on the metadata in the specification, a unique hashed ID is created.</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://covesa.github.io/s2dm/1-approach-overview/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Objects &amp; Fields</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/1.1-objects-and-properties/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/1.1-objects-and-properties/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>Concept URIs</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/1.2-concept-uris/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/1.2-concept-uris/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>Multi hierarchies</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/1.3-multi-hierarchies/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/1.3-multi-hierarchies/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>Variant IDs</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/1.4-variant-ids/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/1.4-variant-ids/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>Specification registry</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/1.5-spec-registry/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/1.5-spec-registry/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>Capabilities</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/1.6-capabilities/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/1.6-capabilities/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pre-defined elements :: S2DM</title>
+    <link>https://covesa.github.io/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html</link>
+    <description>Units Units are represented as enum values. For example:&#xA;enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.&#xA;[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://covesa.github.io/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

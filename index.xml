@@ -1,32 +1,53 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Simplified Semantic Data Modeling (S2DM) :: S2DM</title>
+    <title>Simplified Semantic Data Modeling :: S2DM</title>
     <link>https://covesa.github.io/s2dm/index.html</link>
     <description>The Simplified Semantic Data Modeling (S2DM) is an approach for modeling data of multiple domains. It is simple in the sense that any Subject Matter Expert (SME) could contribute to a controlled vocabulary with minimal data modeling expertise. Likewise, it is semantic in the sense that it specifies meaningful data structures, their cross-domain relationships, and arbitrary classification schemes.&#xA;[!NOTE] Bear in mind the word Simplified in the name. This approach aims to foster the adoption of (some) good data modeling practices.</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <atom:link href="https://covesa.github.io/s2dm/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Data modeling guideline</title>
-      <link>https://covesa.github.io/s2dm/1-modeling-guideline/index.html</link>
+      <title>Approach overview</title>
+      <link>https://covesa.github.io/s2dm/1-approach-overview/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://covesa.github.io/s2dm/1-modeling-guideline/index.html</guid>
-      <description></description>
+      <guid>https://covesa.github.io/s2dm/1-approach-overview/index.html</guid>
+      <description>The design of S2DM can be summarized in these parts:&#xA;Objects &amp; Fields – Model the objects of interest (i.e., entities, events, features, etc.) and their fields (i.e., properties). Concept URIs – Concepts from the objects and fields are assigned future-proof URIs. Multi hierarchies – Concept URIs are reused to build arbitrary classification schemes. Variant IDs – Based on the metadata in the specification, a unique hashed ID is created.</description>
+    </item>
+    <item>
+      <title>Data modeling guideline</title>
+      <link>https://covesa.github.io/s2dm/2-data-modeling-guideline/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/2-data-modeling-guideline/index.html</guid>
+      <description>Under construction…</description>
     </item>
     <item>
       <title>Tools</title>
-      <link>https://covesa.github.io/s2dm/2-tools/index.html</link>
+      <link>https://covesa.github.io/s2dm/3-tools/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://covesa.github.io/s2dm/2-tools/index.html</guid>
-      <description>Under construction</description>
+      <guid>https://covesa.github.io/s2dm/3-tools/index.html</guid>
+      <description>Under construction…</description>
     </item>
     <item>
       <title>Examples</title>
-      <link>https://covesa.github.io/s2dm/3-examples/index.html</link>
+      <link>https://covesa.github.io/s2dm/4-examples/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://covesa.github.io/s2dm/3-examples/index.html</guid>
+      <guid>https://covesa.github.io/s2dm/4-examples/index.html</guid>
       <description>Below are some examples of how the Simplified Semantic Data Modeling (S2DM) approach can be applied in different areas or use cases. Each example is linked to its corresponding folder in the repository for further exploration.&#xA;Example Use Cases Multiple Classification Schemes: Enabling multiple classification schemes using SKOS. Multiple Domains: Covering cross-references across different domains. Seat Capabilities: Specifying possible operations linked to seat-related objects or entities. Seat to VSS Mapping: Mapping modular seat specifications to the Vehicle Signal Specification (VSS).</description>
+    </item>
+    <item>
+      <title>FAQs</title>
+      <link>https://covesa.github.io/s2dm/5-faqs/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/5-faqs/index.html</guid>
+      <description>Under construction…</description>
+    </item>
+    <item>
+      <title>Others</title>
+      <link>https://covesa.github.io/s2dm/others/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/others/index.html</guid>
+      <description></description>
     </item>
   </channel>
 </rss>

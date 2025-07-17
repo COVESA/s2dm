@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Others :: S2DM</title>
+    <link>https://covesa.github.io/s2dm/others/index.html</link>
+    <description></description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://covesa.github.io/s2dm/others/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Approach primer</title>
+      <link>https://covesa.github.io/s2dm/others/approach_primer/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/others/approach_primer/index.html</guid>
+      <description>Simplified Semantic Data Modeling (S2DM) - Approach Primer Table of Contents Background Why do we need such an approach? Subject Matter Experts are often NOT data modeling experts Vehicle Signal Specification has been an alternative but requires improvements Design principles Problem Requirements Goal Artifact Proposed solution approach General workflow Idea (1): Maintain Entity and Property sets Idea (2): Maintain a set of reusable labels Idea (3): Construct unique IDs Idea (4): Allow arbitrary hierarchies for different classification criteria Other ideas Examples Special considerations Special cross references Model versioning Background Why do we need such an approach?</description>
+    </item>
+    <item>
+      <title>Basic principle</title>
+      <link>https://covesa.github.io/s2dm/others/basic_principle/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/others/basic_principle/index.html</guid>
+      <description>Basic principle The idea is that multiple systems in the physical layer (e.g., databases, streaming platforms, applications, etc.) can share the same concepts. However, instead of arbitrarily modeling domains in the physical layer, the purpose is to have a unique way for specifying the concepts of common interest and its organizing principles in such a way that they are reused. This principle is a core part of a data-centric architecture, reducing undesired duplications and software waste when it is systematically applied.</description>
+    </item>
+  </channel>
+</rss>

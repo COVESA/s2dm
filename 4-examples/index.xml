@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Examples :: S2DM</title>
+    <link>https://covesa.github.io/s2dm/4-examples/index.html</link>
+    <description>Below are some examples of how the Simplified Semantic Data Modeling (S2DM) approach can be applied in different areas or use cases. Each example is linked to its corresponding folder in the repository for further exploration.&#xA;Example Use Cases Multiple Classification Schemes: Enabling multiple classification schemes using SKOS. Multiple Domains: Covering cross-references across different domains. Seat Capabilities: Specifying possible operations linked to seat-related objects or entities. Seat to VSS Mapping: Mapping modular seat specifications to the Vehicle Signal Specification (VSS).</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://covesa.github.io/s2dm/4-examples/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Version Bump CLI Examples</title>
+      <link>https://covesa.github.io/s2dm/4-examples/version-bump-cli/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/4-examples/version-bump-cli/index.html</guid>
+      <description>This section contains examples demonstrating different scenarios for the s2dm check version-bump command, based on GraphQL Inspector’s change detection.&#xA;Overview The version-bump command analyzes GraphQL schema changes and recommends the appropriate semantic version bump:&#xA;No version bump: Identical schemas Patch/Minor bump: Non-breaking changes (new optional fields, enum values) Major bump: Breaking changes (removed fields, type changes) Dangerous changes: Potentially problematic but not immediately breaking Examples 1. No Version Bump Needed Command:</description>
+    </item>
+  </channel>
+</rss>

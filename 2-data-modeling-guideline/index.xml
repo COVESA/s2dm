@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data modeling guideline :: S2DM</title>
+    <link>https://covesa.github.io/s2dm/2-data-modeling-guideline/index.html</link>
+    <description>Under construction…</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://covesa.github.io/s2dm/2-data-modeling-guideline/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Pre-defined elements</title>
+      <link>https://covesa.github.io/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/2-data-modeling-guideline/2.1.-pre-defined-elements/index.html</guid>
+      <description>Units Units are represented as enum values. For example:&#xA;enum VelocityUnitEnum { KILOMETER_PER_HOUR METERS_PER_SECOND } The name of the enum itself refers to the quantity kind (e.g., Velocity). A set of commonly used units is provided in the file unit_enums.graphql.&#xA;[!NOTE] It is planned to adopt and reuse an existing standard data model for units. At the moment, the units file is inspired by COVESA VSS Units file. The tentative model that will be used in the future is the QUDT units.</description>
+    </item>
+    <item>
+      <title>How to...?</title>
+      <link>https://covesa.github.io/s2dm/2-data-modeling-guideline/2.2-how-to/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://covesa.github.io/s2dm/2-data-modeling-guideline/2.2-how-to/index.html</guid>
+      <description>Under construction..&#xA;…model an object and/or a field? Simply use the GraphQL SDL. Object types start with type keyword.&#xA;type MyObject { someField: String # &lt;-- Built-in scalar as output anotherField: AnotherOutputType # &lt;-- Custom named type as output } Modeling Guide NOTE: This document explains how to contribute to an specific model (new or existing). If you want to contribute to the data modeling approach itself, then see the Contributing Guide instead.</description>
+    </item>
+  </channel>
+</rss>
