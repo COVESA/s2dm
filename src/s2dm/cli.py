@@ -95,9 +95,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path | None) -> None:
     log.setLevel(log_level)
     if log_level == "DEBUG":
         _ = install(show_locals=True)
-    # Attach rich console to click context
-    ctx.obj = ctx.obj or {}
-    ctx.obj["console"] = Console()
+    ctx.obj = Console()
 
 
 @click.group()
@@ -243,8 +241,8 @@ def vspec(schema: Path, output: Path) -> None:
     default=False,
     help="Output the version bump type for pipeline usage",
 )
-@click.pass_context
-def version_bump(ctx: click.Context, schema: Path, previous: Path, output_type: bool) -> None:
+@click.pass_obj
+def version_bump(console: Console, schema: Path, previous: Path, output_type: bool) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     Returns:
@@ -260,8 +258,6 @@ def version_bump(ctx: click.Context, schema: Path, previous: Path, output_type: 
 
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     diff_result = inspector.diff(schema_temp_path)
-
-    console = ctx.obj["console"]
 
     # Determine version bump type based on output analysis
     version_bump_type = None
@@ -300,8 +296,8 @@ def version_bump(ctx: click.Context, schema: Path, previous: Path, output_type: 
 
 @check.command(name="constraints")
 @schema_option
-@click.pass_context
-def check_constraints(ctx: click.Context, schema: Path) -> None:
+@click.pass_obj
+def check_constraints(console: Console, schema: Path) -> None:
     """
     Enforce intended use of custom directives and naming conventions.
     Checks:
@@ -315,7 +311,6 @@ def check_constraints(ctx: click.Context, schema: Path) -> None:
     constraint_checker = ConstraintChecker(gql_schema)
     errors = constraint_checker.run(objects)
 
-    console = ctx.obj["console"]
     if errors:
         console.rule("[bold red]Constraint Violations")
         for err in errors:
@@ -330,14 +325,13 @@ def check_constraints(ctx: click.Context, schema: Path) -> None:
 @validate.command(name="graphql")
 @schema_option
 @output_option
-@click.pass_context
-def validate_graphql(ctx: click.Context, schema: Path, output: Path) -> None:
+@click.pass_obj
+def validate_graphql(console: Console, schema: Path, output: Path) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     validation_result = inspector.introspect(output)
 
-    console = ctx.obj["console"]
     console.print(validation_result.output)
     sys.exit(validation_result.returncode)
 
@@ -354,8 +348,8 @@ def validate_graphql(ctx: click.Context, schema: Path, output: Path) -> None:
     required=True,
     help="The GraphQL schema file to validate against",
 )
-@click.pass_context
-def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Path | None) -> None:
+@click.pass_obj
+def diff_graphql(console: Console, schema: Path, val_schema: Path, output: Path | None) -> None:
     """Diff for two GraphQL schemas."""
     log.info(f"Comparing schemas: {schema} and {val_schema} and writing output to {output}")
 
@@ -371,7 +365,6 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
         processed = pretty_print_dict_json(diff_result.as_dict())
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
-    console = ctx.obj["console"]
     console.print(diff_result.output)
     sys.exit(diff_result.returncode)
 
@@ -390,15 +383,14 @@ def diff_graphql(ctx: click.Context, schema: Path, val_schema: Path, output: Pat
     default="ns",
     help="The prefix to use for the URIs",
 )
-@click.pass_context
-def export_concept_uri(ctx: click.Context, schema: Path, output: Path | None, namespace: str, prefix: str) -> None:
+@click.pass_obj
+def export_concept_uri(console: Console, schema: Path, output: Path | None, namespace: str, prefix: str) -> None:
     """Generate concept URIs for a GraphQL schema and output as JSON-LD."""
     graphql_schema = load_schema(schema)
     concepts = iter_all_concepts(get_all_named_types(graphql_schema))
     concept_uri_model = create_concept_uri_model(concepts, namespace, prefix)
     data = concept_uri_model.to_json_ld()
 
-    console = ctx.obj["console"]
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
         with open(output, "w", encoding="utf-8") as output_file:
@@ -422,8 +414,8 @@ def export_concept_uri(ctx: click.Context, schema: Path, output: Path | None, na
 )
 @optional_output_option
 @click.option("--strict-mode/--no-strict-mode", default=False)
-@click.pass_context
-def export_id(ctx: click.Context, schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
+@click.pass_obj
+def export_id(console: Console, schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
     """Generate concept IDs for GraphQL schema fields and enums."""
     exporter = IDExporter(
         schema=schema,
@@ -434,7 +426,6 @@ def export_id(ctx: click.Context, schema: Path, units: Path, output: Path | None
     )
     node_ids = exporter.run()
 
-    console = ctx.obj["console"]
     console.rule("[bold blue]Concept IDs")
     console.print(node_ids)
 
@@ -460,9 +451,9 @@ def export_id(ctx: click.Context, schema: Path, units: Path, output: Path | None
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@click.pass_context
+@click.pass_obj
 def registry_init(
-    ctx: click.Context,
+    console: Console,
     schema: Path,
     units: Path,
     output: Path,
@@ -494,7 +485,6 @@ def registry_init(
     )
     spec_history_result = spec_history_exporter.init_spec_history_model(concept_uris, concept_ids, concept_uri_model)
 
-    console = ctx.obj["console"]
     console.rule("[bold blue]Concept IDs")
     console.print(concept_ids)
     console.rule("[bold blue]Concept URIs")
@@ -531,9 +521,9 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@click.pass_context
+@click.pass_obj
 def registry_update(
-    ctx: click.Context,
+    console: Console,
     schema: Path,
     units: Path,
     spec_history: Path,
@@ -571,7 +561,6 @@ def registry_update(
         spec_history_path=spec_history,
     )
 
-    console = ctx.obj["console"]
     console.rule("[bold blue]Concept IDs")
     console.print(concept_ids)
     console.rule("[bold blue]Concept URIs")
@@ -586,8 +575,8 @@ def registry_update(
 @click.option("--type", "-t", required=True, help="Type or field you want to search the graphql schema for.")
 @click.option("--case-insensitive", "-i", is_flag=True, default=False, help="Perform a case-insensitive search.")
 @click.option("--exact", is_flag=True, default=False, help="Perform an exact match search.")
-@click.pass_context
-def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive: bool, exact: bool) -> None:
+@click.pass_obj
+def search_graphql(console: Console, schema: Path, type: str, case_insensitive: bool, exact: bool) -> None:
     """Search for a type or field in the GraphQL schema. If type was found returns type including all fields,
     if fields was found returns only field in parent type"""
 
@@ -607,7 +596,6 @@ def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive
         partial=not exact,
         case_insensitive=case_insensitive,
     )
-    console = ctx.obj["console"]
     console.rule(f"[bold blue] Search results for '{type}'")
     if not type_results and not field_results:
         console.print(f"[yellow]No matches found for '{type}'.")
@@ -632,8 +620,8 @@ def search_graphql(ctx: click.Context, schema: Path, type: str, case_insensitive
     required=False,
     help="Output file, only .json allowed here",
 )
-@click.pass_context
-def similar_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path | None) -> None:
+@click.pass_obj
+def similar_graphql(console: Console, schema: Path, keyword: str, output: Path | None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
     whole schema (in %)."""
     schema_temp_path = create_tempfile_to_composed_schema(schema)
@@ -644,7 +632,6 @@ def similar_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path
     # if keyword == "all" search all elements otherwise only keyword
     search_result = inspector.similar(output) if keyword == "all" else inspector.similar_keyword(keyword, output)
 
-    console = ctx.obj["console"]
     console.rule(f"[bold blue] Search result for '{keyword}'")
     console.print(search_result.output)
     sys.exit(search_result.returncode)
@@ -654,8 +641,8 @@ def similar_graphql(ctx: click.Context, schema: Path, keyword: str, output: Path
 # ----------
 @stats.command(name="graphql")
 @schema_option
-@click.pass_context
-def stats_graphql(ctx: click.Context, schema: Path) -> None:
+@click.pass_obj
+def stats_graphql(console: Console, schema: Path) -> None:
     """Get stats of schema."""
     gql_schema = load_schema(schema)
 
@@ -691,7 +678,6 @@ def stats_graphql(ctx: click.Context, schema: Path) -> None:
         if kind == "GraphQLScalarType" and name not in ("Int", "Float", "String", "Boolean", "ID"):
             type_counts["custom_types"][name] = type_counts["custom_types"].get(name, 0) + 1
 
-    console = ctx.obj["console"]
     console.rule("[bold blue]GraphQL Schema Type Counts")
     console.print(type_counts)
 
