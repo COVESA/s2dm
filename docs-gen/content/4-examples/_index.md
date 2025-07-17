@@ -1,6 +1,6 @@
 ---
 title: Examples
-weight: 30
+weight: 4
 ---
 
 Below are some examples of how the Simplified Semantic Data Modeling (`S2DM`) approach can be applied in different areas or use cases. Each example is linked to its corresponding folder in the repository for further exploration.

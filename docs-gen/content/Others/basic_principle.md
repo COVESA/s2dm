@@ -1,7 +1,5 @@
 ---
 title: Basic principle
-weight: 19
-chapter: false
 ---
 
 ## Basic principle

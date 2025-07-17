@@ -1,5 +1,5 @@
 ---
-title: (5) Specification registry
+title: Specification registry
 weight: 5
 chapter: false
 ---

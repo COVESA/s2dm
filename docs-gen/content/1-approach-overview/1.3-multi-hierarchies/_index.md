@@ -1,5 +1,5 @@
 ---
-title: (3) Multi hierarchies
+title: Multi hierarchies
 weight: 3
 chapter: false
 ---
