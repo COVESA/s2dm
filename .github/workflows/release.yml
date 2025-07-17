@@ -87,7 +87,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           # Bump version without creating a tag
           uv run bump-my-version bump ${{ steps.version.outputs.bump }} --no-tag
 
