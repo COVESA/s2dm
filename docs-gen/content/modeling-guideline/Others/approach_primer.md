@@ -5,28 +5,6 @@ chapter: false
 
 ## Simplified Semantic Data Modeling (S2DM) - Approach Primer
 
-### Table of Contents
-1. [Background](#background)
-    1. [Why do we need such an approach?](#why-do-we-need-such-an-approach)
-        1. [Subject Matter Experts are often NOT data modeling experts](#subject-matter-experts-are-often-not-data-modeling-experts)
-        2. [Vehicle Signal Specification has been an alternative but requires improvements](#vehicle-signal-specification-has-been-an-alternative-but-requires-improvements)
-    2. [Design principles](#design-principles)
-        1. [Problem](#problem)
-        2. [Requirements](#requirements)
-        3. [Goal](#goal)
-        4. [Artifact](#artifact)
-2. [Proposed solution approach](#proposed-solution-approach)
-    1. [General workflow](#general-workflow)
-    2. [Idea (1): Maintain Entity and Property sets](#idea-1-maintain-entity-and-property-sets)
-    3. [Idea (2): Maintain a set of reusable labels](#idea-2-maintain-a-set-of-reusable-labels)
-    4. [Idea (3): Construct unique IDs](#idea-3-construct-unique-ids)
-    5. [Idea (4): Allow arbitrary hierarchies for different classification criteria](#idea-4-allow-arbitrary-hierarchies-for-different-classification-criteria)
-    6. [Other ideas](#other-ideas)
-3. [Examples](#examples)
-4. [Special considerations](#special-considerations)
-    1. [Special cross references](#special-cross-references)
-    2. [Model versioning](#model-versioning)
-
 ## Background
 ### Why do we need such an approach?
 #### Subject Matter Experts are often NOT data modeling experts
@@ -68,10 +46,10 @@ The reference mapping between the Vehicle Signal Specification (VSS) and this S2
 | **Support for cross-domain references** | Multiple cross-referenced domains are supported natively by the language (useful for contextual data). |
 | **Community & Tools** | Data model can be used in multiple up-to-date public tools. Modeling approach is based on a language that is already established in the open community. |
 
-![VSS limits criteria](images/vss-limits-criteria.jpg)
+![Goal](/images/vss-limits-criteria.jpg)
 #### Goal
 - To minimize the effort needed to develop, extend, and maintain vehicle-related semantic data models.
-![Current vs desired approach](images/current-vs-desired.jpg)
+![Goal](/images/current-vs-desired.jpg)
 #### Artifact
 - A guideline on how to model vehicle-related data with proper semantics and good practices.
 
@@ -89,7 +67,7 @@ In the case that no existing data matches his needs, simple steps must allow the
 To that end, such a process is proposed with the following ideas:
 
 
-![General flow diagram](images/general-flow.jpg)
+![General flow](/s2dm/images/general-flow.jpg)
 
 ### Idea (1): Maintain Entity and Property sets
 In an application, most of the value is centered around what one can read or write.

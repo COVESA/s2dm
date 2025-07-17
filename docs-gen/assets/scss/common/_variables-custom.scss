@@ -1,14 +1,18 @@
 // Put your custom SCSS variables here
 $primary: $db-bluishCyan-100;
 
+// Purple link colors
+$link-color: #6f42c1; // Purple color for links
+$link-hover-color: #5a2d91; // Darker purple for hover
+
 // Dark mode
 // $link-color-dark: aquamarine;
 // $button-color-dark: aquamarine;
 
-:root,
-::backdrop {
+// :root,
+// ::backdrop {
 // --sl-color-accent-high: aquamarine;
-}
+// }
 
 
 $container-max-widths: (

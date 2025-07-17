@@ -8,7 +8,7 @@ mainSections = ["modeling-guideline", "tools", "examples"]
 # Doks (@hyas/doks-core)
 [doks]
   # Color mode
-  colorMode = "light" # auto (default), light or dark
+  colorMode = "auto" # auto (default), light or dark
   colorModeToggler = true # true (default) or false (this setting is only relevant when colorMode = auto)
 
   # Navbar

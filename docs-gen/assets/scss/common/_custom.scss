@@ -1,16 +1,121 @@
 // Put your custom SCSS code here
 //
 
-// .bg-dots {
-// margin-top: 0rem;
-// }
-.section-features {
-    // margin-top: -1rem;
+// Purple link styling
+a {
+    color: #6f42c1 !important; // Purple color for all links
+    text-decoration: none;
+    
+    &:hover, &:focus {
+        color: #5a2d91 !important; // Darker purple on hover
+        text-decoration: underline;
+    }
 }
+
+// Content area links with underlines
+.docs-content p a,
+.docs-content li a,
+.content article p a,
+.content article li a {
+    color: #6f42c1 !important;
+    text-decoration: underline;
+    
+    &:hover, &:focus {
+        color: #5a2d91 !important;
+        text-decoration: underline;
+    }
+}
+
+// Navigation and other specific links
+.nav-link,
+.navbar-nav .nav-link {
+    color: #6f42c1 !important;
+    
+    &:hover, &:focus {
+        color: #5a2d91 !important;
+    }
+}
+
+// Keep existing custom styles
+// .section-features {
+//     margin-top: -1rem;
+// }
 
 .page-nav {
     display: none !important;
+}
 
+// Text alignment - ensure all text is left-aligned
+body,
+.container,
+.content,
+.docs-content,
+.main,
+article,
+section,
+div,
+p,
+h1, h2, h3, h4, h5, h6,
+.text-center,
+.text-end,
+.text-justify {
+    text-align: left !important;
+}
+
+// Specific content areas
+.docs-content,
+.content article,
+.page-content,
+.markdown-body {
+    text-align: left !important;
+}
+
+// Headers and titles
+.page-title,
+.article-title,
+.section-title,
+.card-title,
+.navbar-brand {
+    text-align: left !important;
+}
+
+// Navigation items (keep them properly aligned)
+.navbar-nav {
+    text-align: left !important;
+}
+
+// Lists
+ul, ol, li {
+    text-align: left !important;
+}
+
+// Tables
+table,
+td,
+th {
+    text-align: left !important;
+}
+
+// Hero section and landing page
+.hero,
+.hero-title,
+.hero-text,
+.lead {
+    text-align: left !important;
+}
+
+// Cards and components
+.card,
+.card-body,
+.card-text,
+.card-header {
+    text-align: left !important;
+}
+
+// Footer
+.footer,
+.footer-content {
+    text-align: left !important;
 }
 
 .head-button {
@@ -18,24 +123,4 @@
     @media screen and (min-width: 1200px) and (max-width: 1400px) {
         min-width: 10rem;
     }
-}
-
-.docs-content p a {
-     text-decoration: underline;
-}
-
-.docs-content li a {
-     text-decoration: underline;
-}
-
-summary {
-
-}
-
-.content article p a {
-    text-decoration: underline;
-}
-
-.content article li a {
-    text-decoration: underline;
 }
