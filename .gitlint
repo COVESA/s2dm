@@ -1,0 +1,31 @@
+[general]
+
+# Ignore rules, reference them by id or name (comma-separated)
+
+ignore=B6
+
+# Use search semantics for regex matching
+
+regex-style-search=True
+
+# Enable specific community contributed rules
+
+contrib=contrib-title-conventional-commits,CC1
+
+# Set the extra-path where gitlint will search for user defined rules
+
+# extra-path=./gitlint_rules/my_rules.py
+
+### Configuring rules ###
+
+[title-max-length]
+line-length=100
+
+[title-min-length]
+min-length=5
+
+# Ignore all rules for GitHub Actions bot commits
+
+[ignore-by-author-name]
+regex=GitHub Action
+ignore=all

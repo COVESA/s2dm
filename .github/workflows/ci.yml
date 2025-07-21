@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: setup python
         uses: actions/setup-python@v5
@@ -38,6 +40,18 @@ jobs:
       - name: pre-commit
         run: |
           uv run pre-commit run --all-files
+
+      - name: gitlint
+        run: |
+          # Determine base branch - use PR base if in PR, otherwise main
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_BRANCH="${{ github.base_ref }}"
+          else
+            BASE_BRANCH="main"
+          fi
+          echo "Using base branch: $BASE_BRANCH"
+          # Run gitlint on commits since base branch
+          uv run gitlint --commits $(git merge-base HEAD origin/$BASE_BRANCH)..HEAD
 
       - name: mypy
         run: |

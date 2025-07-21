@@ -1,0 +1,151 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: sync
+        run: uv sync
+
+      - name: install git-cliff
+        run: |
+          curl -L https://github.com/orhun/git-cliff/releases/download/v2.9.1/git-cliff-2.9.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv git-cliff-2.9.1/git-cliff /usr/local/bin/
+
+      - name: determine version bump
+        id: version
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%s" ${LAST_TAG}..HEAD)
+          fi
+
+          echo "Commits since last tag:"
+          echo "$COMMITS"
+
+          # Determine version bump based on conventional commits
+          MAJOR=false
+          MINOR=false
+          PATCH=false
+
+          while IFS= read -r commit; do
+            echo "Analyzing: $commit"
+            if echo "$commit" | grep -qE "^[a-zA-Z]+(\(.+\))?!:"; then
+              echo "Breaking change detected"
+              MAJOR=true
+            elif echo "$commit" | grep -qE "^feat(\(.+\))?:"; then
+              echo "Feature detected"
+              MINOR=true
+            elif echo "$commit" | grep -qE "^(fix|perf)(\(.+\))?:"; then
+              echo "Fix/perf detected"
+              PATCH=true
+            elif echo "$commit" | grep -qE "BREAKING CHANGE:"; then
+              echo "Breaking change in body detected"
+              MAJOR=true
+            fi
+          done <<< "$COMMITS"
+
+          # Determine bump type (major > minor > patch)
+          if [ "$MAJOR" = true ]; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+            echo "Version bump: MAJOR"
+          elif [ "$MINOR" = true ]; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+            echo "Version bump: MINOR"
+          elif [ "$PATCH" = true ]; then
+            echo "bump=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH"
+          else
+            echo "bump=none" >> $GITHUB_OUTPUT
+            echo "No version bump needed"
+          fi
+
+      - name: bump version and update changelog
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Bump version without creating a tag
+          uv run bump-my-version bump ${{ steps.version.outputs.bump }} --no-tag
+
+          # Get the new version from .bumpversion.toml
+          NEW_VERSION="v$(grep -E '^current_version = ' .bumpversion.toml | cut -d'"' -f2)"
+
+          # Generate changelog with git-cliff for the changes since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            CHANGELOG=$(git-cliff --latest --strip=header)
+          else
+            CHANGELOG=$(git-cliff ${LAST_TAG}..HEAD --strip=header)
+          fi
+
+          CHANGELOG=$(echo "$CHANGELOG" | sed "s/\[unreleased\]/[${NEW_VERSION#v}] - $(date +%Y-%m-%d)/")
+
+          # Update CHANGELOG.md - insert new version above the previous version
+          # Create temporary file with the new changelog entry
+          echo "${CHANGELOG}" > temp_changelog.md
+          echo "" >> temp_changelog.md
+
+          # Insert the new changelog entry after the header (line 7) and before the first version entry
+          head -n 7 CHANGELOG.md > updated_changelog.md
+          cat temp_changelog.md >> updated_changelog.md
+          tail -n +8 CHANGELOG.md >> updated_changelog.md
+          mv updated_changelog.md CHANGELOG.md
+          rm temp_changelog.md
+
+          # Commit the updated CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for ${NEW_VERSION}"
+
+          # Create the tag on this commit
+          git tag ${NEW_VERSION}
+
+      - name: push changes
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          git push origin ${{ github.ref_name }} --tags
+
+      - name: create release
+        if: steps.version.outputs.bump != 'none'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the new version
+          NEW_VERSION=$(git describe --tags --abbrev=0)
+
+          # Generate changelog with git-cliff
+          LAST_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+          if [ -z "$LAST_TAG" ]; then
+            CHANGELOG=$(git-cliff --latest --strip=header)
+          else
+            CHANGELOG=$(git-cliff ${LAST_TAG}..${NEW_VERSION} --strip=header)
+          fi
+
+          # Create GitHub release
+          gh release create ${NEW_VERSION} \
+            --title "${NEW_VERSION}" \
+            --notes "## Changes
+
+          ${CHANGELOG}"
