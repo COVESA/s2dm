@@ -15,7 +15,12 @@ from graphql import (
     is_list_type,
     is_non_null_type,
 )
-from graphql.type import GraphQLField, GraphQLNamedType, GraphQLObjectType, GraphQLSchema, GraphQLWrappingType
+from graphql.type import (
+    GraphQLField,
+    GraphQLNamedType,
+    GraphQLObjectType,
+    GraphQLSchema,
+)
 from graphql.utilities import print_schema
 
 from s2dm import log
@@ -283,16 +288,21 @@ def get_field_case(field: GraphQLField) -> FieldCase:
         FieldCase: The case of the field as one of the 6 possible cases that are possible with the GraphQL SDL.
         without custom directives.
     """
-    if is_non_null_type(field.type):
-        if is_list_type(field.type) and isinstance(field.type, GraphQLWrappingType):
-            if is_non_null_type(field.type.of_type) and isinstance(field.type.of_type, GraphQLWrappingType):
+    t = field.type
+
+    if is_non_null_type(t):
+        t = t.of_type  # type: ignore[union-attr]
+        if is_list_type(t):
+            if is_non_null_type(t.of_type):
                 return FieldCase.NON_NULL_LIST_NON_NULL
             return FieldCase.NON_NULL_LIST
         return FieldCase.NON_NULL
-    if is_list_type(field.type):
-        if isinstance(field.type, GraphQLWrappingType) and is_non_null_type(field.type.of_type):
+
+    if is_list_type(t):
+        if is_non_null_type(t.of_type):  # type: ignore[union-attr]
             return FieldCase.LIST_NON_NULL
         return FieldCase.LIST
+
     return FieldCase.DEFAULT
 
 
