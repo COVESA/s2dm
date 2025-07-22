@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  ZERO_BASED_VERSIONING: true # set this to false when you want to release v1.0.0
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -67,9 +70,15 @@ jobs:
           done <<< "$COMMITS"
 
           # Determine bump type (major > minor > patch)
+          # Use minor bump for breaking changes when zero-based versioning is enabled
           if [ "$MAJOR" = true ]; then
-            echo "bump=major" >> $GITHUB_OUTPUT
-            echo "Version bump: MAJOR"
+            if [ "$ZERO_BASED_VERSIONING" = "true" ]; then
+              echo "bump=minor" >> $GITHUB_OUTPUT
+              echo "Version bump: MINOR (zero-based versioning - breaking change)"
+            else
+              echo "bump=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR"
+            fi
           elif [ "$MINOR" = true ]; then
             echo "bump=minor" >> $GITHUB_OUTPUT
             echo "Version bump: MINOR"
