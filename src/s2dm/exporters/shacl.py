@@ -53,6 +53,13 @@ def get_xsd_datatype(scalar: GraphQLScalarType) -> URIRef:
     return XSD[GRAPHQL_SCALAR_TO_XSD[scalar.name]]
 
 
+def add_comment_to_property_node(field: GraphQLField, property_node: BNode, graph: Graph) -> None:
+    """Add comment metadata to a property node if it exists."""
+    comment = get_argument_content(field, "metadata", "comment")
+    if comment and comment != {}:
+        _ = graph.add((property_node, RDFS.comment, Literal(comment)))
+
+
 def translate_to_shacl(
     schema_path: Path,
     shapes_namespace: str,
@@ -142,9 +149,7 @@ def create_property_shape_with_literal(
     if field.description:
         _ = graph.add((property_node, SH.description, Literal(field.description)))
 
-    comment = get_argument_content(field, "metadata", "comment")
-    if comment and comment != {}:
-        _ = graph.add((property_node, RDFS.comment, Literal(comment)))
+    add_comment_to_property_node(field, property_node, graph)
 
 
 def create_property_shape_with_iri(
@@ -173,6 +178,8 @@ def create_property_shape_with_iri(
 
     if field.description:
         _ = graph.add((property_node, SH.description, Literal(field.description)))
+
+    add_comment_to_property_node(field, property_node, graph)
 
 
 def process_field(

@@ -2,52 +2,70 @@
 type TestTypeModifiers {
     # A - field.case.DEFAULT
     """Example (A.1) DEFAULT with scalar output type"""
-    defaultScalar: Boolean
+    defaultScalar: Boolean @metadata(comment: "Comment example A.1")
     """Example (A.2) DEFAULT with object output type"""
-    defaultType: ExampleType
+    defaultType: ExampleType @metadata(comment: "Comment example A.2")
     """Example (A.3) DEFAULT with object output type with instances"""
-    defaultWithInstances: ExampleTypeWithInstances
+    defaultWithInstances: ExampleTypeWithInstances @metadata(comment: "Comment example A.3")
 
 
     # B - field.case.NON_NULL
     """Example (B.1) NON_NULL with scalar output type"""
-    nonNullScalar: Boolean!
+    nonNullScalar: Boolean! @metadata(comment: "Comment example B.1")
     """Example (B.2) NON_NULL with object output type"""
-    nonNull: ExampleType!
+    nonNull: ExampleType! @metadata(comment: "Comment example B.2")
     """Example (B.3) NON_NULL with object output type with instances"""
-    nonNullWithInstances: ExampleTypeWithInstances!
+    nonNullWithInstances: ExampleTypeWithInstances! @metadata(comment: "Comment example B.3")
 
     # C - field.case.LIST
-    #listScalar: [Boolean]
-    #list: [ExampleType]
-    #listWithInstances: [ExampleTypeWithInstances]
+    """Example (C.1) LIST with scalar output type"""
+    listScalar: [Boolean] @metadata(comment: "Comment example C.1")
+    """Example (C.2) LIST with object output type"""
+    list: [ExampleType] @metadata(comment: "Comment example C.2")
+    """Example (C.3) LIST with object output type with instances"""
+    listWithInstances: [ExampleTypeWithInstances] @metadata(comment: "Comment example C.3")
 
     # D - field.case.NON_NULL_LIST
-    #nonNullListScalar: [Boolean]!
-    #nonNullList: [ExampleType]!
-    #nonNullListWithInstances: [ExampleTypeWithInstances]!
+    """Example (D.1) NON_NULL_LIST with scalar output type"""
+    nonNullListScalar: [Boolean]! @metadata(comment: "Comment example D.1")
+    """Example (D.2) NON_NULL_LIST with object output type"""
+    nonNullList: [ExampleType]! @metadata(comment: "Comment example D.2")
+    """Example (D.3) NON_NULL_LIST with object output type with instances"""
+    nonNullListWithInstances: [ExampleTypeWithInstances]! @metadata(comment: "Comment example D.3")
 
     # E - field.case.LIST_NON_NULL
-    #listNonNullScalar: [Boolean!]
-    #listNonNull: [ExampleType!]
-    #listNonNullWithInstances: [ExampleTypeWithInstances!]
+    """Example (E.1) LIST_NON_NULL with scalar output type"""
+    listNonNullScalar: [Boolean!] @metadata(comment: "Comment example E.1")
+    """Example (E.2) LIST_NON_NULL with object output type"""
+    listNonNull: [ExampleType!] @metadata(comment: "Comment example E.2")
+    """Example (E.3) LIST_NON_NULL with object output type with instances"""
+    listNonNullWithInstances: [ExampleTypeWithInstances!] @metadata(comment: "Comment example E.3")
 
     # F - field.case.NON_NULL_LIST_NON_NULL
-    #nonNullListNonNullScalar: [Boolean!]!
-    #nonNullListNonNull: [ExampleType!]!
-    #nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]!
+    """Example (F.1) NON_NULL_LIST_NON_NULL with scalar output type"""
+    nonNullListNonNullScalar: [Boolean!]! @metadata(comment: "Comment example F.1")
+    """Example (F.2) NON_NULL_LIST_NON_NULL with object output type"""
+    nonNullListNonNull: [ExampleType!]! @metadata(comment: "Comment example F.2")
+    """Example (F.3) NON_NULL_LIST_NON_NULL with object output type with instances"""
+    nonNullListNonNullWithInstances: [ExampleTypeWithInstances!]! @metadata(comment: "Comment example F.3")
 
     # G - field.case.SET
-    setScalar: [Boolean] @noDuplicates @cardinality(max:5)
-    set: [ExampleType] @noDuplicates @cardinality(max:5)
-    setEnum: [SomeEnum] @noDuplicates @cardinality(max:5)
-    setWithInstances: [ExampleTypeWithInstances] @noDuplicates @cardinality(max:5)
+    """Example (G.1) SET with scalar output type"""
+    setScalar: [Boolean] @noDuplicates @cardinality(max:5) @metadata(comment: "Comment example G.1")
+    """Example (G.2) SET with object output type"""
+    set: [ExampleType] @noDuplicates @cardinality(max:5) @metadata(comment: "Comment example G.2")
+    """Example (G.3) SET with enum output type"""
+    setEnum: [SomeEnum] @noDuplicates @cardinality(max:5) @metadata(comment: "Comment example G.3")
+    """Example (G.4) SET with object output type with instances"""
+    setWithInstances: [ExampleTypeWithInstances] @noDuplicates @cardinality(max:5) @metadata(comment: "Comment example G.4")
 
     # H - field.case.SET_NON_NULL
-    setNonNullScalar: [Boolean!] @noDuplicates @cardinality(max:10)
-    setNonNull: [ExampleType!] @noDuplicates @cardinality(max:10)
-    setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates @cardinality(max:10)
-
+    """Example (H.1) SET_NON_NULL with scalar output type"""
+    setNonNullScalar: [Boolean!] @noDuplicates @cardinality(max:10) @metadata(comment: "Comment example H.1")
+    """Example (H.2) SET_NON_NULL with object output type"""
+    setNonNull: [ExampleType!] @noDuplicates @cardinality(max:10) @metadata(comment: "Comment example H.2")
+    """Example (H.3) SET_NON_NULL with enum output type"""
+    setNonNullWithInstances: [ExampleTypeWithInstances!] @noDuplicates @cardinality(max:10) @metadata(comment: "Comment example H.3")
 }
 
 type ExampleType {
