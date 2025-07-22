@@ -50,6 +50,7 @@ dev = [
     "faker>=37.1.0",
     "hypothesis>=6.131.9",
     "types-pyyaml>=6.0.12.20250516",
+    "gitlint>=0.20.0.dev48",
 ]
 
 [tool.mypy]
