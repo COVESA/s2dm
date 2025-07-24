@@ -1,0 +1,14 @@
+# Overrides for production environment
+baseURL = "https://giaccomole.github.io/s2dm/"
+relativeURLs = false
+canonifyURLs = true
+disableLiveReload = true
+enableRobotsTXT = true
+
+# Ensure consistent URL generation
+uglyURLs = false
+removePathAccents = false
+
+# Asset processing
+[params]
+  cdn_url = "https://giaccomole.github.io/s2dm"

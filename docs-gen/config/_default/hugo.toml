@@ -1,0 +1,106 @@
+title = "S2DM"
+baseURL= ""
+relativeURLs= true
+canonifyURLs= false
+publishDir = "../docs"
+disableAliases = true
+disableHugoGeneratorInject = true
+timeout = 120
+disableKinds = []
+enableEmoji = true
+enableGitInfo = false
+enableRobotsTXT = true
+languageCode = "en-us"
+[pagination]
+  pagerSize = 10
+rssLimit = 10
+summarylength = 20 # 70 (default)
+
+# Multilingual
+defaultContentLanguage = "en"
+disableLanguages = []
+defaultContentLanguageInSubdir = false
+
+copyRight = "Copyright (c) COVESA"
+
+[build.buildStats]
+  enable = true
+
+[outputs]
+  home = ["HTML", "RSS", "searchIndex"]
+  section = ["HTML", "RSS", "SITEMAP"]
+
+[outputFormats.searchIndex]
+  mediaType = "application/json"
+  baseName = "search-index"
+  isPlainText = true
+  notAlternative = true
+
+# Add output format for section sitemap.xml
+[outputFormats.SITEMAP]
+  mediaType = "application/xml"
+  baseName = "sitemap"
+  isHTML = false
+  isPlainText = true
+  noUgly = true
+  rel  = "sitemap"
+
+[sitemap]
+  changefreq = "monthly"
+  filename = "sitemap.xml"
+  priority = 0.5
+
+[caches]
+  [caches.getjson]
+    dir = ":cacheDir/:project"
+    maxAge = -1 # "30m"
+
+[taxonomies]
+  # contributor = "contributors"
+  # category = "categories"
+  # tag = "tags"
+
+[permalinks]
+  blog = "/blog/:slug/"
+  docs = "/docs/:sections[1:]/:slug/"
+# docs = "/docs/1.0/:sections[1:]/:slug/"
+
+[minify.tdewolff.html]
+  keepWhitespace = false
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+
+[related]
+  threshold = 80
+  includeNewer = true
+  toLower = false
+    [[related.indices]]
+      name = "categories"
+      weight = 100
+    [[related.indices]]
+      name = "tags"
+      weight = 80
+    [[related.indices]]
+      name = "date"
+      weight = 10
+
+[imaging]
+  anchor = "Center"
+  bgColor = "#ffffff"
+  hint = "photo"
+  quality = 85
+  resampleFilter = "Lanczos"
+
+[params]
+  # Change default color scheme with a variant one. Can be "red", "blue", "green".
+  themeVariant = "green"
+  disableInlineCopyToClipBoard = true
+  disableLandingPageButton = true
+
+[[menu.shortcuts]]
+name = "<i class='fab fa-github'></i> Github repo"
+identifier = "ds"
+url = "https://github.com/covesa/s2dm"
+weight = 10

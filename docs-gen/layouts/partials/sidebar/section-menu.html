@@ -1,0 +1,51 @@
+{{- $sidebar := printf "sidebar_%s" .Section }}
+{{- with index site.Menus $sidebar }}
+    {{ partial "sidebar/render-section-menu.html" (dict "currentPage" $ "nodes" .) }}
+{{- else }}
+  {{- /* Custom navigation for nested docs structure */ -}}
+  {{ if eq .Section "docs" }}
+    {{- /* Show docs subsections in specific order */ -}}
+    {{ $docsSection := .Site.GetPage "section" "docs" }}
+    {{ $sectionOrder := slice "approach-overview" "data-modeling-guideline" "tools" }}
+    <nav class="section-nav docs-links">
+      <ul class="list-unstyled">
+        {{ range $sectionOrder }}
+          {{ $sectionPath := printf "docs/%s" . }}
+          {{ $section := $.Site.GetPage "section" $sectionPath }}
+          {{ if $section }}
+            <li>
+              <strong><a href="{{ $section.RelPermalink }}">{{ $section.Title }}</a></strong>
+              {{ with $section.RegularPages }}
+                <ul class="list-unstyled list-nested">
+                  {{ range . }}
+                    <li{{ if eq $.RelPermalink .RelPermalink }} class="active"{{ end }}>
+                      <a href="{{ .RelPermalink }}"{{ if eq $.RelPermalink .RelPermalink }} aria-current="page"{{ end }}>
+                        {{ .Title }}
+                      </a>
+                    </li>
+                  {{ end }}
+                </ul>
+              {{ end }}
+            </li>
+          {{ end }}
+        {{ end }}
+      </ul>
+    </nav>
+  {{ else }}
+    {{- /* Original logic for other sections */ -}}
+    {{ $section := (.Site.GetPage "section" .Section) }}
+    {{ with $section.RegularPages }}
+      <nav class="section-nav docs-links">
+        <ul class="list-unstyled">
+          {{ range . }}
+            <li{{ if eq $.RelPermalink .RelPermalink }} class="active"{{ end }}>
+              <a href="{{ .RelPermalink }}"{{ if eq $.RelPermalink .RelPermalink }} aria-current="page"{{ end }}>
+                {{ .Title }}
+              </a>
+            </li>
+          {{ end }}
+        </ul>
+      </nav>
+    {{ end }}
+  {{ end }}
+{{- end }}

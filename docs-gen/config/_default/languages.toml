@@ -1,0 +1,10 @@
+[en]
+  languageName = "English"
+  contentDir = "content/en"
+  weight = 10
+  [en.params]
+    languageISO = "EN"
+    languageTag = "en-US"
+    alertText = '4. April 2024 - Embargo is over. We are live.'
+    # alertText = '<a class="alert-link stretched-link fw-normal" href="/">April 4th - Embargo is over. We are live.</a>'
+    footer = '<a class="text-muted" href="https://covesa.global/">Connected Vehicle Systems Alliance</a>'
