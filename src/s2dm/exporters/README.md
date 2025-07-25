@@ -329,49 +329,53 @@ The JSON Schema exporter produces:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
     "Vehicle": {
-      "$comment": "Vehicle entity",
-      "x-metadata": {
-        "vssType": "branch"
-      },
       "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string"
         },
         "door": {
-          "ROW1": {
-            "additionalProperties": false,
-            "properties": {
-              "DRIVERSIDE": {
-                "$ref": "#/$defs/Door"
+          "additionalProperties": false,
+          "properties": {
+            "ROW1": {
+              "additionalProperties": false,
+              "properties": {
+                "DRIVERSIDE": {
+                  "$ref": "#/$defs/Door"
+                },
+                "MIDDLE": {
+                  "$ref": "#/$defs/Door"
+                },
+                "PASSENGERSIDE": {
+                  "$ref": "#/$defs/Door"
+                }
               },
-              "MIDDLE": {
-                "$ref": "#/$defs/Door"
-              },
-              "PASSENGERSIDE": {
-                "$ref": "#/$defs/Door"
-              }
+              "type": "object"
             },
-            "type": "object"
+            "ROW2": {
+              "additionalProperties": false,
+              "properties": {
+                "DRIVERSIDE": {
+                  "$ref": "#/$defs/Door"
+                },
+                "MIDDLE": {
+                  "$ref": "#/$defs/Door"
+                },
+                "PASSENGERSIDE": {
+                  "$ref": "#/$defs/Door"
+                }
+              },
+              "type": "object"
+            }
           },
-          "ROW2": {
-            "additionalProperties": false,
-            "properties": {
-              "DRIVERSIDE": {
-                "$ref": "#/$defs/Door"
-              },
-              "MIDDLE": {
-                "$ref": "#/$defs/Door"
-              },
-              "PASSENGERSIDE": {
-                "$ref": "#/$defs/Door"
-              }
-            },
-            "type": "object"
-          }
+          "type": "object"
         }
       },
       "type": "object",
+      "$comment": "Vehicle entity",
+      "x-metadata": {
+        "vssType": "branch"
+      },
       "required": [
         "id",
         "door"

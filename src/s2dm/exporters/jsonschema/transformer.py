@@ -326,9 +326,13 @@ class JsonSchemaTransformer:
             if instance_tag_object:
                 expanded_instance_tag = expand_instance_tag(instance_tag_object)
 
-                definition: dict[str, Any] = {}
+                definition: dict[str, Any] = {
+                    "additionalProperties": False,
+                    "properties": {},
+                    "type": "object",
+                }
                 for expanded_instance in expanded_instance_tag:
-                    current_definition = definition
+                    current_definition = definition["properties"]
                     expanded_instance_split = expanded_instance.split(".")
 
                     for index, part in enumerate(expanded_instance_split):
