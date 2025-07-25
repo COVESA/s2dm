@@ -1,0 +1,118 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix s2dm: <https://covesa.global/models/s2dm#> .
+@prefix s2dm-shapes: <https://covesa.global/models/s2dm/shapes#> .
+
+#################################################################
+# SHACL Shape Groups
+#################################################################
+
+s2dm-shapes:SKOSValidationGroup a sh:NodeShape ;
+    sh:description "Group of shapes ensuring SKOS vocabulary completeness and consistency." .
+
+
+#################################################################
+# SKOS VALIDATION SHAPES (GROUP: SKOSValidationGroup)
+#################################################################
+
+### ObjectType Concepts ###
+s2dm-shapes:ObjectConceptShape a sh:NodeShape ;
+    sh:group s2dm-shapes:SKOSValidationGroup ;
+    sh:targetClass s2dm:ObjectType ;
+
+    # ObjectType must also be a SKOS Concept.
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue skos:Concept ;
+    ] ;
+
+    # Must have exactly one SKOS prefLabel.
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # May have SKOS definition (optional).
+    sh:property [
+        sh:path skos:definition ;
+        sh:minCount 0 ;
+    ] ;
+
+    # Must be member ofat least one SKOS Collection.
+    sh:property [
+        sh:path [ sh:inversePath skos:member ] ;
+        sh:minCount 1 ;
+    ] .
+
+### Field Concepts ###
+s2dm-shapes:FieldConceptShape a sh:NodeShape ;
+    sh:group s2dm-shapes:SKOSValidationGroup ;
+    sh:targetClass s2dm:Field ;
+
+    # Field must also be a SKOS Concept.
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue skos:Concept ;
+    ] ;
+
+    # Field must have exactly one skos:prefLabel.
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Field may have skos:definition (optional).
+    sh:property [
+        sh:path skos:definition ;
+        sh:minCount 0 ;
+    ] ;
+
+    # Field must be a member of at least one SKOS collection.
+    sh:property [
+        sh:path [ sh:inversePath skos:member ] ;
+        sh:minCount 1 ;
+    ] .
+
+### EnumValue Concepts ###
+s2dm-shapes:EnumValueConceptShape a sh:NodeShape ;
+    sh:group s2dm-shapes:SKOSValidationGroup ;
+    sh:targetClass s2dm:EnumValue ;
+
+    # EnumValue must also be a SKOS Concept.
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue skos:Concept ;
+    ] ;
+
+    # EnumValue must have exactly one skos:prefLabel.
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # EnumValue may have skos:definition (optional).
+    sh:property [
+        sh:path skos:definition ;
+        sh:minCount 0 ;
+    ] ;
+
+    # EnumValue must be a member of at least one SKOS collection.
+    sh:property [
+        sh:path [ sh:inversePath skos:member ] ;
+        sh:minCount 1 ;
+    ] .
+
+### SKOS Collection Integrity ###
+s2dm-shapes:CollectionShape a sh:NodeShape ;
+    sh:group s2dm-shapes:SKOSValidationGroup ;
+    sh:targetClass skos:Collection ;
+
+    # Every SKOS collection must have at least one member.
+    sh:property [
+        sh:path skos:member ;
+        sh:minCount 1 ;
+    ] .

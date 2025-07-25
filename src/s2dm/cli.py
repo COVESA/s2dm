@@ -24,6 +24,8 @@ from s2dm.exporters.utils import (
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
+from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
+from s2dm.tools.validators import validate_language_tag
 
 schema_option = click.option(
     "--schema",
@@ -114,6 +116,12 @@ def diff() -> None:
 @click.group()
 def export() -> None:
     """Export commands."""
+    pass
+
+
+@click.group()
+def generate() -> None:
+    """Generate commands."""
     pass
 
 
@@ -247,6 +255,54 @@ def jsonschema(schema: Path, output: Path, root_type: str | None, strict: bool) 
     """Generate JSON Schema from a given GraphQL schema."""
     result = translate_to_jsonschema(schema, root_type, strict)
     _ = output.write_text(result)
+
+
+# Export -> skos
+# ----------
+@generate.command
+@schema_option
+@output_option
+@click.option(
+    "--namespace",
+    default="https://example.org/vss#",
+    help="The namespace for the concept URIs",
+)
+@click.option(
+    "--prefix",
+    default="ns",
+    help="The prefix to use for the concept URIs",
+)
+@click.option(
+    "--language",
+    default="en",
+    callback=validate_language_tag,
+    help="BCP 47 language tag for prefLabels",
+    show_default=True,
+)
+def skos_skeleton(
+    schema: Path,
+    output: Path,
+    namespace: str,
+    prefix: str,
+    language: str,
+) -> None:
+    """Generate SKOS skeleton RDF file from GraphQL schema."""
+    from s2dm.exporters.skos import generate_skos_skeleton
+
+    try:
+        with output.open("w") as output_stream:
+            generate_skos_skeleton(
+                schema_path=schema,
+                output_stream=output_stream,
+                namespace=namespace,
+                prefix=prefix,
+                language=language,
+                validate=True,
+            )
+    except ValueError as e:
+        raise click.ClickException(f"SKOS generation failed: {e}") from e
+    except OSError as e:
+        raise click.ClickException(f"Failed to write output file: {e}") from e
 
 
 # Check -> version bump
@@ -632,6 +688,127 @@ def search_graphql(console: Console, schema: Path, type: str, case_insensitive: 
                 console.print(f"[green]{tname}[/green]: {fields}")
 
 
+def display_search_results(
+    console: Console,
+    results: list[SearchResult],
+    term: str,
+    limit_value: int | None = None,
+    total_count: int | None = None,
+) -> None:
+    """Display SKOS search results in a formatted way.
+
+    Args:
+        console: Rich console for output
+        results: List of SearchResult objects
+        term: The search term that was used
+        limit_value: The parsed limit value (None if unlimited, 0 if zero limit)
+        total_count: Total number of matches found (before applying limit)
+    """
+    if not results:
+        console.print(f"[yellow]No matches found for '{term}'[/yellow]")
+        return
+
+    # Show result count with appropriate message format
+    if total_count is not None and limit_value is not None and limit_value > 0 and len(results) < total_count:
+        # Limited results: show "Found X matches, showing only Y:"
+        result_message = f"[green]Found {total_count} match(es) for '{term}', showing only {len(results)}:[/green]"
+    else:
+        # Unlimited results or showing all: show "Found X matches for 'term':"
+        actual_count = total_count if total_count is not None else len(results)
+        result_message = f"[green]Found {actual_count} match(es) for '{term}':[/green]"
+
+    console.print(result_message)
+    console.print()
+
+    for i, result in enumerate(results, 1):
+        concept_uri = result.subject
+        concept_name = concept_uri.split("#")[-1] if "#" in concept_uri else concept_uri
+        property_type = result.predicate
+        value = result.object_value
+        match_type = result.match_type
+
+        console.print(f"[bold cyan]{i}. {concept_name}[/bold cyan] [dim]({match_type} match)[/dim]")
+        console.print(f"   [dim]URI:[/dim] {concept_uri}")
+        console.print(f"   [dim]Property:[/dim] {property_type}")
+        console.print(f"   [dim]Value:[/dim] {value}")
+        console.print()
+
+
+@search.command(name="skos")
+@click.option(
+    "--ttl-file",
+    "-f",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to the TTL/RDF file containing SKOS concepts",
+)
+@click.option(
+    "--term",
+    "-t",
+    required=True,
+    help="Term to search for in SKOS concepts",
+)
+@click.option(
+    "--case-insensitive",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Perform case-insensitive search (default: case-sensitive)",
+)
+@click.option(
+    "--limit",
+    "-l",
+    default="10",
+    show_default=True,
+    help=f"Maximum number of results to return. Use {list(NO_LIMIT_KEYWORDS)} for unlimited results.",
+)
+@click.pass_obj
+def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: bool, limit: str) -> None:
+    """Search for terms in SKOS concepts using SPARQL.
+
+    This command searches through RDF/Turtle files containing SKOS concepts,
+    looking for the specified term in concept URIs and object values.
+    By default, search is case-sensitive unless --case-insensitive is specified.
+
+    Results are limited to 10 by default. Use --limit to change this number,
+    or specify any of these keywords for unlimited results: NO_LIMIT_KEYWORDS.
+
+    The search uses SPARQL to query the RDF graph for subjects and objects
+    that contain the search term, focusing on meaningful content while
+    excluding predicates from the search scope.
+    """
+    # Create search service
+    try:
+        service = SKOSSearchService(ttl_file)
+    except FileNotFoundError as e:
+        console.print(f"[red]File not found: {e}[/red]")
+        raise click.ClickException(f"TTL file not found: {e}") from e
+    except ValueError as e:
+        console.print(f"[red]Invalid TTL file: {e}[/red]")
+        raise click.ClickException(f"TTL file parsing failed: {e}") from e
+
+    with service:
+        # Parse limit value
+        limit_value = service.parse_limit(limit)
+
+        # Get total count first (for accurate reporting)
+        try:
+            total_count = service.count_keyword_matches(term, ignore_case=case_insensitive)
+        except ValueError as e:
+            console.print(f"[red]Count query failed: {e}[/red]")
+            raise click.ClickException(f"SKOS count query failed: {e}") from e
+
+        # Get limited results
+        try:
+            results = service.search_keyword(term, ignore_case=case_insensitive, limit_value=limit_value)
+        except ValueError as e:
+            console.print(f"[red]Search query failed: {e}[/red]")
+            raise click.ClickException(f"SKOS search query failed: {e}") from e
+
+    console.rule(f"[bold blue]SKOS Search Results for '{term}'")
+    display_search_results(console, results, term, limit_value, total_count)
+
+
 # similar -> graphql
 @similar.command(name="graphql")
 @schema_option
@@ -712,6 +889,7 @@ cli.add_command(diff)
 
 
 cli.add_command(export)
+cli.add_command(generate)
 cli.add_command(registry)
 cli.add_command(similar)
 cli.add_command(search)
