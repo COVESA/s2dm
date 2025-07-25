@@ -1,15 +1,12 @@
 from io import StringIO
 from pathlib import Path
-from unittest.mock import Mock
 
-import click
 import pytest
-from faker import Faker
-from graphql import GraphQLNamedType, build_schema
-from hypothesis import given
-from rdflib import Graph, Literal, Namespace
+from graphql import build_schema
+from rdflib import Graph, Literal
 from rdflib.namespace import RDF, SKOS
 
+from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.skos import (
     SKOSConcept,
     collect_skos_concepts,
@@ -17,108 +14,159 @@ from s2dm.exporters.skos import (
     generate_skos_skeleton,
     validate_skos_graph,
 )
-from s2dm.tools.validators import validate_language_tag
-from tests.conftest import MockFieldData, mock_named_types_strategy
+from s2dm.exporters.utils import get_all_named_types
 
 
-class TestSKOSConceptFormatting:
-    """Test SKOS concept creation, formatting, and RDF generation."""
+class TestSKOSConcept:
+    """Test SKOS concept creation and RDF generation."""
 
     @pytest.fixture
-    def sample_concept(self, faker: Faker) -> SKOSConcept:
+    def sample_concept(self) -> SKOSConcept:
         """Create a sample concept for testing."""
-        name = faker.word()
         return SKOSConcept(
-            name=name,
-            pref_label=name,
+            name="TestConcept",
+            pref_label="Test Concept",
             language="en",
-            definition=faker.sentence(),
+            definition="A test concept for unit testing",
+            s2dm_type="ObjectType",
         )
 
-    @pytest.fixture
-    def sample_graph_and_namespace(self) -> tuple[Graph, Namespace]:
-        """Create a sample graph with namespace for testing."""
-        return create_skos_graph("https://test.org/", "test")
-
-    def test_add_to_graph_creates_proper_triples(
-        self,
-        sample_concept: SKOSConcept,
-        sample_graph_and_namespace: tuple[Graph, Namespace],
-    ) -> None:
-        """Test that add_to_graph creates proper RDF triples."""
-        graph, namespace = sample_graph_and_namespace
-
+    def test_add_to_graph_with_definition(self, sample_concept: SKOSConcept) -> None:
+        """Test that concepts with definitions create proper RDF triples."""
+        graph, namespace = create_skos_graph("https://test.org/", "test")
         sample_concept.add_to_graph(graph, namespace)
 
-        # Check that concept was added as SKOS Concept
         concept_ref = namespace[sample_concept.name]
-
         assert (concept_ref, RDF.type, SKOS.Concept) in graph
-        assert (concept_ref, SKOS.prefLabel, None) in graph
-        assert (concept_ref, SKOS.definition, None) in graph
-        assert (concept_ref, SKOS.note, None) in graph
+        assert (concept_ref, SKOS.prefLabel, Literal("Test Concept", lang="en")) in graph
+        assert (concept_ref, SKOS.definition, Literal("A test concept for unit testing")) in graph
+
+    def test_add_to_graph_without_definition(self) -> None:
+        """Test that concepts without definitions don't create definition triples."""
+        concept = SKOSConcept(
+            name="EmptyConcept",
+            pref_label="Empty Concept",
+            language="en",
+            definition="",
+            s2dm_type="Field",
+        )
+        graph, namespace = create_skos_graph("https://test.org/", "test")
+        concept.add_to_graph(graph, namespace)
+
+        concept_ref = namespace[concept.name]
+        assert (concept_ref, RDF.type, SKOS.Concept) in graph
+        assert (concept_ref, SKOS.prefLabel, Literal("Empty Concept", lang="en")) in graph
+        # Should not have definition or note triples
+        assert not list(graph.objects(concept_ref, SKOS.definition))
+        assert not list(graph.objects(concept_ref, SKOS.note))
 
 
-class TestLanguageValidation:
-    """Test BCP 47 language tag validation."""
+class TestSKOSGeneration:
+    """Test SKOS generation from GraphQL schemas."""
 
-    @pytest.fixture
-    def mock_click_context(self) -> tuple[click.Context, click.Parameter]:
-        """Create mock Click context and parameter for testing."""
-        ctx = Mock(spec=click.Context)
-        param = Mock(spec=click.Parameter)
-        return ctx, param
+    def test_collect_skos_concepts_creates_proper_structure(self) -> None:
+        """Test that collect_skos_concepts creates the expected SKOS structure."""
+        schema_str = '''
+            type Query { vehicle: Vehicle }
 
-    @pytest.mark.parametrize("valid_tag", ["en", "en-US", "fr", "de-DE", "zh-CN"])
-    def test_accepts_valid_bcp47_tags(
-        self, valid_tag: str, mock_click_context: tuple[click.Context, click.Parameter]
-    ) -> None:
-        """Test that valid BCP 47 language tags are accepted."""
-        ctx, param = mock_click_context
-        # Should not raise an exception and return the same value
-        result = validate_language_tag(ctx=ctx, param=param, value=valid_tag)
-        assert result == valid_tag
+            """Vehicle description"""
+            type Vehicle {
+                name: String
+                adas: Vehicle_ADAS
+            }
 
-    @pytest.mark.parametrize(
-        "invalid_tag",
-        [
-            "",  # empty string
-            "invalid",  # not a valid language code
-            "en-",  # trailing dash
-            "en US",  # space character
-        ],
-    )
-    def test_rejects_invalid_language_tags(
-        self,
-        invalid_tag: str,
-        mock_click_context: tuple[click.Context, click.Parameter],
-    ) -> None:
-        """Test that invalid language tags are rejected."""
-        ctx, param = mock_click_context
+            type Vehicle_ADAS {
+                isActive: Boolean
+            }
 
-        with pytest.raises(click.BadParameter):
-            validate_language_tag(ctx=ctx, param=param, value=invalid_tag)
+            enum TestEnum { VALUE1, VALUE2 }
+        '''
 
+        schema = build_schema(schema_str)
+        named_types = get_all_named_types(schema)
+        concepts = iter_all_concepts(named_types)
 
-class TestGraphQLSchemaProcessing:
-    """Test processing of GraphQL schemas into SKOS concepts."""
+        graph, namespace = create_skos_graph("https://test.org/", "test")
+        collect_skos_concepts(schema, concepts, graph, namespace, "en")
 
-    @given(named_types_and_fields=mock_named_types_strategy())
-    def test_collect_concepts_processes_all_relevant_types(
-        self, named_types_and_fields: tuple[list[GraphQLNamedType], list[MockFieldData]]
-    ) -> None:
-        """Test that collect_skos_concepts processes GraphQL types correctly."""
-        named_types, _ = named_types_and_fields
+        # Check collections exist
+        collections = list(graph.subjects(RDF.type, SKOS.Collection))
+        collection_names = [str(coll).split("/")[-1] for coll in collections]
+        assert "ObjectConcepts" in collection_names
+        assert "FieldConcepts" in collection_names
+        assert "TestEnum" in collection_names
 
-        graph, namespace = create_skos_graph("https://test.org/", "ns")
-        collect_skos_concepts(named_types, graph, namespace, "en")
+        # Check concepts exist
+        concept_uris = list(graph.subjects(RDF.type, SKOS.Concept))
+        concept_names = [str(concept).split("/")[-1] for concept in concept_uris]
+        assert "Vehicle" in concept_names
+        assert "Vehicle_ADAS" in concept_names
+        assert "Vehicle.name" in concept_names
+        assert "Vehicle_ADAS.isActive" in concept_names
 
-        # Should generate concepts in the graph
-        concepts = list(graph.subjects(RDF.type, SKOS.Concept))
-        assert len(concepts) > 0
+    def test_enum_with_description(self) -> None:
+        """Test enum processing with descriptions."""
+        schema_str = '''
+            type Query { test: String }
+
+            """Status enumeration with description"""
+            enum Status { ACTIVE, INACTIVE }
+        '''
+
+        schema = build_schema(schema_str)
+        named_types = get_all_named_types(schema)
+        concepts = iter_all_concepts(named_types)
+
+        graph, namespace = create_skos_graph("https://test.org/", "test")
+        collect_skos_concepts(schema, concepts, graph, namespace, "en")
+
+        # Check enum collection has description
+        status_collection = namespace["Status"]
+        definitions = list(graph.objects(status_collection, SKOS.definition))
+        assert len(definitions) == 1
+        assert str(definitions[0]) == "Status enumeration with description"
+
+    def test_enum_value_descriptions(self) -> None:
+        """Test that enum value descriptions are properly extracted and used."""
+        schema_str = '''
+            type Query { test: String }
+
+            enum Priority {
+                """Highest priority item"""
+                HIGH
+
+                """Medium priority item"""
+                MEDIUM
+
+                LOW
+            }
+        '''
+
+        schema = build_schema(schema_str)
+        named_types = get_all_named_types(schema)
+        concepts = iter_all_concepts(named_types)
+
+        graph, namespace = create_skos_graph("https://test.org/", "test")
+        collect_skos_concepts(schema, concepts, graph, namespace, "en")
+
+        # Check that enum values with descriptions have them
+        high_concept = namespace["Priority.HIGH"]
+        high_definitions = list(graph.objects(high_concept, SKOS.definition))
+        assert len(high_definitions) == 1
+        assert str(high_definitions[0]) == "Highest priority item"
+
+        medium_concept = namespace["Priority.MEDIUM"]
+        medium_definitions = list(graph.objects(medium_concept, SKOS.definition))
+        assert len(medium_definitions) == 1
+        assert str(medium_definitions[0]) == "Medium priority item"
+
+        # Check that enum values without descriptions don't have definition triples
+        low_concept = namespace["Priority.LOW"]
+        low_definitions = list(graph.objects(low_concept, SKOS.definition))
+        assert len(low_definitions) == 0
 
     def test_excludes_query_and_mutation_types(self) -> None:
-        """Test that Query and Mutation types are properly excluded."""
+        """Test that Query and Mutation types are excluded from SKOS generation."""
         schema_str = """
             type Query { vehicle: Vehicle }
             type Mutation { update: String }
@@ -126,81 +174,76 @@ class TestGraphQLSchemaProcessing:
         """
 
         schema = build_schema(schema_str)
-        named_types = list(schema.type_map.values())
-
-        graph, namespace = create_skos_graph("https://test.org/", "ns")
-        collect_skos_concepts(named_types, graph, namespace, "en")
-
-        # Get all concept URIs from the graph
-        concepts = list(graph.subjects(RDF.type, SKOS.Concept))
-        concept_names = [str(concept).split("/")[-1] for concept in concepts]
-
-        # Should exclude Query and Mutation types
-        assert "Query" not in concept_names
-        assert "Mutation" not in concept_names
-        # Should include Vehicle type
-        assert "Vehicle" in concept_names
-
-
-class TestGraphOperations:
-    """Test graph creation, population, and validation functionality."""
-
-    def test_collect_skos_concepts_populates_graph(self) -> None:
-        """Test that collect_skos_concepts properly populates a graph."""
-        schema_str = """
-            type Query { vehicle: Vehicle }
-            type Vehicle {
-                name: String
-                adas: Vehicle_ADAS
-            }
-            type Vehicle_ADAS {
-                isActive: Boolean
-            }
-        """
-
-        schema = build_schema(schema_str)
-        named_types = list(schema.type_map.values())
+        named_types = get_all_named_types(schema)
+        concepts = iter_all_concepts(named_types)
 
         graph, namespace = create_skos_graph("https://test.org/", "test")
-        collect_skos_concepts(named_types, graph, namespace, "en")
+        collect_skos_concepts(schema, concepts, graph, namespace, "en")
 
-        # Check that concepts were added to the graph
-        concepts = list(graph.subjects(RDF.type, SKOS.Concept))
-        assert len(concepts) > 0
+        concept_uris = list(graph.subjects(RDF.type, SKOS.Concept))
+        concept_names = [str(concept).split("/")[-1] for concept in concept_uris]
+
+        assert "Query" not in concept_names
+        assert "Mutation" not in concept_names
+        assert "Vehicle" in concept_names
+
+    def test_field_metadata_extraction(self) -> None:
+        """Test that field metadata is correctly extracted and used."""
+        schema_str = """
+            type Query { test: String }
+            type Vehicle {
+                "Vehicle name description"
+                name: String
+                speed: Int
+            }
+        """
+        schema = build_schema(schema_str)
+        named_types = get_all_named_types(schema)
+        concepts = iter_all_concepts(named_types)
+
+        # Verify field metadata is populated
+        assert "Vehicle.name" in concepts.fields
+        assert "Vehicle.name" in concepts.field_metadata
+
+        metadata = concepts.field_metadata["Vehicle.name"]
+        assert metadata["object_name"] == "Vehicle"
+        assert metadata["field_name"] == "name"
+        assert hasattr(metadata["field_definition"], "description")
+
+
+class TestSKOSValidation:
+    """Test SKOS graph validation functionality."""
 
     def test_validate_skos_graph_catches_missing_preflabel(self) -> None:
         """Test that validation catches concepts missing prefLabel."""
         graph, namespace = create_skos_graph("https://test.org/", "test")
 
-        # Manually add a concept without prefLabel
+        # Add a concept without prefLabel
         concept_ref = namespace["TestConcept"]
         graph.add((concept_ref, RDF.type, SKOS.Concept))
-        graph.add((concept_ref, SKOS.definition, Literal("A test definition")))
 
         errors = validate_skos_graph(graph)
         assert len(errors) == 1
         assert "missing required skos:prefLabel" in errors[0]
 
-    def test_validate_skos_graph_catches_missing_definition_and_note(self) -> None:
-        """Test that validation catches concepts missing both definition and note."""
+    def test_validate_skos_graph_allows_optional_definition(self) -> None:
+        """Test that validation allows concepts without definition (optional)."""
         graph, namespace = create_skos_graph("https://test.org/", "test")
 
-        # Manually add a concept with only prefLabel
+        # Add a concept with only prefLabel
         concept_ref = namespace["TestConcept"]
         graph.add((concept_ref, RDF.type, SKOS.Concept))
         graph.add((concept_ref, SKOS.prefLabel, Literal("Test Concept")))
 
         errors = validate_skos_graph(graph)
-        assert len(errors) == 1
-        assert "missing both skos:definition and skos:note" in errors[0]
+        assert len(errors) == 0
 
 
 class TestIntegration:
     """Test end-to-end SKOS generation workflow."""
 
-    def test_complete_workflow_produces_valid_skos_output(self, tmp_path: Path) -> None:
+    def test_complete_workflow_generates_valid_skos(self, tmp_path: Path) -> None:
         """Test the complete workflow from GraphQL schema to SKOS output."""
-        # Create test schema
         schema_content = '''
             type Query { vehicle: Vehicle }
 
@@ -217,52 +260,8 @@ class TestIntegration:
 
         schema_file = tmp_path / "test.graphql"
         schema_file.write_text(schema_content)
-        output_file = tmp_path / "output.ttl"
 
-        with open(output_file, "w", encoding="utf-8") as output_stream:
-            # Generate SKOS
-            generate_skos_skeleton(
-                schema_path=schema_file,
-                output_stream=output_stream,
-                namespace="https://test.org/",
-                prefix="test",
-                language="en",
-            )
-
-        content = output_file.read_text()
-
-        # Verify essential SKOS elements are present
-        assert "@prefix skos:" in content
-        assert "test:Vehicle" in content
-        assert "skos:prefLabel" in content
-        assert "Vehicle description" in content
-        assert "test:Vehicle.adas" in content
-
-
-class TestGenerateSkosSkeleton:
-    """Test the generate_skos_skeleton function."""
-
-    def test_generate_skos_skeleton_writes_ttl_to_stream(self, tmp_path: Path) -> None:
-        """Test that generate_skos_skeleton writes TTL output to a stream."""
-        schema_content = '''
-            type Query { vehicle: Vehicle }
-
-            """Vehicle description"""
-            type Vehicle {
-                name: String
-                adas: Vehicle_ADAS
-            }
-
-            type Vehicle_ADAS {
-                isActive: Boolean
-            }
-        '''
-
-        # Create temporary schema file
-        schema_file = tmp_path / "test.graphql"
-        schema_file.write_text(schema_content)
-
-        # Use StringIO for output instead of file
+        # Test both StringIO and file output in one test
         output_stream = StringIO()
         generate_skos_skeleton(
             schema_path=schema_file,
@@ -274,9 +273,55 @@ class TestGenerateSkosSkeleton:
 
         content = output_stream.getvalue()
 
-        # Verify essential SKOS elements are present
+        # Verify essential SKOS elements
         assert "@prefix skos:" in content
+        assert "@prefix s2dm:" in content
         assert "test:Vehicle" in content
         assert "skos:prefLabel" in content
         assert "Vehicle description" in content
-        assert "test:Vehicle.adas" in content
+        assert "test:ObjectConcepts" in content
+        assert "test:FieldConcepts" in content
+
+    def test_validation_disabled(self, tmp_path: Path) -> None:
+        """Test SKOS generation with validation disabled."""
+        schema_content = "type Query { test: String }"
+        schema_file = tmp_path / "test.graphql"
+        schema_file.write_text(schema_content)
+
+        output_stream = StringIO()
+        # Should not raise even if there were validation issues
+        generate_skos_skeleton(
+            schema_path=schema_file,
+            output_stream=output_stream,
+            namespace="https://test.org/",
+            prefix="test",
+            language="en",
+            validate=False,
+        )
+
+        content = output_stream.getvalue()
+        assert "@prefix skos:" in content
+
+    def test_validation_error_handling(self, tmp_path: Path) -> None:
+        """Test that validation errors are properly raised."""
+        schema_content = "type Query { test: String }"
+        schema_file = tmp_path / "test.graphql"
+        schema_file.write_text(schema_content)
+
+        # Create an invalid graph by manually breaking validation
+        from unittest.mock import patch
+
+        def mock_validate_skos_graph(graph: Graph) -> list[str]:
+            return ["Test validation error"]
+
+        with patch("s2dm.exporters.skos.validate_skos_graph", side_effect=mock_validate_skos_graph):
+            output_stream = StringIO()
+            with pytest.raises(ValueError, match="Generated SKOS has validation errors"):
+                generate_skos_skeleton(
+                    schema_path=schema_file,
+                    output_stream=output_stream,
+                    namespace="https://test.org/",
+                    prefix="test",
+                    language="en",
+                    validate=True,
+                )

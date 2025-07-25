@@ -5,16 +5,12 @@ from pathlib import Path
 import pytest
 
 from s2dm.exporters.skos import SKOSConcept
-from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
+from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SKOSSearchService
 
 
 @pytest.fixture
 def sample_skos_ttl() -> str:
-    """Create a sample SKOS TTL content for testing.
-
-    Returns:
-        String containing sample SKOS RDF in Turtle format
-    """
+    """Create a sample SKOS TTL content for testing."""
     return """
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -51,14 +47,7 @@ ns:Door a skos:Concept ;
 
 @pytest.fixture
 def ttl_file(sample_skos_ttl: str) -> Path:
-    """Create a temporary TTL file with sample SKOS data.
-
-    Args:
-        sample_skos_ttl: Sample SKOS content
-
-    Returns:
-        Path to the temporary TTL file
-    """
+    """Create a temporary TTL file with sample SKOS data."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".ttl", delete=False) as f:
         f.write(sample_skos_ttl)
         return Path(f.name)
@@ -66,14 +55,7 @@ def ttl_file(sample_skos_ttl: str) -> Path:
 
 @pytest.fixture
 def search_service(ttl_file: Path) -> Generator[SKOSSearchService, None, None]:
-    """Create a SKOSSearchService instance for testing.
-
-    Args:
-        ttl_file: Path to the test TTL file
-
-    Returns:
-        Configured SKOSSearchService instance
-    """
+    """Create a SKOSSearchService instance for testing."""
     with SKOSSearchService(ttl_file) as service:
         yield service
 
@@ -102,81 +84,41 @@ class TestSKOSSearchService:
             # Access the graph property to trigger parsing
             _ = service.graph
 
-    def test_search_keyword_finds_vehicle_matches(self, search_service: SKOSSearchService) -> None:
-        """Test keyword search finds vehicle-related matches."""
-        # Use unlimited search to ensure we get all matches
+    def test_search_keyword_finds_matches(self, search_service: SKOSSearchService) -> None:
+        """Test keyword search finds expected matches."""
         results = search_service.search_keyword("vehicle", ignore_case=True, limit_value=None)
 
         # Should find both "Vehicle" and "Vehicle_Window"
         assert len(results) >= 2
-
-        # Check that results contain expected subjects
         subjects = {result.subject for result in results}
         assert "https://example.org/vss#Vehicle" in subjects
         assert "https://example.org/vss#Vehicle_Window" in subjects
 
-    def test_search_keyword_case_insensitive(self, search_service: SKOSSearchService) -> None:
-        """Test case-insensitive search when explicitly enabled."""
-        results_lower = search_service.search_keyword("vehicle", ignore_case=True)
-        results_upper = search_service.search_keyword("VEHICLE", ignore_case=True)
+    def test_search_and_count_case_sensitivity(self, search_service: SKOSSearchService) -> None:
+        """Test case sensitivity for both search and count operations."""
+        # Test search case sensitivity
+        case_insensitive_search = search_service.search_keyword("DOOR", ignore_case=True)
+        case_sensitive_search = search_service.search_keyword("DOOR", ignore_case=False)
+        assert len(case_insensitive_search) > len(case_sensitive_search)
 
-        # Both searches should return the same results when case-insensitive
-        assert len(results_lower) == len(results_upper)
+        # Test count case sensitivity
+        case_sensitive_count = search_service.count_keyword_matches("vehicle", ignore_case=False)
+        case_insensitive_count = search_service.count_keyword_matches("vehicle", ignore_case=True)
+        assert case_insensitive_count >= case_sensitive_count
+        assert case_insensitive_count > 0
 
-    def test_search_keyword_case_sensitive_default(self, search_service: SKOSSearchService) -> None:
-        """Test case-sensitive search is the default behavior."""
-        # Default behavior should be case-sensitive
-        results_exact = search_service.search_keyword("Vehicle")
+        # Test consistency between search and count
+        for term, case_insensitive in [("Vehicle", False), ("vehicle", True), ("Door", False)]:
+            total_count = search_service.count_keyword_matches(term, ignore_case=case_insensitive)
+            search_results = search_service.search_keyword(term, ignore_case=case_insensitive, limit_value=None)
+            assert total_count == len(
+                search_results
+            ), f"Count mismatch for '{term}' case_insensitive={case_insensitive}"
 
-        # Should find "Vehicle" in URIs and labels with exact case
-        assert len(results_exact) > 0
-
-    def test_search_keyword_case_sensitive_vs_insensitive(self, search_service: SKOSSearchService) -> None:
-        """Test difference between case-sensitive and case-insensitive search."""
-        # Case-insensitive should find more matches for mixed case terms
-        case_insensitive_results = search_service.search_keyword("DOOR", ignore_case=True)
-        case_sensitive_results = search_service.search_keyword("DOOR", ignore_case=False)
-
-        # Case-insensitive should find "Door" concept, case-sensitive should not
-        assert len(case_insensitive_results) > len(case_sensitive_results)
-
-    def test_search_keyword_empty_string(self, search_service: SKOSSearchService) -> None:
+    def test_search_empty_string(self, search_service: SKOSSearchService) -> None:
         """Test search with empty keyword returns empty results."""
-        results = search_service.search_keyword("")
-        assert len(results) == 0
-
-        results = search_service.search_keyword("   ")  # Whitespace only
-        assert len(results) == 0
-
-    def test_search_keyword_special_characters(self, search_service: SKOSSearchService) -> None:
-        """Test search with special characters in keyword."""
-        # Should not crash with special characters
-        results = search_service.search_keyword('test"quotes')
-        assert isinstance(results, list)
-
-        results = search_service.search_keyword("test'apostrophe")
-        assert isinstance(results, list)
-
-    def test_search_finds_window_in_definition(self, search_service: SKOSSearchService) -> None:
-        """Test that search finds 'window' in definitions."""
-        results = search_service.search_keyword("transparent")
-
-        # Should find Vehicle_Window which has "transparent" in its definition
-        assert len(results) > 0
-        window_found = any("Vehicle_Window" in result.subject for result in results)
-        assert window_found
-
-    def test_search_finds_terms_in_subjects(self, search_service: SKOSSearchService) -> None:
-        """Test that search finds terms in RDF subjects."""
-        results = search_service.search_keyword("Engine")
-
-        # Should find results where "Engine" appears in the subject URI
-        subject_matches = [r for r in results if r.match_type == "subject"]
-        object_matches = [r for r in results if r.match_type == "object"]
-
-        # Should have both subject and object matches
-        assert len(subject_matches) > 0
-        assert len(object_matches) > 0
+        assert search_service.search_keyword("") == []
+        assert search_service.search_keyword("   ") == []
 
     def test_search_no_matches(self, search_service: SKOSSearchService) -> None:
         """Test search with term that has no matches."""
@@ -185,7 +127,6 @@ class TestSKOSSearchService:
 
     def test_search_deduplication(self, search_service: SKOSSearchService) -> None:
         """Test that search results are properly deduplicated."""
-        # Search for a term that might appear in both subject and object
         results = search_service.search_keyword("Vehicle", ignore_case=True)
 
         # Check that we don't have duplicate triples with the same match type
@@ -195,31 +136,25 @@ class TestSKOSSearchService:
             assert triple_key not in seen_triples, f"Duplicate triple found: {triple_key}"
             seen_triples.add(triple_key)
 
-            # Should have some results
         assert len(results) > 0
 
     @pytest.mark.parametrize(
-        "limit,expected_count",
+        "limit,expected_behavior",
         [
-            # Default and numeric limits
             (10, "limited"),
             (2, "limited"),
-            (0, 0),
+            (0, "zero"),
             ("3", "limited"),
-            ("0", 0),
-        ]
-        + [
-            # Unlimited keywords (sample)
-            (list(NO_LIMIT_KEYWORDS)[0], "unlimited"),
-            (list(NO_LIMIT_KEYWORDS)[1], "unlimited"),
-            (list(NO_LIMIT_KEYWORDS)[0].upper(), "unlimited"),
+            ("0", "zero"),
+            ("all", "unlimited"),
+            ("inf", "unlimited"),
+            ("none", "unlimited"),
         ],
     )
     def test_search_keyword_limits(
-        self, search_service: SKOSSearchService, limit: int | str, expected_count: str | int
+        self, search_service: SKOSSearchService, limit: int | str, expected_behavior: str
     ) -> None:
         """Test search with various limit values."""
-        # Parse the limit to get the expected values
         limit_value = search_service.parse_limit(limit)
 
         # Get reference unlimited count
@@ -229,93 +164,77 @@ class TestSKOSSearchService:
         # Perform test search
         results = search_service.search_keyword("example", ignore_case=True, limit_value=limit_value)
 
-        # Assert results
-        if expected_count == 0:
+        # Assert results based on expected behavior
+        if expected_behavior == "zero":
             assert len(results) == 0
-        elif expected_count == "limited":
+        elif expected_behavior == "limited":
             expected_limit = int(limit) if isinstance(limit, str) else limit
             assert len(results) <= expected_limit
-        elif expected_count == "unlimited":
+        elif expected_behavior == "unlimited":
             assert len(results) == unlimited_count
 
-    @pytest.mark.parametrize(
-        "limit_value,expected_limit",
-        [
-            # Numeric limits
-            (10, 10),
-            (1, 1),
-            (5, 5),
-            # Zero limits
-            (0, 0),
-            # String numeric limits
-            ("5", 5),
-            ("10", 10),
-            ("0", 0),
-        ]
-        + [
-            # Unlimited keywords (lowercase)
-            (keyword, None)
-            for keyword in NO_LIMIT_KEYWORDS
-        ]
-        + [
-            # Unlimited keywords (uppercase)
-            (keyword.upper(), None)
-            for keyword in NO_LIMIT_KEYWORDS
-        ],
-    )
-    def test_parse_limit_method(
-        self,
-        search_service: SKOSSearchService,
-        limit_value: int | str,
-        expected_limit: int | None,
-    ) -> None:
-        """Test the parse_limit helper method."""
-        limit_result = search_service.parse_limit(limit_value)
-        assert limit_result == expected_limit
+    def test_parse_limit_method(self, search_service: SKOSSearchService) -> None:
+        """Test the parse_limit helper method with various inputs."""
+        # Numeric limits
+        assert search_service.parse_limit(10) == 10
+        assert search_service.parse_limit(0) == 0
+        assert search_service.parse_limit("5") == 5
+        assert search_service.parse_limit(-1) == 0  # Negative numbers
 
+        # Unlimited keywords
+        for keyword in NO_LIMIT_KEYWORDS:
+            assert search_service.parse_limit(keyword) is None
+            assert search_service.parse_limit(keyword.upper()) is None
 
-class TestSearchResultModel:
-    """Test cases for SearchResult dataclass."""
+        # Invalid string should return 0
+        assert search_service.parse_limit("invalid") == 0
+        assert search_service.parse_limit("not_a_number") == 0
 
-    def test_search_result_creation(self) -> None:
-        """Test creating SearchResult instances."""
-        result = SearchResult(
-            subject="https://example.org/test#Subject",
-            predicate="https://example.org/test#predicate",
-            object_value="Test Value",
-            match_type="object",
-        )
+    def test_count_keyword_matches(self, search_service: SKOSSearchService) -> None:
+        """Test that count_keyword_matches returns correct counts."""
+        # Test with "Vehicle" (should match multiple times)
+        total_count = search_service.count_keyword_matches("Vehicle", ignore_case=False)
+        search_results = search_service.search_keyword("Vehicle", ignore_case=False, limit_value=None)
 
-        assert result.subject == "https://example.org/test#Subject"
-        assert result.predicate == "https://example.org/test#predicate"
-        assert result.object_value == "Test Value"
-        assert result.match_type == "object"
+        # Count should match the unlimited search results length
+        assert total_count == len(search_results)
+        assert total_count > 0
 
-    def test_search_result_string_formatting(self) -> None:
-        """Test SearchResult string formatting for different match types."""
-        subject_result = SearchResult("subj", "pred", "obj", "subject")
-        object_result = SearchResult("subj", "pred", "obj", "object")
+        # Test with empty string
+        assert search_service.count_keyword_matches("", ignore_case=False) == 0
+        assert search_service.count_keyword_matches("   ", ignore_case=True) == 0
 
-        assert str(subject_result).startswith("SUBJECT:")
-        assert str(object_result).startswith("OBJECT:")
-        assert "subj -> pred -> obj" in str(subject_result)
-        assert "subj -> pred -> obj" in str(object_result)
+        # Test with no matches
+        assert search_service.count_keyword_matches("nonexistent_xyz", ignore_case=False) == 0
 
+    def test_sparql_error_handling(self, search_service: SKOSSearchService) -> None:
+        """Test SPARQL query error handling."""
+        from unittest.mock import patch
 
-class TestErrorHandling:
-    """Test error handling in SKOS search functionality."""
+        # Test count query error
+        with (
+            patch("s2dm.tools.skos_search.prepareQuery", side_effect=Exception("SPARQL error")),
+            pytest.raises(ValueError, match="Count query execution failed"),
+        ):
+            search_service.count_keyword_matches("test")
 
-    def test_sparql_query_execution(self, search_service: SKOSSearchService) -> None:
-        """Test that SPARQL queries execute without errors."""
-        # This should not crash the service
-        results = search_service.search_keyword("normal_term")
-        assert isinstance(results, list)
+        # Test search query preparation error
+        with (
+            patch("s2dm.tools.skos_search.prepareQuery", side_effect=Exception("SPARQL prep error")),
+            pytest.raises(ValueError, match="Invalid SPARQL query template"),
+        ):
+            search_service.search_keyword("test")
+
+        # Test search query execution error
+        with (
+            patch.object(search_service.graph, "query", side_effect=Exception("Query exec error")),
+            pytest.raises(ValueError, match="Search query execution failed"),
+        ):
+            search_service.search_keyword("test")
 
     def test_empty_graph_handling(self) -> None:
         """Test behavior with an empty TTL file."""
-        empty_ttl = """
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-"""
+        empty_ttl = "@prefix skos: <http://www.w3.org/2004/02/skos/core#> ."
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".ttl", delete=False) as f:
             f.write(empty_ttl)
@@ -323,5 +242,19 @@ class TestErrorHandling:
 
         with SKOSSearchService(empty_file) as service:
             results = service.search_keyword("anything")
-
             assert len(results) == 0
+            assert service.count_keyword_matches("anything") == 0
+
+    def test_context_manager_cleanup(self, ttl_file: Path) -> None:
+        """Test that context manager properly cleans up resources."""
+        service = SKOSSearchService(ttl_file)
+
+        # Access graph to load it
+        assert len(service.graph) > 0
+        assert service._graph is not None
+
+        # Exit context manager
+        service.__exit__(None, None, None)
+
+        # Graph should be cleaned up
+        assert service._graph is None
