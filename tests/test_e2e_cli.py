@@ -275,6 +275,21 @@ def test_similar_graphql(
     assert out.exists()
 
 
+def test_compose_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1), "-o", str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    composed_content = out.read_text()
+    assert "type Vehicle" in composed_content
+    assert "type InCabinArea2x2" in composed_content
+    assert "enum Acceleration_Unit_Enum" in composed_content
+    assert "directive @range" in composed_content
+
+    assert "Successfully composed schema" in result.output
+
+
 # ToDo(DA): needs refactoring after final decision how stats will work
 def test_stats_graphql(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["stats", "graphql", "-s", str(SAMPLE1)])

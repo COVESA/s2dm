@@ -1,0 +1,130 @@
+name: Automated Migration Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'spec/**'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        path: current
+
+    - name: Checkout COVESA S2DM repository
+      uses: actions/checkout@v4
+      with:
+        repository: COVESA/s2dm
+        path: s2dm
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+
+    - name: Install S2DM dependencies
+      working-directory: s2dm
+      run: |
+        uv sync
+
+    - name: Activate venv
+      working-directory: s2dm
+      run: |
+        source .venv/bin/activate
+
+    - name: Verify S2DM installation
+      run: |
+        s2dm --help
+
+    - name: Download latest release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        mkdir -p .previous-release
+        gh release download --dir .previous-release || echo "No previous release found"
+
+    - name: Prepare artifacts
+      run: |
+        mkdir -p .artifacts/graphql
+        mkdir -p .artifacts/jsonschema
+        mkdir -p .artifacts/registry
+        mkdir -p .artifacts/skos
+
+    - name: Check spec version bump
+      id: version-check
+      run: |
+        VERSION_BUMP=major
+        if [ -d "./.previous-release" ] && [ "$(ls -A ./.previous-release)" ]; then
+          echo "Previous release found"
+          VERSION_BUMP=$(s2dm check version-bump -s ./current/spec -p ./.previous-release/graphql/schema.graphql --output-type | tail -n 1)
+          if [[ "$VERSION_BUMP" != "none" ]]; then
+            echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "No previous release found"
+          echo "IS_INITIAL_RELEASE=true" >> "$GITHUB_OUTPUT"
+        fi
+        echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
+
+    - name: Compose GraphQL schema
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      run: |
+        s2dm compose -s ./current/spec -o ./.artifacts/graphql/schema.graphql
+
+    - name: Generate JSON schema
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      run: |
+        s2dm export jsonschema -S -s ./current/spec -o ./.artifacts/jsonschema/schema.json
+
+    - name: Initialize registry
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
+      run: |
+        s2dm registry init -s ./current/spec -u ./current/units.yaml -o ./.artifacts/registry/history
+
+    - name: Update registry
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'false'
+      run: |
+        s2dm registry update -s ./current/spec -sh ./.artifacts/registry/history -u ./current/units.yaml -o ./.artifacts/registry/history
+
+    - name: Generate SKOS RDF
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      run: |
+        s2dm export skos -s ./current/spec -o ./.artifacts/skos/skos.ttl
+
+    - name: Bump version and push changes
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      working-directory: current
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        bump-my-version bump ${{ steps.version-check.outputs.VERSION_BUMP }} --config-file ../.bumpversion.toml
+        git push origin ${{ github.ref_name }} --tags
+
+    - name: Get latest tag
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      id: get-latest-tag
+      run: |
+        LATEST_TAG=$(git describe --tags --abbrev=0)
+        echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+    - name: Create release
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        LATEST_TAG: ${{ steps.get-latest-tag.outputs.LATEST_TAG }}
+      run: |
+        gh release create "${LATEST_TAG}" \
+          --title "Release ${LATEST_TAG}" \
+          --notes "This release contains the artifacts from the automated migration workflow." \
+          ./.artifacts/*
