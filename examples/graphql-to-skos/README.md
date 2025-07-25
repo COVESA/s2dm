@@ -10,6 +10,10 @@ SKOS is a W3C standard for representing knowledge organization systems (taxonomi
 - `skos:definition` - concept definitions
 - `skos:note` - additional notes and provenance information
 
+## SKOS Mapping Structure
+
+For detailed information about how GraphQL schema elements are mapped to SKOS concepts and collections, see [SKOS Mapping Structure](skos-mapping-diagram.md). This includes the hierarchical collection structure, S2DM ontology namespace details, validation rules, and implementation details.
+
 ## Usage
 
 Generate SKOS concepts from a GraphQL schema:
@@ -37,6 +41,33 @@ s2dm generate skos-skeleton \
   --language "en-US"
 ```
 
+## SHACL Validation
+
+To validate the generated SKOS against the s2dm ontology constraints, use PySHACL:
+
+```bash
+# Generate SKOS TTL file
+s2dm generate skos-skeleton --schema sample.graphql --output output.ttl
+
+# Validate against SHACL shapes
+python -m pyshacl output.ttl -s ../../test_files/shapes.shacl -f human
+```
+
+### Validation Output
+
+- **Success**: `Conforms: True` - The SKOS is valid
+- **Failure**: Detailed report showing constraint violations
+
+### Advanced Validation Options
+
+```bash
+# Save validation report to file
+python -m pyshacl output.ttl -s ../../test_files/shapes.shacl -f turtle -o validation_report.ttl
+
+# Focus on specific shapes or nodes
+python -m pyshacl output.ttl -s ../../test_files/shapes.shacl --shape https://covesa.global/models/s2dm/shapes#ObjectConceptShape
+```
+
 ## Searching SKOS Concepts
 
 Once you've generated a SKOS RDF file, you can search through the concepts using the built-in SPARQL-based search functionality:
@@ -48,190 +79,86 @@ s2dm search skos --ttl-file examples/graphql-to-skos/output.ttl --term Vehicle
 ### Search Command Options
 
 - `--ttl-file/-f` - Path to TTL/RDF file containing SKOS concepts (required)
-- `--term/-t` - Term to search for in SKOS concepts (required)
-- `--case-insensitive/-i` - Perform case-insensitive search (default: case-sensitive)
-- `--limit/-l` - Maximum number of results to return (default: 10). Use 'inf', 'infinity', '-1', 'no', 'none', 'unlimited', 'all' for unlimited results
+- `--term/-t` - Search term to look for in concept names and descriptions (required)
+- `--case-insensitive/-i` - Perform case-insensitive search (optional)
+- `--limit/-l` - Limit number of results (default: 10, use 'all' for unlimited)
 
 ### Search Examples
 
-**Basic concept search:**
 ```bash
-s2dm search skos -f output.ttl -t Vehicle
-```
+# Basic search
+s2dm search skos -f output.ttl -t "Vehicle"
 
-**Search for partial matches:**
-```bash
-s2dm search skos -f output.ttl -t adas
-```
+# Case-insensitive search with limit
+s2dm search skos -f output.ttl -t "adas" -i -l 5
 
-**Case-insensitive search:**
-```bash
-s2dm search skos -f output.ttl -t "vehicle" --case-insensitive
-```
-
-**Search in definitions and notes:**
-```bash
-s2dm search skos -f output.ttl -t "Advanced Driver"
-```
-
-**Limit search results:**
-```bash
-s2dm search skos -f output.ttl -t Unit --limit 5
-```
-
-**Unlimited search results:**
-```bash
-s2dm search skos -f output.ttl -t Unit --limit inf
-```
-
-### How Search Works
-
-The search functionality uses **SPARQL queries** for efficient, scalable searches that work well with large RDF datasets. It performs **case-sensitive matching by default** and looks through:
-
-✅ **RDF Subjects** - The full URI of each concept (e.g., finds "Vehicle" in `ns:Vehicle`)
-✅ **RDF Objects** - All property values including:
-- **Preferred Labels** (`skos:prefLabel`) - Human-readable names
-- **Definitions** (`skos:definition`) - Concept descriptions
-- **Notes** (`skos:note`) - Additional explanatory text
-
-### Search Output
-
-Results show matching concepts with their properties. By default, results are limited to 10 matches:
-
-```
-──────────────────────────────────── SKOS Search Results for 'Vehicle' ─────────────────────────────────────
-Found 10 match(es) for 'Vehicle' (limited to 10):
-
-1. Vehicle
-   URI: https://example.org/vss#Vehicle
-   Property: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-   Value: http://www.w3.org/2004/02/skos/core#Concept
-
-2. Vehicle
-   URI: https://example.org/vss#Vehicle
-   Property: http://www.w3.org/2004/02/skos/core#prefLabel
-   Value: Vehicle
-
-3. Vehicle.averageSpeed
-   URI: https://example.org/vss#Vehicle.averageSpeed
-   Property: http://www.w3.org/2004/02/skos/core#prefLabel
-   Value: Vehicle.averageSpeed
-
-...
-
-10. Vehicle_LowVoltageSystemState_Enum
-    URI: https://example.org/vss#Vehicle_LowVoltageSystemState_Enum
-    Property: http://www.w3.org/2004/02/skos/core#prefLabel
-    Value: Vehicle_LowVoltageSystemState_Enum
-```
-
-For unlimited results, use the `--limit` option:
-
-```bash
-s2dm search skos -f output.ttl -t Vehicle --limit inf
-```
-
-```
-──────────────────────────────────── SKOS Search Results for 'Vehicle' ─────────────────────────────────────
-Found 22 match(es) for 'Vehicle':
-
-1. Vehicle
-   URI: https://example.org/vss#Vehicle
-   ...
-
-22. Vehicle_LowVoltageSystemState_Enum
-    URI: https://example.org/vss#Vehicle_LowVoltageSystemState_Enum
-    ...
-```
-
-### Performance Benefits
-
-The SPARQL-based approach provides several advantages:
-
-1. **Scalability**: SPARQL queries are optimized by the RDF engine and scale well with large datasets
-2. **Standards compliance**: Uses the W3C standard query language for RDF
-3. **Future-proof**: Can easily accommodate new SKOS elements without code changes
-
-## Input Schema
-
-The sample GraphQL schema (`sample.graphql`) contains:
-
-```graphql
-"""High-level vehicle data."""
-type Vehicle {
-  id: ID!
-  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
-  lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
-  adas: Vehicle_ADAS
-}
-
-"""All Advanced Driver Assist Systems data."""
-type Vehicle_ADAS {
-  isAutoPowerOptimize: Boolean
-  obstacleDetection_s: [Vehicle_ADAS_ObstacleDetection]
-}
+# Search for all matches (explicitly unlimited)
+s2dm search skos -f output.ttl -t "enum" -l all
 ```
 
 ## Expected Output
 
-The generated RDF Turtle file will contain:
+The generated SKOS follows a hierarchical collection structure:
 
-### 1. Namespace Prefixes
+### Object Concepts Collection
+Contains all GraphQL object types as `skos:Concept` members:
 ```turtle
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ns: <https://example.org/vss#> .
-```
+ns:ObjectConcepts a skos:Collection ;
+    skos:member ns:Vehicle, ns:Vehicle_ADAS ;
+    skos:prefLabel "Object Concepts"@en .
 
-### 2. Type Concepts
-```turtle
-ns:Vehicle a skos:Concept ;
+ns:Vehicle a skos:Concept, s2dm:ObjectType ;
     skos:prefLabel "Vehicle"@en ;
     skos:definition "High-level vehicle data." ;
-    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle whose URI is ns:Vehicle." .
-
-ns:Vehicle_ADAS a skos:Concept ;
-    skos:prefLabel "Vehicle_ADAS"@en ;
-    skos:definition "All Advanced Driver Assist Systems data." ;
-    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle_ADAS whose URI is ns:Vehicle_ADAS." .
+    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle whose URI is https://example.org/vss#Vehicle." .
 ```
 
-### 3. Field Concepts
+### Field Concepts Collection
+Contains all GraphQL fields and enum values as `skos:Concept` members:
 ```turtle
-ns:Vehicle.averageSpeed a skos:Concept ;
-    skos:prefLabel "Vehicle.averageSpeed"@en ;
-    skos:definition "" ;
-    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle.averageSpeed whose URI is ns:Vehicle.averageSpeed." .
+ns:FieldConcepts a skos:Collection ;
+    skos:member ns:Vehicle.averageSpeed, ns:Vehicle_LowVoltageSystemState_Enum.ON ;
+    skos:prefLabel "Field Concepts"@en .
 
-ns:Vehicle.adas a skos:Concept ;
-    skos:prefLabel "Vehicle.adas"@en ;
-    skos:definition "" ;
-    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle.adas whose URI is ns:Vehicle.adas." .
+ns:Vehicle.averageSpeed a skos:Concept, s2dm:Field ;
+    skos:prefLabel "Vehicle.averageSpeed"@en .
 ```
 
-### 4. Enum Concepts
+### Enum Collections
+Each GraphQL enum becomes its own `skos:Collection` with enum values as members:
 ```turtle
-ns:Vehicle_LowVoltageSystemState_Enum a skos:Concept ;
+ns:Vehicle_LowVoltageSystemState_Enum a skos:Collection ;
+    skos:member ns:Vehicle_LowVoltageSystemState_Enum.ON, ns:Vehicle_LowVoltageSystemState_Enum.OFF ;
     skos:prefLabel "Vehicle_LowVoltageSystemState_Enum"@en ;
-    skos:definition "Vehicle LowVoltageSystemState Enum" ;
-    skos:note "Content of SKOS definition was inherited from the description of the GraphQL SDL element Vehicle_LowVoltageSystemState_Enum whose URI is ns:Vehicle_LowVoltageSystemState_Enum." .
+    skos:definition "Vehicle LowVoltageSystemState Enum" .
+
+ns:Vehicle_LowVoltageSystemState_Enum.ON a skos:Concept, s2dm:EnumValue ;
+    skos:prefLabel "Vehicle_LowVoltageSystemState_Enum.ON"@en .
 ```
 
 ## What Gets Generated
 
-The SKOS exporter processes:
+### Object Types
+- Each GraphQL object type becomes a `skos:Concept` with `s2dm:ObjectType`
+- Added to `ObjectConcepts` collection
+- Uses GraphQL description as `skos:definition` if available (no fallback definitions)
 
-✅ **GraphQL Object Types** → SKOS Concepts
-✅ **GraphQL Fields** → SKOS Concepts (with dot notation: `Type.field`)
-✅ **GraphQL Enums** → SKOS Concepts
-✅ **Descriptions** → Concept definitions
-✅ **BCP 47 Language Tags** → Proper internationalization
+### Fields (Scalar/Enum Types)
+- Each scalar or enum field becomes a `skos:Concept` with `s2dm:Field`
+- Added to `FieldConcepts` collection
+- Uses GraphQL field description if available (no fallback definitions)
 
-❌ **Excluded**: `Query`, `Mutation` types and `id` fields
+### Fields (Object References)
+- Object reference fields are **excluded** (they represent relationships, not data properties)
+- Only scalar and enum fields become field concepts
 
-## Validation
+### Enums
+- Each enum becomes a `skos:Collection`
+- Each enum value becomes a `skos:Concept` with `s2dm:EnumValue`
+- Enum values are members of both their enum collection and `FieldConcepts`
 
-The generated RDF can be validated using:
-- [RDF Turtle Validator](https://www.w3.org/RDF/Validator/)
-- [SKOS Testing Tool](https://www.w3.org/2004/02/skos/validation)
-- Standard RDF tools (Protégé, Apache Jena, etc.)
+### Exclusions
+- Query, Mutation, and Subscription types are excluded
+- Object reference fields are excluded (e.g., `Vehicle.adas: ADAS` won't create `Vehicle.adas` concept)
+- Built-in scalar types (String, Int, etc.) are excluded
+- Fields with `@deprecated` directive are excluded

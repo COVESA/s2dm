@@ -110,6 +110,70 @@ class SKOSSearchService:
             # Integer limit
             return limit if limit > 0 else 0
 
+    def count_keyword_matches(self, keyword: str, ignore_case: bool = False) -> int:
+        """Count total number of matches for a keyword in SKOS RDF data using SPARQL.
+
+        Searches both RDF subjects and objects for the specified keyword and returns
+        the total count without applying any limit.
+
+        Args:
+            keyword: The keyword to search for
+            ignore_case: Whether to perform case-insensitive matching (default: False)
+
+        Returns:
+            Total number of matching results
+        """
+        if not keyword.strip():
+            return 0
+
+        # Build filter conditions based on case sensitivity
+        if ignore_case:
+            subject_filter = "FILTER(CONTAINS(LCASE(STR(?subject)), LCASE(?keyword)))"
+            object_filter = "FILTER(CONTAINS(LCASE(STR(?object)), LCASE(?keyword)))"
+        else:
+            subject_filter = "FILTER(CONTAINS(STR(?subject), ?keyword))"
+            object_filter = "FILTER(CONTAINS(STR(?object), ?keyword))"
+
+        # Count query using subquery to avoid duplicates
+        count_query_template = f"""
+        SELECT (COUNT(*) AS ?total_count)
+        WHERE {{
+            {{
+                SELECT DISTINCT ?subject ?predicate ?object ?match_type
+                WHERE {{
+                    {{
+                        ?subject ?predicate ?object .
+                        {subject_filter}
+                        BIND("subject" AS ?match_type)
+                    }}
+                    UNION
+                    {{
+                        ?subject ?predicate ?object .
+                        {object_filter}
+                        BIND("object" AS ?match_type)
+                    }}
+                }}
+            }}
+        }}
+        """
+
+        # Prepare and execute count query
+        try:
+            prepared_query = prepareQuery(count_query_template)
+            results = self.graph.query(prepared_query, initBindings={"keyword": Literal(keyword)})
+
+            # Extract count from result
+            for row in results:
+                result_row: ResultRow = cast(ResultRow, row)
+                total_count = int(result_row["total_count"])
+                logging.info(f"Found {total_count} total matches for keyword '{keyword}'")
+                return total_count
+
+            return 0
+        except Exception as e:
+            logging.error(f"Count query execution failed: {e}")
+            raise ValueError(f"Count query execution failed: {e}") from e
+
     def search_keyword(
         self, keyword: str, ignore_case: bool = False, limit_value: int | None = 10
     ) -> list[SearchResult]:
@@ -205,5 +269,5 @@ class SKOSSearchService:
             )
             search_results.append(result)
 
-        logging.info(f"Found {len(search_results)} unique matches for keyword '{keyword}'")
+        logging.info(f"{len(search_results)} unique matches for keyword '{keyword}' with limit {limit_value}")
         return search_results

@@ -11,6 +11,7 @@ enum Vehicle_LowVoltageSystemState_Enum {
 """High-level vehicle data."""
 type Vehicle {
   id: ID!
+  "Average speed of the vehicle"
   averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
   lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
   adas: Vehicle_ADAS

@@ -693,6 +693,7 @@ def display_search_results(
     results: list[SearchResult],
     term: str,
     limit_value: int | None = None,
+    total_count: int | None = None,
 ) -> None:
     """Display SKOS search results in a formatted way.
 
@@ -701,16 +702,21 @@ def display_search_results(
         results: List of SearchResult objects
         term: The search term that was used
         limit_value: The parsed limit value (None if unlimited, 0 if zero limit)
+        total_count: Total number of matches found (before applying limit)
     """
     if not results:
         console.print(f"[yellow]No matches found for '{term}'[/yellow]")
         return
 
-    # Show result count with limit information
-    result_message = f"[green]Found {len(results)} match(es) for '{term}'"
-    if limit_value is not None and limit_value > 0:
-        result_message += f" (limited to {limit_value})"
-    result_message += ":[/green]"
+    # Show result count with appropriate message format
+    if total_count is not None and limit_value is not None and limit_value > 0 and len(results) < total_count:
+        # Limited results: show "Found X matches, showing only Y:"
+        result_message = f"[green]Found {total_count} match(es) for '{term}', showing only {len(results)}:[/green]"
+    else:
+        # Unlimited results or showing all: show "Found X matches for 'term':"
+        actual_count = total_count if total_count is not None else len(results)
+        result_message = f"[green]Found {actual_count} match(es) for '{term}':[/green]"
+
     console.print(result_message)
     console.print()
 
@@ -756,8 +762,8 @@ def display_search_results(
     show_default=True,
     help=f"Maximum number of results to return. Use {list(NO_LIMIT_KEYWORDS)} for unlimited results.",
 )
-@click.pass_context
-def search_skos(ctx: click.Context, ttl_file: Path, term: str, case_insensitive: bool, limit: str) -> None:
+@click.pass_obj
+def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: bool, limit: str) -> None:
     """Search for terms in SKOS concepts using SPARQL.
 
     This command searches through RDF/Turtle files containing SKOS concepts,
@@ -771,16 +777,9 @@ def search_skos(ctx: click.Context, ttl_file: Path, term: str, case_insensitive:
     that contain the search term, focusing on meaningful content while
     excluding predicates from the search scope.
     """
-    console = ctx.obj["console"]
-
+    # Create search service
     try:
-        with SKOSSearchService(ttl_file) as service:
-            try:
-                limit_value = SKOSSearchService.parse_limit(limit)
-                results = service.search_keyword(term, ignore_case=case_insensitive, limit_value=limit_value)
-            except ValueError as e:
-                console.print(f"[red]Search failed: {e}[/red]")
-                raise click.ClickException(f"SKOS search failed: {e}") from e
+        service = SKOSSearchService(ttl_file)
     except FileNotFoundError as e:
         console.print(f"[red]File not found: {e}[/red]")
         raise click.ClickException(f"TTL file not found: {e}") from e
@@ -788,8 +787,26 @@ def search_skos(ctx: click.Context, ttl_file: Path, term: str, case_insensitive:
         console.print(f"[red]Invalid TTL file: {e}[/red]")
         raise click.ClickException(f"TTL file parsing failed: {e}") from e
 
+    with service:
+        # Parse limit value
+        limit_value = service.parse_limit(limit)
+
+        # Get total count first (for accurate reporting)
+        try:
+            total_count = service.count_keyword_matches(term, ignore_case=case_insensitive)
+        except ValueError as e:
+            console.print(f"[red]Count query failed: {e}[/red]")
+            raise click.ClickException(f"SKOS count query failed: {e}") from e
+
+        # Get limited results
+        try:
+            results = service.search_keyword(term, ignore_case=case_insensitive, limit_value=limit_value)
+        except ValueError as e:
+            console.print(f"[red]Search query failed: {e}[/red]")
+            raise click.ClickException(f"SKOS search query failed: {e}") from e
+
     console.rule(f"[bold blue]SKOS Search Results for '{term}'")
-    display_search_results(console, results, term, limit_value)
+    display_search_results(console, results, term, limit_value, total_count)
 
 
 # similar -> graphql

@@ -9,6 +9,7 @@ from s2dm.concept.models import (
     Concepts,
     ConceptUriModel,
     ConceptUriNode,
+    FieldMetadata,
     SpecHistoryModel,
     SpecHistoryNode,
 )
@@ -266,13 +267,17 @@ def generate_concept_uri(
 
 
 def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
-    """Extract all concepts from GraphQL named types.
+    """Extract all concepts from GraphQL named types with enhanced metadata.
+
+    This function extracts all concepts and captures additional GraphQL
+    field definitions for enhanced functionality (like SKOS generation),
+    while maintaining backward compatibility.
 
     Args:
         named_types: List of GraphQL named types to process
 
     Returns:
-        Concepts object containing all extracted concepts
+        Concepts object containing all extracted concepts plus field metadata
     """
     concepts = Concepts()
     for named_type in named_types:
@@ -308,5 +313,9 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
                     # field uses a scalar type or enum type
                     concepts.objects[named_type.name].append(field_fqn)
                     concepts.fields.append(field_fqn)
+                    # Enhanced metadata for advanced functionality (SKOS generation, etc.)
+                    concepts.field_metadata[field_fqn] = FieldMetadata(
+                        object_name=named_type.name, field_name=field_name, field_definition=field
+                    )
 
     return concepts
