@@ -58,6 +58,9 @@
 				<div class="my-n3"></div>
 			{{ end -}}
 			-->
+			{{ if .HasShortcode "graphql-voyager" }}
+				{{ partial "graphql-voyager-assets.html" . }}
+			{{ end }}
 		</main>
 		{{ if and (eq site.Params.doks.containerBreakpoint "fluid") (in .Site.Params.mainSections .Type) }}
 			</div>
