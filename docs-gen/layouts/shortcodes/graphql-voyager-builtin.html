@@ -44,17 +44,17 @@
   const containerId = '{{ $containerId }}';
   const schemaPath = '{{ $schema }}';
   const container = document.getElementById(containerId);
-  
+
   // Show loading state
   function showLoading() {
     container.innerHTML = '<div class="graphql-voyager-loading">Loading GraphQL Schema...</div>';
   }
-  
+
   // Show error state
   function showError(message) {
     container.innerHTML = '<div class="graphql-voyager-error">Error loading schema: ' + message + '</div>';
   }
-  
+
   // Wait for GraphQL Voyager to be available
   function waitForVoyager(callback) {
     if (typeof GraphQLVoyager !== 'undefined') {
@@ -63,12 +63,12 @@
       setTimeout(() => waitForVoyager(callback), 100);
     }
   }
-  
+
   // Load and render the schema
   function loadSchema() {
     // For Hugo, we need to construct the path to the assets
     const fullSchemaPath = schemaPath.startsWith('/') ? schemaPath : '/' + schemaPath;
-    
+
     fetch(fullSchemaPath)
       .then(response => {
         if (!response.ok) {
@@ -80,22 +80,22 @@
         if (!sdlText.trim()) {
           throw new Error('Schema file is empty');
         }
-        
+
         console.log('SDL loaded, length:', sdlText.length);
         console.log('SDL preview:', sdlText.substring(0, 200));
-        
+
         waitForVoyager(() => {
           try {
             console.log('Converting SDL to schema using GraphQL buildSchema');
-            
+
             // Use GraphQL's buildSchema to create a proper schema object
             let introspectionResult;
-            
+
             if (typeof GraphQL !== 'undefined' && GraphQL.buildSchema) {
               console.log('Using GraphQL.buildSchema');
               const schema = GraphQL.buildSchema(sdlText);
-              introspectionResult = GraphQL.getIntrospectionQuery ? 
-                GraphQL.introspectionFromSchema(schema) : 
+              introspectionResult = GraphQL.getIntrospectionQuery ?
+                GraphQL.introspectionFromSchema(schema) :
                 { data: { __schema: schema } };
             } else if (typeof GraphQLVoyager.sdlToSchema === 'function') {
               console.log('Using GraphQLVoyager.sdlToSchema');
@@ -104,15 +104,15 @@
               console.log('No schema conversion available, passing SDL directly');
               introspectionResult = null;
             }
-            
+
             console.log('Schema conversion result:', introspectionResult);
-            
+
             // Clear the container
             container.innerHTML = '';
-            
+
             // Configure Voyager options - enable documentation and full features
             const voyagerOptions = {};
-            
+
             // If we have introspection result, use it; otherwise pass SDL directly
             if (introspectionResult) {
               voyagerOptions.introspection = introspectionResult;
@@ -120,7 +120,7 @@
               // Try passing SDL directly - Voyager might handle it internally
               voyagerOptions.schemaSDL = sdlText;
             }
-            
+
             // Add display options using template variables
             const skipRelay = {{ if eq $skipRelay "true" }}true{{ else }}false{{ end }};
             const skipDeprecated = {{ if eq $skipDeprecated "true" }}true{{ else }}false{{ end }};
@@ -130,7 +130,7 @@
             const hideDocs = {{ if eq $hideDocs "true" }}true{{ else }}false{{ end }};
             const hideSettings = {{ if eq $hideSettings "true" }}true{{ else }}false{{ end }};
             const allowToChangeSchema = {{ if eq $allowToChangeSchema "true" }}true{{ else }}false{{ end }};
-            
+
             voyagerOptions.displayOptions = {
               skipRelay: skipRelay,
               skipDeprecated: skipDeprecated,
@@ -138,17 +138,17 @@
               showLeafFields: showLeafFields,
               hideRoot: hideRoot
             };
-            
+
             // Add UI options
             voyagerOptions.hideDocs = hideDocs;
             voyagerOptions.hideSettings = hideSettings;
             voyagerOptions.allowToChangeSchema = allowToChangeSchema;
-            
+
             console.log('Voyager options:', voyagerOptions);
-            
+
             // Render the voyager
             GraphQLVoyager.renderVoyager(container, voyagerOptions);
-            
+
             console.log('GraphQL Voyager rendered successfully');
           } catch (error) {
             console.error('Error converting SDL to schema:', error);
@@ -161,7 +161,7 @@
         showError(error.message);
       });
   }
-  
+
   // Start loading when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadSchema);
