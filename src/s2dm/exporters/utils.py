@@ -101,9 +101,61 @@ def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
     return ensure_query(schema)
 
 
+def load_schema_filtered(graphql_schema_path: Path, root_type: str) -> GraphQLSchema:
+    """Load and build GraphQL schema filtered by root type.
+
+    Args:
+        graphql_schema_path: Path to the GraphQL schema file or directory
+        root_type: Root type name to filter the schema
+    Returns:
+        Filtered GraphQL schema as GraphQLSchema object
+    Raises:
+        ValueError: If root type is not found in schema
+    """
+    graphql_schema = load_schema(graphql_schema_path)
+
+    if root_type not in graphql_schema.type_map:
+        raise ValueError(f"Root type '{root_type}' not found in schema")
+
+    log.info(f"Filtering schema with root type: {root_type}")
+
+    referenced_types = get_referenced_types(graphql_schema, root_type)
+    named_types = [t for t in referenced_types if isinstance(t, GraphQLNamedType)]
+
+    filtered_schema = GraphQLSchema(
+        query=graphql_schema.query_type,
+        mutation=graphql_schema.mutation_type,
+        subscription=graphql_schema.subscription_type,
+        types=named_types,
+        directives=graphql_schema.directives,
+        description=graphql_schema.description,
+        extensions=graphql_schema.extensions,
+    )
+
+    log.info(f"Filtered schema from {len(graphql_schema.type_map)} to {len(referenced_types)} types")
+
+    return filtered_schema
+
+
 def load_schema_as_str(graphql_schema_path: Path) -> str:
     """Load and build GraphQL schema but return as str."""
     return print_schema(load_schema(graphql_schema_path))
+
+
+def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> str:
+    """Load and build GraphQL schema filtered by root type, return as str.
+
+    Args:
+        graphql_schema_path: Path to the GraphQL schema file or directory
+        root_type: Root type name to filter the schema
+
+    Returns:
+        Filtered GraphQL schema as string
+
+    Raises:
+        ValueError: If root type is not found in schema
+    """
+    return print_schema(load_schema_filtered(graphql_schema_path, root_type))
 
 
 def create_tempfile_to_composed_schema(graphql_schema_path: Path) -> Path:

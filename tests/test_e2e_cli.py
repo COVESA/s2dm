@@ -10,6 +10,7 @@ from s2dm.cli import cli
 TESTS_DATA = Path(__file__).parent / "data"
 SAMPLE1 = TESTS_DATA / "schema1.graphql"
 SAMPLE2 = TESTS_DATA / "schema2.graphql"
+SAMPLE3 = TESTS_DATA / "schema3.graphql"
 UNITS = TESTS_DATA / "test_units.yaml"
 
 # Version bump test schemas
@@ -318,6 +319,58 @@ def test_similar_graphql(
     assert expected_returncode == result.exit_code, result.output
     assert expected_output in result.output
     assert out.exists()
+
+
+def test_compose_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-o", str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    composed_content = out.read_text()
+    assert "type Vehicle" in composed_content
+    assert "type Vehicle_ADAS" in composed_content
+    assert "type InCabinArea2x2" in composed_content
+    assert "enum Acceleration_Unit_Enum" in composed_content
+    assert "directive @range" in composed_content
+
+    assert "Successfully composed schema" in result.output
+
+
+def test_compose_graphql_with_root_type(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_filtered.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-r", "Vehicle", "-o", str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    composed_content = out.read_text()
+    assert "type Vehicle" in composed_content
+    assert "type Vehicle_ADAS" in composed_content
+    assert "Successfully composed schema with root type 'Vehicle'" in result.output
+
+
+def test_compose_graphql_with_root_type_nonexistent(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_error.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-r", "NonExistentType", "-o", str(out)])
+
+    assert result.exit_code == 1
+    assert not out.exists()
+    assert "Root type 'NonExistentType' not found in schema" in result.output
+
+
+def test_compose_graphql_root_type_filters_unreferenced_types(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_filtered.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-r", "Vehicle_ADAS", "-o", str(out)])
+    assert result.exit_code == 0
+
+    composed_content = out.read_text()
+
+    assert "type Vehicle_ADAS" in composed_content
+    assert "type Vehicle_ADAS_ABS" in composed_content
+    assert "type Vehicle_Body" in composed_content
+
+    assert "type Vehicle_Occupant" not in composed_content
+    assert "type InCabinArea2x2" not in composed_content
 
 
 # ToDo(DA): needs refactoring after final decision how stats will work

@@ -19,6 +19,8 @@ from s2dm.exporters.utils import (
     get_all_named_types,
     get_all_object_types,
     load_schema,
+    load_schema_as_str,
+    load_schema_as_str_filtered,
     search_schema,
 )
 from s2dm.exporters.vspec import translate_to_vspec
@@ -153,6 +155,52 @@ def stats() -> None:
 def validate() -> None:
     """Diff commands for multiple input types."""
     pass
+
+
+@click.command()
+@click.option(
+    "--schema",
+    "-s",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="GraphQL schema file or directory containing schema files",
+)
+@click.option(
+    "--root-type",
+    "-r",
+    type=str,
+    help="Root type name for filtering the schema",
+)
+@output_option
+@click.pass_context
+def compose(ctx: click.Context, schema: Path, root_type: str | None, output: Path) -> None:
+    """Compose GraphQL schema files into a single output file."""
+    try:
+        if root_type:
+            composed_schema_str = load_schema_as_str_filtered(schema, root_type)
+        else:
+            composed_schema_str = load_schema_as_str(schema)
+
+        output.write_text(composed_schema_str)
+
+        console = ctx.obj
+        if root_type:
+            console.print(f"[green]✓[/green] Successfully composed schema with root type '{root_type}' to {output}")
+        else:
+            console.print(f"[green]✓[/green] Successfully composed schema to {output}")
+
+    except OSError as e:
+        console = ctx.obj
+        console.print(f"[red]✗[/red] File I/O error: {e}")
+        sys.exit(1)
+    except ValueError as e:
+        console = ctx.obj
+        console.print(f"[red]✗[/red] Invalid schema: {e}")
+        sys.exit(1)
+    except Exception as e:
+        console = ctx.obj
+        console.print(f"[red]✗[/red] Unexpected error: {e}")
+        sys.exit(1)
 
 
 # SHACL
@@ -892,6 +940,7 @@ def stats_graphql(console: Console, schema: Path) -> None:
 
 
 cli.add_command(check)
+cli.add_command(compose)
 cli.add_command(diff)
 
 
