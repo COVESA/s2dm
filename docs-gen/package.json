@@ -31,6 +31,8 @@
     "@tabler/icons": "^2.40.0",
     "exec-bin": "^1.0.0",
     "gethyas": "^2.2.2",
+    "graphql": "^16.8.1",
+    "graphql-voyager": "^2.0.0",
     "hugo-installer": "^4.0.1"
   },
   "devDependencies": {
