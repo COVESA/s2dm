@@ -17,10 +17,11 @@ enum VelocityUnitEnum {
 The name of the enum itself refers to the quantity kind (e.g., `Velocity`).
 A set of commonly used units is provided in the file [`unit_enums.graphql`](https://github.com/COVESA/s2dm/blob/main/src/s2dm/spec/unit_enums.graphql).
 
-> [!NOTE]
-> [It is planned](https://github.com/COVESA/s2dm/issues/43) to adopt and reuse an existing standard data model for units.
-> At the moment, the units file is inspired by [COVESA VSS Units file](https://github.com/COVESA/vehicle_signal_specification/blob/main/spec/units.md).
-> The tentative model that will be used in the future is the [QUDT units](http://www.qudt.org/doc/DOC_VOCAB-UNITS-ALL.html).
+{{< callout context="note" >}}
+It is planned to adopt and reuse an existing standard data model for units. See [issue #43](https://github.com/COVESA/s2dm/issues/43) for details.
+Currently, the units file is inspired by the [COVESA VSS Units file](https://github.com/COVESA/vehicle_signal_specification/blob/main/spec/units.md).
+The tentative model for future use is [QUDT units](http://www.qudt.org/doc/DOC_VOCAB-UNITS-ALL.html).
+{{< /callout >}}
 
 
 ### Custom scalars
