@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from graphql import (
     GraphQLEnumType,
@@ -25,7 +25,7 @@ from s2dm.exporters.utils import (
     get_instance_tag_object,
     has_directive,
     has_valid_instance_tag_field,
-    load_schema,
+    load_schema_with_naming,
     print_field_sdl,
 )
 
@@ -66,6 +66,7 @@ def translate_to_shacl(
     shapes_namespace_prefix: str,
     model_namespace: str,
     model_namespace_prefix: str,
+    naming_config: dict[str, Any] | None = None,
 ) -> Graph:
     """Translate a GraphQL schema to SHACL."""
     namespaces = Namespaces(
@@ -74,7 +75,7 @@ def translate_to_shacl(
         Namespace(model_namespace),
         Namespace(model_namespace_prefix),
     )
-    schema = load_schema(schema_path)
+    schema = load_schema_with_naming(schema_path, naming_config)
     graph = Graph()
     graph.bind(namespaces.shapes_prefix, namespaces.shapes)
     graph.bind(namespaces.model_prefix, namespaces.model)
