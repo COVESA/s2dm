@@ -265,7 +265,9 @@ def compose(console: Console, schema: Path, root_type: str | None, output: Path)
     help="The prefix for the data model",
     show_default=True,
 )
+@click.pass_context
 def shacl(
+    ctx: click.Context,
     schema: Path,
     output: Path,
     serialization_format: str,
@@ -275,12 +277,14 @@ def shacl(
     model_namespace_prefix: str,
 ) -> None:
     """Generate SHACL shapes from a given GraphQL schema."""
+    naming_config = ctx.obj.get("naming_config")
     result = translate_to_shacl(
         schema,
         shapes_namespace,
         shapes_namespace_prefix,
         model_namespace,
         model_namespace_prefix,
+        naming_config,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = result.serialize(destination=output, format=serialization_format)
@@ -291,9 +295,15 @@ def shacl(
 @export.command
 @schema_option
 @output_option
-def vspec(schema: Path, output: Path) -> None:
+@click.pass_context
+def vspec(ctx: click.Context, schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
-    result = translate_to_vspec(schema)
+    naming_config = ctx.obj.get("naming_config")
+    if naming_config:
+        log.info(f"Loaded naming config: {naming_config}")
+    else:
+        log.info("No naming config provided")
+    result = translate_to_vspec(schema, naming_config)
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(result)
 
@@ -323,9 +333,13 @@ def vspec(schema: Path, output: Path) -> None:
     default=False,
     help="Expand instance tags into nested structure instead of arrays",
 )
-def jsonschema(schema: Path, output: Path, root_type: str | None, strict: bool, expanded_instances: bool) -> None:
+@click.pass_context
+def jsonschema(
+    ctx: click.Context, schema: Path, output: Path, root_type: str | None, strict: bool, expanded_instances: bool
+) -> None:
     """Generate JSON Schema from a given GraphQL schema."""
-    result = translate_to_jsonschema(schema, root_type, strict, expanded_instances)
+    naming_config = ctx.obj.get("naming_config")
+    result = translate_to_jsonschema(schema, root_type, strict, expanded_instances, naming_config)
     _ = output.write_text(result)
 
 

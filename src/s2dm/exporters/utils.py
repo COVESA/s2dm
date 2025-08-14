@@ -36,6 +36,8 @@ from graphql.utilities import print_schema
 
 from s2dm import log
 
+from .naming_utils import apply_naming_to_schema
+
 
 def read_file(file_path: Path) -> str:
     """
@@ -682,3 +684,11 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
 
     log.info(f"Found {len(referenced)} referenced types from root type '{root_type}'")
     return referenced
+
+
+def load_schema_with_naming(schema_path: Path, naming_config: dict[str, Any] | None = None) -> GraphQLSchema:
+    """Load schema and apply naming conversion."""
+    schema = load_schema(schema_path)
+    if naming_config:
+        schema = apply_naming_to_schema(schema, naming_config)
+    return schema
