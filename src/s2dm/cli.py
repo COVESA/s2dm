@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import rich_click as click
+import yaml
 from rich.console import Console
 from rich.traceback import install
 
@@ -75,6 +76,18 @@ def pretty_print_dict_json(result: dict[str, Any]) -> dict[str, Any]:
     return {k: multiline_str_representer(v) for k, v in result.items()}
 
 
+def load_naming_config(config_path: Path | None) -> dict[str, Any] | None:
+    if config_path is None:
+        return None
+
+    try:
+        with config_path.open("r", encoding="utf-8") as file:
+            result = yaml.safe_load(file)
+            return result if isinstance(result, dict) else {}
+    except Exception as e:
+        raise click.ClickException(f"Failed to load naming config from {config_path}: {e}") from e
+
+
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
 @click.option(
     "-l",
@@ -116,9 +129,17 @@ def diff() -> None:
 
 
 @click.group()
-def export() -> None:
+@click.option(
+    "--naming-config",
+    "-n",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="YAML file containing naming configuration",
+)
+@click.pass_context
+def export(ctx: click.Context, naming_config: Path | None) -> None:
     """Export commands."""
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj["naming_config"] = load_naming_config(naming_config)
 
 
 @click.group()
