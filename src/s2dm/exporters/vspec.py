@@ -22,7 +22,7 @@ from s2dm.exporters.utils import (
     get_instance_tag_dict,
     get_instance_tag_object,
     has_directive,
-    load_schema,
+    load_schema_with_naming,
 )
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
@@ -161,9 +161,9 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def translate_to_vspec(schema_path: Path) -> str:
+def translate_to_vspec(schema_path: Path, naming_config: dict[str, Any] | None = None) -> str:
     """Translate a GraphQL schema to YAML."""
-    schema = load_schema(schema_path)
+    schema = load_schema_with_naming(schema_path, naming_config)
 
     all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")

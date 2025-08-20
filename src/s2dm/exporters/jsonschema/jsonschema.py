@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from graphql import GraphQLSchema
 
 from s2dm import log
-from s2dm.exporters.utils import load_schema
+from s2dm.exporters.utils import load_schema_with_naming
 
 from .transformer import JsonSchemaTransformer
 
@@ -42,7 +43,11 @@ def transform(
 
 
 def translate_to_jsonschema(
-    schema_path: Path, root_type: str | None = None, strict: bool = False, expanded_instances: bool = False
+    schema_path: Path,
+    root_type: str | None = None,
+    strict: bool = False,
+    expanded_instances: bool = False,
+    naming_config: dict[str, Any] | None = None,
 ) -> str:
     """
     Translate a GraphQL schema file to JSON Schema format.
@@ -58,7 +63,7 @@ def translate_to_jsonschema(
     """
     log.info(f"Loading GraphQL schema from: {schema_path}")
 
-    graphql_schema = load_schema(schema_path)
+    graphql_schema = load_schema_with_naming(schema_path, naming_config)
     log.info(f"Successfully loaded GraphQL schema with {len(graphql_schema.type_map)} types")
 
     return transform(graphql_schema, root_type, strict, expanded_instances)
