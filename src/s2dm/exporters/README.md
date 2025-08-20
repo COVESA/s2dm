@@ -732,7 +732,7 @@ enumValue: "PascalCase"
 The exported schema will transform names as follows:
 
 - Type: `vehicle_info` → `VehicleInfo`
-- Field: `avg_speed` → `avgSpeed`  
+- Field: `avg_speed` → `avgSpeed`
 - Field: `fuel_type` → `fuelType`
 - Enum type: `fuel_type_enum` → `FuelTypeEnum`
 - Enum values: `GASOLINE_TYPE` → `GasolineType`, `DIESEL_TYPE` → `DieselType`
