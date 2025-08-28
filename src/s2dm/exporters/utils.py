@@ -699,3 +699,16 @@ def load_schema_with_naming(schema_path: Path, naming_config: dict[str, Any] | N
     if naming_config:
         schema = apply_naming_to_schema(schema, naming_config)
     return schema
+
+
+def is_built_in_type(type_name: str) -> bool:
+    return type_name.startswith("__") or type_name in {
+        "String",
+        "Int",
+        "Float",
+        "Boolean",
+        "ID",
+        "Query",
+        "Mutation",
+        "Subscription",
+    }

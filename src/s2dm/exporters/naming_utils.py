@@ -42,6 +42,9 @@ def get_target_case_for_element(element_type: str, context: str, naming_config: 
 
 def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any]) -> GraphQLSchema:
     """Apply naming conversion to a GraphQL schema by modifying object names directly."""
+
+    from s2dm.exporters.utils import is_built_in_type
+
     type_contexts = {
         GraphQLObjectType: "object",
         GraphQLInterfaceType: "interface",
@@ -53,16 +56,7 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
 
     new_type_map = {}
     for type_name, type_obj in schema.type_map.items():
-        if type_name.startswith("__") or type_name in {
-            "String",
-            "Int",
-            "Float",
-            "Boolean",
-            "ID",
-            "Query",
-            "Mutation",
-            "Subscription",
-        }:
+        if is_built_in_type(type_name):
             new_type_map[type_name] = type_obj
             continue
 
