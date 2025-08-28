@@ -108,15 +108,15 @@ class TestApplyNamingToSchema:
 
         naming_config = {"type": {"object": "PascalCase", "enum": "PascalCase"}}
 
-        converted_schema = apply_naming_to_schema(schema, naming_config)
+        apply_naming_to_schema(schema, naming_config)
 
-        assert "TestObject" in converted_schema.type_map
-        assert "TestEnum" in converted_schema.type_map
-        assert "test_object" not in converted_schema.type_map
-        assert "test_enum" not in converted_schema.type_map
+        assert "TestObject" in schema.type_map
+        assert "TestEnum" in schema.type_map
+        assert "test_object" not in schema.type_map
+        assert "test_enum" not in schema.type_map
 
-        assert converted_schema.type_map["TestObject"].name == "TestObject"
-        assert converted_schema.type_map["TestEnum"].name == "TestEnum"
+        assert schema.type_map["TestObject"].name == "TestObject"
+        assert schema.type_map["TestEnum"].name == "TestEnum"
 
     def test_apply_naming_preserves_builtin_types(self) -> None:
         """Test that built-in GraphQL types are not modified."""
@@ -125,14 +125,14 @@ class TestApplyNamingToSchema:
         schema = GraphQLSchema(query=query_type, types=[object_type])
 
         naming_config = {"type": {"object": "snake_case"}}
-        converted_schema = apply_naming_to_schema(schema, naming_config)
+        apply_naming_to_schema(schema, naming_config)
 
         # Built-in types should remain unchanged
         builtin_types = ["String", "Int", "Float", "Boolean", "ID", "Query", "Mutation", "Subscription"]
         for builtin in builtin_types:
             if builtin in schema.type_map:
-                assert builtin in converted_schema.type_map
-                assert converted_schema.type_map[builtin].name == builtin
+                assert builtin in schema.type_map
+                assert schema.type_map[builtin].name == builtin
 
     def test_apply_naming_converts_fields_and_enums_end_to_end(self) -> None:
         """Test complete schema conversion with types, fields, and enum values."""
@@ -151,19 +151,19 @@ class TestApplyNamingToSchema:
             "enumValue": "PascalCase",
         }
 
-        converted_schema = apply_naming_to_schema(schema, naming_config)
+        apply_naming_to_schema(schema, naming_config)
 
-        assert "TestObject" in converted_schema.type_map
-        assert "TestEnum" in converted_schema.type_map
+        assert "TestObject" in schema.type_map
+        assert "TestEnum" in schema.type_map
 
-        test_object_type = converted_schema.type_map["TestObject"]
+        test_object_type = schema.type_map["TestObject"]
         assert isinstance(test_object_type, GraphQLObjectType)
         assert "testField" in test_object_type.fields
         assert "enumField" in test_object_type.fields
         assert "TestField" not in test_object_type.fields
         assert "enum_field" not in test_object_type.fields
 
-        test_enum_type = converted_schema.type_map["TestEnum"]
+        test_enum_type = schema.type_map["TestEnum"]
         assert isinstance(test_enum_type, GraphQLEnumType)
         assert "OldValue" in test_enum_type.values
         assert "OLD_VALUE" not in test_enum_type.values
@@ -174,11 +174,10 @@ class TestApplyNamingToSchema:
         query_type = GraphQLObjectType(name="Query", fields={"test": GraphQLField(object_type)})
         original_schema = GraphQLSchema(query=query_type, types=[object_type])
 
-        converted_schema = apply_naming_to_schema(original_schema, {})
+        apply_naming_to_schema(original_schema, {})
 
-        assert len(converted_schema.type_map) == len(original_schema.type_map)
-        assert "TestObject" in converted_schema.type_map
-        test_object_type = converted_schema.type_map["TestObject"]
+        assert "TestObject" in original_schema.type_map
+        test_object_type = original_schema.type_map["TestObject"]
         assert isinstance(test_object_type, GraphQLObjectType)
         assert "TestField" in test_object_type.fields
 

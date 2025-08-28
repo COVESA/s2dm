@@ -40,8 +40,8 @@ def get_target_case_for_element(element_type: str, context: str, naming_config: 
     return None
 
 
-def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any]) -> GraphQLSchema:
-    """Apply naming conversion to a GraphQL schema by modifying object names directly."""
+def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any]) -> None:
+    """Apply naming conversion to a GraphQL schema by modifying it in place."""
 
     from s2dm.exporters.utils import is_built_in_type
 
@@ -54,10 +54,9 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
         GraphQLScalarType: "scalar",
     }
 
-    new_type_map = {}
+    types_to_rename = []
     for type_name, type_obj in schema.type_map.items():
         if is_built_in_type(type_name):
-            new_type_map[type_name] = type_obj
             continue
 
         context = type_contexts.get(type(type_obj))
@@ -66,27 +65,18 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
             if target_case:
                 new_name = convert_name(type_name, target_case)
                 if new_name != type_name:
-                    type_obj.name = new_name
-                    new_type_map[new_name] = type_obj
-                    continue
+                    types_to_rename.append((type_name, new_name, type_obj))
 
-        new_type_map[type_name] = type_obj
+    for old_name, new_name, type_obj in types_to_rename:
+        del schema.type_map[old_name]
+        type_obj.name = new_name
+        schema.type_map[new_name] = type_obj
 
-    for type_obj in new_type_map.values():
+    for type_obj in schema.type_map.values():
         if isinstance(type_obj, GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType):
             convert_field_names(type_obj, naming_config, schema)
         elif isinstance(type_obj, GraphQLEnumType):
             convert_enum_values(type_obj, naming_config)
-
-    return GraphQLSchema(
-        query=schema.query_type,
-        mutation=schema.mutation_type,
-        subscription=schema.subscription_type,
-        types=list(new_type_map.values()),
-        directives=schema.directives,
-        description=schema.description,
-        extensions=schema.extensions,
-    )
 
 
 def convert_names_in_collection(

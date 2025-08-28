@@ -697,7 +697,7 @@ def load_schema_with_naming(schema_path: Path, naming_config: dict[str, Any] | N
     """Load schema and apply naming conversion."""
     schema = load_schema(schema_path)
     if naming_config:
-        schema = apply_naming_to_schema(schema, naming_config)
+        apply_naming_to_schema(schema, naming_config)
     return schema
 
 
