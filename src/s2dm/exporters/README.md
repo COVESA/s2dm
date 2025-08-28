@@ -668,28 +668,28 @@ The naming configuration is defined in a YAML file with the following structure:
 ```yaml
 # Transform type names by type context
 type:
-  object: "PascalCase"
-  interface: "PascalCase"
-  input: "PascalCase"
-  enum: "PascalCase"
-  union: "PascalCase"
-  scalar: "PascalCase"
+  object: PascalCase
+  interface: PascalCase
+  input: PascalCase
+  enum: PascalCase
+  union: PascalCase
+  scalar: PascalCase
 
 # Transform field names by type context
 field:
-  object: "camelCase"
-  interface: "camelCase"
-  input: "snake_case"
+  object: camelCase
+  interface: camelCase
+  input: snake_case
 
 # Transform enum values (no context needed)
-enumValue: "MACROCASE"
+enumValue: MACROCASE
 
 # Transform instanceTag field names (no context needed)
-instanceTag: "COBOL-CASE"
+instanceTag: COBOL-CASE
 
 # Transform argument names by context
 argument:
-  field: "camelCase"
+  field: camelCase
 ```
 
 ### Supported Case Formats
@@ -725,11 +725,11 @@ And this naming configuration:
 
 ```yaml
 type:
-  object: "PascalCase"
-  enum: "PascalCase"
+  object: PascalCase
+  enum: PascalCase
 field:
-  object: "camelCase"
-enumValue: "PascalCase"
+  object: camelCase
+enumValue: PascalCase
 ```
 
 The exported schema will transform names as follows:
