@@ -675,7 +675,7 @@ type:
   union: "PascalCase"
   scalar: "PascalCase"
 
-# Transform field names by parent type context
+# Transform field names by type context
 field:
   object: "camelCase"
   interface: "camelCase"
@@ -683,6 +683,9 @@ field:
 
 # Transform enum values (no context needed)
 enumValue: "MACROCASE"
+
+# Transform instanceTag field names (no context needed)
+instanceTag: "COBOL-CASE"
 
 # Transform argument names by context
 argument:
@@ -736,6 +739,34 @@ The exported schema will transform names as follows:
 - Field: `fuel_type` → `fuelType`
 - Enum type: `fuel_type_enum` → `FuelTypeEnum`
 - Enum values: `GASOLINE_TYPE` → `GasolineType`, `DIESEL_TYPE` → `DieselType`
+
+### Validation Rules
+
+The naming configuration system enforces several validation rules to ensure consistency and correctness:
+
+#### Element Type Validation
+
+- **Valid element types**: Only `type`, `field`, `argument`, `enumValue`, and `instanceTag` are allowed
+- **Context restrictions**: Some element types cannot have context-specific configurations:
+  - `enumValue` and `instanceTag` are contextless and use a single case format
+  - `argument` can only have `field` context
+- **Value type validation**: Element values must be either strings (case formats) or dictionaries (for context-specific configurations)
+
+#### Context Validation
+
+- **Type contexts**: `object`, `interface`, `input`, `scalar`, `union`, `enum`
+- **Field contexts**: `object`, `interface`, `input`
+- **Argument contexts**: `field`
+
+#### Case Format Validation
+
+- **Valid case formats**: `camelCase`, `PascalCase`, `snake_case`, `kebab-case`, `MACROCASE`, `COBOL-CASE`, `flatcase`, `TitleCase`
+- **Format enforcement**: Only recognized case formats are accepted; invalid formats will cause validation errors
+
+#### Special Rules
+
+- **EnumValue-InstanceTag pairing**: If `enumValue` is present in the configuration, `instanceTag` must also be present
+- **InstanceTag preservation**: The literal field name `instanceTag` is never transformed, regardless of naming configuration, to preserve its semantic meaning
 
 ### Notes
 
