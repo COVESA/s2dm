@@ -12,25 +12,53 @@ from graphql import (
     get_named_type,
 )
 
+CASE_CONVERTERS = {
+    "camelCase": camelcase,
+    "PascalCase": pascalcase,
+    "snake_case": snakecase,
+    "kebab-case": kebabcase,
+    "MACROCASE": macrocase,
+    "COBOL-CASE": cobolcase,
+    "flatcase": flatcase,
+    "TitleCase": titlecase,
+}
+
+TYPE_CONTEXTS = {
+    GraphQLObjectType: "object",
+    GraphQLInterfaceType: "interface",
+    GraphQLInputObjectType: "input",
+    GraphQLEnumType: "enum",
+    GraphQLUnionType: "union",
+    GraphQLScalarType: "scalar",
+}
+
 
 def convert_name(name: str, target_case: str) -> str:
-    case_converters = {
-        "camelCase": camelcase,
-        "PascalCase": pascalcase,
-        "snake_case": snakecase,
-        "kebab-case": kebabcase,
-        "MACROCASE": macrocase,
-        "COBOL-CASE": cobolcase,
-        "flatcase": flatcase,
-        "TitleCase": titlecase,
-    }
+    """Convert a name to the specified case format.
 
-    if target_case in case_converters:
-        return str(case_converters[target_case](name))
+    Args:
+        name: The name to convert
+        target_case: The target case format (e.g., "camelCase", "PascalCase", "snake_case")
+
+    Returns:
+        The converted name, or the original name if target_case is not supported
+    """
+    if target_case in CASE_CONVERTERS:
+        return str(CASE_CONVERTERS[target_case](name))
     return name
 
 
 def get_target_case_for_element(element_type: str, context: str, naming_config: dict[str, Any]) -> str | None:
+    """Get the target case conversion for a specific element type and context.
+
+    Args:
+        element_type: The type of element (e.g., "type", "field", "enumValue", "argument")
+        context: The context within the element type (e.g., "object", "interface", "input")
+        naming_config: Configuration dictionary specifying case conversions
+
+    Returns:
+        The target case string (e.g., "camelCase", "PascalCase") or None if not configured
+    """
     if element_type in naming_config:
         config_section = naming_config[element_type]
         if isinstance(config_section, dict) and context in config_section:
@@ -41,25 +69,21 @@ def get_target_case_for_element(element_type: str, context: str, naming_config: 
 
 
 def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any]) -> None:
-    """Apply naming conversion to a GraphQL schema by modifying it in place."""
+    """Apply naming conversion to a GraphQL schema by modifying it in place.
+
+    Args:
+        schema: The GraphQL schema to modify
+        naming_config: Configuration dictionary specifying case conversions for different element types
+    """
 
     from s2dm.exporters.utils import is_built_in_type
-
-    type_contexts = {
-        GraphQLObjectType: "object",
-        GraphQLInterfaceType: "interface",
-        GraphQLInputObjectType: "input",
-        GraphQLEnumType: "enum",
-        GraphQLUnionType: "union",
-        GraphQLScalarType: "scalar",
-    }
 
     types_to_rename = []
     for type_name, type_obj in schema.type_map.items():
         if is_built_in_type(type_name):
             continue
 
-        context = type_contexts.get(type(type_obj))
+        context = TYPE_CONTEXTS.get(type(type_obj))
         if context:
             target_case = get_target_case_for_element("type", context, naming_config)
             if target_case:
@@ -79,20 +103,17 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
             convert_enum_values(type_obj, naming_config)
 
 
-def convert_names_in_collection(
-    collection: dict[str, Any], element_type: str, context: str, naming_config: dict[str, Any]
-) -> None:
-    target_case = get_target_case_for_element(element_type, context, naming_config)
-    if not target_case:
-        return
-
-    for name, item in collection.items():
-        new_name = convert_name(name, target_case)
-        if new_name != name:
-            item.name = new_name
-
-
 def is_instance_tag_field(field_name: str, field: Any, schema: GraphQLSchema) -> bool:
+    """Check if a field is an instanceTag field that should not be renamed.
+
+    Args:
+        field_name: Name of the field to check
+        field: The GraphQL field object
+        schema: The GraphQL schema containing the field's type
+
+    Returns:
+        True if this is an instanceTag field that should preserve its name
+    """
     if field_name != "instanceTag":
         return False
 
@@ -114,9 +135,14 @@ def convert_field_names(
     naming_config: dict[str, Any],
     schema: GraphQLSchema,
 ) -> None:
-    type_contexts = {GraphQLObjectType: "object", GraphQLInterfaceType: "interface", GraphQLInputObjectType: "input"}
+    """Convert field names and argument names for a GraphQL type object.
 
-    context = type_contexts.get(type(type_obj))
+    Args:
+        type_obj: The GraphQL type object to modify
+        naming_config: Configuration dictionary specifying case conversions
+        schema: The GraphQL schema (used for instanceTag field detection)
+    """
+    context = TYPE_CONTEXTS.get(type(type_obj))
     if not context:
         return
 
@@ -150,6 +176,12 @@ def convert_field_names(
 
 
 def convert_enum_values(type_obj: GraphQLEnumType, naming_config: dict[str, Any]) -> None:
+    """Convert enum value names for a GraphQL enum type.
+
+    Args:
+        type_obj: The GraphQL enum type to modify
+        naming_config: Configuration dictionary specifying case conversions
+    """
     target_case = get_target_case_for_element("enumValue", "", naming_config)
     if not target_case:
         return
