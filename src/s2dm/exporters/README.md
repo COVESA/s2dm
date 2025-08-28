@@ -772,7 +772,6 @@ The naming configuration system enforces several validation rules to ensure cons
 
 - Built-in GraphQL types (`String`, `Int`, `Float`, `Boolean`, `ID`, `Query`, `Mutation`, `Subscription`) are never transformed
 - If a configuration is not provided for an element type, the original names are preserved
-- Invalid case format names are ignored and original names are kept
 - Configuration is loaded once at the command level and applied consistently across the entire export process
 
 ## Identifiers
