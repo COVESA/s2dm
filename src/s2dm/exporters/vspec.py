@@ -14,6 +14,7 @@ from graphql import (
 )
 
 from s2dm import log
+from s2dm.exporters.naming_utils import convert_name, get_target_case_for_element
 from s2dm.exporters.utils import (
     FieldCase,
     get_all_expanded_instance_tags,
@@ -24,7 +25,6 @@ from s2dm.exporters.utils import (
     has_directive,
     load_schema_with_naming,
 )
-from s2dm.exporters.naming_utils import convert_name, get_target_case_for_element
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
     "MILLIMETER": "mm",
@@ -162,25 +162,23 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def apply_naming_to_instance_values(
-    instance_values: list[str], naming_config: dict[str, Any] | None
-) -> list[str]:
+def apply_naming_to_instance_values(instance_values: list[str], naming_config: dict[str, Any] | None) -> list[str]:
     """Apply naming conversion to instance tag values based on the naming configuration.
-    
+
     Args:
         instance_values: List of enum values to convert
         naming_config: Naming configuration dictionary
-        
+
     Returns:
         List of converted enum values
     """
     if not naming_config:
         return instance_values
-    
+
     target_case = get_target_case_for_element("instanceTag", "", naming_config)
     if not target_case:
         return instance_values
-    
+
     return [convert_name(value, target_case) for value in instance_values]
 
 
@@ -237,7 +235,9 @@ def translate_to_vspec(schema_path: Path, naming_config: dict[str, Any] | None =
     return yaml.dump(yaml_dict, default_flow_style=False, Dumper=CustomDumper, sort_keys=True)
 
 
-def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema, naming_config: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+def process_object_type(
+    object_type: GraphQLObjectType, schema: GraphQLSchema, naming_config: dict[str, Any] | None = None
+) -> dict[str, dict[str, Any]]:
     """Process a GraphQL object type and generate the corresponding YAML."""
     log.info(f"Processing object type '{object_type.name}'.")
 
