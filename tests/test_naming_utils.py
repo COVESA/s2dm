@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from graphql import (
     GraphQLArgument,
@@ -18,6 +20,12 @@ from s2dm.exporters.naming_utils import (
     convert_field_names,
     convert_name,
     get_target_case_for_element,
+)
+from s2dm.exporters.utils import (
+    expand_instance_tag,
+    get_all_object_types,
+    get_all_objects_with_directive,
+    load_schema,
 )
 
 
@@ -186,7 +194,8 @@ class TestConvertFieldNames:
         )
 
         naming_config = {"field": {"object": "camelCase"}}
-        convert_field_names(object_type, naming_config)
+        schema = GraphQLSchema(query=object_type)
+        convert_field_names(object_type, naming_config, schema)
 
         assert "testField" in object_type.fields
         assert "anotherTestField" in object_type.fields
@@ -198,7 +207,8 @@ class TestConvertFieldNames:
         interface_type = GraphQLInterfaceType(name="TestInterface", fields={"TestField": GraphQLField(GraphQLString)})
 
         naming_config = {"field": {"interface": "snake_case"}}
-        convert_field_names(interface_type, naming_config)
+        schema = GraphQLSchema(query=GraphQLObjectType(name="Query", fields={}))
+        convert_field_names(interface_type, naming_config, schema)
 
         assert "test_field" in interface_type.fields
         assert "TestField" not in interface_type.fields
@@ -208,7 +218,8 @@ class TestConvertFieldNames:
         input_type = GraphQLInputObjectType(name="TestInput", fields={"TestField": GraphQLInputField(GraphQLString)})
 
         naming_config = {"field": {"input": "kebab-case"}}
-        convert_field_names(input_type, naming_config)
+        schema = GraphQLSchema(query=GraphQLObjectType(name="Query", fields={}))
+        convert_field_names(input_type, naming_config, schema)
 
         assert "test-field" in input_type.fields
         assert "TestField" not in input_type.fields
@@ -226,7 +237,8 @@ class TestConvertFieldNames:
         )
 
         naming_config = {"argument": {"field": "MACROCASE"}}
-        convert_field_names(object_type, naming_config)
+        schema = GraphQLSchema(query=object_type)
+        convert_field_names(object_type, naming_config, schema)
 
         field_args = object_type.fields["testField"].args
         assert "TEST_ARG" in field_args
@@ -238,9 +250,31 @@ class TestConvertFieldNames:
         """Test that fields remain unchanged when no config is provided."""
         object_type = GraphQLObjectType(name="TestObject", fields={"TestField": GraphQLField(GraphQLString)})
 
-        convert_field_names(object_type, {})
+        schema = GraphQLSchema(query=object_type)
+        convert_field_names(object_type, {}, schema)
 
         assert "TestField" in object_type.fields
+
+    def test_skip_instance_tag_field_conversion(self) -> None:
+        """Test that instanceTag fields pointing to @instanceTag types are not converted."""
+        schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
+        schema = load_schema(schema_path)
+
+        door_type = schema.get_type("Door")
+        assert isinstance(door_type, GraphQLObjectType)
+
+        door_type.fields["regularField"] = GraphQLField(GraphQLString)
+
+        naming_config = {"field": {"object": "camelCase"}}
+        convert_field_names(door_type, naming_config, schema)
+
+        assert "instanceTag" in door_type.fields
+        assert "instancetag" not in door_type.fields
+
+        assert "regularField" in door_type.fields
+        assert "RegularField" not in door_type.fields
+
+        assert "isLocked" in door_type.fields  # was "isLocked" -> should stay as is in camelCase
 
 
 class TestConvertEnumValues:
@@ -282,6 +316,42 @@ class TestConvertEnumValues:
         convert_enum_values(enum_type, {})
 
         assert "OLD_VALUE" in enum_type.values
+
+
+class TestInstanceTagConversion:
+    """Test instance tag expansion with naming conversion."""
+
+    def test_expand_instance_tag_with_naming_config(self) -> None:
+        """Test that instance tag expansion applies naming conversion."""
+        schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
+        schema = load_schema(schema_path)
+        object_types = get_all_object_types(schema)
+        instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
+
+        assert len(instance_tag_objects) > 0
+        door_position = next((obj for obj in instance_tag_objects if obj.name == "DoorPosition"), None)
+        assert door_position is not None
+
+        naming_config = {"instanceTag": "PascalCase"}
+        result = expand_instance_tag(door_position, naming_config)
+
+        expected = ["Row1.Driverside", "Row1.Passengerside", "Row2.Driverside", "Row2.Passengerside"]
+        assert set(result) == set(expected)
+
+    def test_expand_instance_tag_without_naming_config(self) -> None:
+        """Test that instance tag expansion works without naming config."""
+        schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
+        schema = load_schema(schema_path)
+        object_types = get_all_object_types(schema)
+        instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
+
+        door_position = next((obj for obj in instance_tag_objects if obj.name == "DoorPosition"), None)
+        assert door_position is not None
+
+        result = expand_instance_tag(door_position)
+
+        expected = ["ROW1.DRIVERSIDE", "ROW1.PASSENGERSIDE", "ROW2.DRIVERSIDE", "ROW2.PASSENGERSIDE"]
+        assert set(result) == set(expected)
 
 
 if __name__ == "__main__":

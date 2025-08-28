@@ -9,6 +9,7 @@ from graphql import (
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLUnionType,
+    get_named_type,
 )
 
 
@@ -79,7 +80,7 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
 
     for type_obj in new_type_map.values():
         if isinstance(type_obj, GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType):
-            convert_field_names(type_obj, naming_config)
+            convert_field_names(type_obj, naming_config, schema)
         elif isinstance(type_obj, GraphQLEnumType):
             convert_enum_values(type_obj, naming_config)
 
@@ -107,8 +108,27 @@ def convert_names_in_collection(
             item.name = new_name
 
 
+def is_instance_tag_field(field_name: str, field: Any, schema: GraphQLSchema) -> bool:
+    if field_name != "instanceTag":
+        return False
+
+    field_type = get_named_type(field.type)
+    target_type = schema.get_type(field_type.name)
+
+    if not isinstance(target_type, GraphQLObjectType):
+        return False
+
+    if target_type.ast_node and target_type.ast_node.directives:
+        for directive in target_type.ast_node.directives:
+            if directive.name.value == "instanceTag":
+                return True
+    return False
+
+
 def convert_field_names(
-    type_obj: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType, naming_config: dict[str, Any]
+    type_obj: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType,
+    naming_config: dict[str, Any],
+    schema: GraphQLSchema,
 ) -> None:
     type_contexts = {GraphQLObjectType: "object", GraphQLInterfaceType: "interface", GraphQLInputObjectType: "input"}
 
@@ -120,8 +140,11 @@ def convert_field_names(
     if target_case:
         new_fields = {}
         for old_name, field in type_obj.fields.items():
-            new_name = convert_name(old_name, target_case)
-            new_fields[new_name] = field
+            if is_instance_tag_field(old_name, field, schema):
+                new_fields[old_name] = field
+            else:
+                new_name = convert_name(old_name, target_case)
+                new_fields[new_name] = field
 
         type_obj.fields.clear()
         type_obj.fields.update(new_fields)

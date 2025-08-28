@@ -35,8 +35,7 @@ from graphql.type import (
 from graphql.utilities import print_schema
 
 from s2dm import log
-
-from .naming_utils import apply_naming_to_schema
+from s2dm.exporters.naming_utils import apply_naming_to_schema, convert_name, get_target_case_for_element
 
 
 def read_file(file_path: Path) -> str:
@@ -232,17 +231,18 @@ def get_all_objects_with_directive(objects: list[GraphQLObjectType], directive_n
 
 def get_all_expanded_instance_tags(
     schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
 ) -> dict[GraphQLObjectType, list[str]]:
     all_expanded_instance_tags: dict[GraphQLObjectType, list[str]] = {}
     for object in get_all_objects_with_directive(get_all_object_types(schema), "instanceTag"):
-        all_expanded_instance_tags[object] = expand_instance_tag(object)
+        all_expanded_instance_tags[object] = expand_instance_tag(object, naming_config)
 
     log.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
 
     return all_expanded_instance_tags
 
 
-def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
+def expand_instance_tag(object: GraphQLObjectType, naming_config: dict[str, Any] | None = None) -> list[str]:
     log.debug(f"Expanding instanceTag for object: {object.name}")
     expanded_tags = []
     if not has_directive(object, "instanceTag"):
@@ -256,7 +256,14 @@ def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
             if not isinstance(field_type, GraphQLEnumType):
                 # TODO: Move this check to a validation function for the @instanceTag directive
                 raise TypeError(f"Field '{field_name}' in object '{object.name}' is not an enum.")
-            tags_per_enum_field.append(list(field_type.values.keys()))
+
+            enum_values = list(field_type.values.keys())
+            if naming_config:
+                target_case = get_target_case_for_element("instanceTag", "", naming_config)
+                if target_case:
+                    enum_values = [convert_name(value, target_case) for value in enum_values]
+
+            tags_per_enum_field.append(enum_values)
         log.debug(f"Tags per field: {tags_per_enum_field}")
 
         # Combine tags from different enum fields

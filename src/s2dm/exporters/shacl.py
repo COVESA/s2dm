@@ -90,13 +90,17 @@ def translate_to_shacl(
         if has_directive(object_type, "instanceTag"):
             log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
             continue
-        process_object_type(namespaces, object_type, graph, schema)
+        process_object_type(namespaces, object_type, graph, schema, naming_config)
 
     return graph
 
 
 def process_object_type(
-    namespaces: Namespaces, object_type: GraphQLObjectType, graph: Graph, schema: GraphQLSchema
+    namespaces: Namespaces,
+    object_type: GraphQLObjectType,
+    graph: Graph,
+    schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
 ) -> None:
     """Process a GraphQL object type and generate the corresponding SHACL triples."""
     log.info(f"Processing object type '{object_type.name}'.")
@@ -108,7 +112,7 @@ def process_object_type(
         _ = graph.add((shape_node, SH.description, Literal(object_type.description)))
 
     for field_name, field in object_type.fields.items():
-        process_field(namespaces, field_name, field, shape_node, graph, schema)
+        process_field(namespaces, field_name, field, shape_node, graph, schema, naming_config)
 
 
 def create_property_shape_with_literal(
@@ -190,6 +194,7 @@ def process_field(
     shape_node: URIRef,
     graph: Graph,
     schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
 ) -> None:
     """Process a field of a GraphQL object type and generate the corresponding SHACL triples."""
     log.info(f"Processing field... '{print_field_sdl(field)}'")
@@ -270,7 +275,7 @@ def process_field(
                 if has_valid_instance_tag_field(object_type=unwrapped_field_type, schema=schema):
                     instance_tag_object = get_instance_tag_object(unwrapped_field_type, schema)
                     if instance_tag_object is not None:
-                        expanded_tags = expand_instance_tag(instance_tag_object)
+                        expanded_tags = expand_instance_tag(instance_tag_object, naming_config)
                         for tag in expanded_tags:
                             create_property_shape_with_iri(
                                 namespaces=namespaces,
