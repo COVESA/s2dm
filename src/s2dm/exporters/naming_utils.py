@@ -91,16 +91,15 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
                 if new_name != type_name:
                     types_to_rename.append((type_name, new_name, type_obj))
 
-    for old_name, new_name, type_obj in types_to_rename:
-        del schema.type_map[old_name]
-        type_obj.name = new_name
-        schema.type_map[new_name] = type_obj
-
-    for type_obj in schema.type_map.values():
         if isinstance(type_obj, GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType):
             convert_field_names(type_obj, naming_config, schema)
         elif isinstance(type_obj, GraphQLEnumType):
             convert_enum_values(type_obj, naming_config)
+
+    for old_name, new_name, type_obj in types_to_rename:
+        del schema.type_map[old_name]
+        type_obj.name = new_name
+        schema.type_map[new_name] = type_obj
 
 
 def is_instance_tag_field(field_name: str, field: Any, schema: GraphQLSchema) -> bool:
