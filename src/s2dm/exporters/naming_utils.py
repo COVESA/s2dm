@@ -192,3 +192,23 @@ def convert_enum_values(type_obj: GraphQLEnumType, naming_config: dict[str, Any]
 
     type_obj.values.clear()
     type_obj.values.update(new_values)
+
+
+def apply_naming_to_instance_values(instance_values: list[str], naming_config: dict[str, Any] | None) -> list[str]:
+    """Apply naming conversion to instance tag values based on the naming configuration.
+
+    Args:
+        instance_values: List of enum values to convert
+        naming_config: Naming configuration dictionary
+
+    Returns:
+        List of converted enum values
+    """
+    if not naming_config:
+        return instance_values
+
+    target_case = get_target_case_for_element("instanceTag", "", naming_config)
+    if not target_case:
+        return instance_values
+
+    return [convert_name(value, target_case) for value in instance_values]

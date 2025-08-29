@@ -35,7 +35,7 @@ from graphql.type import (
 from graphql.utilities import print_schema
 
 from s2dm import log
-from s2dm.exporters.naming_utils import apply_naming_to_schema, convert_name, get_target_case_for_element
+from s2dm.exporters.naming_utils import apply_naming_to_instance_values, apply_naming_to_schema
 
 
 def read_file(file_path: Path) -> str:
@@ -257,12 +257,7 @@ def expand_instance_tag(object: GraphQLObjectType, naming_config: dict[str, Any]
                 # TODO: Move this check to a validation function for the @instanceTag directive
                 raise TypeError(f"Field '{field_name}' in object '{object.name}' is not an enum.")
 
-            enum_values = list(field_type.values.keys())
-            if naming_config:
-                target_case = get_target_case_for_element("instanceTag", "", naming_config)
-                if target_case:
-                    enum_values = [convert_name(value, target_case) for value in enum_values]
-
+            enum_values = apply_naming_to_instance_values(list(field_type.values.keys()), naming_config)
             tags_per_enum_field.append(enum_values)
         log.debug(f"Tags per field: {tags_per_enum_field}")
 

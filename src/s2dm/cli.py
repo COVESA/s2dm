@@ -141,10 +141,12 @@ def validate_naming_config(config: dict[str, Any]) -> None:
 
 def load_naming_config(config_path: Path | None) -> dict[str, Any] | None:
     if config_path is None:
+        log.info("No naming config provided")
         return None
 
     try:
         with config_path.open("r", encoding="utf-8") as file:
+            log.info(f"Loaded naming config: {config_path}")
             result = yaml.safe_load(file)
             config = result if isinstance(result, dict) else {}
             if config:
@@ -365,10 +367,6 @@ def shacl(
 def vspec(ctx: click.Context, schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
-    if naming_config:
-        log.info(f"Loaded naming config: {naming_config}")
-    else:
-        log.info("No naming config provided")
     result = translate_to_vspec(schema, naming_config)
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(result)

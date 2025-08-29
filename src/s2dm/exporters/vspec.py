@@ -14,7 +14,7 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.naming_utils import convert_name, get_target_case_for_element
+from s2dm.exporters.naming_utils import apply_naming_to_instance_values
 from s2dm.exporters.utils import (
     FieldCase,
     get_all_expanded_instance_tags,
@@ -160,26 +160,6 @@ class CustomDumper(yaml.Dumper):
 
 # Register the custom representer for lists
 CustomDumper.add_representer(list, CustomDumper.represent_list)
-
-
-def apply_naming_to_instance_values(instance_values: list[str], naming_config: dict[str, Any] | None) -> list[str]:
-    """Apply naming conversion to instance tag values based on the naming configuration.
-
-    Args:
-        instance_values: List of enum values to convert
-        naming_config: Naming configuration dictionary
-
-    Returns:
-        List of converted enum values
-    """
-    if not naming_config:
-        return instance_values
-
-    target_case = get_target_case_for_element("instanceTag", "", naming_config)
-    if not target_case:
-        return instance_values
-
-    return [convert_name(value, target_case) for value in instance_values]
 
 
 def translate_to_vspec(schema_path: Path, naming_config: dict[str, Any] | None = None) -> str:
