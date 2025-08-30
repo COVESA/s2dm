@@ -226,9 +226,7 @@ def add_directives_to_schema(schema_str: str, directive_map: dict[str | tuple[st
 
             if type_name in directive_map:
                 directives_str = " " + " ".join(directive_map[type_name])
-                line = line.replace(
-                    f"{type_kind} {type_name}", f"{type_kind} {type_name}{directives_str}"
-                )
+                line = line.replace(f"{type_kind} {type_name}", f"{type_kind} {type_name}{directives_str}")
 
         elif current_type:
             field_match = re.match(r"^\s+(\w+)(?:\([^)]*\))?\s*:\s*", line)
