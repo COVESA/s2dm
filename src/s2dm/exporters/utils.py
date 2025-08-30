@@ -35,6 +35,7 @@ from graphql.type import (
 from graphql.utilities import print_schema
 
 from s2dm import log
+from s2dm.exporters.naming_utils import apply_naming_to_instance_values, apply_naming_to_schema
 
 
 def read_file(file_path: Path) -> str:
@@ -230,17 +231,18 @@ def get_all_objects_with_directive(objects: list[GraphQLObjectType], directive_n
 
 def get_all_expanded_instance_tags(
     schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
 ) -> dict[GraphQLObjectType, list[str]]:
     all_expanded_instance_tags: dict[GraphQLObjectType, list[str]] = {}
     for object in get_all_objects_with_directive(get_all_object_types(schema), "instanceTag"):
-        all_expanded_instance_tags[object] = expand_instance_tag(object)
+        all_expanded_instance_tags[object] = expand_instance_tag(object, naming_config)
 
     log.debug(f"All expanded tags in the spec: {all_expanded_instance_tags}")
 
     return all_expanded_instance_tags
 
 
-def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
+def expand_instance_tag(object: GraphQLObjectType, naming_config: dict[str, Any] | None = None) -> list[str]:
     log.debug(f"Expanding instanceTag for object: {object.name}")
     expanded_tags = []
     if not has_directive(object, "instanceTag"):
@@ -254,7 +256,9 @@ def expand_instance_tag(object: GraphQLObjectType) -> list[str]:
             if not isinstance(field_type, GraphQLEnumType):
                 # TODO: Move this check to a validation function for the @instanceTag directive
                 raise TypeError(f"Field '{field_name}' in object '{object.name}' is not an enum.")
-            tags_per_enum_field.append(list(field_type.values.keys()))
+
+            enum_values = apply_naming_to_instance_values(list(field_type.values.keys()), naming_config)
+            tags_per_enum_field.append(enum_values)
         log.debug(f"Tags per field: {tags_per_enum_field}")
 
         # Combine tags from different enum fields
@@ -682,3 +686,24 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
 
     log.info(f"Found {len(referenced)} referenced types from root type '{root_type}'")
     return referenced
+
+
+def load_schema_with_naming(schema_path: Path, naming_config: dict[str, Any] | None = None) -> GraphQLSchema:
+    """Load schema and apply naming conversion."""
+    schema = load_schema(schema_path)
+    if naming_config:
+        apply_naming_to_schema(schema, naming_config)
+    return schema
+
+
+def is_built_in_type(type_name: str) -> bool:
+    return type_name.startswith("__") or type_name in {
+        "String",
+        "Int",
+        "Float",
+        "Boolean",
+        "ID",
+        "Query",
+        "Mutation",
+        "Subscription",
+    }

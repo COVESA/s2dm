@@ -63,11 +63,13 @@ class JsonSchemaTransformer:
         root_type: str | None = None,
         strict: bool = False,
         expanded_instances: bool = False,
+        naming_config: dict[str, Any] | None = None,
     ):
         self.graphql_schema = graphql_schema
         self.root_type = root_type
         self.strict = strict
         self.expanded_instances = expanded_instances
+        self.naming_config = naming_config
 
     def transform(self) -> dict[str, Any]:
         """
@@ -375,7 +377,7 @@ class JsonSchemaTransformer:
         if is_object_type(named_type):
             instance_tag_object = get_instance_tag_object(cast(GraphQLObjectType, named_type), self.graphql_schema)
             if instance_tag_object:
-                expanded_instance_tag = expand_instance_tag(instance_tag_object)
+                expanded_instance_tag = expand_instance_tag(instance_tag_object, self.naming_config)
 
                 definition: dict[str, Any] = {
                     "additionalProperties": False,
@@ -422,7 +424,7 @@ class JsonSchemaTransformer:
         Returns:
             Dict[str, Any]: JSON Schema definition with expanded nested structure
         """
-        expanded_instance_tags = expand_instance_tag(instance_tag_object)
+        expanded_instance_tags = expand_instance_tag(instance_tag_object, self.naming_config)
 
         definition: dict[str, Any] = {
             "additionalProperties": False,
