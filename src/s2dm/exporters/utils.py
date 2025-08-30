@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from enum import Enum
@@ -13,6 +14,7 @@ from graphql import (
     GraphQLInterfaceType,
     GraphQLList,
     GraphQLNonNull,
+    GraphQLScalarType,
     GraphQLString,
     GraphQLType,
     GraphQLUnionType,
@@ -25,7 +27,7 @@ from graphql import (
     is_object_type,
     is_union_type,
 )
-from graphql.language.ast import FloatValueNode, IntValueNode
+from graphql.language.ast import FloatValueNode, IntValueNode, StringValueNode
 from graphql.type import (
     GraphQLField,
     GraphQLNamedType,
@@ -137,9 +139,129 @@ def load_schema_filtered(graphql_schema_path: Path, root_type: str) -> GraphQLSc
     return filtered_schema
 
 
+def format_directive_from_ast(directive_node: Any) -> str:
+    directive_name = directive_node.name.value
+    if directive_name in {"deprecated", "specifiedBy"}:
+        return ""
+
+    args_str = ""
+    if directive_node.arguments:
+        args_list = []
+        for arg_node in directive_node.arguments:
+            arg_name = arg_node.name.value
+            if hasattr(arg_node.value, "value"):
+                if isinstance(arg_node.value, StringValueNode):
+                    arg_value = f'"{arg_node.value.value}"'
+                else:
+                    arg_value = str(arg_node.value.value)
+            else:
+                arg_value = str(arg_node.value)
+            args_list.append(f"{arg_name}: {arg_value}")
+        args_str = f"({', '.join(args_list)})"
+
+    return f"@{directive_name}{args_str}"
+
+
+def build_directive_map(schema: GraphQLSchema) -> dict[str | tuple[str, str], list[str]]:
+    directive_map: dict[str | tuple[str, str], list[str]] = {}
+
+    for type_name, type_obj in schema.type_map.items():
+        if type_name.startswith("__"):
+            continue
+
+        if isinstance(
+            type_obj,
+            GraphQLObjectType
+            | GraphQLInterfaceType
+            | GraphQLInputObjectType
+            | GraphQLEnumType
+            | GraphQLUnionType
+            | GraphQLScalarType,
+        ):
+            if hasattr(type_obj, "ast_node") and type_obj.ast_node and type_obj.ast_node.directives:
+                directive_strings = []
+                for directive_node in type_obj.ast_node.directives:
+                    directive_str = format_directive_from_ast(directive_node)
+                    if directive_str:
+                        directive_strings.append(directive_str)
+                if directive_strings:
+                    directive_map[type_name] = directive_strings
+
+            if hasattr(type_obj, "fields"):
+                for field_name, field in type_obj.fields.items():
+                    if hasattr(field, "ast_node") and field.ast_node and field.ast_node.directives:
+                        directive_strings = []
+                        for directive_node in field.ast_node.directives:
+                            directive_str = format_directive_from_ast(directive_node)
+                            if directive_str:
+                                directive_strings.append(directive_str)
+                        if directive_strings:
+                            directive_map[(type_name, field_name)] = directive_strings
+
+            if isinstance(type_obj, GraphQLEnumType) and hasattr(type_obj, "values"):
+                for enum_value_name, enum_value in type_obj.values.items():
+                    if hasattr(enum_value, "ast_node") and enum_value.ast_node and enum_value.ast_node.directives:
+                        directive_strings = []
+                        for directive_node in enum_value.ast_node.directives:
+                            directive_str = format_directive_from_ast(directive_node)
+                            if directive_str:
+                                directive_strings.append(directive_str)
+                        if directive_strings:
+                            directive_map[(type_name, enum_value_name)] = directive_strings
+
+    return directive_map
+
+
+def add_directives_to_schema(schema_str: str, directive_map: dict[str | tuple[str, str], list[str]]) -> str:
+    lines = schema_str.split("\n")
+    result_lines = []
+    current_type = None
+
+    for line in lines:
+        type_match = re.match(r"^(type|interface|input|enum|union|scalar)\s+(\w+)", line)
+        if type_match:
+            type_kind = type_match.group(1)
+            type_name = type_match.group(2)
+            current_type = type_name
+
+            if type_name in directive_map:
+                directives_str = " " + " ".join(directive_map[type_name])
+                line = line.replace(
+                    f"{type_kind} {type_name}", f"{type_kind} {type_name}{directives_str}"
+                )
+
+        elif current_type:
+            field_match = re.match(r"^\s+(\w+)(?:\([^)]*\))?\s*:\s*", line)
+            if field_match:
+                field_name = field_match.group(1)
+                if current_type and (current_type, field_name) in directive_map:
+                    directives_str = " " + " ".join(directive_map[(current_type, field_name)])
+                    line = line.rstrip() + directives_str
+
+            enum_match = re.match(r"^\s+(\w+)\s*$", line)
+            if enum_match:
+                enum_value_name = enum_match.group(1)
+                if current_type and (current_type, enum_value_name) in directive_map:
+                    directives_str = " " + " ".join(directive_map[(current_type, enum_value_name)])
+                    line = line.rstrip() + directives_str
+
+        if line.strip() == "}":
+            current_type = None
+
+        result_lines.append(line)
+
+    return "\n".join(result_lines)
+
+
+def print_schema_with_directives_preserved(schema: GraphQLSchema) -> str:
+    directive_map = build_directive_map(schema)
+    base_schema = print_schema(schema)
+    return add_directives_to_schema(base_schema, directive_map)
+
+
 def load_schema_as_str(graphql_schema_path: Path) -> str:
     """Load and build GraphQL schema but return as str."""
-    return print_schema(load_schema(graphql_schema_path))
+    return print_schema_with_directives_preserved(load_schema(graphql_schema_path))
 
 
 def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> str:
@@ -155,7 +277,7 @@ def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> st
     Raises:
         ValueError: If root type is not found in schema
     """
-    return print_schema(load_schema_filtered(graphql_schema_path, root_type))
+    return print_schema_with_directives_preserved(load_schema_filtered(graphql_schema_path, root_type))
 
 
 def create_tempfile_to_composed_schema(graphql_schema_path: Path) -> Path:

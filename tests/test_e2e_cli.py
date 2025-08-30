@@ -373,6 +373,24 @@ def test_compose_graphql_root_type_filters_unreferenced_types(runner: CliRunner,
     assert "type InCabinArea2x2" not in composed_content
 
 
+def test_compose_preserves_custom_directives(runner: CliRunner, tmp_outputs: Path) -> None:
+    """Test that compose preserves all types of custom directives and formatting."""
+    out = tmp_outputs / "directive_preservation_test.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1), "-o", str(out)])
+
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    composed_content = out.read_text()
+
+    assert "directive @range(min: Float, max: Float) on FIELD_DEFINITION" in composed_content
+    assert "directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION" in composed_content
+    assert "directive @noDuplicates on FIELD_DEFINITION" in composed_content
+    assert "directive @instanceTag on OBJECT" in composed_content
+
+    assert "type InCabinArea2x2 @instanceTag" in composed_content
+
+
 # ToDo(DA): needs refactoring after final decision how stats will work
 def test_stats_graphql(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["stats", "graphql", "-s", str(SAMPLE1)])
