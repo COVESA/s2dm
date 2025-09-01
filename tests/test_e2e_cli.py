@@ -1,4 +1,5 @@
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,6 @@ SAMPLE1_2 = TESTS_DATA / "schema1-2.graphql"
 SAMPLE2_1 = TESTS_DATA / "schema2-1.graphql"
 SAMPLE2_2 = TESTS_DATA / "schema2-2.graphql"
 SAMPLE3 = TESTS_DATA / "schema3.graphql"
-UNITS = TESTS_DATA / "test_units.yaml"
 
 # Version bump test schemas
 BASE_SCHEMA = TESTS_DATA / "base.graphql"
@@ -225,12 +225,12 @@ def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> No
 
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
-    assert contains_value(
-        data, "ns:Vehicle.averageSpeed"
-    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
-    assert contains_value(
-        data, "ns:Person.name"
-    ), 'Expected value "ns:Person.name" not found in the concept URI output.'
+    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
+        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    )
+    assert contains_value(data, "ns:Person.name"), (
+        'Expected value "ns:Person.name" not found in the concept URI output.'
+    )
 
 
 def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
@@ -244,8 +244,6 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
             str(SAMPLE1_1),
             "-s",
             str(SAMPLE1_2),
-            "-u",
-            str(UNITS),
             "-o",
             str(out),
         ],
@@ -261,9 +259,7 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
 
 def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "spec_history.json"
-    result = runner.invoke(
-        cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-u", str(UNITS), "-o", str(out)]
-    )
+    result = runner.invoke(cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
     with open(out) as f:
@@ -294,9 +290,9 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:
                     found_person = True
         if found_vehicle and found_person:
             break
-    assert (
-        found_vehicle
-    ), 'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id "0xEC20D822" not found.'
+    assert found_vehicle, (
+        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id "0xEC20D822" not found.'
+    )
     assert found_person, 'Expected entry with "@id": "ns:Person.height" and specHistory id "0xC3D633BB" not found.'
 
 
@@ -304,9 +300,7 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "spec_history_update.json"
     # First, create a spec history file
     init_out = tmp_outputs / "spec_history.json"
-    runner.invoke(
-        cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-u", str(UNITS), "-o", str(init_out)]
-    )
+    runner.invoke(cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(init_out)])
     runner.invoke(
         cli,
         [
@@ -316,8 +310,6 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
             str(SAMPLE2_1),
             "-s",
             str(SAMPLE2_2),
-            "-u",
-            str(UNITS),
             "-sh",
             str(init_out),
             "-o",
@@ -571,3 +563,33 @@ def test_stats_graphql(runner: CliRunner) -> None:
     print(f"{result.output=}")
     assert result.exit_code == 0, result.output
     assert "'UInt32': 1" in result.output
+
+
+def test_units_sync_cli(
+    runner: CliRunner,
+    tmp_outputs: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_sync_qudt_units: Callable[..., list[Path]],
+    mock_check_latest_qudt_version: Callable[[], str],
+) -> None:
+    """Test that the units sync CLI command works end-to-end."""
+
+    # Simple mock that just returns a few paths
+    def simple_mock(units_root: Path, version: str | None = None, *, dry_run: bool = False) -> list[Path]:
+        return mock_sync_qudt_units(units_root, version, dry_run=dry_run, num_paths=2)
+
+    # Apply mocks to avoid network calls
+    monkeypatch.setattr("s2dm.cli.sync_qudt_units", simple_mock)
+    monkeypatch.setattr("s2dm.cli.check_latest_qudt_version", mock_check_latest_qudt_version)
+
+    output_dir = tmp_outputs / "units_cli_test"
+
+    # Test basic CLI functionality
+    result = runner.invoke(cli, ["units", "sync", "--output-dir", str(output_dir)])
+    assert result.exit_code == 0, result.output
+    assert "Generated" in result.output or "enum files" in result.output
+
+    # Test that --dry-run flag is accepted (detailed behavior tested in unit tests)
+    result = runner.invoke(cli, ["units", "sync", "--output-dir", str(output_dir), "--dry-run"])
+    assert result.exit_code == 0, result.output
+    assert "Would generate" in result.output or "dry" in result.output.lower()

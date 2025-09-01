@@ -1,6 +1,6 @@
-from collections import UserDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,20 +17,9 @@ from hypothesis.strategies import composite
 from s2dm.exporters.utils.extraction import get_all_named_types
 from s2dm.exporters.utils.schema_loader import ensure_query
 from s2dm.idgen.models import IDGenerationSpec
+from s2dm.units.sync import UnitRow, _uri_to_enum_symbol
 
 SCALAR_TYPES = ["String", "Int", "Float", "Boolean"]
-
-
-class EchoDict(UserDict[str, str]):
-    """A dictionary that echoes the key as the value."""
-
-    def __missing__(self, key: str) -> str:
-        return key
-
-
-@pytest.fixture(scope="session")
-def mock_unit_lookup() -> EchoDict:
-    return EchoDict()
 
 
 @dataclass
@@ -58,7 +47,7 @@ class MockFieldData:
     def enum_schema_str(self) -> str:
         return f"""
             enum {self.enum_name if self.is_enum_field else self.unit_enum_name} {{
-                {' '.join(self.allowed or self.unit_allowed_values)}
+                {" ".join(self.allowed or self.unit_allowed_values)}
             }}
         """
 
@@ -143,10 +132,10 @@ def mock_graphql_schema_strategy(
             vehicle: Vehicle
         }}
 
-        {' '.join(enums)}
+        {" ".join(enums)}
 
         type Vehicle {{
-            {' '.join(map(lambda f: f.to_field_str(), fields))}
+            {" ".join(map(lambda f: f.to_field_str(), fields))}
         }}
         """
     )
@@ -160,3 +149,96 @@ def mock_named_types_strategy(
 ) -> tuple[list[GraphQLNamedType], list[MockFieldData]]:
     schema, fields = draw(mock_graphql_schema_strategy())
     return get_all_named_types(schema), fields
+
+
+# Constants for common test values
+MOCK_QUDT_VERSION = "3.1.5"
+MOCK_ENUM_CONTENT = "enum TestEnum { TEST }"
+
+# QUDT constants for unit testing
+QUDT_UNIT_BASE = "http://qudt.org/vocab/unit"
+QUDT_QK_BASE = "http://qudt.org/vocab/quantitykind"
+
+# Standard test paths for units sync
+STANDARD_UNIT_PATHS = [
+    "velocity/VelocityUnitEnum.graphql",
+    "mass/MassUnitEnum.graphql",
+    "length/LengthUnitEnum.graphql",
+]
+
+
+@pytest.fixture
+def mock_qudt_version() -> str:
+    """Standard QUDT version for testing."""
+    return MOCK_QUDT_VERSION
+
+
+@pytest.fixture
+def mock_check_latest_qudt_version(mock_qudt_version: str) -> Callable[[], str]:
+    """Mock function for checking latest QUDT version."""
+
+    def _mock() -> str:
+        return mock_qudt_version
+
+    return _mock
+
+
+@pytest.fixture
+def mock_sync_qudt_units() -> Callable[..., list[Path]]:
+    """Mock function for sync_qudt_units with configurable behavior."""
+
+    def _mock(
+        units_root: Path,
+        version: str | None = None,
+        *,
+        dry_run: bool = False,
+        num_paths: int = 3,
+        create_files: bool = True,
+    ) -> list[Path]:
+        # Generate test paths based on the number requested
+        test_paths = [units_root / path for path in STANDARD_UNIT_PATHS[:num_paths]]
+
+        # Simulate creating files only when not in dry-run mode and create_files is True
+        if not dry_run and create_files:
+            for path in test_paths:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(MOCK_ENUM_CONTENT)
+
+        return test_paths
+
+    return _mock
+
+
+@pytest.fixture
+def units_sync_mocks(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_sync_qudt_units: Callable[..., list[Path]],
+    mock_check_latest_qudt_version: Callable[[], str],
+) -> tuple[Callable[..., list[Path]], Callable[[], str]]:
+    """Fixture that applies all units sync mocks at once."""
+    monkeypatch.setattr("s2dm.cli.sync_qudt_units", mock_sync_qudt_units)
+    monkeypatch.setattr("s2dm.cli.check_latest_qudt_version", mock_check_latest_qudt_version)
+    return mock_sync_qudt_units, mock_check_latest_qudt_version
+
+
+def create_test_unit_row(
+    unit_segment: str,
+    qk_segment: str,
+    label: str | None = None,
+    ucum: str | None = None,
+) -> "UnitRow":
+    """Create a test UnitRow with minimal required data.
+
+    Note: This imports UnitRow and _uri_to_enum_symbol locally to avoid circular imports.
+    """
+    unit_label = label or unit_segment.lower().replace("-", " ")
+    symbol = _uri_to_enum_symbol(f"{QUDT_UNIT_BASE}/{unit_segment}")
+
+    return UnitRow(
+        unit_iri=f"{QUDT_UNIT_BASE}/{unit_segment}",
+        unit_label=unit_label,
+        quantity_kind_iri=f"{QUDT_QK_BASE}/{qk_segment}",
+        quantity_kind_label=qk_segment,
+        symbol=symbol,
+        ucum_code=ucum or unit_segment.lower(),
+    )
