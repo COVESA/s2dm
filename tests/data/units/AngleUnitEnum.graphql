@@ -1,0 +1,38 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AngleUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Angle", versionTag: "3.1.5") {
+  """Arcminute | UCUM: '"""
+  ARCMIN @reference(uri: "http://qudt.org/vocab/unit/ARCMIN", versionTag: "3.1.5")
+
+  """Arcsecond | UCUM: ''"""
+  ARCSEC @reference(uri: "http://qudt.org/vocab/unit/ARCSEC", versionTag: "3.1.5")
+
+  """Degree | UCUM: deg"""
+  DEG @reference(uri: "http://qudt.org/vocab/unit/DEG", versionTag: "3.1.5")
+
+  """Gon | UCUM: gon"""
+  GON @reference(uri: "http://qudt.org/vocab/unit/GON", versionTag: "3.1.5")
+
+  """Grad"""
+  GRAD @reference(uri: "http://qudt.org/vocab/unit/GRAD", versionTag: "3.1.5")
+
+  """Microradian | UCUM: urad"""
+  MICRORAD @reference(uri: "http://qudt.org/vocab/unit/MicroRAD", versionTag: "3.1.5")
+
+  """Mil Angle (nato)"""
+  MIL @reference(uri: "http://qudt.org/vocab/unit/MIL", versionTag: "3.1.5")
+
+  """Milliarcsecond | UCUM: m''"""
+  MILLIARCSEC @reference(uri: "http://qudt.org/vocab/unit/MilliARCSEC", versionTag: "3.1.5")
+
+  """Milliradian | UCUM: mrad"""
+  MILLIRAD @reference(uri: "http://qudt.org/vocab/unit/MilliRAD", versionTag: "3.1.5")
+
+  """Minute Angle | UCUM: '"""
+  MIN_ANGLE @reference(uri: "http://qudt.org/vocab/unit/MIN_Angle", versionTag: "3.1.5")
+
+  """Radian | UCUM: rad"""
+  RAD @reference(uri: "http://qudt.org/vocab/unit/RAD", versionTag: "3.1.5")
+
+  """Revolution"""
+  REV @reference(uri: "http://qudt.org/vocab/unit/REV", versionTag: "3.1.5")
+}

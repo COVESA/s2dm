@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AngularVelocityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AngularVelocity", versionTag: "3.1.5") {
+  """Degree per Hour | UCUM: deg.h-1"""
+  DEG_PER_HR @reference(uri: "http://qudt.org/vocab/unit/DEG-PER-HR", versionTag: "3.1.5")
+
+  """Degree per Minute | UCUM: deg.min-1"""
+  DEG_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/DEG-PER-MIN", versionTag: "3.1.5")
+
+  """Degree per Second | UCUM: deg.s-1"""
+  DEG_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/DEG-PER-SEC", versionTag: "3.1.5")
+
+  """Planck Angular Frequency"""
+  PLANCKFREQUENCY_ANG @reference(uri: "http://qudt.org/vocab/unit/PlanckFrequency_Ang", versionTag: "3.1.5")
+
+  """Radian per Hour | UCUM: rad.h-1"""
+  RAD_PER_HR @reference(uri: "http://qudt.org/vocab/unit/RAD-PER-HR", versionTag: "3.1.5")
+
+  """Radian per Minute | UCUM: rad.min-1"""
+  RAD_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/RAD-PER-MIN", versionTag: "3.1.5")
+
+  """Radian per Second | UCUM: rad.s-1"""
+  RAD_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/RAD-PER-SEC", versionTag: "3.1.5")
+}

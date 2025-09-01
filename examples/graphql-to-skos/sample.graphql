@@ -12,7 +12,7 @@ enum Vehicle_LowVoltageSystemState_Enum {
 type Vehicle {
   id: ID!
   "Average speed of the vehicle"
-  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+  averageSpeed(unit: VelocityUnitEnum = KILOM_PER_HR): Float
   lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
   adas: Vehicle_ADAS
 }

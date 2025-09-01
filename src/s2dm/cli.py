@@ -340,7 +340,7 @@ def units_check_version(console: Console, qudt_units_dir: Path) -> None:
         sys.exit(1)
 
     if latest == local_version:
-        console.print("[green]✓[/green] Everything is up to date.")
+        console.print("[green]✓[/green] Units are up to date.")
     else:
         console.print(f"[yellow]![/yellow] A newer release is available. Local: {local_version}, Latest: {latest}")
 
