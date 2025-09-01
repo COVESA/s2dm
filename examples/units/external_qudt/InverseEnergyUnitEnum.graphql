@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseEnergy", versionTag: "v3.1.5") {
+  """Reciprocal Joule | UCUM: /J"""
+  PER_J @reference(uri: "http://qudt.org/vocab/unit/PER-J", versionTag: "v3.1.5")
+
+  """Reciprocal Kilo Volt Ampere Hour | UCUM: kVA-1.h-1"""
+  PER_KILOVA_HR @reference(uri: "http://qudt.org/vocab/unit/PER-KiloVA-HR", versionTag: "v3.1.5")
+
+  """Reciprocal Volt Ampere Second | UCUM: VA-1.s-1"""
+  PER_VA_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-VA-SEC", versionTag: "v3.1.5")
+}

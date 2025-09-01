@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MolarVolumeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MolarVolume", versionTag: "v3.1.5") {
+  """Cubic Centimeter per Mole | UCUM: cm3.mol-1"""
+  CENTIM3_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-MOL", versionTag: "v3.1.5")
+
+  """Cubic Decimeter per Mole | UCUM: dm3.mol-1"""
+  DECIM3_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-MOL", versionTag: "v3.1.5")
+
+  """Liter per Micromole | UCUM: L.umol-1"""
+  L_PER_MICROMOL @reference(uri: "http://qudt.org/vocab/unit/L-PER-MicroMOL", versionTag: "v3.1.5")
+
+  """Liter per Mole | UCUM: L.mol-1"""
+  L_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/L-PER-MOL", versionTag: "v3.1.5")
+
+  """Cubic Meter per Mole | UCUM: m3.mol-1"""
+  M3_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/M3-PER-MOL", versionTag: "v3.1.5")
+}

@@ -1,0 +1,35 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassPerTimeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassPerTime", versionTag: "v3.1.5") {
+  """Kilogram per Hour | UCUM: kg.h-1"""
+  KILOGM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-HR", versionTag: "v3.1.5")
+
+  """Kilogram per Second | UCUM: kg.s-1"""
+  KILOGM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC", versionTag: "v3.1.5")
+
+  """Kilo Pound Mass per Hour"""
+  KILOLB_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloLB-PER-HR", versionTag: "v3.1.5")
+
+  """Pound Mass per Hour | UCUM: [lb_av].h-1"""
+  LB_PER_HR @reference(uri: "http://qudt.org/vocab/unit/LB-PER-HR", versionTag: "v3.1.5")
+
+  """Pound Mass per Minute | UCUM: [lb_av].min-1"""
+  LB_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/LB-PER-MIN", versionTag: "v3.1.5")
+
+  """Nanogram per Day | UCUM: ng.d-1"""
+  NANOGM_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/NanoGM-PER-DAY", versionTag: "v3.1.5")
+
+  """Newton Second per Meter | UCUM: N.s.m-1"""
+  N_SEC_PER_M @reference(uri: "http://qudt.org/vocab/unit/N-SEC-PER-M", versionTag: "v3.1.5")
+
+  """Slug per Second"""
+  SLUG_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-SEC", versionTag: "v3.1.5")
+
+  """Tonne per Month | UCUM: t.mo-1"""
+  TONNE_PER_MO @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-MO", versionTag: "v3.1.5")
+
+  """Tonne per Year | UCUM: t.a-1"""
+  TONNE_PER_YR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-YR", versionTag: "v3.1.5")
+
+  """Short Ton per Hour | UCUM: [ston_av].h-1"""
+  TON_SHORT_PER_HR @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT-PER-HR", versionTag: "v3.1.5")
+}

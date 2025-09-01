@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DatasetOfBitsUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DatasetOfBits", versionTag: "v3.1.5") {
+  """Gibibit"""
+  GIBIBIT @reference(uri: "http://qudt.org/vocab/unit/GibiBIT", versionTag: "v3.1.5")
+
+  """Gigabit"""
+  GIGABIT @reference(uri: "http://qudt.org/vocab/unit/GigaBIT", versionTag: "v3.1.5")
+
+  """Kibibit"""
+  KIBIBIT @reference(uri: "http://qudt.org/vocab/unit/KibiBIT", versionTag: "v3.1.5")
+
+  """Kilobit"""
+  KILOBIT @reference(uri: "http://qudt.org/vocab/unit/KiloBIT", versionTag: "v3.1.5")
+
+  """Mebibit"""
+  MEBIBIT @reference(uri: "http://qudt.org/vocab/unit/MebiBIT", versionTag: "v3.1.5")
+
+  """Megabit"""
+  MEGABIT @reference(uri: "http://qudt.org/vocab/unit/MegaBIT", versionTag: "v3.1.5")
+
+  """Octet"""
+  OCTET @reference(uri: "http://qudt.org/vocab/unit/OCTET", versionTag: "v3.1.5")
+
+  """Petabit"""
+  PETABIT @reference(uri: "http://qudt.org/vocab/unit/PetaBIT", versionTag: "v3.1.5")
+
+  """Terabit"""
+  TERABIT @reference(uri: "http://qudt.org/vocab/unit/TeraBIT", versionTag: "v3.1.5")
+}

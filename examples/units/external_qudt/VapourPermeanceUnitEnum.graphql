@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VapourPermeanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VapourPermeance", versionTag: "v3.1.5") {
+  """Kilogram per Square Meter Pascal Second | UCUM: kg.m-2.Pa-1.s-1"""
+  KILOGM_PER_M2_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M2-PA-SEC", versionTag: "v3.1.5")
+
+  """Nanogram per Square Meter Pascal Second | UCUM: ng.m-2.Pa-1.s-1"""
+  NANOGM_PER_M2_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/NanoGM-PER-M2-PA-SEC", versionTag: "v3.1.5")
+
+  """Metric Perm"""
+  PERM_METRIC @reference(uri: "http://qudt.org/vocab/unit/PERM_Metric", versionTag: "v3.1.5")
+
+  """U.s. Perm"""
+  PERM_US @reference(uri: "http://qudt.org/vocab/unit/PERM_US", versionTag: "v3.1.5")
+}

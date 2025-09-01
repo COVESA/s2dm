@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum StressOpticCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/StressOpticCoefficient", versionTag: "v3.1.5") {
+  """Brewster"""
+  BREWSTER @reference(uri: "http://qudt.org/vocab/unit/BREWSTER", versionTag: "v3.1.5")
+
+  """Nanometer per Centimeter Megapascal | UCUM: nm.cm-1.MPa-1"""
+  NANOM_PER_CENTIM_MEGAPA @reference(uri: "http://qudt.org/vocab/unit/NanoM-PER-CentiM-MegaPA", versionTag: "v3.1.5")
+
+  """Nanometer per Centimeter Psi | UCUM: nm.cm-1.PSI-1"""
+  NANOM_PER_CENTIM_PSI @reference(uri: "http://qudt.org/vocab/unit/NanoM-PER-CentiM-PSI", versionTag: "v3.1.5")
+
+  """Nanometer per Millimeter Megapascal | UCUM: nm.mm-1.MPa-1"""
+  NANOM_PER_MILLIM_MEGAPA @reference(uri: "http://qudt.org/vocab/unit/NanoM-PER-MilliM-MegaPA", versionTag: "v3.1.5")
+
+  """Reciprocal Megapascal | UCUM: /MPa"""
+  PER_MEGAPA @reference(uri: "http://qudt.org/vocab/unit/PER-MegaPA", versionTag: "v3.1.5")
+
+  """Reciprocal Pascal | UCUM: /Pa"""
+  PER_PA @reference(uri: "http://qudt.org/vocab/unit/PER-PA", versionTag: "v3.1.5")
+
+  """Reciprocal Psi | UCUM: [psi]-1"""
+  PER_PSI @reference(uri: "http://qudt.org/vocab/unit/PER-PSI", versionTag: "v3.1.5")
+}

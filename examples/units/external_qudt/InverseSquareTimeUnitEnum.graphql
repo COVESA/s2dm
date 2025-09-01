@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseSquareTimeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseSquareTime", versionTag: "v3.1.5") {
+  """Reciprocal Square Second | UCUM: s-2"""
+  PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/PER-SEC2", versionTag: "v3.1.5")
+}

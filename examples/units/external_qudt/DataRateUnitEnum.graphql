@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DataRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DataRate", versionTag: "v3.1.5") {
+  """Bit per Second | UCUM: Bd"""
+  BIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BIT-PER-SEC", versionTag: "v3.1.5")
+
+  """Exabit per Second"""
+  EXABIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/ExaBIT-PER-SEC", versionTag: "v3.1.5")
+
+  """Gigabit per Second | UCUM: Gbit.s-1"""
+  GIGABIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GigaBIT-PER-SEC", versionTag: "v3.1.5")
+
+  """Kilobit per Second | UCUM: kbit.s-1"""
+  KILOBIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloBIT-PER-SEC", versionTag: "v3.1.5")
+
+  """Kilobyte per Second | UCUM: kBy.s-1"""
+  KILOBYTE_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloBYTE-PER-SEC", versionTag: "v3.1.5")
+
+  """Megabit per Second | UCUM: MBd"""
+  MEGABIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MegaBIT-PER-SEC", versionTag: "v3.1.5")
+
+  """Petabit per Second | UCUM: Pbit.s-1"""
+  PETABIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PetaBIT-PER-SEC", versionTag: "v3.1.5")
+
+  """Terabit per Second | UCUM: Tbit.s-1"""
+  TERABIT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/TeraBIT-PER-SEC", versionTag: "v3.1.5")
+}

@@ -1,0 +1,89 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ThermalEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ThermalEnergy", versionTag: "v3.1.5") {
+  """British Thermal Unit (39 °F)"""
+  BTU_39DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_39DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (59 °F)"""
+  BTU_59DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_59DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (60 °F)"""
+  BTU_60DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_60DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) | UCUM: [Btu_IT]"""
+  BTU_IT @reference(uri: "http://qudt.org/vocab/unit/BTU_IT", versionTag: "v3.1.5")
+
+  """British Thermal Unit (mean) | UCUM: [Btu_m]"""
+  BTU_MEAN @reference(uri: "http://qudt.org/vocab/unit/BTU_MEAN", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) | UCUM: [Btu_th]"""
+  BTU_TH @reference(uri: "http://qudt.org/vocab/unit/BTU_TH", versionTag: "v3.1.5")
+
+  """Calorie (15 Degrees C) | UCUM: cal_[15]"""
+  CAL_15DEG_C @reference(uri: "http://qudt.org/vocab/unit/CAL_15DEG_C", versionTag: "v3.1.5")
+
+  """Calorie (20 °C)"""
+  CAL_20DEG_C @reference(uri: "http://qudt.org/vocab/unit/CAL_20DEG_C", versionTag: "v3.1.5")
+
+  """International Table Calorie | UCUM: cal_IT"""
+  CAL_IT @reference(uri: "http://qudt.org/vocab/unit/CAL_IT", versionTag: "v3.1.5")
+
+  """Calorie (Mean) | UCUM: cal_m"""
+  CAL_MEAN @reference(uri: "http://qudt.org/vocab/unit/CAL_MEAN", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie | UCUM: cal_th"""
+  CAL_TH @reference(uri: "http://qudt.org/vocab/unit/CAL_TH", versionTag: "v3.1.5")
+
+  """Gigajoule | UCUM: GJ"""
+  GIGAJ @reference(uri: "http://qudt.org/vocab/unit/GigaJ", versionTag: "v3.1.5")
+
+  """Joule | UCUM: J"""
+  J @reference(uri: "http://qudt.org/vocab/unit/J", versionTag: "v3.1.5")
+
+  """Kilo British Thermal Unit (international Definition) | UCUM: k[Btu_IT]"""
+  KILOBTU_IT @reference(uri: "http://qudt.org/vocab/unit/KiloBTU_IT", versionTag: "v3.1.5")
+
+  """Kilo British Thermal Unit (thermochemical Definition) | UCUM: k[Btu_th]"""
+  KILOBTU_TH @reference(uri: "http://qudt.org/vocab/unit/KiloBTU_TH", versionTag: "v3.1.5")
+
+  """Kilocalorie | UCUM: kcal"""
+  KILOCAL @reference(uri: "http://qudt.org/vocab/unit/KiloCAL", versionTag: "v3.1.5")
+
+  """Kilo International Table Calorie | UCUM: kcal_IT"""
+  KILOCAL_IT @reference(uri: "http://qudt.org/vocab/unit/KiloCAL_IT", versionTag: "v3.1.5")
+
+  """Kilocalorie (Mean) | UCUM: kcal_m"""
+  KILOCAL_MEAN @reference(uri: "http://qudt.org/vocab/unit/KiloCAL_Mean", versionTag: "v3.1.5")
+
+  """Kilo Thermochemical Calorie | UCUM: [Cal]"""
+  KILOCAL_TH @reference(uri: "http://qudt.org/vocab/unit/KiloCAL_TH", versionTag: "v3.1.5")
+
+  """Kilojoule | UCUM: kJ"""
+  KILOJ @reference(uri: "http://qudt.org/vocab/unit/KiloJ", versionTag: "v3.1.5")
+
+  """Mega British Thermal Unit (international Definition)"""
+  MEGABTU_IT @reference(uri: "http://qudt.org/vocab/unit/MegaBTU_IT", versionTag: "v3.1.5")
+
+  """Megajoule | UCUM: MJ"""
+  MEGAJ @reference(uri: "http://qudt.org/vocab/unit/MegaJ", versionTag: "v3.1.5")
+
+  """Nanojoule"""
+  NANOJ @reference(uri: "http://qudt.org/vocab/unit/NanoJ", versionTag: "v3.1.5")
+
+  """Picojoule"""
+  PICOJ @reference(uri: "http://qudt.org/vocab/unit/PicoJ", versionTag: "v3.1.5")
+
+  """Therm (ec)"""
+  THERM_EC @reference(uri: "http://qudt.org/vocab/unit/THERM_EC", versionTag: "v3.1.5")
+
+  """Therm (u.s.)"""
+  THERM_US @reference(uri: "http://qudt.org/vocab/unit/THERM_US", versionTag: "v3.1.5")
+
+  """Thm_eec | UCUM: 100000.[Btu_IT]"""
+  THM_EEC @reference(uri: "http://qudt.org/vocab/unit/THM_EEC", versionTag: "v3.1.5")
+
+  """Therm Us | UCUM: 100000.[Btu_59]"""
+  THM_US @reference(uri: "http://qudt.org/vocab/unit/THM_US", versionTag: "v3.1.5")
+
+  """Ton of Refrigeration Hour"""
+  TON_FG_HR @reference(uri: "http://qudt.org/vocab/unit/TON_FG-HR", versionTag: "v3.1.5")
+}

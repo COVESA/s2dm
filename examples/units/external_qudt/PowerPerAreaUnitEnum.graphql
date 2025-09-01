@@ -1,0 +1,77 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PowerPerAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PowerPerArea", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Square Foot Hour | UCUM: [Btu_IT].[ft_i]-2.h-1"""
+  BTU_IT_PER_FT2_HR @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-FT2-HR", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Square Foot Second | UCUM: [Btu_IT].[ft_i]-2.s-1"""
+  BTU_IT_PER_FT2_SEC @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-FT2-SEC", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Hour Square Foot | UCUM: [Btu_IT].h-1.[ft_i]-2"""
+  BTU_IT_PER_HR_FT2 @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-HR-FT2", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Square Inch Second | UCUM: [Btu_IT].[in_i]-2.s-1"""
+  BTU_IT_PER_IN2_SEC @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-IN2-SEC", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Second Square Foot | UCUM: [Btu_IT].s-1.[ft_i]-2"""
+  BTU_IT_PER_SEC_FT2 @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-SEC-FT2", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Square Foot Hour | UCUM: [Btu_th].[ft_i]-2.h-1"""
+  BTU_TH_PER_FT2_HR @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-FT2-HR", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Square Foot Minute | UCUM: [Btu_th].[ft_i]-2.min-1"""
+  BTU_TH_PER_FT2_MIN @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-FT2-MIN", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Square Foot Second | UCUM: [Btu_th].[ft_i]-2.s-1"""
+  BTU_TH_PER_FT2_SEC @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-FT2-SEC", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Square Centimeter Minute | UCUM: cal_th.cm-2.min-1"""
+  CAL_TH_PER_CENTIM2_MIN @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-CentiM2-MIN", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Square Centimeter Second | UCUM: cal_th.cm-2.s-1"""
+  CAL_TH_PER_CENTIM2_SEC @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-CentiM2-SEC", versionTag: "v3.1.5")
+
+  """Erg per Square Centimeter Second | UCUM: erg.cm-2.s-1"""
+  ERG_PER_CENTIM2_SEC @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-CentiM2-SEC", versionTag: "v3.1.5")
+
+  """Foot Pound Force per Square Foot Second | UCUM: [ft_i].[lbf_av].[sft_i]-1.s-1"""
+  FT_LB_F_PER_FT2_SEC @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F-PER-FT2-SEC", versionTag: "v3.1.5")
+
+  """Joule per Square Centimeter Day | UCUM: J.cm-2.d-1"""
+  J_PER_CENTIM2_DAY @reference(uri: "http://qudt.org/vocab/unit/J-PER-CentiM2-DAY", versionTag: "v3.1.5")
+
+  """Kilocalorie per Square Centimeter Minute | UCUM: kcal.cm-2.min-1"""
+  KILOCAL_PER_CENTIM2_MIN @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-CentiM2-MIN", versionTag: "v3.1.5")
+
+  """Kilocalorie per Square Centimeter Second | UCUM: kcal.cm-2.s-1"""
+  KILOCAL_PER_CENTIM2_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-CentiM2-SEC", versionTag: "v3.1.5")
+
+  """Kilowatt per Square Meter | UCUM: kW.m-2"""
+  KILOW_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloW-PER-M2", versionTag: "v3.1.5")
+
+  """Microwatt per Square Meter | UCUM: uW.m-2"""
+  MICROW_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MicroW-PER-M2", versionTag: "v3.1.5")
+
+  """Milliwatt per Square Meter | UCUM: mW.m-2"""
+  MILLIW_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliW-PER-M2", versionTag: "v3.1.5")
+
+  """Meter Pascal per Second | UCUM: m.Pa.s-1"""
+  M_PA_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M-PA-PER-SEC", versionTag: "v3.1.5")
+
+  """Nanowatt per Square Meter | UCUM: nW.m-2"""
+  NANOW_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/NanoW-PER-M2", versionTag: "v3.1.5")
+
+  """Picowatt per Square Meter | UCUM: pW.m-2"""
+  PICOW_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/PicoW-PER-M2", versionTag: "v3.1.5")
+
+  """Watt per Square Centimeter | UCUM: W.cm-2"""
+  W_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/W-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Watt per Square Foot | UCUM: W.[sft_i]-1"""
+  W_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/W-PER-FT2", versionTag: "v3.1.5")
+
+  """Watt per Square Inch | UCUM: W.[sin_i]-1"""
+  W_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/W-PER-IN2", versionTag: "v3.1.5")
+
+  """Watt per Square Meter | UCUM: W.m-2"""
+  W_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2", versionTag: "v3.1.5")
+}

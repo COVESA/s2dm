@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MolecularMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MolecularMass", versionTag: "v3.1.5") {
+  """Dalton | UCUM: u"""
+  DA @reference(uri: "http://qudt.org/vocab/unit/DA", versionTag: "v3.1.5")
+}

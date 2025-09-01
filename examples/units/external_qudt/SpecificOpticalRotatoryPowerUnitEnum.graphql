@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificOpticalRotatoryPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificOpticalRotatoryPower", versionTag: "v3.1.5") {
+  """Radian Square Meter per Kilogram | UCUM: rad.m2.kg-1"""
+  RAD_M2_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/RAD-M2-PER-KiloGM", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum GrowingDegreeDayUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/GrowingDegreeDay", versionTag: "v3.1.5") {
+  """Growing Degree Days (cereals)"""
+  DEG_C_GROWING_CEREAL_DAY @reference(uri: "http://qudt.org/vocab/unit/DEG_C_GROWING_CEREAL-DAY", versionTag: "v3.1.5")
+}

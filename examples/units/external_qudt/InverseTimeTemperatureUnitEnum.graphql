@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseTimeTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseTimeTemperature", versionTag: "v3.1.5") {
+  """Hertz per Kelvin | UCUM: Hz.K-1"""
+  HZ_PER_K @reference(uri: "http://qudt.org/vocab/unit/HZ-PER-K", versionTag: "v3.1.5")
+
+  """Megahertz per Kelvin | UCUM: MHz.K-1"""
+  MEGAHZ_PER_K @reference(uri: "http://qudt.org/vocab/unit/MegaHZ-PER-K", versionTag: "v3.1.5")
+}

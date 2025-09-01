@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VapourPermeabilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VapourPermeability", versionTag: "v3.1.5") {
+  """Kilogram per Pascal Second Meter | UCUM: kg.Pa-1.s-1.m-1"""
+  KILOGM_PER_PA_SEC_M @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-PA-SEC-M", versionTag: "v3.1.5")
+}

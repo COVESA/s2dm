@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PressureGradientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PressureGradient", versionTag: "v3.1.5") {
+  """Standard Atmosphere per Meter | UCUM: atm.m-1"""
+  ATM_PER_M @reference(uri: "http://qudt.org/vocab/unit/ATM-PER-M", versionTag: "v3.1.5")
+
+  """Technical Atmosphere per Meter | UCUM: att.m-1"""
+  ATM_T_PER_M @reference(uri: "http://qudt.org/vocab/unit/ATM_T-PER-M", versionTag: "v3.1.5")
+
+  """Hectopascal per Meter | UCUM: hPa.m-1"""
+  HECTOPA_PER_M @reference(uri: "http://qudt.org/vocab/unit/HectoPA-PER-M", versionTag: "v3.1.5")
+
+  """Kilopascal per Meter | UCUM: kPa.m-1"""
+  KILOPA_PER_M @reference(uri: "http://qudt.org/vocab/unit/KiloPA-PER-M", versionTag: "v3.1.5")
+
+  """Millipascal per Meter | UCUM: mPa.m-1"""
+  MILLIPA_PER_M @reference(uri: "http://qudt.org/vocab/unit/MilliPA-PER-M", versionTag: "v3.1.5")
+
+  """Psi per Inch | UCUM: [psi].[in_i]-1"""
+  PSI_PER_IN @reference(uri: "http://qudt.org/vocab/unit/PSI-PER-IN", versionTag: "v3.1.5")
+
+  """Torr per Meter"""
+  TORR_PER_M @reference(uri: "http://qudt.org/vocab/unit/TORR-PER-M", versionTag: "v3.1.5")
+}

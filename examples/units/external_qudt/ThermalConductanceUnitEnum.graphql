@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ThermalConductanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ThermalConductance", versionTag: "v3.1.5") {
+  """Kilo Volt Ampere per Kelvin | UCUM: kVA.K-1"""
+  KILOVA_PER_K @reference(uri: "http://qudt.org/vocab/unit/KiloVA-PER-K", versionTag: "v3.1.5")
+
+  """Micro Volt Ampere per Kelvin | UCUM: uVA.K-1"""
+  MICROVA_PER_K @reference(uri: "http://qudt.org/vocab/unit/MicroVA-PER-K", versionTag: "v3.1.5")
+
+  """Milli Volt Ampere per Kelvin | UCUM: mVA.K-1"""
+  MILLIVA_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliVA-PER-K", versionTag: "v3.1.5")
+
+  """Volt Ampere per Kelvin | UCUM: VA.K-1"""
+  VA_PER_K @reference(uri: "http://qudt.org/vocab/unit/VA-PER-K", versionTag: "v3.1.5")
+
+  """Watt per Kelvin | UCUM: W.K-1"""
+  W_PER_K @reference(uri: "http://qudt.org/vocab/unit/W-PER-K", versionTag: "v3.1.5")
+}

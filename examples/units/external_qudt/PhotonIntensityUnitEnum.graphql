@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PhotonIntensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PhotonIntensity", versionTag: "v3.1.5") {
+  """Reciprocal Second Steradian | UCUM: /(s.sr)"""
+  PER_SEC_SR @reference(uri: "http://qudt.org/vocab/unit/PER-SEC-SR", versionTag: "v3.1.5")
+}

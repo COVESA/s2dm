@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassTemperature", versionTag: "v3.1.5") {
+  """Kilogram Kelvin | UCUM: kg.K"""
+  KILOGM_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-K", versionTag: "v3.1.5")
+
+  """Pound Mass Degree Fahrenheit | UCUM: [lb_av].[degF]"""
+  LB_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-DEG_F", versionTag: "v3.1.5")
+
+  """Pound Mass Degree Rankine | UCUM: [lb_av].[degR]"""
+  LB_DEG_R @reference(uri: "http://qudt.org/vocab/unit/LB-DEG_R", versionTag: "v3.1.5")
+}

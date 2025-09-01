@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificModulusUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificModulus", versionTag: "v3.1.5") {
+  """Gigapascal Cubic Centimeter per Gram | UCUM: GPa.cm3.g-1"""
+  GIGAPA_CENTIM3_PER_GM @reference(uri: "http://qudt.org/vocab/unit/GigaPA-CentiM3-PER-GM", versionTag: "v3.1.5")
+
+  """Square Kilometer per Square Second | UCUM: km2.s-2"""
+  KILOM2_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloM2-PER-SEC2", versionTag: "v3.1.5")
+
+  """Square Meter per Square Second | UCUM: m2.s-2"""
+  M2_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SEC2", versionTag: "v3.1.5")
+}

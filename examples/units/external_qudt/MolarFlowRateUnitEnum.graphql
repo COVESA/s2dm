@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MolarFlowRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MolarFlowRate", versionTag: "v3.1.5") {
+  """Kilomole per Minute | UCUM: kmol.min-1"""
+  KILOMOL_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-MIN", versionTag: "v3.1.5")
+
+  """Kilomole per Second | UCUM: kmol.s-1"""
+  KILOMOL_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-SEC", versionTag: "v3.1.5")
+
+  """Mole per Hour | UCUM: mol.h-1"""
+  MOL_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-HR", versionTag: "v3.1.5")
+
+  """Mole per Minute | UCUM: mol.min-1"""
+  MOL_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-MIN", versionTag: "v3.1.5")
+
+  """Mole per Second | UCUM: mol.s-1"""
+  MOL_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-SEC", versionTag: "v3.1.5")
+
+  """Standard Cubic Foot per Hour"""
+  SCF_PER_HR @reference(uri: "http://qudt.org/vocab/unit/SCF-PER-HR", versionTag: "v3.1.5")
+
+  """Standard Cubic Foot per Minute"""
+  SCF_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/SCF-PER-MIN", versionTag: "v3.1.5")
+
+  """Standard Cubic Meter per Hour"""
+  SCM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/SCM-PER-HR", versionTag: "v3.1.5")
+
+  """Standard Cubic Meter per Minute"""
+  SCM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/SCM-PER-MIN", versionTag: "v3.1.5")
+}

@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DistanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Distance", versionTag: "v3.1.5") {
+  """International Mile | UCUM: [mi_i]"""
+  MI @reference(uri: "http://qudt.org/vocab/unit/MI", versionTag: "v3.1.5")
+
+  """Microinch | UCUM: u[in_i]"""
+  MICROIN @reference(uri: "http://qudt.org/vocab/unit/MicroIN", versionTag: "v3.1.5")
+
+  """Big Point"""
+  PT_BIG @reference(uri: "http://qudt.org/vocab/unit/PT_BIG", versionTag: "v3.1.5")
+}

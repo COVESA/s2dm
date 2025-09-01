@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LengthEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LengthEnergy", versionTag: "v3.1.5") {
+  """Mega Electron Volt Femtometer | UCUM: MeV.fm"""
+  MEGAEV_FEMTOM @reference(uri: "http://qudt.org/vocab/unit/MegaEV-FemtoM", versionTag: "v3.1.5")
+}

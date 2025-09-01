@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum RotationalMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/RotationalMass", versionTag: "v3.1.5") {
+  """Kilogram Square Centimeter | UCUM: kg.cm2"""
+  KILOGM_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-CentiM2", versionTag: "v3.1.5")
+
+  """Kilogram Square Meter | UCUM: kg.m2"""
+  KILOGM_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-M2", versionTag: "v3.1.5")
+
+  """Kilogram Square Millimeter | UCUM: kg.mm2"""
+  KILOGM_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-MilliM2", versionTag: "v3.1.5")
+
+  """Pound Mass Square Foot | UCUM: [lb_av].[sft_i]"""
+  LB_FT2 @reference(uri: "http://qudt.org/vocab/unit/LB-FT2", versionTag: "v3.1.5")
+
+  """Pound Mass Square Inch | UCUM: [lb_av].[sin_i]"""
+  LB_IN2 @reference(uri: "http://qudt.org/vocab/unit/LB-IN2", versionTag: "v3.1.5")
+}

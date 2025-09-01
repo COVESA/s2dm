@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CatalyticActivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CatalyticActivity", versionTag: "v3.1.5") {
+  """Enzyme Unit"""
+  ENZ @reference(uri: "http://qudt.org/vocab/unit/ENZ", versionTag: "v3.1.5")
+
+  """Katal | UCUM: kat"""
+  KAT @reference(uri: "http://qudt.org/vocab/unit/KAT", versionTag: "v3.1.5")
+
+  """Kilomole per Hour | UCUM: kmol.h-1"""
+  KILOMOL_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-HR", versionTag: "v3.1.5")
+
+  """Microkatal"""
+  MICROKAT @reference(uri: "http://qudt.org/vocab/unit/MicroKAT", versionTag: "v3.1.5")
+
+  """Millikatal"""
+  MILLIKAT @reference(uri: "http://qudt.org/vocab/unit/MilliKAT", versionTag: "v3.1.5")
+
+  """Pound Mole per Minute | UCUM: [mol_lb].min-1"""
+  MOL_LB_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MOL_LB-PER-MIN", versionTag: "v3.1.5")
+
+  """Pound Mole per Second | UCUM: [mol_lb].s-1"""
+  MOL_LB_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MOL_LB-PER-SEC", versionTag: "v3.1.5")
+
+  """Nanokatal"""
+  NANOKAT @reference(uri: "http://qudt.org/vocab/unit/NanoKAT", versionTag: "v3.1.5")
+
+  """Picokatal"""
+  PICOKAT @reference(uri: "http://qudt.org/vocab/unit/PicoKAT", versionTag: "v3.1.5")
+}

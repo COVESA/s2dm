@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TotalLinearStoppingPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TotalLinearStoppingPower", versionTag: "v3.1.5") {
+  """Erg per Centimeter | UCUM: erg.cm-1"""
+  ERG_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-CentiM", versionTag: "v3.1.5")
+
+  """Electron Volt per Angstrom | UCUM: eV.Ao-1"""
+  EV_PER_ANGSTROM @reference(uri: "http://qudt.org/vocab/unit/EV-PER-ANGSTROM", versionTag: "v3.1.5")
+
+  """Electron Volt per Meter | UCUM: eV.m-1"""
+  EV_PER_M @reference(uri: "http://qudt.org/vocab/unit/EV-PER-M", versionTag: "v3.1.5")
+
+  """Joule per Meter | UCUM: J.m-1"""
+  J_PER_M @reference(uri: "http://qudt.org/vocab/unit/J-PER-M", versionTag: "v3.1.5")
+}

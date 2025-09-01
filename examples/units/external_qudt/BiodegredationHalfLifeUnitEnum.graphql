@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum BiodegredationHalfLifeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/BiodegredationHalfLife", versionTag: "v3.1.5") {
+  """Day | UCUM: d"""
+  DAY @reference(uri: "http://qudt.org/vocab/unit/DAY", versionTag: "v3.1.5")
+}

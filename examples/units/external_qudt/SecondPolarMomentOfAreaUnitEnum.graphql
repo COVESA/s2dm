@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SecondPolarMomentOfAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SecondPolarMomentOfArea", versionTag: "v3.1.5") {
+  """Quartic Centimeter | UCUM: cm4"""
+  CENTIM4 @reference(uri: "http://qudt.org/vocab/unit/CentiM4", versionTag: "v3.1.5")
+
+  """Quartic Foot"""
+  FT4 @reference(uri: "http://qudt.org/vocab/unit/FT4", versionTag: "v3.1.5")
+
+  """Quartic Inch | UCUM: [in_i]4"""
+  IN4 @reference(uri: "http://qudt.org/vocab/unit/IN4", versionTag: "v3.1.5")
+
+  """Quartic Meter | UCUM: m4"""
+  M4 @reference(uri: "http://qudt.org/vocab/unit/M4", versionTag: "v3.1.5")
+
+  """Quartic Millimeter | UCUM: mm4"""
+  MILLIM4 @reference(uri: "http://qudt.org/vocab/unit/MilliM4", versionTag: "v3.1.5")
+}

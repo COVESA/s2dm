@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricFluxUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricFlux", versionTag: "v3.1.5") {
+  """Volt Meter | UCUM: V.m"""
+  V_M @reference(uri: "http://qudt.org/vocab/unit/V-M", versionTag: "v3.1.5")
+
+  """Statvolt Centimeter"""
+  V_STAT_CENTIM @reference(uri: "http://qudt.org/vocab/unit/V_Stat-CentiM", versionTag: "v3.1.5")
+}

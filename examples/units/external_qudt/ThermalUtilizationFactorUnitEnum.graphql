@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ThermalUtilizationFactorUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ThermalUtilizationFactor", versionTag: "v3.1.5") {
+  """Unitless"""
+  UNITLESS @reference(uri: "http://qudt.org/vocab/unit/UNITLESS", versionTag: "v3.1.5")
+}

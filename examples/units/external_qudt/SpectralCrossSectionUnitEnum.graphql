@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpectralCrossSectionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpectralCrossSection", versionTag: "v3.1.5") {
+  """Square Centimeter per Erg | UCUM: cm2.erg-1"""
+  CENTIM2_PER_ERG @reference(uri: "http://qudt.org/vocab/unit/CentiM2-PER-ERG", versionTag: "v3.1.5")
+
+  """Square Meter per Joule | UCUM: m2.J-1"""
+  M2_PER_J @reference(uri: "http://qudt.org/vocab/unit/M2-PER-J", versionTag: "v3.1.5")
+}

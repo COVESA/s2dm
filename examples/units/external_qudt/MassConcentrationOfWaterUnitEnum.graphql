@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassConcentrationOfWaterUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassConcentrationOfWater", versionTag: "v3.1.5") {
+  """Kilogram per Cubic Meter | UCUM: kg.m-3"""
+  KILOGM_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M3", versionTag: "v3.1.5")
+}

@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SectionModulusUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SectionModulus", versionTag: "v3.1.5") {
+  """Cubic Meter | UCUM: m3"""
+  M3 @reference(uri: "http://qudt.org/vocab/unit/M3", versionTag: "v3.1.5")
+
+  """Cubic Mile (uk Statute)"""
+  MI_UK3 @reference(uri: "http://qudt.org/vocab/unit/MI_UK3", versionTag: "v3.1.5")
+
+  """Ton, Register"""
+  TON_REGISTER @reference(uri: "http://qudt.org/vocab/unit/TON_Register", versionTag: "v3.1.5")
+}

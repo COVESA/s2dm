@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LinearElectricCurrentDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LinearElectricCurrentDensity", versionTag: "v3.1.5") {
+  """Ampere per Centimeter | UCUM: A.cm-1"""
+  A_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/A-PER-CentiM", versionTag: "v3.1.5")
+
+  """Ampere per Meter | UCUM: A.m-1"""
+  A_PER_M @reference(uri: "http://qudt.org/vocab/unit/A-PER-M", versionTag: "v3.1.5")
+
+  """Ampere per Millimeter | UCUM: A.mm-1"""
+  A_PER_MILLIM @reference(uri: "http://qudt.org/vocab/unit/A-PER-MilliM", versionTag: "v3.1.5")
+
+  """Kiloampere per Meter | UCUM: kA.m-1"""
+  KILOA_PER_M @reference(uri: "http://qudt.org/vocab/unit/KiloA-PER-M", versionTag: "v3.1.5")
+
+  """Milliampere per Inch | UCUM: mA.[in_i]-1"""
+  MILLIA_PER_IN @reference(uri: "http://qudt.org/vocab/unit/MilliA-PER-IN", versionTag: "v3.1.5")
+
+  """Milliampere per Millimeter | UCUM: mA.mm-1"""
+  MILLIA_PER_MILLIM @reference(uri: "http://qudt.org/vocab/unit/MilliA-PER-MilliM", versionTag: "v3.1.5")
+}

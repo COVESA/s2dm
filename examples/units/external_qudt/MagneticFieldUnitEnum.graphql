@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MagneticFieldUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MagneticField", versionTag: "v3.1.5") {
+  """Gamma"""
+  GAMMA @reference(uri: "http://qudt.org/vocab/unit/GAMMA", versionTag: "v3.1.5")
+
+  """Kilotesla"""
+  KILOT @reference(uri: "http://qudt.org/vocab/unit/KiloT", versionTag: "v3.1.5")
+
+  """Tesla | UCUM: T"""
+  T @reference(uri: "http://qudt.org/vocab/unit/T", versionTag: "v3.1.5")
+
+  """Abtesla"""
+  T_AB @reference(uri: "http://qudt.org/vocab/unit/T_Ab", versionTag: "v3.1.5")
+}

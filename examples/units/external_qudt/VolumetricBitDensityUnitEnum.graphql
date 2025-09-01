@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VolumetricBitDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VolumetricBitDensity", versionTag: "v3.1.5") {
+  """Bit per Cubic Meter | UCUM: bit.m-3"""
+  BIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/BIT-PER-M3", versionTag: "v3.1.5")
+
+  """Exbibit per Cubic Meter"""
+  EXBIBIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/ExbiBIT-PER-M3", versionTag: "v3.1.5")
+
+  """Gibibit per Cubic Meter | UCUM: Gibit.m-3"""
+  GIBIBIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/GibiBIT-PER-M3", versionTag: "v3.1.5")
+
+  """Kibibit per Cubic Meter | UCUM: Kibit.m-3"""
+  KIBIBIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/KibiBIT-PER-M3", versionTag: "v3.1.5")
+
+  """Mebibit per Cubic Meter | UCUM: Mibit.m-3"""
+  MEBIBIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MebiBIT-PER-M3", versionTag: "v3.1.5")
+
+  """Pebibit per Cubic Meter"""
+  PEBIBIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/PebiBIT-PER-M3", versionTag: "v3.1.5")
+
+  """Tebibit per Cubic Meter"""
+  TEBIBIT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/TebiBIT-PER-M3", versionTag: "v3.1.5")
+}

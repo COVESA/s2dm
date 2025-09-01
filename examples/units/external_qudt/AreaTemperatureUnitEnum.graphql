@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaTemperature", versionTag: "v3.1.5") {
+  """Square Foot Degree Fahrenheit | UCUM: [sft_i].[degF]"""
+  FT2_DEG_F @reference(uri: "http://qudt.org/vocab/unit/FT2-DEG_F", versionTag: "v3.1.5")
+
+  """Square Meter Kelvin | UCUM: m2.K"""
+  M2_K @reference(uri: "http://qudt.org/vocab/unit/M2-K", versionTag: "v3.1.5")
+}

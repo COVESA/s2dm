@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ModulusOfLinearSubgradeReactionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ModulusOfLinearSubgradeReaction", versionTag: "v3.1.5") {
+  """Newton per Square Meter | UCUM: N.m-2"""
+  N_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/N-PER-M2", versionTag: "v3.1.5")
+
+  """Poundal per Square Inch | UCUM: [lb_av].[ft_i].s-2.[in_i]-2"""
+  PDL_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/PDL-PER-IN2", versionTag: "v3.1.5")
+}

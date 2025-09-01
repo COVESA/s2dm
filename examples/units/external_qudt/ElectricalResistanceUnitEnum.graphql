@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricalResistanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricalResistance", versionTag: "v3.1.5") {
+  """Nanoohm"""
+  NANOOHM @reference(uri: "http://qudt.org/vocab/unit/NanoOHM", versionTag: "v3.1.5")
+}

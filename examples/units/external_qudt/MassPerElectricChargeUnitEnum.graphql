@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassPerElectricChargeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassPerElectricCharge", versionTag: "v3.1.5") {
+  """Tesla Second | UCUM: T.s"""
+  T_SEC @reference(uri: "http://qudt.org/vocab/unit/T-SEC", versionTag: "v3.1.5")
+}

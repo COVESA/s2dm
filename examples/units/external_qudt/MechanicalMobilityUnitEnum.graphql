@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MechanicalMobilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MechanicalMobility", versionTag: "v3.1.5") {
+  """Mohm"""
+  MOHM @reference(uri: "http://qudt.org/vocab/unit/MOHM", versionTag: "v3.1.5")
+}

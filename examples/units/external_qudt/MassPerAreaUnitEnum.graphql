@@ -1,0 +1,83 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassPerAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassPerArea", versionTag: "v3.1.5") {
+  """Gram per Square Centimeter | UCUM: g.cm-2"""
+  GM_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/GM-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Gram per Hectare | UCUM: g.har-1"""
+  GM_PER_HA @reference(uri: "http://qudt.org/vocab/unit/GM-PER-HA", versionTag: "v3.1.5")
+
+  """Gram per Square Meter | UCUM: g.m-2"""
+  GM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M2", versionTag: "v3.1.5")
+
+  """Gram per Square Millimeter | UCUM: g.mm-2"""
+  GM_PER_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MilliM2", versionTag: "v3.1.5")
+
+  """Kilogram per Square Centimeter | UCUM: kg.cm-2"""
+  KILOGM_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Kilogram per Square Foot | UCUM: kg.ft-2"""
+  KILOGM_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-FT2", versionTag: "v3.1.5")
+
+  """Kilogram per Hectare | UCUM: kg.har-1"""
+  KILOGM_PER_HA @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-HA", versionTag: "v3.1.5")
+
+  """Kilogram per Square Kilometer | UCUM: kg.km-2"""
+  KILOGM_PER_KILOM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-KiloM2", versionTag: "v3.1.5")
+
+  """Kilogram per Square Meter | UCUM: kg.m-2"""
+  KILOGM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M2", versionTag: "v3.1.5")
+
+  """Pound Mass per Acre | UCUM: lb.[acr_br]-1"""
+  LB_PER_AC @reference(uri: "http://qudt.org/vocab/unit/LB-PER-AC", versionTag: "v3.1.5")
+
+  """Pound Mass per Square Foot | UCUM: [lb_av].[ft_i]-2"""
+  LB_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT2", versionTag: "v3.1.5")
+
+  """Pound Mass per Square Inch | UCUM: [lb_av].[sin_i]-1"""
+  LB_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/LB-PER-IN2", versionTag: "v3.1.5")
+
+  """Pound Mass per Square Yard | UCUM: [lb_av].[yd_i]-2"""
+  LB_PER_YD2 @reference(uri: "http://qudt.org/vocab/unit/LB-PER-YD2", versionTag: "v3.1.5")
+
+  """Megagram per Hectare | UCUM: Mg.har-1"""
+  MEGAGM_PER_HA @reference(uri: "http://qudt.org/vocab/unit/MegaGM-PER-HA", versionTag: "v3.1.5")
+
+  """Microgram per Square Centimeter | UCUM: u[g].cm-2"""
+  MICROGM_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Microgram per Square Inch | UCUM: µg.in-2"""
+  MICROGM_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-IN2", versionTag: "v3.1.5")
+
+  """Milligram per Square Centimeter | UCUM: mg.cm-2"""
+  MILLIGM_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Milligram per Square Decimeter | UCUM: mg.dm-2"""
+  MILLIGM_PER_DECIM2 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-DeciM2", versionTag: "v3.1.5")
+
+  """Milligram per Hectare | UCUM: mg.har-1"""
+  MILLIGM_PER_HA @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-HA", versionTag: "v3.1.5")
+
+  """Milligram per Square Meter | UCUM: mg.m-2"""
+  MILLIGM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M2", versionTag: "v3.1.5")
+
+  """Nanogram per Square Centimeter | UCUM: ng.cm-2"""
+  NANOGM_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/NanoGM-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Ounce Mass per Square Foot | UCUM: [oz_av].[sft_i]-1"""
+  OZ_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-FT2", versionTag: "v3.1.5")
+
+  """Ounce Mass per Square Inch | UCUM: [oz_av].[in_i]-2"""
+  OZ_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-IN2", versionTag: "v3.1.5")
+
+  """Ounce Mass per Square Yard | UCUM: [oz_av].[syd_i]-1"""
+  OZ_PER_YD2 @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-YD2", versionTag: "v3.1.5")
+
+  """Slug per Square Foot"""
+  SLUG_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-FT2", versionTag: "v3.1.5")
+
+  """Tonne per Hectare | UCUM: t.har-1"""
+  TONNE_PER_HA @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-HA", versionTag: "v3.1.5")
+
+  """Metric Ton per Hectare | UCUM: t.har-1"""
+  TON_METRIC_PER_HA @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-HA", versionTag: "v3.1.5")
+}

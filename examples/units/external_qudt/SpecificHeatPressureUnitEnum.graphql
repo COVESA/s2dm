@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificHeatPressureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificHeatPressure", versionTag: "v3.1.5") {
+  """Joule per Kilogram Kelvin Pascal | UCUM: J.kg-1.K-1.Pa-1"""
+  J_PER_KILOGM_K_PA @reference(uri: "http://qudt.org/vocab/unit/J-PER-KiloGM-K-PA", versionTag: "v3.1.5")
+}

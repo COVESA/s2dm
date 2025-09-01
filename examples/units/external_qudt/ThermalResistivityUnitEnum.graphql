@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ThermalResistivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ThermalResistivity", versionTag: "v3.1.5") {
+  """Degree Fahrenheit Hour Square Foot per British Thermal Unit (international Definition) Inch | UCUM: [degF].h.[ft_i]2.[Btu_IT]-1.[in_i]-1"""
+  DEG_F_HR_FT2_PER_BTU_IT_IN @reference(uri: "http://qudt.org/vocab/unit/DEG_F-HR-FT2-PER-BTU_IT-IN", versionTag: "v3.1.5")
+
+  """Degree Fahrenheit Hour Square Foot per British Thermal Unit (thermochemical Definition) Inch | UCUM: [degF].h.[ft_i]2.[Btu_th]-1.[in_i]-1"""
+  DEG_F_HR_FT2_PER_BTU_TH_IN @reference(uri: "http://qudt.org/vocab/unit/DEG_F-HR-FT2-PER-BTU_TH-IN", versionTag: "v3.1.5")
+
+  """Kelvin Meter per Watt | UCUM: K.m.W-1"""
+  K_M_PER_W @reference(uri: "http://qudt.org/vocab/unit/K-M-PER-W", versionTag: "v3.1.5")
+
+  """Meter Kelvin per Watt | UCUM: m.K.W-1"""
+  M_K_PER_W @reference(uri: "http://qudt.org/vocab/unit/M-K-PER-W", versionTag: "v3.1.5")
+}

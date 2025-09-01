@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MorbidityRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MorbidityRate", versionTag: "v3.1.5") {
+  """Cases per 1000 Individuals Year"""
+  CASES_PER_KILOINDIV_YR @reference(uri: "http://qudt.org/vocab/unit/CASES-PER-KiloINDIV-YR", versionTag: "v3.1.5")
+}

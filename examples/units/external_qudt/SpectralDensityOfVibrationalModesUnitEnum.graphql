@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpectralDensityOfVibrationalModesUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpectralDensityOfVibrationalModes", versionTag: "v3.1.5") {
+  """Second per Cubic Meter Radian | UCUM: s.m-3.rad-1"""
+  SEC_PER_M3_RAD @reference(uri: "http://qudt.org/vocab/unit/SEC-PER-M3-RAD", versionTag: "v3.1.5")
+}

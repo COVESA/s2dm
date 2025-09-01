@@ -1,0 +1,71 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InformationEntropyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InformationEntropy", versionTag: "v3.1.5") {
+  """Ban"""
+  BAN @reference(uri: "http://qudt.org/vocab/unit/BAN", versionTag: "v3.1.5")
+
+  """Bit | UCUM: bit"""
+  BIT @reference(uri: "http://qudt.org/vocab/unit/BIT", versionTag: "v3.1.5")
+
+  """Byte | UCUM: By"""
+  BYTE @reference(uri: "http://qudt.org/vocab/unit/BYTE", versionTag: "v3.1.5")
+
+  """Erlang"""
+  ERLANG @reference(uri: "http://qudt.org/vocab/unit/ERLANG", versionTag: "v3.1.5")
+
+  """Exabit"""
+  EXABIT @reference(uri: "http://qudt.org/vocab/unit/ExaBIT", versionTag: "v3.1.5")
+
+  """Exabyte | UCUM: EBy"""
+  EXABYTE @reference(uri: "http://qudt.org/vocab/unit/ExaBYTE", versionTag: "v3.1.5")
+
+  """Exbibit"""
+  EXBIBIT @reference(uri: "http://qudt.org/vocab/unit/ExbiBIT", versionTag: "v3.1.5")
+
+  """Exbibyte"""
+  EXBIBYTE @reference(uri: "http://qudt.org/vocab/unit/ExbiBYTE", versionTag: "v3.1.5")
+
+  """Gibibyte"""
+  GIBIBYTE @reference(uri: "http://qudt.org/vocab/unit/GibiBYTE", versionTag: "v3.1.5")
+
+  """Gigabyte | UCUM: GBy"""
+  GIGABYTE @reference(uri: "http://qudt.org/vocab/unit/GigaBYTE", versionTag: "v3.1.5")
+
+  """Hartley"""
+  HART @reference(uri: "http://qudt.org/vocab/unit/HART", versionTag: "v3.1.5")
+
+  """Kibibyte"""
+  KIBIBYTE @reference(uri: "http://qudt.org/vocab/unit/KibiBYTE", versionTag: "v3.1.5")
+
+  """Kilobyte | UCUM: kBy"""
+  KILOBYTE @reference(uri: "http://qudt.org/vocab/unit/KiloBYTE", versionTag: "v3.1.5")
+
+  """Mebibyte"""
+  MEBIBYTE @reference(uri: "http://qudt.org/vocab/unit/MebiBYTE", versionTag: "v3.1.5")
+
+  """Megabyte | UCUM: MBy"""
+  MEGABYTE @reference(uri: "http://qudt.org/vocab/unit/MegaBYTE", versionTag: "v3.1.5")
+
+  """Nat"""
+  NAT @reference(uri: "http://qudt.org/vocab/unit/NAT", versionTag: "v3.1.5")
+
+  """Pebibit"""
+  PEBIBIT @reference(uri: "http://qudt.org/vocab/unit/PebiBIT", versionTag: "v3.1.5")
+
+  """Pebibyte"""
+  PEBIBYTE @reference(uri: "http://qudt.org/vocab/unit/PebiBYTE", versionTag: "v3.1.5")
+
+  """Petabyte | UCUM: PBy"""
+  PETABYTE @reference(uri: "http://qudt.org/vocab/unit/PetaBYTE", versionTag: "v3.1.5")
+
+  """Shannon"""
+  SHANNON @reference(uri: "http://qudt.org/vocab/unit/SHANNON", versionTag: "v3.1.5")
+
+  """Tebibit"""
+  TEBIBIT @reference(uri: "http://qudt.org/vocab/unit/TebiBIT", versionTag: "v3.1.5")
+
+  """Tebibyte"""
+  TEBIBYTE @reference(uri: "http://qudt.org/vocab/unit/TebiBYTE", versionTag: "v3.1.5")
+
+  """Terabyte | UCUM: TBy"""
+  TERABYTE @reference(uri: "http://qudt.org/vocab/unit/TeraBYTE", versionTag: "v3.1.5")
+}

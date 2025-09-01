@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CO2EquivalentUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CO2Equivalent", versionTag: "v3.1.5") {
+  """Kilogram | UCUM: kg"""
+  KILOGM @reference(uri: "http://qudt.org/vocab/unit/KiloGM", versionTag: "v3.1.5")
+
+  """Tonne | UCUM: t"""
+  TONNE @reference(uri: "http://qudt.org/vocab/unit/TONNE", versionTag: "v3.1.5")
+}

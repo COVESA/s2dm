@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LuminousExposureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LuminousExposure", versionTag: "v3.1.5") {
+  """Lux Hour | UCUM: lx.h"""
+  LUX_HR @reference(uri: "http://qudt.org/vocab/unit/LUX-HR", versionTag: "v3.1.5")
+
+  """Lux Second | UCUM: lx.s"""
+  LUX_SEC @reference(uri: "http://qudt.org/vocab/unit/LUX-SEC", versionTag: "v3.1.5")
+}

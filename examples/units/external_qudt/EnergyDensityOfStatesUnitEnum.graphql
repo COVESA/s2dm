@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyDensityOfStatesUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/EnergyDensityOfStates", versionTag: "v3.1.5") {
+  """Reciprocal Electron Volt Cubic Meter | UCUM: eV-1.m-3"""
+  PER_EV_M3 @reference(uri: "http://qudt.org/vocab/unit/PER-EV-M3", versionTag: "v3.1.5")
+
+  """Reciprocal Joule Cubic Meter | UCUM: J-1.m-3"""
+  PER_J_M3 @reference(uri: "http://qudt.org/vocab/unit/PER-J-M3", versionTag: "v3.1.5")
+}

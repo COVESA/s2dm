@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PolarizabilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Polarizability", versionTag: "v3.1.5") {
+  """Square Coulomb Square Meter per Joule | UCUM: C2.m2.J-1"""
+  C2_M2_PER_J @reference(uri: "http://qudt.org/vocab/unit/C2-M2-PER-J", versionTag: "v3.1.5")
+
+  """Coulomb Square Meter per Volt | UCUM: C.m2.V-1"""
+  C_M2_PER_V @reference(uri: "http://qudt.org/vocab/unit/C-M2-PER-V", versionTag: "v3.1.5")
+}

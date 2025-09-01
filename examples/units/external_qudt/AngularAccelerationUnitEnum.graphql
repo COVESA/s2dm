@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AngularAccelerationUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AngularAcceleration", versionTag: "v3.1.5") {
+  """Degree per Square Second | UCUM: deg.s-2"""
+  DEG_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/DEG-PER-SEC2", versionTag: "v3.1.5")
+
+  """Radian per Square Second | UCUM: rad.s-2"""
+  RAD_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/RAD-PER-SEC2", versionTag: "v3.1.5")
+
+  """Revolution per Minute Second | UCUM: {#}.min-1.s-1"""
+  REV_PER_MIN_SEC @reference(uri: "http://qudt.org/vocab/unit/REV-PER-MIN-SEC", versionTag: "v3.1.5")
+
+  """Revolution per Square Second | UCUM: {#}.s-2"""
+  REV_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/REV-PER-SEC2", versionTag: "v3.1.5")
+}

@@ -1,0 +1,41 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CoefficientOfHeatTransferUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CoefficientOfHeatTransfer", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Square Foot Hour Degree Fahrenheit | UCUM: [Btu_IT].[ft_i]-2.h-1.[degF]-1"""
+  BTU_IT_PER_FT2_HR_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-FT2-HR-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Square Foot Second Degree Fahrenheit | UCUM: [Btu_IT].[ft_i]-2.s-1.[degF]-1"""
+  BTU_IT_PER_FT2_SEC_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-FT2-SEC-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Hour Square Foot Degree Fahrenheit | UCUM: [Btu_IT].h-1.[ft_i]-2.[degF]-1"""
+  BTU_IT_PER_HR_FT2_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-HR-FT2-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Hour Square Foot Degree Rankine | UCUM: [Btu_IT].h-1.[ft_i]-2.[degR]-1"""
+  BTU_IT_PER_HR_FT2_DEG_R @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-HR-FT2-DEG_R", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Second Square Foot Degree Fahrenheit | UCUM: [Btu_IT].s-1.[ft_i]-2.[degF]-1"""
+  BTU_IT_PER_SEC_FT2_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-SEC-FT2-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Second Square Foot Degree Rankine | UCUM: [Btu_IT].s-1.[ft_i]-2.[degR]-1"""
+  BTU_IT_PER_SEC_FT2_DEG_R @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-SEC-FT2-DEG_R", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Hour Square Foot Degree Fahrenheit | UCUM: [Btu_th].h-1.[ft_i]-2.[degF]-1"""
+  BTU_TH_PER_HR_FT2_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-HR-FT2-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Second Square Foot Degree Fahrenheit | UCUM: [Btu_th].s-1.[ft_i]-2.[degF]-1"""
+  BTU_TH_PER_SEC_FT2_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-SEC-FT2-DEG_F", versionTag: "v3.1.5")
+
+  """International Table Calorie per Second Square Centimeter Kelvin | UCUM: cal_IT.s-1.cm-2.K-1"""
+  CAL_IT_PER_SEC_CENTIM2_K @reference(uri: "http://qudt.org/vocab/unit/CAL_IT-PER-SEC-CentiM2-K", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Second Square Centimeter Kelvin | UCUM: cal_th.s-1.cm-2.K-1"""
+  CAL_TH_PER_SEC_CENTIM2_K @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-SEC-CentiM2-K", versionTag: "v3.1.5")
+
+  """Kilogram per Cubic Second Kelvin | UCUM: kg.s-3.K-1"""
+  KILOGM_PER_SEC3_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC3-K", versionTag: "v3.1.5")
+
+  """Kilowatt per Square Meter Kelvin | UCUM: kW.m-2.K-1"""
+  KILOW_PER_M2_K @reference(uri: "http://qudt.org/vocab/unit/KiloW-PER-M2-K", versionTag: "v3.1.5")
+
+  """Watt per Square Meter Kelvin | UCUM: W.m-2.K-1"""
+  W_PER_M2_K @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2-K", versionTag: "v3.1.5")
+}

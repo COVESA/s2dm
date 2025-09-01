@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TotalAtomicStoppingPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TotalAtomicStoppingPower", versionTag: "v3.1.5") {
+  """Electron Volt Square Meter | UCUM: eV.m2"""
+  EV_M2 @reference(uri: "http://qudt.org/vocab/unit/EV-M2", versionTag: "v3.1.5")
+
+  """Joule Square Meter | UCUM: J.m2"""
+  J_M2 @reference(uri: "http://qudt.org/vocab/unit/J-M2", versionTag: "v3.1.5")
+}

@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpectralAngularCrossSectionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpectralAngularCrossSection", versionTag: "v3.1.5") {
+  """Square Centimeter per Steradian Erg | UCUM: cm2.sr-1.erg-1"""
+  CENTIM2_PER_SR_ERG @reference(uri: "http://qudt.org/vocab/unit/CentiM2-PER-SR-ERG", versionTag: "v3.1.5")
+
+  """Square Meter per Steradian Joule | UCUM: m2.sr-1.J-1"""
+  M2_PER_SR_J @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SR-J", versionTag: "v3.1.5")
+}

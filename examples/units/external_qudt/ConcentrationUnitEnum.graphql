@@ -1,0 +1,38 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ConcentrationUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Concentration", versionTag: "v3.1.5") {
+  """Centimole per Liter | UCUM: cmol.L-1"""
+  CENTIMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/CentiMOL-PER-L", versionTag: "v3.1.5")
+
+  """Femtomole per Liter | UCUM: fmol.L-1"""
+  FEMTOMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/FemtoMOL-PER-L", versionTag: "v3.1.5")
+
+  """Kilomole per Cubic Meter | UCUM: kmol.m-3"""
+  KILOMOL_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-M3", versionTag: "v3.1.5")
+
+  """Micromole per Liter | UCUM: umol.L-1"""
+  MICROMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-L", versionTag: "v3.1.5")
+
+  """Millimole per Liter | UCUM: mmol.L-1"""
+  MILLIMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-L", versionTag: "v3.1.5")
+
+  """Millimole per Cubic Meter | UCUM: mmol.m-3"""
+  MILLIMOL_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-M3", versionTag: "v3.1.5")
+
+  """Mole per Cubic Decimeter | UCUM: mol.dm-3"""
+  MOL_PER_DECIM3 @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-DeciM3", versionTag: "v3.1.5")
+
+  """Mole per Liter | UCUM: mol.L-1"""
+  MOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-L", versionTag: "v3.1.5")
+
+  """Mole per Cubic Meter | UCUM: mol.m-3"""
+  MOL_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M3", versionTag: "v3.1.5")
+
+  """Nanomole per Liter | UCUM: nmol.L-1"""
+  NANOMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-L", versionTag: "v3.1.5")
+
+  """Picomole per Liter | UCUM: pmol.L-1"""
+  PICOMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-L", versionTag: "v3.1.5")
+
+  """Picomole per Cubic Meter | UCUM: pmol.m-3"""
+  PICOMOL_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-M3", versionTag: "v3.1.5")
+}

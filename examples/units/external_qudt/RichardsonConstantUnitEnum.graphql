@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum RichardsonConstantUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/RichardsonConstant", versionTag: "v3.1.5") {
+  """Ampere per Square Meter Square Kelvin | UCUM: A.m-2.K-2"""
+  A_PER_M2_K2 @reference(uri: "http://qudt.org/vocab/unit/A-PER-M2-K2", versionTag: "v3.1.5")
+}

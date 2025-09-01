@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectromagneticPermeabilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectromagneticPermeability", versionTag: "v3.1.5") {
+  """Henry per Meter | UCUM: H.m-1"""
+  H_PER_M @reference(uri: "http://qudt.org/vocab/unit/H-PER-M", versionTag: "v3.1.5")
+
+  """Stathenry per Centimeter"""
+  H_STAT_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/H_Stat-PER-CentiM", versionTag: "v3.1.5")
+
+  """Microhenry per Meter | UCUM: uH.m-1"""
+  MICROH_PER_M @reference(uri: "http://qudt.org/vocab/unit/MicroH-PER-M", versionTag: "v3.1.5")
+
+  """Nanohenry per Meter | UCUM: nH.m-1"""
+  NANOH_PER_M @reference(uri: "http://qudt.org/vocab/unit/NanoH-PER-M", versionTag: "v3.1.5")
+}

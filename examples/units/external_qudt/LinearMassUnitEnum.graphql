@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LinearMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LinearMass", versionTag: "v3.1.5") {
+  """Kilogram per Kilometer | UCUM: kg.km-1"""
+  KILOGM_PER_KILOM @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-KiloM", versionTag: "v3.1.5")
+
+  """Pound Mass per Yard | UCUM: [lb_av].[yd_i]-1"""
+  LB_PER_YD @reference(uri: "http://qudt.org/vocab/unit/LB-PER-YD", versionTag: "v3.1.5")
+}

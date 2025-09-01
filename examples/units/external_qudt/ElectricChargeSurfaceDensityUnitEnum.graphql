@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricChargeSurfaceDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricChargeSurfaceDensity", versionTag: "v3.1.5") {
+  """Ampere Hour per Square Meter | UCUM: A.h.m-2"""
+  A_HR_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/A-HR-PER-M2", versionTag: "v3.1.5")
+
+  """Coulomb per Square Meter | UCUM: C.m-2"""
+  C_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/C-PER-M2", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SoundExposureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SoundExposure", versionTag: "v3.1.5") {
+  """Square Pascal Second | UCUM: Pa2.s"""
+  PA2_SEC @reference(uri: "http://qudt.org/vocab/unit/PA2-SEC", versionTag: "v3.1.5")
+}

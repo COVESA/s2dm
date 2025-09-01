@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificSurfaceAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificSurfaceArea", versionTag: "v3.1.5") {
+  """Square Centimeter per Gram | UCUM: cm2.g-1"""
+  CENTIM2_PER_GM @reference(uri: "http://qudt.org/vocab/unit/CentiM2-PER-GM", versionTag: "v3.1.5")
+
+  """Square Meter per Gram | UCUM: m2.g-1"""
+  M2_PER_GM @reference(uri: "http://qudt.org/vocab/unit/M2-PER-GM", versionTag: "v3.1.5")
+
+  """Square Meter per Kilogram | UCUM: m2.kg-1"""
+  M2_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/M2-PER-KiloGM", versionTag: "v3.1.5")
+}

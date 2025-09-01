@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CurrencyPerFlightUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CurrencyPerFlight", versionTag: "v3.1.5") {
+  """Mega Us Dollar per Flight"""
+  MEGACCY_USD_PER_FLIGHT @reference(uri: "http://qudt.org/vocab/unit/MegaCCY_USD-PER-FLIGHT", versionTag: "v3.1.5")
+}

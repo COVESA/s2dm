@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MolarMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MolarMass", versionTag: "v3.1.5") {
+  """Gram per Mole | UCUM: g.mol-1"""
+  GM_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MOL", versionTag: "v3.1.5")
+
+  """Kilogram per Kilomole | UCUM: kg.kmol-1"""
+  KILOGM_PER_KILOMOL @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-KiloMOL", versionTag: "v3.1.5")
+
+  """Kilogram per Mole | UCUM: kg.mol-1"""
+  KILOGM_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-MOL", versionTag: "v3.1.5")
+}

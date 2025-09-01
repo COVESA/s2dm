@@ -1,0 +1,32 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CapacitanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Capacitance", versionTag: "v3.1.5") {
+  """Attofarad | UCUM: aF"""
+  ATTOFARAD @reference(uri: "http://qudt.org/vocab/unit/AttoFARAD", versionTag: "v3.1.5")
+
+  """Farad | UCUM: F"""
+  FARAD @reference(uri: "http://qudt.org/vocab/unit/FARAD", versionTag: "v3.1.5")
+
+  """Abfarad | UCUM: GF"""
+  FARAD_AB @reference(uri: "http://qudt.org/vocab/unit/FARAD_Ab", versionTag: "v3.1.5")
+
+  """Statfarad"""
+  FARAD_STAT @reference(uri: "http://qudt.org/vocab/unit/FARAD_Stat", versionTag: "v3.1.5")
+
+  """Femtofarad"""
+  FEMTOFARAD @reference(uri: "http://qudt.org/vocab/unit/FemtoFARAD", versionTag: "v3.1.5")
+
+  """Kilofarad"""
+  KILOFARAD @reference(uri: "http://qudt.org/vocab/unit/KiloFARAD", versionTag: "v3.1.5")
+
+  """Microfarad | UCUM: uF"""
+  MICROFARAD @reference(uri: "http://qudt.org/vocab/unit/MicroFARAD", versionTag: "v3.1.5")
+
+  """Millifarad | UCUM: mF"""
+  MILLIFARAD @reference(uri: "http://qudt.org/vocab/unit/MilliFARAD", versionTag: "v3.1.5")
+
+  """Nanofarad | UCUM: nF"""
+  NANOFARAD @reference(uri: "http://qudt.org/vocab/unit/NanoFARAD", versionTag: "v3.1.5")
+
+  """Picofarad | UCUM: pF"""
+  PICOFARAD @reference(uri: "http://qudt.org/vocab/unit/PicoFARAD", versionTag: "v3.1.5")
+}

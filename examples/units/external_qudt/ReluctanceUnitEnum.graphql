@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ReluctanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Reluctance", versionTag: "v3.1.5") {
+  """Reciprocal Henry | UCUM: /H"""
+  PER_H @reference(uri: "http://qudt.org/vocab/unit/PER-H", versionTag: "v3.1.5")
+}

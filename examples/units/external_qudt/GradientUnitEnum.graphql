@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum GradientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Gradient", versionTag: "v3.1.5") {
+  """Micrometer per Meter | UCUM: um.m-1"""
+  MICROM_PER_M @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-M", versionTag: "v3.1.5")
+
+  """Millimeter per Meter | UCUM: mm.m-1"""
+  MILLIM_PER_M @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-M", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum BurstFactorUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/BurstFactor", versionTag: "v3.1.5") {
+  """Pascal Square Meter per Kilogram | UCUM: Pa.m2.kg-1"""
+  PA_M2_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/PA-M2-PER-KiloGM", versionTag: "v3.1.5")
+}

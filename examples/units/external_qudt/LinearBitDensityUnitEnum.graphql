@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LinearBitDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LinearBitDensity", versionTag: "v3.1.5") {
+  """Bit per Meter | UCUM: bit.m-1"""
+  BIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/BIT-PER-M", versionTag: "v3.1.5")
+
+  """Exbibit per Meter"""
+  EXBIBIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/ExbiBIT-PER-M", versionTag: "v3.1.5")
+
+  """Gibibit per Meter | UCUM: Gibit.m-1"""
+  GIBIBIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/GibiBIT-PER-M", versionTag: "v3.1.5")
+
+  """Gigabit per Meter | UCUM: Gbit.m-1"""
+  GIGABIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/GigaBIT-PER-M", versionTag: "v3.1.5")
+
+  """Kibibit per Meter | UCUM: Kibit.m-1"""
+  KIBIBIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/KibiBIT-PER-M", versionTag: "v3.1.5")
+
+  """Mebibit per Meter | UCUM: Mibit.m-1"""
+  MEBIBIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/MebiBIT-PER-M", versionTag: "v3.1.5")
+
+  """Pebibit per Meter"""
+  PEBIBIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/PebiBIT-PER-M", versionTag: "v3.1.5")
+
+  """Tebibit per Meter"""
+  TEBIBIT_PER_M @reference(uri: "http://qudt.org/vocab/unit/TebiBIT-PER-M", versionTag: "v3.1.5")
+}

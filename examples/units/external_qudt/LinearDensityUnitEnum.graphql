@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LinearDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LinearDensity", versionTag: "v3.1.5") {
+  """Kilogram per Meter | UCUM: kg.m-1"""
+  KILOGM_PER_M @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M", versionTag: "v3.1.5")
+
+  """Kilogram per Millimeter | UCUM: kg.mm-1"""
+  KILOGM_PER_MILLIM @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-MilliM", versionTag: "v3.1.5")
+}

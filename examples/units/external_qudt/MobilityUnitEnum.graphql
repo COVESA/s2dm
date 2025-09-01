@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MobilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Mobility", versionTag: "v3.1.5") {
+  """Square Centimeter per Volt Second | UCUM: cm2.V-1.s-1"""
+  CENTIM2_PER_V_SEC @reference(uri: "http://qudt.org/vocab/unit/CentiM2-PER-V-SEC", versionTag: "v3.1.5")
+
+  """Square Meter per Volt Second | UCUM: m2.V-1.s-1"""
+  M2_PER_V_SEC @reference(uri: "http://qudt.org/vocab/unit/M2-PER-V-SEC", versionTag: "v3.1.5")
+}

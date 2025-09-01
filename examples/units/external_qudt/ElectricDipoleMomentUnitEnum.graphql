@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricDipoleMomentUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricDipoleMoment", versionTag: "v3.1.5") {
+  """Coulomb Meter | UCUM: C.m"""
+  C_M @reference(uri: "http://qudt.org/vocab/unit/C-M", versionTag: "v3.1.5")
+
+  """Debye"""
+  DEBYE @reference(uri: "http://qudt.org/vocab/unit/DEBYE", versionTag: "v3.1.5")
+}

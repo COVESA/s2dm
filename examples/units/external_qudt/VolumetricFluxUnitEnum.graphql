@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VolumetricFluxUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VolumetricFlux", versionTag: "v3.1.5") {
+  """Milliliter per Square Centimeter Minute | UCUM: mL.cm-2"""
+  MILLIL_PER_CENTIM2_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-CentiM2-MIN", versionTag: "v3.1.5")
+
+  """Milliliter per Square Centimeter Second | UCUM: mL.cm-2.s-1"""
+  MILLIL_PER_CENTIM2_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-CentiM2-SEC", versionTag: "v3.1.5")
+}

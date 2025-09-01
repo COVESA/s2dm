@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyPerSquareMagneticFluxDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/EnergyPerSquareMagneticFluxDensity", versionTag: "v3.1.5") {
+  """Joule per Square Tesla | UCUM: J.T-2"""
+  J_PER_T2 @reference(uri: "http://qudt.org/vocab/unit/J-PER-T2", versionTag: "v3.1.5")
+}

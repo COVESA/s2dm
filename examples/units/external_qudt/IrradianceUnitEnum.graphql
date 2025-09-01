@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum IrradianceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Irradiance", versionTag: "v3.1.5") {
+  """Megajoule per Square Meter Day | UCUM: MJ.m-2.d-1"""
+  MEGAJ_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-M2-DAY", versionTag: "v3.1.5")
+}

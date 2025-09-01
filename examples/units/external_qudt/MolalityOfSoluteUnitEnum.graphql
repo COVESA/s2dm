@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MolalityOfSoluteUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MolalityOfSolute", versionTag: "v3.1.5") {
+  """Centimole per Kilogram | UCUM: cmol.kg-1"""
+  CENTIMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/CentiMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Kilomole per Kilogram | UCUM: kmol.kg-1"""
+  KILOMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Micromole per Gram | UCUM: umol.g-1"""
+  MICROMOL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-GM", versionTag: "v3.1.5")
+
+  """Pound Mole per Pound Mass | UCUM: [mol_lb].[lb_av]-1"""
+  MOL_LB_PER_LB @reference(uri: "http://qudt.org/vocab/unit/MOL_LB-PER-LB", versionTag: "v3.1.5")
+
+  """Mole per Kilogram | UCUM: mol.kg-1"""
+  MOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Nanomole per Gram | UCUM: nmol.g-1"""
+  NANOMOL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-GM", versionTag: "v3.1.5")
+}

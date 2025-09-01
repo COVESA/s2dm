@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PowerPerElectricChargeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PowerPerElectricCharge", versionTag: "v3.1.5") {
+  """Millivolt per Minute | UCUM: mV.min-1"""
+  MILLIV_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliV-PER-MIN", versionTag: "v3.1.5")
+
+  """Volt per Microsecond | UCUM: V.us-1"""
+  V_PER_MICROSEC @reference(uri: "http://qudt.org/vocab/unit/V-PER-MicroSEC", versionTag: "v3.1.5")
+
+  """Volt per Second | UCUM: V.s-1"""
+  V_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/V-PER-SEC", versionTag: "v3.1.5")
+}

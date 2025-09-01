@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InversePermittivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InversePermittivity", versionTag: "v3.1.5") {
+  """Meter per Farad | UCUM: m.F-1"""
+  M_PER_FARAD @reference(uri: "http://qudt.org/vocab/unit/M-PER-FARAD", versionTag: "v3.1.5")
+}

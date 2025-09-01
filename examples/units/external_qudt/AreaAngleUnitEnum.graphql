@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaAngleUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaAngle", versionTag: "v3.1.5") {
+  """Square Meter Steradian | UCUM: m2.sr"""
+  M2_SR @reference(uri: "http://qudt.org/vocab/unit/M2-SR", versionTag: "v3.1.5")
+}

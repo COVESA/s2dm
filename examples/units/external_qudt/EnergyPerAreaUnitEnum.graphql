@@ -1,0 +1,83 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyPerAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/EnergyPerArea", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Square Foot | UCUM: [Btu_IT].[ft_i]-2"""
+  BTU_IT_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-FT2", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Square Foot | UCUM: [Btu_th].[ft_i]-2"""
+  BTU_TH_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-FT2", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Square Centimeter | UCUM: cal_th.cm-2"""
+  CAL_TH_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Centinewton Meter per Square Meter | UCUM: cN.m.m-2"""
+  CENTIN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/CentiN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Erg per Square Centimeter | UCUM: erg.cm-2"""
+  ERG_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Foot Pound Force per Square Foot | UCUM: [ft_i].[lbf_av].[sft_i]-1"""
+  FT_LB_F_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F-PER-FT2", versionTag: "v3.1.5")
+
+  """Foot Pound Force per Square Meter | UCUM: [ft_i].[lbf_av].m-2"""
+  FT_LB_F_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F-PER-M2", versionTag: "v3.1.5")
+
+  """Gigajoule per Square Meter | UCUM: GJ.m-2"""
+  GIGAJ_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/GigaJ-PER-M2", versionTag: "v3.1.5")
+
+  """Giganewton Meter per Square Meter"""
+  GIGAN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/GigaN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Joule per Square Centimeter | UCUM: J.cm-2"""
+  J_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/J-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Joule per Square Meter | UCUM: J.m-2"""
+  J_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/J-PER-M2", versionTag: "v3.1.5")
+
+  """Kilo British Thermal Unit (international Definition) per Square Foot | UCUM: k[Btu_IT].[ft_i]-2"""
+  KILOBTU_IT_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/KiloBTU_IT-PER-FT2", versionTag: "v3.1.5")
+
+  """Kilocalorie per Square Centimeter | UCUM: kcal.cm-2"""
+  KILOCAL_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Kilogram per Square Second | UCUM: kg.s-2"""
+  KILOGM_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC2", versionTag: "v3.1.5")
+
+  """Kilonewton Meter per Square Meter | UCUM: kN.m.m-2"""
+  KILON_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Kilowatt Hour per Square Meter | UCUM: kW.h.m-2"""
+  KILOW_HR_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloW-HR-PER-M2", versionTag: "v3.1.5")
+
+  """Langley"""
+  LANGLEY @reference(uri: "http://qudt.org/vocab/unit/LANGLEY", versionTag: "v3.1.5")
+
+  """Pound Force per Inch | UCUM: [lbf_av].[in_i]-1"""
+  LB_F_PER_IN @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-IN", versionTag: "v3.1.5")
+
+  """Megajoule per Square Meter | UCUM: MJ.m-2"""
+  MEGAJ_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-M2", versionTag: "v3.1.5")
+
+  """Meganewton Meter per Square Meter | UCUM: m.MN.m-2"""
+  MEGAN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MegaN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Micronewton Meter per Square Meter | UCUM: m.uN.m-2"""
+  MICRON_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MicroN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Millijoule per Square Meter | UCUM: mJ.m-2"""
+  MILLIJ_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliJ-PER-M2", versionTag: "v3.1.5")
+
+  """Millinewton Meter per Square Meter | UCUM: m.mN.m-2"""
+  MILLIN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Nanonewton Meter per Square Meter"""
+  NANON_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/NanoN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Newton Meter per Square Meter | UCUM: N.m.m-2"""
+  N_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-M2", versionTag: "v3.1.5")
+
+  """Watt Hour per Square Meter | UCUM: W.h.m-2"""
+  W_HR_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/W-HR-PER-M2", versionTag: "v3.1.5")
+
+  """Watt Second per Square Meter | UCUM: W.s.m-2"""
+  W_SEC_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/W-SEC-PER-M2", versionTag: "v3.1.5")
+}

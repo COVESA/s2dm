@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricFieldUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricField", versionTag: "v3.1.5") {
+  """Abvolt per Centimeter | UCUM: 10.nV.cm-1"""
+  V_AB_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/V_Ab-PER-CentiM", versionTag: "v3.1.5")
+
+  """Volt per Meter | UCUM: V.m-1"""
+  V_PER_M @reference(uri: "http://qudt.org/vocab/unit/V-PER-M", versionTag: "v3.1.5")
+
+  """Statvolt per Centimeter"""
+  V_STAT_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/V_Stat-PER-CentiM", versionTag: "v3.1.5")
+}

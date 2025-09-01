@@ -1,0 +1,152 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Energy", versionTag: "v3.1.5") {
+  """Attojoule | UCUM: aJ"""
+  ATTOJ @reference(uri: "http://qudt.org/vocab/unit/AttoJ", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) | UCUM: [Btu_IT]"""
+  BTU_IT @reference(uri: "http://qudt.org/vocab/unit/BTU_IT", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) | UCUM: [Btu_th]"""
+  BTU_TH @reference(uri: "http://qudt.org/vocab/unit/BTU_TH", versionTag: "v3.1.5")
+
+  """International Table Calorie | UCUM: cal_IT"""
+  CAL_IT @reference(uri: "http://qudt.org/vocab/unit/CAL_IT", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie | UCUM: cal_th"""
+  CAL_TH @reference(uri: "http://qudt.org/vocab/unit/CAL_TH", versionTag: "v3.1.5")
+
+  """Erg | UCUM: erg"""
+  ERG @reference(uri: "http://qudt.org/vocab/unit/ERG", versionTag: "v3.1.5")
+
+  """Electron Volt | UCUM: eV"""
+  EV @reference(uri: "http://qudt.org/vocab/unit/EV", versionTag: "v3.1.5")
+
+  """Exajoule | UCUM: EJ"""
+  EXAJ @reference(uri: "http://qudt.org/vocab/unit/ExaJ", versionTag: "v3.1.5")
+
+  """Hartree"""
+  E_H @reference(uri: "http://qudt.org/vocab/unit/E_h", versionTag: "v3.1.5")
+
+  """Femtojoule | UCUM: fJ"""
+  FEMTOJ @reference(uri: "http://qudt.org/vocab/unit/FemtoJ", versionTag: "v3.1.5")
+
+  """Foot Pound Force | UCUM: [ft_i].[lbf_av]"""
+  FT_LB_F @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F", versionTag: "v3.1.5")
+
+  """Foot Poundal | UCUM: [ft_i].[lb_av].[ft_i].s-2"""
+  FT_PDL @reference(uri: "http://qudt.org/vocab/unit/FT-PDL", versionTag: "v3.1.5")
+
+  """Giga Electron Volt | UCUM: GeV"""
+  GIGAEV @reference(uri: "http://qudt.org/vocab/unit/GigaEV", versionTag: "v3.1.5")
+
+  """Gigajoule | UCUM: GJ"""
+  GIGAJ @reference(uri: "http://qudt.org/vocab/unit/GigaJ", versionTag: "v3.1.5")
+
+  """Gigawatt Hour | UCUM: GW.h"""
+  GIGAW_HR @reference(uri: "http://qudt.org/vocab/unit/GigaW-HR", versionTag: "v3.1.5")
+
+  """Joule | UCUM: J"""
+  J @reference(uri: "http://qudt.org/vocab/unit/J", versionTag: "v3.1.5")
+
+  """Kilo British Thermal Unit (international Definition) | UCUM: k[Btu_IT]"""
+  KILOBTU_IT @reference(uri: "http://qudt.org/vocab/unit/KiloBTU_IT", versionTag: "v3.1.5")
+
+  """Kilo British Thermal Unit (thermochemical Definition) | UCUM: k[Btu_th]"""
+  KILOBTU_TH @reference(uri: "http://qudt.org/vocab/unit/KiloBTU_TH", versionTag: "v3.1.5")
+
+  """Kilocalorie | UCUM: kcal"""
+  KILOCAL @reference(uri: "http://qudt.org/vocab/unit/KiloCAL", versionTag: "v3.1.5")
+
+  """Kilo Electron Volt | UCUM: keV"""
+  KILOEV @reference(uri: "http://qudt.org/vocab/unit/KiloEV", versionTag: "v3.1.5")
+
+  """Kilojoule | UCUM: kJ"""
+  KILOJ @reference(uri: "http://qudt.org/vocab/unit/KiloJ", versionTag: "v3.1.5")
+
+  """Kilo Volt Ampere Reactive Hour | UCUM: kVA.h{reactive}"""
+  KILOVAR_HR @reference(uri: "http://qudt.org/vocab/unit/KiloVAR-HR", versionTag: "v3.1.5")
+
+  """Kilo Volt Ampere Hour | UCUM: kVA.h"""
+  KILOVA_HR @reference(uri: "http://qudt.org/vocab/unit/KiloVA-HR", versionTag: "v3.1.5")
+
+  """Kilowatt Hour | UCUM: kW.h"""
+  KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/KiloW-HR", versionTag: "v3.1.5")
+
+  """Mega British Thermal Unit (international Definition)"""
+  MEGABTU_IT @reference(uri: "http://qudt.org/vocab/unit/MegaBTU_IT", versionTag: "v3.1.5")
+
+  """Mega Electron Volt | UCUM: MeV"""
+  MEGAEV @reference(uri: "http://qudt.org/vocab/unit/MegaEV", versionTag: "v3.1.5")
+
+  """Megajoule | UCUM: MJ"""
+  MEGAJ @reference(uri: "http://qudt.org/vocab/unit/MegaJ", versionTag: "v3.1.5")
+
+  """Mega Ton of Oil Equivalent"""
+  MEGATOE @reference(uri: "http://qudt.org/vocab/unit/MegaTOE", versionTag: "v3.1.5")
+
+  """Mega Volt Ampere Reactive Hour | UCUM: MVA{reactive}.h"""
+  MEGAVAR_HR @reference(uri: "http://qudt.org/vocab/unit/MegaVAR-HR", versionTag: "v3.1.5")
+
+  """Mega Volt Ampere Hour | UCUM: MVA.h"""
+  MEGAVA_HR @reference(uri: "http://qudt.org/vocab/unit/MegaVA-HR", versionTag: "v3.1.5")
+
+  """Megawatt Hour | UCUM: MW.h"""
+  MEGAW_HR @reference(uri: "http://qudt.org/vocab/unit/MegaW-HR", versionTag: "v3.1.5")
+
+  """Micro Joule"""
+  MICROJ @reference(uri: "http://qudt.org/vocab/unit/MicroJ", versionTag: "v3.1.5")
+
+  """Millijoule | UCUM: mJ"""
+  MILLIJ @reference(uri: "http://qudt.org/vocab/unit/MilliJ", versionTag: "v3.1.5")
+
+  """Nanojoule"""
+  NANOJ @reference(uri: "http://qudt.org/vocab/unit/NanoJ", versionTag: "v3.1.5")
+
+  """Petajoule | UCUM: PJ"""
+  PETAJ @reference(uri: "http://qudt.org/vocab/unit/PetaJ", versionTag: "v3.1.5")
+
+  """Picojoule"""
+  PICOJ @reference(uri: "http://qudt.org/vocab/unit/PicoJ", versionTag: "v3.1.5")
+
+  """Planck Energy"""
+  PLANCKENERGY @reference(uri: "http://qudt.org/vocab/unit/PlanckEnergy", versionTag: "v3.1.5")
+
+  """Quad"""
+  QUAD @reference(uri: "http://qudt.org/vocab/unit/QUAD", versionTag: "v3.1.5")
+
+  """Terajoule | UCUM: TJ"""
+  TERAJ @reference(uri: "http://qudt.org/vocab/unit/TeraJ", versionTag: "v3.1.5")
+
+  """Terawatt Hour | UCUM: TW/h"""
+  TERAW_HR @reference(uri: "http://qudt.org/vocab/unit/TeraW-HR", versionTag: "v3.1.5")
+
+  """Therm (ec)"""
+  THERM_EC @reference(uri: "http://qudt.org/vocab/unit/THERM_EC", versionTag: "v3.1.5")
+
+  """Therm (u.s.)"""
+  THERM_US @reference(uri: "http://qudt.org/vocab/unit/THERM_US", versionTag: "v3.1.5")
+
+  """Thm_eec | UCUM: 100000.[Btu_IT]"""
+  THM_EEC @reference(uri: "http://qudt.org/vocab/unit/THM_EEC", versionTag: "v3.1.5")
+
+  """Therm Us | UCUM: 100000.[Btu_59]"""
+  THM_US @reference(uri: "http://qudt.org/vocab/unit/THM_US", versionTag: "v3.1.5")
+
+  """Ton of Oil Equivalent"""
+  TOE @reference(uri: "http://qudt.org/vocab/unit/TOE", versionTag: "v3.1.5")
+
+  """Ton Energy | UCUM: Gcal"""
+  TONENERGY @reference(uri: "http://qudt.org/vocab/unit/TonEnergy", versionTag: "v3.1.5")
+
+  """Volt Ampere Reactive Hour | UCUM: VA{reactive}.h"""
+  VAR_HR @reference(uri: "http://qudt.org/vocab/unit/VAR-HR", versionTag: "v3.1.5")
+
+  """Volt Ampere Hour | UCUM: VA.h"""
+  VA_HR @reference(uri: "http://qudt.org/vocab/unit/VA-HR", versionTag: "v3.1.5")
+
+  """Watt Hour | UCUM: W.h"""
+  W_HR @reference(uri: "http://qudt.org/vocab/unit/W-HR", versionTag: "v3.1.5")
+
+  """Watt Second | UCUM: W.s"""
+  W_SEC @reference(uri: "http://qudt.org/vocab/unit/W-SEC", versionTag: "v3.1.5")
+}

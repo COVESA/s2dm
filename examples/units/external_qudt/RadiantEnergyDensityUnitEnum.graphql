@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum RadiantEnergyDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/RadiantEnergyDensity", versionTag: "v3.1.5") {
+  """Joule per Cubic Meter | UCUM: J.m-3"""
+  J_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/J-PER-M3", versionTag: "v3.1.5")
+}

@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InversePressureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InversePressure", versionTag: "v3.1.5") {
+  """Reciprocal Bar | UCUM: /bar"""
+  PER_BAR @reference(uri: "http://qudt.org/vocab/unit/PER-BAR", versionTag: "v3.1.5")
+
+  """Reciprocal Megapascal | UCUM: /MPa"""
+  PER_MEGAPA @reference(uri: "http://qudt.org/vocab/unit/PER-MegaPA", versionTag: "v3.1.5")
+
+  """Reciprocal Mille Psi"""
+  PER_MILLE_PSI @reference(uri: "http://qudt.org/vocab/unit/PER-MILLE-PSI", versionTag: "v3.1.5")
+
+  """Reciprocal Pascal | UCUM: /Pa"""
+  PER_PA @reference(uri: "http://qudt.org/vocab/unit/PER-PA", versionTag: "v3.1.5")
+
+  """Reciprocal Psi | UCUM: [psi]-1"""
+  PER_PSI @reference(uri: "http://qudt.org/vocab/unit/PER-PSI", versionTag: "v3.1.5")
+}

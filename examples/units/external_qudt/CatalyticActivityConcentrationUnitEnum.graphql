@@ -1,0 +1,56 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CatalyticActivityConcentrationUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CatalyticActivityConcentration", versionTag: "v3.1.5") {
+  """Enzyme Unit per Liter"""
+  ENZ_PER_L @reference(uri: "http://qudt.org/vocab/unit/ENZ-PER-L", versionTag: "v3.1.5")
+
+  """Katal per Liter | UCUM: kat/L"""
+  KAT_PER_L @reference(uri: "http://qudt.org/vocab/unit/KAT-PER-L", versionTag: "v3.1.5")
+
+  """Katal per Cubic Meter | UCUM: kat.m-3"""
+  KAT_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/KAT-PER-M3", versionTag: "v3.1.5")
+
+  """Katal per Microliter | UCUM: kat/uL"""
+  KAT_PER_MICROL @reference(uri: "http://qudt.org/vocab/unit/KAT-PER-MicroL", versionTag: "v3.1.5")
+
+  """Microkatal per Liter | UCUM: ukat/L"""
+  MICROKAT_PER_L @reference(uri: "http://qudt.org/vocab/unit/MicroKAT-PER-L", versionTag: "v3.1.5")
+
+  """Micromole per Liter Hour | UCUM: umol.L-1.h-1"""
+  MICROMOL_PER_L_HR @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-L-HR", versionTag: "v3.1.5")
+
+  """Millikatal per Liter | UCUM: mkat/L"""
+  MILLIKAT_PER_L @reference(uri: "http://qudt.org/vocab/unit/MilliKAT-PER-L", versionTag: "v3.1.5")
+
+  """Millimole per Cubic Meter Day | UCUM: mmol.m-3.d-1"""
+  MILLIMOL_PER_M3_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-M3-DAY", versionTag: "v3.1.5")
+
+  """Mole per Square Meter Second Meter | UCUM: mol.m-2.s-1.m-1"""
+  MOL_PER_M2_SEC_M @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M2-SEC-M", versionTag: "v3.1.5")
+
+  """Mole per Cubic Meter Second | UCUM: mol.m-3.s-1"""
+  MOL_PER_M3_SEC @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M3-SEC", versionTag: "v3.1.5")
+
+  """Nanokatal per Liter | UCUM: nkat/L"""
+  NANOKAT_PER_L @reference(uri: "http://qudt.org/vocab/unit/NanoKAT-PER-L", versionTag: "v3.1.5")
+
+  """Nanomole per Cubic Centimeter Hour | UCUM: nmol.cm-3.h-1"""
+  NANOMOL_PER_CENTIM3_HR @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-CentiM3-HR", versionTag: "v3.1.5")
+
+  """Nanomole per Liter Day | UCUM: nmol.L-1.d-1"""
+  NANOMOL_PER_L_DAY @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-L-DAY", versionTag: "v3.1.5")
+
+  """Nanomole per Liter Hour | UCUM: nmol.L-1.h-1"""
+  NANOMOL_PER_L_HR @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-L-HR", versionTag: "v3.1.5")
+
+  """Picokatal per Liter | UCUM: pkat/L"""
+  PICOKAT_PER_L @reference(uri: "http://qudt.org/vocab/unit/PicoKAT-PER-L", versionTag: "v3.1.5")
+
+  """Picomole per Liter Day | UCUM: pmol.L-1.d-1"""
+  PICOMOL_PER_L_DAY @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-L-DAY", versionTag: "v3.1.5")
+
+  """Picomole per Liter Hour | UCUM: pmol.L-1.h-1"""
+  PICOMOL_PER_L_HR @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-L-HR", versionTag: "v3.1.5")
+
+  """Picomole per Cubic Meter Second | UCUM: pmol.m-3.s-1"""
+  PICOMOL_PER_M3_SEC @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-M3-SEC", versionTag: "v3.1.5")
+}

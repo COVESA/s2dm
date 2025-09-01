@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassAbsorptionCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassAbsorptionCoefficient", versionTag: "v3.1.5") {
+  """Square Meter per Kilogram | UCUM: m2.kg-1"""
+  M2_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/M2-PER-KiloGM", versionTag: "v3.1.5")
+}

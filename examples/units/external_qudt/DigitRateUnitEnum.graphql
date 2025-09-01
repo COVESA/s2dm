@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DigitRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DigitRate", versionTag: "v3.1.5") {
+  """Baud"""
+  BAUD @reference(uri: "http://qudt.org/vocab/unit/BAUD", versionTag: "v3.1.5")
+
+  """Kilobaud"""
+  KILOBAUD @reference(uri: "http://qudt.org/vocab/unit/KiloBAUD", versionTag: "v3.1.5")
+
+  """Megabaud"""
+  MEGABAUD @reference(uri: "http://qudt.org/vocab/unit/MegaBAUD", versionTag: "v3.1.5")
+}

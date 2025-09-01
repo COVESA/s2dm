@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DoseEquivalentUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DoseEquivalent", versionTag: "v3.1.5") {
+  """Microsievert | UCUM: uSv"""
+  MICROSV @reference(uri: "http://qudt.org/vocab/unit/MicroSV", versionTag: "v3.1.5")
+
+  """Milli Roentgen Equivalent Man | UCUM: mREM"""
+  MILLIR_MAN @reference(uri: "http://qudt.org/vocab/unit/MilliR_man", versionTag: "v3.1.5")
+
+  """Millisievert | UCUM: mSv"""
+  MILLISV @reference(uri: "http://qudt.org/vocab/unit/MilliSV", versionTag: "v3.1.5")
+
+  """Nanosievert"""
+  NANOSV @reference(uri: "http://qudt.org/vocab/unit/NanoSV", versionTag: "v3.1.5")
+
+  """Rem | UCUM: REM"""
+  REM @reference(uri: "http://qudt.org/vocab/unit/REM", versionTag: "v3.1.5")
+
+  """Roentgen Equivalent Man | UCUM: REM"""
+  R_MAN @reference(uri: "http://qudt.org/vocab/unit/R_man", versionTag: "v3.1.5")
+
+  """Sievert | UCUM: Sv"""
+  SV @reference(uri: "http://qudt.org/vocab/unit/SV", versionTag: "v3.1.5")
+}

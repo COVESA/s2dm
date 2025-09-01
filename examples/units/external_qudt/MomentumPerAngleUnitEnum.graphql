@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MomentumPerAngleUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MomentumPerAngle", versionTag: "v3.1.5") {
+  """Newton Second per Radian | UCUM: N.s.rad-1"""
+  N_SEC_PER_RAD @reference(uri: "http://qudt.org/vocab/unit/N-SEC-PER-RAD", versionTag: "v3.1.5")
+}

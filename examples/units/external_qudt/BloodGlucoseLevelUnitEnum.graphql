@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum BloodGlucoseLevelUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/BloodGlucoseLevel", versionTag: "v3.1.5") {
+  """Millimole per Liter | UCUM: mmol.L-1"""
+  MILLIMOL_PER_L @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-L", versionTag: "v3.1.5")
+}

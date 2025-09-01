@@ -1,0 +1,38 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ResistivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Resistivity", versionTag: "v3.1.5") {
+  """Gigaohm Meter | UCUM: GOhm.m"""
+  GIGAOHM_M @reference(uri: "http://qudt.org/vocab/unit/GigaOHM-M", versionTag: "v3.1.5")
+
+  """Kiloohm Meter | UCUM: kOhm.m"""
+  KILOOHM_M @reference(uri: "http://qudt.org/vocab/unit/KiloOHM-M", versionTag: "v3.1.5")
+
+  """Megaohm Kilometer | UCUM: MOhm.km"""
+  MEGAOHM_KILOM @reference(uri: "http://qudt.org/vocab/unit/MegaOHM-KiloM", versionTag: "v3.1.5")
+
+  """Megaohm Meter | UCUM: m.MOhm"""
+  MEGAOHM_M @reference(uri: "http://qudt.org/vocab/unit/MegaOHM-M", versionTag: "v3.1.5")
+
+  """Microohm Meter | UCUM: m.uOhm"""
+  MICROOHM_M @reference(uri: "http://qudt.org/vocab/unit/MicroOHM-M", versionTag: "v3.1.5")
+
+  """Milliohm Meter | UCUM: m.mOhm"""
+  MILLIOHM_M @reference(uri: "http://qudt.org/vocab/unit/MilliOHM-M", versionTag: "v3.1.5")
+
+  """Nanoohm Meter | UCUM: nOhm.m"""
+  NANOOHM_M @reference(uri: "http://qudt.org/vocab/unit/NanoOHM-M", versionTag: "v3.1.5")
+
+  """Ohm Centimeter | UCUM: Ohm.cm"""
+  OHM_CENTIM @reference(uri: "http://qudt.org/vocab/unit/OHM-CentiM", versionTag: "v3.1.5")
+
+  """Ohm Circular Mil per Foot"""
+  OHM_CIRC_MIL_PER_FT @reference(uri: "http://qudt.org/vocab/unit/OHM_CIRC-MIL-PER-FT", versionTag: "v3.1.5")
+
+  """Ohm Kilometer | UCUM: Ohm.km"""
+  OHM_KILOM @reference(uri: "http://qudt.org/vocab/unit/OHM-KiloM", versionTag: "v3.1.5")
+
+  """Ohm Meter | UCUM: Ohm.m"""
+  OHM_M @reference(uri: "http://qudt.org/vocab/unit/OHM-M", versionTag: "v3.1.5")
+
+  """Ohm Square Meter per Meter | UCUM: Ohm2.m.m-1"""
+  OHM_M2_PER_M @reference(uri: "http://qudt.org/vocab/unit/OHM-M2-PER-M", versionTag: "v3.1.5")
+}

@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ExpansionRatioUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ExpansionRatio", versionTag: "v3.1.5") {
+  """Millimeter per Degree Celsius Meter | UCUM: mm.Cel-1.m-1"""
+  MILLIM_PER_DEG_C_M @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-DEG_C-M", versionTag: "v3.1.5")
+
+  """Meter per Degree Celsius Meter | UCUM: m.Cel-1.m-1"""
+  M_PER_DEG_C_M @reference(uri: "http://qudt.org/vocab/unit/M-PER-DEG_C-M", versionTag: "v3.1.5")
+
+  """Reciprocal Degree Fahrenheit | UCUM: /[degF]"""
+  PER_DEG_F @reference(uri: "http://qudt.org/vocab/unit/PER-DEG_F", versionTag: "v3.1.5")
+
+  """Reciprocal Kelvin | UCUM: /K"""
+  PER_K @reference(uri: "http://qudt.org/vocab/unit/PER-K", versionTag: "v3.1.5")
+
+  """Reciprocal Megakelvin"""
+  PER_MEGAK @reference(uri: "http://qudt.org/vocab/unit/PER-MegaK", versionTag: "v3.1.5")
+
+  """Parts per Million per Kelvin | UCUM: ppm.K-1"""
+  PPM_PER_K @reference(uri: "http://qudt.org/vocab/unit/PPM-PER-K", versionTag: "v3.1.5")
+
+  """Parts per Ten Million per Kelvin"""
+  PPTM_PER_K @reference(uri: "http://qudt.org/vocab/unit/PPTM-PER-K", versionTag: "v3.1.5")
+}

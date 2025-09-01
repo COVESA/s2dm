@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum HallCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/HallCoefficient", versionTag: "v3.1.5") {
+  """Cubic Meter per Coulomb | UCUM: m3.C-1"""
+  M3_PER_C @reference(uri: "http://qudt.org/vocab/unit/M3-PER-C", versionTag: "v3.1.5")
+
+  """Volt Square Inch per Pound Force | UCUM: V.[in_i]2.[lbf_av]-1"""
+  V_IN2_PER_LB_F @reference(uri: "http://qudt.org/vocab/unit/V-IN2-PER-LB_F", versionTag: "v3.1.5")
+
+  """Volt per Bar | UCUM: V.bar-1"""
+  V_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/V-PER-BAR", versionTag: "v3.1.5")
+
+  """Volt per Pascal | UCUM: V.Pa-1"""
+  V_PER_PA @reference(uri: "http://qudt.org/vocab/unit/V-PER-PA", versionTag: "v3.1.5")
+}

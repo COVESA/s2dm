@@ -1,0 +1,35 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CountUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Count", versionTag: "v3.1.5") {
+  """Billion (Long Scale)"""
+  BILLION_LONG @reference(uri: "http://qudt.org/vocab/unit/BILLION_Long", versionTag: "v3.1.5")
+
+  """Billion (Short Scale)"""
+  BILLION_SHORT @reference(uri: "http://qudt.org/vocab/unit/BILLION_Short", versionTag: "v3.1.5")
+
+  """Count"""
+  COUNT @reference(uri: "http://qudt.org/vocab/unit/COUNT", versionTag: "v3.1.5")
+
+  """Hundred"""
+  HUNDRED @reference(uri: "http://qudt.org/vocab/unit/HUNDRED", versionTag: "v3.1.5")
+
+  """Million"""
+  MILLION @reference(uri: "http://qudt.org/vocab/unit/MILLION", versionTag: "v3.1.5")
+
+  """Number | UCUM: 1"""
+  NUM @reference(uri: "http://qudt.org/vocab/unit/NUM", versionTag: "v3.1.5")
+
+  """One"""
+  ONE @reference(uri: "http://qudt.org/vocab/unit/ONE", versionTag: "v3.1.5")
+
+  """Pixel (count)"""
+  PIXEL_COUNT @reference(uri: "http://qudt.org/vocab/unit/PIXEL_COUNT", versionTag: "v3.1.5")
+
+  """Ten"""
+  TEN @reference(uri: "http://qudt.org/vocab/unit/TEN", versionTag: "v3.1.5")
+
+  """Thousand"""
+  THOUSAND @reference(uri: "http://qudt.org/vocab/unit/THOUSAND", versionTag: "v3.1.5")
+
+  """Unitless"""
+  UNITLESS @reference(uri: "http://qudt.org/vocab/unit/UNITLESS", versionTag: "v3.1.5")
+}

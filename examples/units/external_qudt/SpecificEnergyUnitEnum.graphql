@@ -1,0 +1,44 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificEnergy", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Pound Mass | UCUM: [Btu_IT].[lb_av]-1"""
+  BTU_IT_PER_LB @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-LB", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Pound Mass | UCUM: [Btu_th].[lb_av]-1"""
+  BTU_TH_PER_LB @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-LB", versionTag: "v3.1.5")
+
+  """International Table Calorie per Gram | UCUM: cal_IT.g-1"""
+  CAL_IT_PER_GM @reference(uri: "http://qudt.org/vocab/unit/CAL_IT-PER-GM", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Gram | UCUM: cal_th.g-1"""
+  CAL_TH_PER_GM @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-GM", versionTag: "v3.1.5")
+
+  """Erg per Gram | UCUM: erg.g-1"""
+  ERG_PER_GM @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-GM", versionTag: "v3.1.5")
+
+  """Joule per Gram | UCUM: J.g-1"""
+  J_PER_GM @reference(uri: "http://qudt.org/vocab/unit/J-PER-GM", versionTag: "v3.1.5")
+
+  """Joule per Kilogram | UCUM: J.kg-1"""
+  J_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/J-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Kilocalorie per Gram | UCUM: kcal.g-1"""
+  KILOCAL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-GM", versionTag: "v3.1.5")
+
+  """Kilojoule per Kilogram | UCUM: kJ.kg-1"""
+  KILOJ_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Kilo Pound Force Foot per Pound Mass | UCUM: [lbf_av].[ft_i].[lb_av]-1"""
+  KILOLB_F_FT_PER_LB @reference(uri: "http://qudt.org/vocab/unit/KiloLB_F-FT-PER-LB", versionTag: "v3.1.5")
+
+  """Megajoule per Kilogram | UCUM: MJ.kg-1"""
+  MEGAJ_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Millijoule per Gram | UCUM: mJ.g-1"""
+  MILLIJ_PER_GM @reference(uri: "http://qudt.org/vocab/unit/MilliJ-PER-GM", versionTag: "v3.1.5")
+
+  """Newton Meter per Kilogram | UCUM: N.m.kg-1"""
+  N_M_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Watt Hour per Kilogram | UCUM: W.h.kg-1"""
+  W_HR_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/W-HR-PER-KiloGM", versionTag: "v3.1.5")
+}

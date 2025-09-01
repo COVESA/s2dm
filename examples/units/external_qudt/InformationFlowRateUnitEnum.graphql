@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InformationFlowRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InformationFlowRate", versionTag: "v3.1.5") {
+  """Hartley per Second"""
+  HART_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/HART-PER-SEC", versionTag: "v3.1.5")
+
+  """Nat per Second"""
+  NAT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/NAT-PER-SEC", versionTag: "v3.1.5")
+
+  """Shannon per Second"""
+  SHANNON_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/SHANNON-PER-SEC", versionTag: "v3.1.5")
+}

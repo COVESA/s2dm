@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CostPerMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CostPerMass", versionTag: "v3.1.5") {
+  """Swiss Franc per Kilogram"""
+  CCY_CHF_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/CCY_CHF-PER-KiloGM", versionTag: "v3.1.5")
+}

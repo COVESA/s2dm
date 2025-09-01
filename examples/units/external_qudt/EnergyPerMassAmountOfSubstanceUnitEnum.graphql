@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyPerMassAmountOfSubstanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/EnergyPerMassAmountOfSubstance", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Pound Mole | UCUM: [Btu_IT].[mol_lb]-1"""
+  BTU_IT_PER_MOL_LB @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-MOL_LB", versionTag: "v3.1.5")
+}

@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ActivityConcentrationUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ActivityConcentration", versionTag: "v3.1.5") {
+  """Becquerel per Liter | UCUM: Bq.L-1"""
+  BQ_PER_L @reference(uri: "http://qudt.org/vocab/unit/BQ-PER-L", versionTag: "v3.1.5")
+
+  """Becquerel per Cubic Meter | UCUM: Bq.m-3"""
+  BQ_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/BQ-PER-M3", versionTag: "v3.1.5")
+
+  """Microbecquerel per Liter | UCUM: uBq.L-1"""
+  MICROBQ_PER_L @reference(uri: "http://qudt.org/vocab/unit/MicroBQ-PER-L", versionTag: "v3.1.5")
+
+  """Millibecquerel per Liter | UCUM: mBq.L-1"""
+  MILLIBQ_PER_L @reference(uri: "http://qudt.org/vocab/unit/MilliBQ-PER-L", versionTag: "v3.1.5")
+
+  """Nanobecquerel per Liter | UCUM: nBq.L-1"""
+  NANOBQ_PER_L @reference(uri: "http://qudt.org/vocab/unit/NanoBQ-PER-L", versionTag: "v3.1.5")
+}

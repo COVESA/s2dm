@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SlowingDownDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Slowing-DownDensity", versionTag: "v3.1.5") {
+  """Reciprocal Cubic Meter Second | UCUM: m-3.s-1"""
+  PER_M3_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-M3-SEC", versionTag: "v3.1.5")
+
+  """Reciprocal Second Cubic Meter | UCUM: s-1.m-3"""
+  PER_SEC_M3 @reference(uri: "http://qudt.org/vocab/unit/PER-SEC-M3", versionTag: "v3.1.5")
+}

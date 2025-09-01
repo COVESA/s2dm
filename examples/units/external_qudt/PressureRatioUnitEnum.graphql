@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PressureRatioUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PressureRatio", versionTag: "v3.1.5") {
+  """Bar per Bar | UCUM: bar.bar-1"""
+  BAR_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/BAR-PER-BAR", versionTag: "v3.1.5")
+
+  """Hectopascal per Bar | UCUM: hPa.bar-1"""
+  HECTOPA_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/HectoPA-PER-BAR", versionTag: "v3.1.5")
+
+  """Kilopascal per Bar | UCUM: kPa.bar-1"""
+  KILOPA_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloPA-PER-BAR", versionTag: "v3.1.5")
+
+  """Megapascal per Bar | UCUM: MPa.bar-1"""
+  MEGAPA_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MegaPA-PER-BAR", versionTag: "v3.1.5")
+
+  """Millibar per Bar | UCUM: mbar.bar-1"""
+  MILLIBAR_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliBAR-PER-BAR", versionTag: "v3.1.5")
+
+  """Pascal per Bar | UCUM: Pa.bar-1"""
+  PA_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/PA-PER-BAR", versionTag: "v3.1.5")
+
+  """Percent | UCUM: %"""
+  PERCENT @reference(uri: "http://qudt.org/vocab/unit/PERCENT", versionTag: "v3.1.5")
+
+  """Psi per Psi | UCUM: [psi].[psi]-1"""
+  PSI_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/PSI-PER-PSI", versionTag: "v3.1.5")
+}

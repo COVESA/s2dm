@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseLengthTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseLengthTemperature", versionTag: "v3.1.5") {
+  """Reciprocal Meter Kelvin | UCUM: m-1.K-1"""
+  PER_M_K @reference(uri: "http://qudt.org/vocab/unit/PER-M-K", versionTag: "v3.1.5")
+}

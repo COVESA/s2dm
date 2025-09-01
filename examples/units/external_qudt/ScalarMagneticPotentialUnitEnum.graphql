@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ScalarMagneticPotentialUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ScalarMagneticPotential", versionTag: "v3.1.5") {
+  """Volt Second per Meter | UCUM: V.s.m-1"""
+  V_SEC_PER_M @reference(uri: "http://qudt.org/vocab/unit/V-SEC-PER-M", versionTag: "v3.1.5")
+}

@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaTimeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaTime", versionTag: "v3.1.5") {
+  """Square Centimeter Minute | UCUM: cm2.min"""
+  CENTIM2_MIN @reference(uri: "http://qudt.org/vocab/unit/CentiM2-MIN", versionTag: "v3.1.5")
+
+  """Square Centimeter Second | UCUM: cm2.s"""
+  CENTIM2_SEC @reference(uri: "http://qudt.org/vocab/unit/CentiM2-SEC", versionTag: "v3.1.5")
+
+  """Hour Square Foot | UCUM: h.[ft_i]2"""
+  HR_FT2 @reference(uri: "http://qudt.org/vocab/unit/HR-FT2", versionTag: "v3.1.5")
+
+  """Second Square Foot | UCUM: s.[ft_i]2"""
+  SEC_FT2 @reference(uri: "http://qudt.org/vocab/unit/SEC-FT2", versionTag: "v3.1.5")
+}

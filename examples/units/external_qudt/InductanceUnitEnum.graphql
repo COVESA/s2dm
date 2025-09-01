@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InductanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Inductance", versionTag: "v3.1.5") {
+  """Henry | UCUM: H"""
+  H @reference(uri: "http://qudt.org/vocab/unit/H", versionTag: "v3.1.5")
+
+  """Abhenry | UCUM: nH"""
+  H_AB @reference(uri: "http://qudt.org/vocab/unit/H_Ab", versionTag: "v3.1.5")
+
+  """Stathenry"""
+  H_STAT @reference(uri: "http://qudt.org/vocab/unit/H_Stat", versionTag: "v3.1.5")
+
+  """Kilohenry"""
+  KILOH @reference(uri: "http://qudt.org/vocab/unit/KiloH", versionTag: "v3.1.5")
+
+  """Microhenry | UCUM: uH"""
+  MICROH @reference(uri: "http://qudt.org/vocab/unit/MicroH", versionTag: "v3.1.5")
+
+  """Millihenry | UCUM: mH"""
+  MILLIH @reference(uri: "http://qudt.org/vocab/unit/MilliH", versionTag: "v3.1.5")
+
+  """Nanohenry | UCUM: nH"""
+  NANOH @reference(uri: "http://qudt.org/vocab/unit/NanoH", versionTag: "v3.1.5")
+
+  """Picohenry | UCUM: pH"""
+  PICOH @reference(uri: "http://qudt.org/vocab/unit/PicoH", versionTag: "v3.1.5")
+}

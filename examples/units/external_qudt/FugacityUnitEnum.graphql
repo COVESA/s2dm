@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum FugacityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Fugacity", versionTag: "v3.1.5") {
+  """Pascal | UCUM: Pa"""
+  PA @reference(uri: "http://qudt.org/vocab/unit/PA", versionTag: "v3.1.5")
+
+  """Picopascal"""
+  PICOPA @reference(uri: "http://qudt.org/vocab/unit/PicoPA", versionTag: "v3.1.5")
+}

@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TemperatureRatioUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TemperatureRatio", versionTag: "v3.1.5") {
+  """Degree Celsius per Kelvin | UCUM: Cel.K-1"""
+  DEG_C_PER_K @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-K", versionTag: "v3.1.5")
+
+  """Degree Fahrenheit per Kelvin | UCUM: [degF].K-1"""
+  DEG_F_PER_K @reference(uri: "http://qudt.org/vocab/unit/DEG_F-PER-K", versionTag: "v3.1.5")
+
+  """Kelvin per Kelvin | UCUM: K.K-1"""
+  K_PER_K @reference(uri: "http://qudt.org/vocab/unit/K-PER-K", versionTag: "v3.1.5")
+
+  """Millikelvin per Kelvin"""
+  MILLIK_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliK-PER-K", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MachNumberUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MachNumber", versionTag: "v3.1.5") {
+  """Mach"""
+  MACH @reference(uri: "http://qudt.org/vocab/unit/MACH", versionTag: "v3.1.5")
+}

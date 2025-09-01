@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CurrentLinkageUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CurrentLinkage", versionTag: "v3.1.5") {
+  """Ampere | UCUM: A"""
+  A @reference(uri: "http://qudt.org/vocab/unit/A", versionTag: "v3.1.5")
+
+  """Attoampere"""
+  ATTOA @reference(uri: "http://qudt.org/vocab/unit/AttoA", versionTag: "v3.1.5")
+
+  """Femtoampere"""
+  FEMTOA @reference(uri: "http://qudt.org/vocab/unit/FemtoA", versionTag: "v3.1.5")
+
+  """Gigaampere"""
+  GIGAA @reference(uri: "http://qudt.org/vocab/unit/GigaA", versionTag: "v3.1.5")
+
+  """Petaampere"""
+  PETAA @reference(uri: "http://qudt.org/vocab/unit/PetaA", versionTag: "v3.1.5")
+
+  """Teraampere"""
+  TERAA @reference(uri: "http://qudt.org/vocab/unit/TeraA", versionTag: "v3.1.5")
+}

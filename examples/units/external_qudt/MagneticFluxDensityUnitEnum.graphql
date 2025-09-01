@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MagneticFluxDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MagneticFluxDensity", versionTag: "v3.1.5") {
+  """Gamma"""
+  GAMMA @reference(uri: "http://qudt.org/vocab/unit/GAMMA", versionTag: "v3.1.5")
+
+  """Gauss | UCUM: G"""
+  GAUSS @reference(uri: "http://qudt.org/vocab/unit/GAUSS", versionTag: "v3.1.5")
+
+  """Kilogauss | UCUM: kG"""
+  KILOGAUSS @reference(uri: "http://qudt.org/vocab/unit/KiloGAUSS", versionTag: "v3.1.5")
+
+  """Kilotesla"""
+  KILOT @reference(uri: "http://qudt.org/vocab/unit/KiloT", versionTag: "v3.1.5")
+
+  """Microtesla | UCUM: uT"""
+  MICROT @reference(uri: "http://qudt.org/vocab/unit/MicroT", versionTag: "v3.1.5")
+
+  """Millitesla | UCUM: mT"""
+  MILLIT @reference(uri: "http://qudt.org/vocab/unit/MilliT", versionTag: "v3.1.5")
+
+  """Nanotesla | UCUM: nT"""
+  NANOT @reference(uri: "http://qudt.org/vocab/unit/NanoT", versionTag: "v3.1.5")
+
+  """Tesla | UCUM: T"""
+  T @reference(uri: "http://qudt.org/vocab/unit/T", versionTag: "v3.1.5")
+
+  """Abtesla"""
+  T_AB @reference(uri: "http://qudt.org/vocab/unit/T_Ab", versionTag: "v3.1.5")
+}

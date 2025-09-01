@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MagneticAreaMomentUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MagneticAreaMoment", versionTag: "v3.1.5") {
+  """Abampere Square Centimeter | UCUM: Bi.cm2"""
+  A_AB_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/A_Ab-CentiM2", versionTag: "v3.1.5")
+
+  """Ampere Square Meter | UCUM: A.m2"""
+  A_M2 @reference(uri: "http://qudt.org/vocab/unit/A-M2", versionTag: "v3.1.5")
+
+  """Electron Volt per Tesla | UCUM: eV.T-1"""
+  EV_PER_T @reference(uri: "http://qudt.org/vocab/unit/EV-PER-T", versionTag: "v3.1.5")
+
+  """Joule per Tesla | UCUM: J.T-1"""
+  J_PER_T @reference(uri: "http://qudt.org/vocab/unit/J-PER-T", versionTag: "v3.1.5")
+}
