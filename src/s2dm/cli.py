@@ -738,25 +738,13 @@ def export_concept_uri(console: Console, schema: Path, output: Path | None, name
 # registry -> id
 @registry.command(name="id")
 @schema_option
-@click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
 @optional_output_option
 @click.option("--strict-mode/--no-strict-mode", default=False)
 @click.pass_obj
-def export_id(console: Console, schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
+def export_id(console: Console, schema: Path, output: Path | None, strict_mode: bool) -> None:
     """Generate concept IDs for GraphQL schema fields and enums."""
-    exporter = IDExporter(
-        schema=schema,
-        units_file=units,
-        output=output,
-        strict_mode=strict_mode,
-        dry_run=output is None,
-    )
+
+    exporter = IDExporter(schema=schema, output=output, strict_mode=strict_mode, dry_run=output is None)
     node_ids = exporter.run()
 
     console.rule("[bold blue]Concept IDs")
@@ -766,13 +754,6 @@ def export_id(console: Console, schema: Path, units: Path, output: Path | None, 
 # registry -> init
 @registry.command(name="init")
 @schema_option
-@click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
 @output_option
 @click.option(
     "--concept-namespace",
@@ -784,20 +765,21 @@ def export_id(console: Console, schema: Path, units: Path, output: Path | None, 
     default="ns",
     help="The prefix to use for the concept URIs",
 )
+@units_dir_option
 @click.pass_obj
 def registry_init(
     console: Console,
     schema: Path,
-    units: Path,
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
+    units_dir: Path,
 ) -> None:
     """Initialize your spec history with the given schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
+    id_exporter = IDExporter(schema, None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
@@ -830,13 +812,6 @@ def registry_init(
 @registry.command(name="update")
 @schema_option
 @click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
-@click.option(
     "--spec-history",
     "-sh",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
@@ -854,21 +829,22 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
+@units_dir_option
 @click.pass_obj
 def registry_update(
     console: Console,
     schema: Path,
-    units: Path,
     spec_history: Path,
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
+    units_dir: Path,
 ) -> None:
     """Update a given spec history file with your new schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
+    id_exporter = IDExporter(schema, None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
@@ -1148,6 +1124,7 @@ cli.add_command(similar)
 cli.add_command(search)
 cli.add_command(stats)
 cli.add_command(validate)
+cli.add_command(units)
 
 if __name__ == "__main__":
     cli()
