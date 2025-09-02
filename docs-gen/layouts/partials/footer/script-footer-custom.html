@@ -1,5 +1,12 @@
 {{/* Put your custom <script></script> tags here */}}
 
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ 
+    startOnLoad: true,
+    theme: 'default'
+  });
+</script>
 {{/* EXAMPLE - only load script for production
 {{ if eq (hugo.Environment) "production" -}}
   {{ partial "footer/esbuild" (dict "src" "js/instantpage.js" "load" "async" "transpile" false) -}}
