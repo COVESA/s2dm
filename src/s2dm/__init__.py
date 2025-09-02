@@ -4,7 +4,7 @@ from rich.logging import RichHandler
 
 __author__ = """Daniel Alvarez-Coello"""
 __email__ = "8550265+jdacoello@users.noreply.github.com"
-__version__ = "0.4.0"
+__version__ = "0.6.2"
 
 logging.basicConfig(
     level="INFO",

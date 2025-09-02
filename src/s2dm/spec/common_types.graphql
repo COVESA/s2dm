@@ -13,14 +13,14 @@ enum ThreeRowsInCabinEnum {
 }
 
 enum TwoColumnsInCabinEnum {
-  DRIVERSIDE
-  PASSENGERSIDE
+  DRIVER_SIDE
+  PASSENGER_SIDE
 }
 
 enum ThreeColumnsInCabinEnum {
-  DRIVERSIDE
+  DRIVER_SIDE
   MIDDLE
-  PASSENGERSIDE
+  PASSENGER_SIDE
 }
 
 # Object types

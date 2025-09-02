@@ -1,0 +1,55 @@
+enum RowEnum {
+  ROW1
+  ROW2
+}
+
+enum SideEnum {
+  DRIVERSIDE
+  PASSENGERSIDE
+}
+
+type DoorPosition @instanceTag {
+  row: RowEnum!
+  side: SideEnum!
+}
+
+type Door {
+  isLocked: Boolean
+  position: Int
+  instanceTag: DoorPosition
+}
+
+type Vehicle {
+  doors: [Door] @noDuplicates
+  model: String
+  year: Int
+}
+
+enum SeatRowEnum {
+  ROW1
+  ROW2
+  ROW3
+}
+
+enum SeatPositionEnum {
+  LEFT
+  CENTER
+  RIGHT
+}
+
+type SeatPosition @instanceTag {
+  row: SeatRowEnum!
+  position: SeatPositionEnum!
+}
+
+type Seat {
+  isOccupied: Boolean
+  height: Int
+  instanceTag: SeatPosition
+}
+
+type Cabin {
+  seats: [Seat] @noDuplicates
+  doors: [Door] @noDuplicates
+  temperature: Float
+}

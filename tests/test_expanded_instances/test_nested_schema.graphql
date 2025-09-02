@@ -1,0 +1,35 @@
+enum TwoRowsEnum {
+  ROW1
+  ROW2
+}
+
+enum LateralPositionEnum {
+  LEFT
+  RIGHT
+}
+
+type ChassisAxleRowTag @instanceTag {
+  row: TwoRowsEnum
+}
+
+type LateralPositionTag @instanceTag {
+  position: LateralPositionEnum
+}
+
+type Chassis {
+  Axles: [Axle] @noDuplicates
+}
+
+type Axle {
+  instanceTag: ChassisAxleRowTag
+  Wheels: [Wheel] @noDuplicates
+}
+
+type Wheel {
+  instanceTag: LateralPositionTag
+  Tire: Tire
+}
+
+type Tire {
+  Pressure: Float @range(min: 0)
+}

@@ -11,6 +11,15 @@ This directory contains the Hugo-based documentation website for the **Simplifie
   - Lucide icons (for index page features)
   - Font Awesome 5.15.3 (site-wide)
 
+## Hugo Version Management
+
+This project uses a specific Hugo version to ensure consistency between local development and production builds:
+
+- **Local development**: Hugo version is specified in `package.json` under `otherDependencies.hugo`
+- **CI/CD (GitHub Actions)**: Hugo version is specified in `.github/workflows/docgen.yml` under `HUGO_VERSION`
+
+⚠️ **Important**: These versions must match to ensure consistent builds. If you update one, update the other.
+
 ## Directory Structure
 
 ```
@@ -204,6 +213,12 @@ lead: "An approach for modeling data of multiple domains..."
 - **Minification**: Enabled in production builds
 
 ## Common Issues
+
+### Hugo Version Mismatch
+If you encounter build differences between local and CI/CD:
+1. Check Hugo version in `package.json` (`otherDependencies.hugo`)
+2. Check Hugo version in `.github/workflows/docgen.yml` (`HUGO_VERSION`)
+3. Ensure both versions match exactly
 
 ### Port Already in Use
 If port 1313 is busy:
