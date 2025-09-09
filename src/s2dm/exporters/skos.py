@@ -10,7 +10,8 @@ from rdflib.term import Node
 
 from s2dm.concept.models import Concepts, FieldMetadata
 from s2dm.concept.services import iter_all_concepts
-from s2dm.exporters.utils import get_all_named_types, load_schema
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.schema_loader import load_schema
 
 # Constants
 

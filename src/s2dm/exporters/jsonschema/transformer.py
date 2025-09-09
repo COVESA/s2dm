@@ -22,16 +22,11 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils import (
-    expand_instance_tag,
-    get_all_named_types,
-    get_cardinality,
-    get_directive_arguments,
-    get_instance_tag_object,
-    get_referenced_types,
-    has_directive,
-    is_valid_instance_tag_field,
-)
+from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.field import get_cardinality
+from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, is_valid_instance_tag_field
+from s2dm.exporters.utils.schema_loader import get_referenced_types
 
 GRAPHQL_SCALAR_TO_JSON_SCHEMA = {
     "String": "string",
@@ -145,9 +140,11 @@ class JsonSchemaTransformer:
         Returns:
             Optional[Dict[str, Any]]: JSON Schema definition or None if not transformable
         """
-        if is_object_type(graphql_type) and not has_directive(cast(GraphQLObjectType, graphql_type), "instanceTag"):
+        if is_object_type(graphql_type) and not has_given_directive(
+            cast(GraphQLObjectType, graphql_type), "instanceTag"
+        ):
             return self.transform_object_type(cast(GraphQLObjectType, graphql_type))
-        elif is_object_type(graphql_type) and has_directive(cast(GraphQLObjectType, graphql_type), "instanceTag"):
+        elif is_object_type(graphql_type) and has_given_directive(cast(GraphQLObjectType, graphql_type), "instanceTag"):
             object_type = cast(GraphQLObjectType, graphql_type)
             log.warning(f"Skipping object type with @instanceTag directive: {object_type.name}")
             return None
@@ -467,7 +464,7 @@ class JsonSchemaTransformer:
         """
         extensions: dict[str, Any] = {}
 
-        if has_directive(element, "noDuplicates"):
+        if has_given_directive(element, "noDuplicates"):
             extensions["uniqueItems"] = True
 
         if isinstance(element, GraphQLField):
@@ -478,14 +475,14 @@ class JsonSchemaTransformer:
                 if cardinality.max is not None:
                     extensions["maxItems"] = cardinality.max
 
-        if has_directive(element, "range"):
+        if has_given_directive(element, "range"):
             args = get_directive_arguments(element, "range")
             if "min" in args:
                 extensions["minimum"] = args["min"]
             if "max" in args:
                 extensions["maximum"] = args["max"]
 
-        if has_directive(element, "metadata"):
+        if has_given_directive(element, "metadata"):
             args = get_directive_arguments(element, "metadata")
             if "comment" in args:
                 extensions["$comment"] = args["comment"]

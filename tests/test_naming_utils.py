@@ -14,19 +14,16 @@ from graphql import (
     GraphQLString,
 )
 
-from s2dm.exporters.naming_utils import (
+from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
+from s2dm.exporters.utils.instance_tag import expand_instance_tag
+from s2dm.exporters.utils.naming import (
     apply_naming_to_schema,
     convert_enum_values,
     convert_field_names,
     convert_name,
     get_target_case_for_element,
 )
-from s2dm.exporters.utils import (
-    expand_instance_tag,
-    get_all_object_types,
-    get_all_objects_with_directive,
-    load_schema,
-)
+from s2dm.exporters.utils.schema_loader import load_schema
 
 
 class TestConvertName:

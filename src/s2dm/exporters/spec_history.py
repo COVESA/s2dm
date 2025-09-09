@@ -13,7 +13,7 @@ from s2dm.concept.services import (
     save_spec_history,
     update_spec_history_from_concept_uris,
 )
-from s2dm.exporters.utils import build_schema_str
+from s2dm.exporters.utils.schema_loader import build_schema_str
 
 
 class SpecHistoryExporter:

@@ -12,6 +12,8 @@ from graphql import (
     get_named_type,
 )
 
+from s2dm.exporters.utils.graphql_type import is_graphql_system_type
+
 CASE_CONVERTERS = {
     "camelCase": camelcase,
     "PascalCase": pascalcase,
@@ -76,11 +78,9 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: dict[str, Any])
         naming_config: Configuration dictionary specifying case conversions for different element types
     """
 
-    from s2dm.exporters.utils import is_built_in_type
-
     types_to_rename = []
     for type_name, type_obj in schema.type_map.items():
-        if is_built_in_type(type_name):
+        if is_graphql_system_type(type_name):
             continue
 
         context = TYPE_CONTEXTS.get(type(type_obj))

@@ -14,17 +14,17 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.naming_utils import apply_naming_to_instance_values
-from s2dm.exporters.utils import (
-    FieldCase,
+from s2dm.exporters.utils.directive import has_given_directive
+from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
+from s2dm.exporters.utils.field import FieldCase
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
+from s2dm.exporters.utils.instance_tag import (
     get_all_expanded_instance_tags,
-    get_all_object_types,
-    get_all_objects_with_directive,
     get_instance_tag_dict,
     get_instance_tag_object,
-    has_directive,
-    load_schema_with_naming,
 )
+from s2dm.exporters.utils.naming import apply_naming_to_instance_values
+from s2dm.exporters.utils.schema import load_schema_with_naming
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
     "MILLIMETER": "mm",
@@ -177,8 +177,8 @@ def translate_to_vspec(schema_path: Path, naming_config: dict[str, Any] | None =
     nested_types: list[tuple[str, str]] = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
     for object_type in object_types:
-        if object_type.name == "Query":
-            log.debug("Skipping Query object type.")
+        if is_introspection_or_root_type(object_type.name):
+            log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
 
         # Add a VSS branch structure for the object type
@@ -261,7 +261,7 @@ def process_field(
             "datatype": SCALAR_DATATYPE_MAP[output_type.name],
         }
         # TODO: Fix numbers that are appearing with quotes as strings.
-        if has_directive(field, "range") and field.ast_node and field.ast_node.directives:
+        if has_given_directive(field, "range") and field.ast_node and field.ast_node.directives:
             range_directive = next(
                 (directive for directive in field.ast_node.directives if directive.name.value == "range"), None
             )
@@ -293,7 +293,7 @@ def process_field(
             if unit_arg is not None:
                 field_dict["unit"] = UNITS_DICT[unit_arg]
 
-        if has_directive(field, "metadata"):
+        if has_given_directive(field, "metadata"):
             metadata_directive = None
             if field.ast_node and field.ast_node.directives:
                 metadata_directive = next(
