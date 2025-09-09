@@ -165,49 +165,60 @@ def format_directive_from_ast(directive_node: Any) -> str:
 def build_directive_map(schema: GraphQLSchema) -> dict[str | tuple[str, str], list[str]]:
     directive_map: dict[str | tuple[str, str], list[str]] = {}
 
+    # Helper functions to avoid code duplication
+    def has_directives(value: Any) -> bool:
+        return bool(
+            hasattr(value, "ast_node")
+            and value.ast_node
+            and hasattr(value.ast_node, "directives")
+            and value.ast_node.directives
+        )
+
+    def get_directive_strings(value: Any) -> list[str]:
+        directive_strings = []
+        for directive_node in value.ast_node.directives:
+            directive_str = format_directive_from_ast(directive_node)
+            if directive_str:
+                directive_strings.append(directive_str)
+        return directive_strings
+
+    DIRECTIVE_RELATED_TYPES: tuple[type, ...] = (
+        GraphQLObjectType,
+        GraphQLInterfaceType,
+        GraphQLInputObjectType,
+        GraphQLEnumType,
+        GraphQLUnionType,
+        GraphQLScalarType,
+    )
+
     for type_name, type_obj in schema.type_map.items():
-        if type_name.startswith("__"):
+        if type_name.startswith("__") or not isinstance(
+            type_obj,
+            DIRECTIVE_RELATED_TYPES,
+        ):
             continue
 
-        if isinstance(
-            type_obj,
-            GraphQLObjectType
-            | GraphQLInterfaceType
-            | GraphQLInputObjectType
-            | GraphQLEnumType
-            | GraphQLUnionType
-            | GraphQLScalarType,
-        ):
-            if hasattr(type_obj, "ast_node") and type_obj.ast_node and type_obj.ast_node.directives:
-                directive_strings = []
-                for directive_node in type_obj.ast_node.directives:
-                    directive_str = format_directive_from_ast(directive_node)
-                    if directive_str:
-                        directive_strings.append(directive_str)
-                if directive_strings:
-                    directive_map[type_name] = directive_strings
+        # Directives on types
+        if has_directives(type_obj):
+            directive_strings = get_directive_strings(type_obj)
+            if directive_strings:
+                directive_map[type_name] = directive_strings
 
-            if hasattr(type_obj, "fields"):
-                for field_name, field in type_obj.fields.items():
-                    if hasattr(field, "ast_node") and field.ast_node and field.ast_node.directives:
-                        directive_strings = []
-                        for directive_node in field.ast_node.directives:
-                            directive_str = format_directive_from_ast(directive_node)
-                            if directive_str:
-                                directive_strings.append(directive_str)
-                        if directive_strings:
-                            directive_map[(type_name, field_name)] = directive_strings
+        # Directives on fields
+        if hasattr(type_obj, "fields"):
+            for field_name, field in type_obj.fields.items():
+                if has_directives(field):
+                    directive_strings = get_directive_strings(field)
+                    if directive_strings:
+                        directive_map[(type_name, field_name)] = directive_strings
 
-            if isinstance(type_obj, GraphQLEnumType) and hasattr(type_obj, "values"):
-                for enum_value_name, enum_value in type_obj.values.items():
-                    if hasattr(enum_value, "ast_node") and enum_value.ast_node and enum_value.ast_node.directives:
-                        directive_strings = []
-                        for directive_node in enum_value.ast_node.directives:
-                            directive_str = format_directive_from_ast(directive_node)
-                            if directive_str:
-                                directive_strings.append(directive_str)
-                        if directive_strings:
-                            directive_map[(type_name, enum_value_name)] = directive_strings
+        # Directives on enums
+        if isinstance(type_obj, GraphQLEnumType) and hasattr(type_obj, "values"):
+            for enum_value_name, enum_value in type_obj.values.items():
+                if has_directives(enum_value):
+                    directive_strings = get_directive_strings(enum_value)
+                    if directive_strings:
+                        directive_map[(type_name, enum_value_name)] = directive_strings
 
     return directive_map
 
