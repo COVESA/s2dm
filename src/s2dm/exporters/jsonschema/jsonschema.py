@@ -5,7 +5,7 @@ from typing import Any
 from graphql import GraphQLSchema
 
 from s2dm import log
-from s2dm.exporters.utils import load_schema_with_naming
+from s2dm.exporters.utils.schema import load_schema_with_naming
 
 from .transformer import JsonSchemaTransformer
 

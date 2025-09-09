@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from s2dm.exporters.utils import FieldCase, get_field_case, get_field_case_extended, load_schema
+from s2dm.exporters.utils.field import FieldCase, get_field_case, get_field_case_extended
+from s2dm.exporters.utils.schema_loader import load_schema
 
 
 @pytest.fixture

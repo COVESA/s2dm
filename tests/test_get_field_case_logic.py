@@ -2,7 +2,7 @@
 
 from graphql import GraphQLField, GraphQLList, GraphQLNonNull, GraphQLString
 
-from s2dm.exporters.utils import FieldCase, get_field_case
+from s2dm.exporters.utils.field import FieldCase, get_field_case
 
 
 def test_get_field_case_implementation_logic() -> None:

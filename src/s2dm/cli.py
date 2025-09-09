@@ -15,14 +15,14 @@ from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
-from s2dm.exporters.utils import (
+from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types
+from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
+from s2dm.exporters.utils.schema import search_schema
+from s2dm.exporters.utils.schema_loader import (
     create_tempfile_to_composed_schema,
-    get_all_named_types,
-    get_all_object_types,
     load_schema,
     load_schema_as_str,
     load_schema_as_str_filtered,
-    search_schema,
 )
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
@@ -145,15 +145,22 @@ def load_naming_config(config_path: Path | None) -> dict[str, Any] | None:
         return None
 
     try:
-        with config_path.open("r", encoding="utf-8") as file:
-            log.info(f"Loaded naming config: {config_path}")
-            result = yaml.safe_load(file)
-            config = result if isinstance(result, dict) else {}
-            if config:
-                validate_naming_config(config)
-            return config
-    except Exception as e:
-        raise click.ClickException(f"Failed to load naming config from {config_path}: {e}") from e
+        config_file_handle = config_path.open("r", encoding="utf-8")
+    except OSError as e:
+        raise click.ClickException(f"Failed to open naming config file {config_path}: {e}") from e
+
+    with config_file_handle:
+        log.info(f"Loaded naming config: {config_path}")
+
+        try:
+            result = yaml.safe_load(config_file_handle)
+        except yaml.YAMLError as e:
+            raise click.ClickException(f"Failed to load naming config from {config_path}: {e}") from e
+
+        config = result if isinstance(result, dict) else {}
+        if config:
+            validate_naming_config(config)
+        return config
 
 
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
@@ -1011,7 +1018,7 @@ def stats_graphql(console: Console, schema: Path) -> None:
     }
     for t in type_map.values():
         name = getattr(t, "name", "")
-        if name.startswith("__"):
+        if is_introspection_type(name):
             continue
         kind = type(t).__name__
         if kind == "GraphQLObjectType":
@@ -1027,7 +1034,7 @@ def stats_graphql(console: Console, schema: Path) -> None:
         elif kind == "GraphQLInputObjectType":
             type_counts["input_object"] += 1
         # Detect custom types e.g. (not built-in scalars)
-        if kind == "GraphQLScalarType" and name not in ("Int", "Float", "String", "Boolean", "ID"):
+        if kind == "GraphQLScalarType" and not is_builtin_scalar_type(name):
             type_counts["custom_types"][name] = type_counts["custom_types"].get(name, 0) + 1
 
     console.rule("[bold blue]GraphQL Schema Type Counts")
