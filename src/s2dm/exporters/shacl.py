@@ -14,20 +14,11 @@ from rdflib import RDF, RDFS, SH, XSD, BNode, Graph, Literal, Namespace, Node, U
 from rdflib.collection import Collection
 
 from s2dm import log
-from s2dm.exporters.utils import (
-    Cardinality,
-    FieldCase,
-    expand_instance_tag,
-    get_all_object_types,
-    get_argument_content,
-    get_cardinality,
-    get_field_case_extended,
-    get_instance_tag_object,
-    has_directive,
-    has_valid_instance_tag_field,
-    load_schema_with_naming,
-    print_field_sdl,
-)
+from s2dm.exporters.utils.directive import get_argument_content, has_given_directive
+from s2dm.exporters.utils.extraction import get_all_object_types
+from s2dm.exporters.utils.field import Cardinality, FieldCase, get_cardinality, get_field_case_extended, print_field_sdl
+from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, has_valid_instance_tag_field
+from s2dm.exporters.utils.schema import load_schema_with_naming
 
 SUPPORTED_FIELD_CASES = {
     FieldCase.DEFAULT,
@@ -87,7 +78,7 @@ def translate_to_shacl(
         if object_type.name == "Query":
             log.debug("Skipping Query object type.")
             continue
-        if has_directive(object_type, "instanceTag"):
+        if has_given_directive(object_type, "instanceTag"):
             log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
             continue
         process_object_type(namespaces, object_type, graph, schema, naming_config)

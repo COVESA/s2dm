@@ -1,6 +1,6 @@
 from graphql import GraphQLObjectType, GraphQLSchema, build_schema
 
-from s2dm.exporters.utils import get_all_object_types
+from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.tools.constraint_checker import ConstraintChecker
 
 

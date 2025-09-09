@@ -13,7 +13,8 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils import get_all_named_types, load_schema
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.schema_loader import load_schema
 from s2dm.idgen.idgen import fnv1_32_wrapper
 from s2dm.idgen.models import IDGenerationSpec
 

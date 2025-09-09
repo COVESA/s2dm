@@ -15,14 +15,13 @@ from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
-from s2dm.exporters.utils import (
+from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types
+from s2dm.exporters.utils.schema import search_schema
+from s2dm.exporters.utils.schema_loader import (
     create_tempfile_to_composed_schema,
-    get_all_named_types,
-    get_all_object_types,
     load_schema,
     load_schema_as_str,
     load_schema_as_str_filtered,
-    search_schema,
 )
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
