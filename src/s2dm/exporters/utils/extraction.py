@@ -1,6 +1,7 @@
 from graphql import GraphQLNamedType, GraphQLObjectType, GraphQLSchema
 
 from s2dm.exporters.utils.directive import has_given_directive
+from s2dm.exporters.utils.graphql_type import is_introspection_type
 
 
 def get_all_named_types(schema: GraphQLSchema) -> list[GraphQLNamedType]:
@@ -13,7 +14,7 @@ def get_all_named_types(schema: GraphQLSchema) -> list[GraphQLNamedType]:
     Returns:
         list[GraphQLNamedType]: A list of all named types in the schema.
     """
-    return [type_ for type_ in schema.type_map.values() if not type_.name.startswith("__")]
+    return [type_ for type_ in schema.type_map.values() if not is_introspection_type(type_.name)]
 
 
 def get_all_object_types(

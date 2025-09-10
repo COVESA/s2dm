@@ -1,4 +1,3 @@
-import os
 import tempfile
 from pathlib import Path
 from typing import Any, cast
@@ -27,10 +26,10 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils.base import read_file
 from s2dm.exporters.utils.directive import has_given_directive
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 
-SPEC_DIR_PATH = Path(os.path.join(os.path.dirname(__file__), "..", "..", "spec"))
+SPEC_DIR_PATH = Path(__file__).parent.parent.parent / "spec"
 
 
 def build_schema_str(graphql_schema_path: Path) -> str:
@@ -40,19 +39,19 @@ def build_schema_str(graphql_schema_path: Path) -> str:
 
     # Read custom directives from file
     custom_directives_file = SPEC_DIR_PATH / "custom_directives.graphql"
-    custom_directives_str = read_file(Path(custom_directives_file))
+    custom_directives_str = custom_directives_file.read_text()
 
     # Read common types from file
     common_types_file = SPEC_DIR_PATH / "common_types.graphql"
-    common_types_str = read_file(Path(common_types_file))
+    common_types_str = common_types_file.read_text()
 
     # Read custom scalar types from file
     custom_scalar_types_file = SPEC_DIR_PATH / "custom_scalars.graphql"
-    custom_scalar_types_str = read_file(Path(custom_scalar_types_file))
+    custom_scalar_types_str = custom_scalar_types_file.read_text()
 
     # Read unit enums from file
     unit_enums_file = SPEC_DIR_PATH / "unit_enums.graphql"
-    unit_enums_str = read_file(Path(unit_enums_file))
+    unit_enums_str = unit_enums_file.read_text()
 
     # Build schema with custom directives
     # TODO: Improve this part with schema merge function with a whole directory.
@@ -195,10 +194,7 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
 
         visited.add(type_name)
 
-        if type_name.startswith("__"):
-            return
-
-        if type_name in {"Query", "Mutation", "Subscription"}:
+        if is_introspection_or_root_type(type_name):
             return
 
         type_def = graphql_schema.type_map.get(type_name)

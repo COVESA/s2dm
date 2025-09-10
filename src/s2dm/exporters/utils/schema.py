@@ -3,6 +3,7 @@ from typing import Any
 
 from graphql import GraphQLSchema
 
+from s2dm.exporters.utils.graphql_type import is_introspection_type
 from s2dm.exporters.utils.naming import apply_naming_to_schema
 from s2dm.exporters.utils.schema_loader import load_schema
 
@@ -29,7 +30,7 @@ def search_schema(
     """
     results: dict[str, list[Any] | None] = {}
     for tname, t in schema.type_map.items():
-        if tname.startswith("__"):
+        if is_introspection_type(tname):
             continue
         tname_cmp = tname.lower() if case_insensitive else tname
         type_name_cmp = type_name.lower() if (type_name and case_insensitive) else type_name

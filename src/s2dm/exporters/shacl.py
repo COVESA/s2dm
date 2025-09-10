@@ -17,6 +17,7 @@ from s2dm import log
 from s2dm.exporters.utils.directive import get_argument_content, has_given_directive
 from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.exporters.utils.field import Cardinality, FieldCase, get_cardinality, get_field_case_extended, print_field_sdl
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, has_valid_instance_tag_field
 from s2dm.exporters.utils.schema import load_schema_with_naming
 
@@ -75,8 +76,8 @@ def translate_to_shacl(
     log.debug(f"Object types: {object_types}")
 
     for object_type in object_types:
-        if object_type.name == "Query":
-            log.debug("Skipping Query object type.")
+        if is_introspection_or_root_type(object_type.name):
+            log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
         if has_given_directive(object_type, "instanceTag"):
             log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")

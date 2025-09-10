@@ -17,6 +17,7 @@ from s2dm import log
 from s2dm.exporters.utils.directive import has_given_directive
 from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
 from s2dm.exporters.utils.field import FieldCase
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 from s2dm.exporters.utils.instance_tag import (
     get_all_expanded_instance_tags,
     get_instance_tag_dict,
@@ -176,8 +177,8 @@ def translate_to_vspec(schema_path: Path, naming_config: dict[str, Any] | None =
     nested_types: list[tuple[str, str]] = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
     for object_type in object_types:
-        if object_type.name == "Query":
-            log.debug("Skipping Query object type.")
+        if is_introspection_or_root_type(object_type.name):
+            log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
 
         # Add a VSS branch structure for the object type

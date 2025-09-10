@@ -4,7 +4,6 @@ from typing import Any
 import pytest
 from graphql.type import GraphQLObjectType
 
-from s2dm.exporters.utils import base as base_utils
 from s2dm.exporters.utils import directive as directive_utils
 from s2dm.exporters.utils import extraction as extraction_utils
 from s2dm.exporters.utils import field as field_utils
@@ -20,17 +19,6 @@ SCHEMA1: Path = DATA_DIR / "schema1.graphql"
 def schema_path() -> Path:
     assert SCHEMA1.exists(), f"Missing test file: {SCHEMA1}"
     return SCHEMA1
-
-
-# #########################################################
-# Base utils
-# #########################################################
-
-
-def test_read_file(schema_path: Path) -> None:
-    content: str = base_utils.read_file(schema_path)
-    assert isinstance(content, str)
-    assert "type" in content
 
 
 # #########################################################
