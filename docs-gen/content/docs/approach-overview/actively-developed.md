@@ -1,5 +1,5 @@
 ---
-title: Actively Developed (SME) 
+title: Actively Developed (SME)
 weight: 10
 chapter: false
 ---

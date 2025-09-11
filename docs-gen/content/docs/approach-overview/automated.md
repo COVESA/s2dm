@@ -7,4 +7,3 @@ chapter: false
 ![Frame 2:  Automated](/s2dm/images/automated.png)
 
 Under construction...
-
