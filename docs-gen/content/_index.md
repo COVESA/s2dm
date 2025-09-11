@@ -21,21 +21,3 @@ Therefore, it does not incorporate advanced reasoning capabilities or comprehens
 The figure above ilustrates the role of the `S2DM` approach.
 One can distinghish three areas:
 the re-use of existing resources (left), the artifacts offered by `S2DM` (center), and the resulting domain data model created and maintained with `S2DM` artifacts (right).
-
-### Getting started
-* Get a basic understanding of the [S2DM approach](/s2dm/docs/approach-overview).
-* Model your domain following the [S2DM data modeling guideline](/s2dm/docs/data-modeling-guideline).
-* Maintain your domain model with the support of the provided [S2DM tools](/s2dm/docs/tools).
-
-{{< callout context="tip" >}}
-`S2DM` artifacts are based on the following existing resources. Getting familiar with them is recommended.
-
-- **Modeling languages and vocabularies**
-    - [GraphQL Schema Definition Language (SDL)](https://graphql.org/learn/schema/): Provides a clear, human-readable syntax for defining data structures and relationships, making it easy for SMEs to understand and use without requiring deep technical expertise.
-    - [Simple Knowledge Organization System (SKOS)](https://www.w3.org/2004/02/skos/): An RDF-based vocabulary that offers a straightforward framework for creating and managing hierarchical classifications and relationships between concepts, facilitating intuitive and semantically rich knowledge organization.
-
-- **Tools**
-    - [rdflib](https://rdflib.readthedocs.io): For working with RDF data in Python (e.g., `SKOS`).
-    - [graphql-core](https://graphql-core-3.readthedocs.io): For working with `GraphQL` schemas in Python (e.g., `SDL`).
-    - [Additional dependencies](https://github.com/COVESA/s2dm/blob/main/pyproject.toml)
-{{< /callout >}}
