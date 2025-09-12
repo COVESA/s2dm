@@ -1,6 +1,19 @@
+import re
 from typing import Any
 
-from graphql import FloatValueNode, GraphQLField, GraphQLObjectType, IntValueNode
+from graphql import (
+    FloatValueNode,
+    GraphQLEnumType,
+    GraphQLField,
+    GraphQLInputObjectType,
+    GraphQLInterfaceType,
+    GraphQLObjectType,
+    GraphQLScalarType,
+    GraphQLSchema,
+    GraphQLUnionType,
+    IntValueNode,
+)
+from graphql.language.ast import StringValueNode
 
 
 def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive_name: str) -> dict[str, Any]:
@@ -58,3 +71,126 @@ def get_argument_content(
     """
     args = get_directive_arguments(element, directive_name)
     return args.get(argument_name) if args and argument_name in args else None
+
+
+def format_directive_from_ast(directive_node: Any) -> str:
+    directive_name = directive_node.name.value
+    if directive_name in {"deprecated", "specifiedBy"}:
+        return ""
+
+    args_str = ""
+    if directive_node.arguments:
+        args_list = []
+        for arg_node in directive_node.arguments:
+            arg_name = arg_node.name.value
+            if hasattr(arg_node.value, "value"):
+                if isinstance(arg_node.value, StringValueNode):
+                    arg_value = f'"{arg_node.value.value}"'
+                else:
+                    arg_value = str(arg_node.value.value)
+            else:
+                arg_value = str(arg_node.value)
+            args_list.append(f"{arg_name}: {arg_value}")
+        args_str = f"({', '.join(args_list)})"
+
+    return f"@{directive_name}{args_str}"
+
+
+def build_directive_map(schema: GraphQLSchema) -> dict[str | tuple[str, str], list[str]]:
+    directive_map: dict[str | tuple[str, str], list[str]] = {}
+
+    # Helper functions to avoid code duplication
+    def has_directives(value: Any) -> bool:
+        return bool(
+            hasattr(value, "ast_node")
+            and value.ast_node
+            and hasattr(value.ast_node, "directives")
+            and value.ast_node.directives
+        )
+
+    def get_directive_strings(value: Any) -> list[str]:
+        directive_strings = []
+        for directive_node in value.ast_node.directives:
+            directive_str = format_directive_from_ast(directive_node)
+            if directive_str:
+                directive_strings.append(directive_str)
+        return directive_strings
+
+    DIRECTIVE_RELATED_TYPES = (
+        GraphQLObjectType,
+        GraphQLInterfaceType,
+        GraphQLInputObjectType,
+        GraphQLEnumType,
+        GraphQLUnionType,
+        GraphQLScalarType,
+    )
+
+    for type_name, type_obj in schema.type_map.items():
+        if type_name.startswith("__") or not isinstance(
+            type_obj,
+            DIRECTIVE_RELATED_TYPES,
+        ):
+            continue
+
+        # Directives on types
+        if has_directives(type_obj):
+            directive_strings = get_directive_strings(type_obj)
+            if directive_strings:
+                directive_map[type_name] = directive_strings
+
+        # Directives on fields
+        if hasattr(type_obj, "fields"):
+            for field_name, field in type_obj.fields.items():
+                if has_directives(field):
+                    directive_strings = get_directive_strings(field)
+                    if directive_strings:
+                        directive_map[(type_name, field_name)] = directive_strings
+
+        # Directives on enums
+        if isinstance(type_obj, GraphQLEnumType) and hasattr(type_obj, "values"):
+            for enum_value_name, enum_value in type_obj.values.items():
+                if has_directives(enum_value):
+                    directive_strings = get_directive_strings(enum_value)
+                    if directive_strings:
+                        directive_map[(type_name, enum_value_name)] = directive_strings
+
+    return directive_map
+
+
+def add_directives_to_schema(schema_str: str, directive_map: dict[str | tuple[str, str], list[str]]) -> str:
+    lines = schema_str.split("\n")
+    result_lines = []
+    current_type = None
+
+    for line in lines:
+        type_match = re.match(r"^(type|interface|input|enum|union|scalar)\s+(\w+)", line)
+        if type_match:
+            type_kind = type_match.group(1)
+            type_name = type_match.group(2)
+            current_type = type_name
+
+            if type_name in directive_map:
+                directives_str = " " + " ".join(directive_map[type_name])
+                line = line.replace(f"{type_kind} {type_name}", f"{type_kind} {type_name}{directives_str}")
+
+        elif current_type:
+            field_match = re.match(r"^\s+(\w+)(?:\([^)]*\))?\s*:\s*", line)
+            if field_match:
+                field_name = field_match.group(1)
+                if current_type and (current_type, field_name) in directive_map:
+                    directives_str = " " + " ".join(directive_map[(current_type, field_name)])
+                    line = line.rstrip() + directives_str
+
+            enum_match = re.match(r"^\s+(\w+)\s*$", line)
+            if enum_match:
+                enum_value_name = enum_match.group(1)
+                if current_type and (current_type, enum_value_name) in directive_map:
+                    directives_str = " " + " ".join(directive_map[(current_type, enum_value_name)])
+                    line = line.rstrip() + directives_str
+
+        if line.strip() == "}":
+            current_type = None
+
+        result_lines.append(line)
+
+    return "\n".join(result_lines)

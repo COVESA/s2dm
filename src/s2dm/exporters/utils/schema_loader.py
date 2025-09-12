@@ -26,7 +26,7 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils.directive import has_given_directive
+from s2dm.exporters.utils.directive import add_directives_to_schema, build_directive_map, has_given_directive
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 
 SPEC_DIR_PATH = Path(__file__).parent.parent.parent / "spec"
@@ -115,9 +115,15 @@ def load_schema_filtered(graphql_schema_path: Path, root_type: str) -> GraphQLSc
     return filtered_schema
 
 
+def print_schema_with_directives_preserved(schema: GraphQLSchema) -> str:
+    directive_map = build_directive_map(schema)
+    base_schema = print_schema(schema)
+    return add_directives_to_schema(base_schema, directive_map)
+
+
 def load_schema_as_str(graphql_schema_path: Path) -> str:
     """Load and build GraphQL schema but return as str."""
-    return print_schema(load_schema(graphql_schema_path))
+    return print_schema_with_directives_preserved(load_schema(graphql_schema_path))
 
 
 def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> str:
@@ -133,7 +139,7 @@ def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> st
     Raises:
         ValueError: If root type is not found in schema
     """
-    return print_schema(load_schema_filtered(graphql_schema_path, root_type))
+    return print_schema_with_directives_preserved(load_schema_filtered(graphql_schema_path, root_type))
 
 
 def create_tempfile_to_composed_schema(graphql_schema_path: Path) -> Path:
