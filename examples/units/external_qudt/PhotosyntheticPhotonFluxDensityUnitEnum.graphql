@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PhotosyntheticPhotonFluxDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PhotosyntheticPhotonFluxDensity", versionTag: "v3.1.5") {
+  """Micromole per Square Meter Day | UCUM: umol.m-2.d-1"""
+  MICROMOL_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-M2-DAY", versionTag: "v3.1.5")
+
+  """Micromole per Square Meter Hour | UCUM: umol.m-2.h-1"""
+  MICROMOL_PER_M2_HR @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-M2-HR", versionTag: "v3.1.5")
+
+  """Micromole per Square Meter Second | UCUM: umol.m-2.s-1"""
+  MICROMOL_PER_M2_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-M2-SEC", versionTag: "v3.1.5")
+
+  """Millimole per Square Meter Day | UCUM: mmol.m-2.d-1"""
+  MILLIMOL_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-M2-DAY", versionTag: "v3.1.5")
+
+  """Millimole per Square Meter Second | UCUM: mmol.m-2.s-1"""
+  MILLIMOL_PER_M2_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-M2-SEC", versionTag: "v3.1.5")
+
+  """Mole per Square Meter Day | UCUM: mol.m-2.d-1"""
+  MOL_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M2-DAY", versionTag: "v3.1.5")
+
+  """Mole per Square Meter Second | UCUM: mol.m-2.s-1"""
+  MOL_PER_M2_SEC @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M2-SEC", versionTag: "v3.1.5")
+
+  """Nanomole per Square Meter Day | UCUM: nmol.m-2.d-1"""
+  NANOMOL_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-M2-DAY", versionTag: "v3.1.5")
+
+  """Picomole per Square Meter Day | UCUM: pmol.m-2.d-1"""
+  PICOMOL_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-M2-DAY", versionTag: "v3.1.5")
+}

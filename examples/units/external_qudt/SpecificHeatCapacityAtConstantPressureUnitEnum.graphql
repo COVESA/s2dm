@@ -1,0 +1,38 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificHeatCapacityAtConstantPressureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificHeatCapacityAtConstantPressure", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Pound Mass Degree Fahrenheit | UCUM: [Btu_IT].[lb_av]-1.[degF]-1"""
+  BTU_IT_PER_LB_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-LB-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Pound Mass Degree Fahrenheit | UCUM: [Btu_th].[lb_av]-1.[degF]-1"""
+  BTU_TH_PER_LB_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-LB-DEG_F", versionTag: "v3.1.5")
+
+  """International Table Calorie per Gram Degree Celsius | UCUM: cal_IT.g-1.Cel-1"""
+  CAL_IT_PER_GM_DEG_C @reference(uri: "http://qudt.org/vocab/unit/CAL_IT-PER-GM-DEG_C", versionTag: "v3.1.5")
+
+  """International Table Calorie per Gram Kelvin | UCUM: cal_IT.g-1.K-1"""
+  CAL_IT_PER_GM_K @reference(uri: "http://qudt.org/vocab/unit/CAL_IT-PER-GM-K", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Gram Degree Celsius | UCUM: cal_th.g-1.Cel-1"""
+  CAL_TH_PER_GM_DEG_C @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-GM-DEG_C", versionTag: "v3.1.5")
+
+  """Thermochemical Calorie per Gram Kelvin | UCUM: cal_th.g-1.K-1"""
+  CAL_TH_PER_GM_K @reference(uri: "http://qudt.org/vocab/unit/CAL_TH-PER-GM-K", versionTag: "v3.1.5")
+
+  """Joule per Gram Degree Celsius | UCUM: J.g-1.Cel-1"""
+  J_PER_GM_DEG_C @reference(uri: "http://qudt.org/vocab/unit/J-PER-GM-DEG_C", versionTag: "v3.1.5")
+
+  """Joule per Gram Kelvin | UCUM: J.g-1.K-1"""
+  J_PER_GM_K @reference(uri: "http://qudt.org/vocab/unit/J-PER-GM-K", versionTag: "v3.1.5")
+
+  """Joule per Kilogram Degree Celsius | UCUM: J.kg-1.Cel-1"""
+  J_PER_KILOGM_DEG_C @reference(uri: "http://qudt.org/vocab/unit/J-PER-KiloGM-DEG_C", versionTag: "v3.1.5")
+
+  """Joule per Kilogram Kelvin | UCUM: J.kg-1.K-1"""
+  J_PER_KILOGM_K @reference(uri: "http://qudt.org/vocab/unit/J-PER-KiloGM-K", versionTag: "v3.1.5")
+
+  """Kilocalorie per Gram Degree Celsius | UCUM: cal.g-1.Cel-1"""
+  KILOCAL_PER_GM_DEG_C @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-GM-DEG_C", versionTag: "v3.1.5")
+
+  """Kilojoule per Kilogram Kelvin | UCUM: kJ.(kg.K)-1"""
+  KILOJ_PER_KILOGM_K @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-KiloGM-K", versionTag: "v3.1.5")
+}

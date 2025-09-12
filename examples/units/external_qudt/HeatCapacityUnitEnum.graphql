@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum HeatCapacityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/HeatCapacity", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Degree Fahrenheit | UCUM: [Btu_IT].[degF]-1"""
+  BTU_IT_PER_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (international Definition) per Degree Rankine | UCUM: [Btu_IT].[degR]-1"""
+  BTU_IT_PER_DEG_R @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-DEG_R", versionTag: "v3.1.5")
+
+  """Electron Volt per Kelvin | UCUM: eV.K-1"""
+  EV_PER_K @reference(uri: "http://qudt.org/vocab/unit/EV-PER-K", versionTag: "v3.1.5")
+
+  """Joule per Kelvin | UCUM: J.K-1"""
+  J_PER_K @reference(uri: "http://qudt.org/vocab/unit/J-PER-K", versionTag: "v3.1.5")
+
+  """Megajoule per Kelvin | UCUM: MJ.K-1"""
+  MEGAJ_PER_K @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-K", versionTag: "v3.1.5")
+}

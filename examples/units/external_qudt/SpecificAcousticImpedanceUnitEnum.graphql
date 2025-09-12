@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificAcousticImpedanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificAcousticImpedance", versionTag: "v3.1.5") {
+  """Newton Second per Cubic Meter | UCUM: N.s.m-3"""
+  N_SEC_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/N-SEC-PER-M3", versionTag: "v3.1.5")
+
+  """Rayl"""
+  RAYL @reference(uri: "http://qudt.org/vocab/unit/RAYL", versionTag: "v3.1.5")
+}

@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MortalityRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MortalityRate", versionTag: "v3.1.5") {
+  """Deaths per 1000 Individuals Year"""
+  DEATHS_PER_KILOINDIV_YR @reference(uri: "http://qudt.org/vocab/unit/DEATHS-PER-KiloINDIV-YR", versionTag: "v3.1.5")
+
+  """Deaths per Million Individuals Year"""
+  DEATHS_PER_MEGAINDIV_YR @reference(uri: "http://qudt.org/vocab/unit/DEATHS-PER-MegaINDIV-YR", versionTag: "v3.1.5")
+}

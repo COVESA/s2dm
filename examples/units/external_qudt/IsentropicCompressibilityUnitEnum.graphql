@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum IsentropicCompressibilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/IsentropicCompressibility", versionTag: "v3.1.5") {
+  """Reciprocal Megapascal | UCUM: /MPa"""
+  PER_MEGAPA @reference(uri: "http://qudt.org/vocab/unit/PER-MegaPA", versionTag: "v3.1.5")
+
+  """Reciprocal Pascal | UCUM: /Pa"""
+  PER_PA @reference(uri: "http://qudt.org/vocab/unit/PER-PA", versionTag: "v3.1.5")
+}

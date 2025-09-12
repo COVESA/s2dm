@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SurfaceCoefficientOfHeatTransferUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SurfaceCoefficientOfHeatTransfer", versionTag: "v3.1.5") {
+  """Kilowatt per Square Meter Kelvin | UCUM: kW.m-2.K-1"""
+  KILOW_PER_M2_K @reference(uri: "http://qudt.org/vocab/unit/KiloW-PER-M2-K", versionTag: "v3.1.5")
+
+  """Watt per Square Meter Kelvin | UCUM: W.m-2.K-1"""
+  W_PER_M2_K @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2-K", versionTag: "v3.1.5")
+}

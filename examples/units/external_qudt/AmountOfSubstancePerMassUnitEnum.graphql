@@ -1,0 +1,47 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AmountOfSubstancePerMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AmountOfSubstancePerMass", versionTag: "v3.1.5") {
+  """Centimole per Kilogram | UCUM: cmol.kg-1"""
+  CENTIMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/CentiMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Femtomole per Kilogram | UCUM: fmol.kg-1"""
+  FEMTOMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/FemtoMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """International Unit per Milligram | UCUM: [IU].mg-1"""
+  IU_PER_MILLIGM @reference(uri: "http://qudt.org/vocab/unit/IU-PER-MilliGM", versionTag: "v3.1.5")
+
+  """Kilomole per Kilogram | UCUM: kmol.kg-1"""
+  KILOMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Micromole per Gram | UCUM: umol.g-1"""
+  MICROMOL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-GM", versionTag: "v3.1.5")
+
+  """Micromole per Kilogram | UCUM: umol.kg-1"""
+  MICROMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Millimole per Gram | UCUM: mmol.g-1"""
+  MILLIMOL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-GM", versionTag: "v3.1.5")
+
+  """Millimole per Kilogram | UCUM: mmol.kg-1"""
+  MILLIMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Milliosmole per Kilogram | UCUM: mOsmol.kg-1"""
+  MILLIOSM_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MilliOSM-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Pound Mole per Pound Mass | UCUM: [mol_lb].[lb_av]-1"""
+  MOL_LB_PER_LB @reference(uri: "http://qudt.org/vocab/unit/MOL_LB-PER-LB", versionTag: "v3.1.5")
+
+  """Mole per Kilogram | UCUM: mol.kg-1"""
+  MOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Mole per Tonne | UCUM: mol.t-1"""
+  MOL_PER_TONNE @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-TONNE", versionTag: "v3.1.5")
+
+  """Nanomole per Gram | UCUM: nmol.g-1"""
+  NANOMOL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-GM", versionTag: "v3.1.5")
+
+  """Nanomole per Kilogram | UCUM: nmol.kg-1"""
+  NANOMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Picomole per Kilogram | UCUM: pmol.kg-1"""
+  PICOMOL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-KiloGM", versionTag: "v3.1.5")
+}

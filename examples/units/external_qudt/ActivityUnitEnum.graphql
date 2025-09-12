@@ -1,0 +1,41 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ActivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Activity", versionTag: "v3.1.5") {
+  """Becquerel | UCUM: Bq"""
+  BQ @reference(uri: "http://qudt.org/vocab/unit/BQ", versionTag: "v3.1.5")
+
+  """Curie | UCUM: Ci"""
+  CI @reference(uri: "http://qudt.org/vocab/unit/CI", versionTag: "v3.1.5")
+
+  """Gigabecquerel | UCUM: GBq"""
+  GIGABQ @reference(uri: "http://qudt.org/vocab/unit/GigaBQ", versionTag: "v3.1.5")
+
+  """Kilobecquerel | UCUM: kBq"""
+  KILOBQ @reference(uri: "http://qudt.org/vocab/unit/KiloBQ", versionTag: "v3.1.5")
+
+  """Kilocurie | UCUM: kCi"""
+  KILOCI @reference(uri: "http://qudt.org/vocab/unit/KiloCI", versionTag: "v3.1.5")
+
+  """Megabecquerel | UCUM: MBq"""
+  MEGABQ @reference(uri: "http://qudt.org/vocab/unit/MegaBQ", versionTag: "v3.1.5")
+
+  """Microbecquerel | UCUM: uBq"""
+  MICROBQ @reference(uri: "http://qudt.org/vocab/unit/MicroBQ", versionTag: "v3.1.5")
+
+  """Microcurie | UCUM: uCi"""
+  MICROCI @reference(uri: "http://qudt.org/vocab/unit/MicroCI", versionTag: "v3.1.5")
+
+  """Millibecquerel"""
+  MILLIBQ @reference(uri: "http://qudt.org/vocab/unit/MilliBQ", versionTag: "v3.1.5")
+
+  """Millicurie | UCUM: mCi"""
+  MILLICI @reference(uri: "http://qudt.org/vocab/unit/MilliCI", versionTag: "v3.1.5")
+
+  """Nanobecquerel"""
+  NANOBQ @reference(uri: "http://qudt.org/vocab/unit/NanoBQ", versionTag: "v3.1.5")
+
+  """Petabecquerel"""
+  PETABQ @reference(uri: "http://qudt.org/vocab/unit/PetaBQ", versionTag: "v3.1.5")
+
+  """Terabecquerel"""
+  TERABQ @reference(uri: "http://qudt.org/vocab/unit/TeraBQ", versionTag: "v3.1.5")
+}

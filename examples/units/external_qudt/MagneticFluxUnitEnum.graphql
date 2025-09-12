@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MagneticFluxUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MagneticFlux", versionTag: "v3.1.5") {
+  """Kilo Pound Force Foot per Ampere | UCUM: [lbf_av].[ft_i].A-1"""
+  KILOLB_F_FT_PER_A @reference(uri: "http://qudt.org/vocab/unit/KiloLB_F-FT-PER-A", versionTag: "v3.1.5")
+
+  """Kiloweber"""
+  KILOWB @reference(uri: "http://qudt.org/vocab/unit/KiloWB", versionTag: "v3.1.5")
+
+  """Milliweber | UCUM: mWb"""
+  MILLIWB @reference(uri: "http://qudt.org/vocab/unit/MilliWB", versionTag: "v3.1.5")
+
+  """Maxwell | UCUM: Mx"""
+  MX @reference(uri: "http://qudt.org/vocab/unit/MX", versionTag: "v3.1.5")
+
+  """Newton Meter per Ampere | UCUM: N.m.A-1"""
+  N_M_PER_A @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-A", versionTag: "v3.1.5")
+
+  """Unit Pole"""
+  UNITPOLE @reference(uri: "http://qudt.org/vocab/unit/UnitPole", versionTag: "v3.1.5")
+
+  """Abvolt Second | UCUM: 10.nV.s"""
+  V_AB_SEC @reference(uri: "http://qudt.org/vocab/unit/V_Ab-SEC", versionTag: "v3.1.5")
+
+  """Weber | UCUM: Wb"""
+  WB @reference(uri: "http://qudt.org/vocab/unit/WB", versionTag: "v3.1.5")
+}

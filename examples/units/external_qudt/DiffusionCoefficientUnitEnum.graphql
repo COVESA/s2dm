@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DiffusionCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DiffusionCoefficient", versionTag: "v3.1.5") {
+  """Square Meter per Second | UCUM: m2.s-1"""
+  M2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SEC", versionTag: "v3.1.5")
+}

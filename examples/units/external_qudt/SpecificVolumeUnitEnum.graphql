@@ -1,0 +1,35 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SpecificVolumeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SpecificVolume", versionTag: "v3.1.5") {
+  """Cubic Centimeter per Gram | UCUM: cm3.g-1"""
+  CENTIM3_PER_GM @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-GM", versionTag: "v3.1.5")
+
+  """Deciliter per Gram | UCUM: dL.g-1"""
+  DECIL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/DeciL-PER-GM", versionTag: "v3.1.5")
+
+  """Cubic Decimeter per Kilogram | UCUM: dm3.kg-1"""
+  DECIM3_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Cubic Foot per Pound Mass | UCUM: [ft_i]3.[lb_av]-1"""
+  FT3_PER_LB @reference(uri: "http://qudt.org/vocab/unit/FT3-PER-LB", versionTag: "v3.1.5")
+
+  """Cubic Inch per Pound Mass | UCUM: [in_i]3.[lb_av]-1"""
+  IN3_PER_LB @reference(uri: "http://qudt.org/vocab/unit/IN3-PER-LB", versionTag: "v3.1.5")
+
+  """Liter per Kilogram | UCUM: L.kg-1"""
+  L_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/L-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Cubic Meter per Kilogram | UCUM: m3.kg-1"""
+  M3_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/M3-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Milliliter per Gram | UCUM: mL.g-1"""
+  MILLIL_PER_GM @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-GM", versionTag: "v3.1.5")
+
+  """Milliliter per Kilogram | UCUM: mL.kg-1"""
+  MILLIL_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Cubic Millimeter per Gram | UCUM: mm3.g-1"""
+  MILLIM3_PER_GM @reference(uri: "http://qudt.org/vocab/unit/MilliM3-PER-GM", versionTag: "v3.1.5")
+
+  """Cubic Millimeter per Kilogram | UCUM: mm3.kg-1"""
+  MILLIM3_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MilliM3-PER-KiloGM", versionTag: "v3.1.5")
+}

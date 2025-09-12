@@ -1,0 +1,41 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseLengthUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseLength", versionTag: "v3.1.5") {
+  """Kayser | UCUM: Ky"""
+  KY @reference(uri: "http://qudt.org/vocab/unit/KY", versionTag: "v3.1.5")
+
+  """Mesh | UCUM: [mesh_i]"""
+  MESH @reference(uri: "http://qudt.org/vocab/unit/MESH", versionTag: "v3.1.5")
+
+  """Meter per Hectare | UCUM: m.hm-2"""
+  M_PER_HA @reference(uri: "http://qudt.org/vocab/unit/M-PER-HA", versionTag: "v3.1.5")
+
+  """Meter per Square Meter | UCUM: m.m-2"""
+  M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/M-PER-M2", versionTag: "v3.1.5")
+
+  """Number per Meter | UCUM: /m"""
+  NUM_PER_M @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-M", versionTag: "v3.1.5")
+
+  """Reciprocal Angstrom | UCUM: /Ao"""
+  PER_ANGSTROM @reference(uri: "http://qudt.org/vocab/unit/PER-ANGSTROM", versionTag: "v3.1.5")
+
+  """Reciprocal Centimeter | UCUM: /cm"""
+  PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/PER-CentiM", versionTag: "v3.1.5")
+
+  """Reciprocal Kilometer | UCUM: /km"""
+  PER_KILOM @reference(uri: "http://qudt.org/vocab/unit/PER-KiloM", versionTag: "v3.1.5")
+
+  """Reciprocal Meter | UCUM: /m"""
+  PER_M @reference(uri: "http://qudt.org/vocab/unit/PER-M", versionTag: "v3.1.5")
+
+  """Reciprocal Micrometer | UCUM: /um"""
+  PER_MICROM @reference(uri: "http://qudt.org/vocab/unit/PER-MicroM", versionTag: "v3.1.5")
+
+  """Reciprocal Millimeter | UCUM: /mm"""
+  PER_MILLIM @reference(uri: "http://qudt.org/vocab/unit/PER-MilliM", versionTag: "v3.1.5")
+
+  """Reciprocal Nanometer | UCUM: /nm"""
+  PER_NANOM @reference(uri: "http://qudt.org/vocab/unit/PER-NanoM", versionTag: "v3.1.5")
+
+  """Reciprocal Picometer | UCUM: /pm"""
+  PER_PICOM @reference(uri: "http://qudt.org/vocab/unit/PER-PicoM", versionTag: "v3.1.5")
+}

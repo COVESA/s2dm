@@ -1,0 +1,542 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CurrencyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Currency", versionTag: "v3.1.5") {
+  """United Arab Emirates Dirham"""
+  CCY_AED @reference(uri: "http://qudt.org/vocab/unit/CCY_AED", versionTag: "v3.1.5")
+
+  """Afghani"""
+  CCY_AFN @reference(uri: "http://qudt.org/vocab/unit/CCY_AFN", versionTag: "v3.1.5")
+
+  """Lek"""
+  CCY_ALL @reference(uri: "http://qudt.org/vocab/unit/CCY_ALL", versionTag: "v3.1.5")
+
+  """Armenian Dram"""
+  CCY_AMD @reference(uri: "http://qudt.org/vocab/unit/CCY_AMD", versionTag: "v3.1.5")
+
+  """Netherlands Antillian Guilder"""
+  CCY_ANG @reference(uri: "http://qudt.org/vocab/unit/CCY_ANG", versionTag: "v3.1.5")
+
+  """Kwanza"""
+  CCY_AOA @reference(uri: "http://qudt.org/vocab/unit/CCY_AOA", versionTag: "v3.1.5")
+
+  """Argentine Peso"""
+  CCY_ARS @reference(uri: "http://qudt.org/vocab/unit/CCY_ARS", versionTag: "v3.1.5")
+
+  """Australian Dollar"""
+  CCY_AUD @reference(uri: "http://qudt.org/vocab/unit/CCY_AUD", versionTag: "v3.1.5")
+
+  """Aruban Guilder"""
+  CCY_AWG @reference(uri: "http://qudt.org/vocab/unit/CCY_AWG", versionTag: "v3.1.5")
+
+  """Azerbaijanian Manat"""
+  CCY_AZN @reference(uri: "http://qudt.org/vocab/unit/CCY_AZN", versionTag: "v3.1.5")
+
+  """Convertible Marks"""
+  CCY_BAM @reference(uri: "http://qudt.org/vocab/unit/CCY_BAM", versionTag: "v3.1.5")
+
+  """Barbados Dollar"""
+  CCY_BBD @reference(uri: "http://qudt.org/vocab/unit/CCY_BBD", versionTag: "v3.1.5")
+
+  """Bangladeshi Taka"""
+  CCY_BDT @reference(uri: "http://qudt.org/vocab/unit/CCY_BDT", versionTag: "v3.1.5")
+
+  """Bulgarian Lev"""
+  CCY_BGN @reference(uri: "http://qudt.org/vocab/unit/CCY_BGN", versionTag: "v3.1.5")
+
+  """Bahraini Dinar"""
+  CCY_BHD @reference(uri: "http://qudt.org/vocab/unit/CCY_BHD", versionTag: "v3.1.5")
+
+  """Burundian Franc"""
+  CCY_BIF @reference(uri: "http://qudt.org/vocab/unit/CCY_BIF", versionTag: "v3.1.5")
+
+  """Bermuda Dollar"""
+  CCY_BMD @reference(uri: "http://qudt.org/vocab/unit/CCY_BMD", versionTag: "v3.1.5")
+
+  """Brunei Dollar"""
+  CCY_BND @reference(uri: "http://qudt.org/vocab/unit/CCY_BND", versionTag: "v3.1.5")
+
+  """Boliviano"""
+  CCY_BOB @reference(uri: "http://qudt.org/vocab/unit/CCY_BOB", versionTag: "v3.1.5")
+
+  """Bolivian Mvdol (funds Code)"""
+  CCY_BOV @reference(uri: "http://qudt.org/vocab/unit/CCY_BOV", versionTag: "v3.1.5")
+
+  """Brazilian Real"""
+  CCY_BRL @reference(uri: "http://qudt.org/vocab/unit/CCY_BRL", versionTag: "v3.1.5")
+
+  """Bahamian Dollar"""
+  CCY_BSD @reference(uri: "http://qudt.org/vocab/unit/CCY_BSD", versionTag: "v3.1.5")
+
+  """Ngultrum"""
+  CCY_BTN @reference(uri: "http://qudt.org/vocab/unit/CCY_BTN", versionTag: "v3.1.5")
+
+  """Pula"""
+  CCY_BWP @reference(uri: "http://qudt.org/vocab/unit/CCY_BWP", versionTag: "v3.1.5")
+
+  """Belarussian Ruble"""
+  CCY_BYN @reference(uri: "http://qudt.org/vocab/unit/CCY_BYN", versionTag: "v3.1.5")
+
+  """Belize Dollar"""
+  CCY_BZD @reference(uri: "http://qudt.org/vocab/unit/CCY_BZD", versionTag: "v3.1.5")
+
+  """Canadian Dollar"""
+  CCY_CAD @reference(uri: "http://qudt.org/vocab/unit/CCY_CAD", versionTag: "v3.1.5")
+
+  """Franc Congolais"""
+  CCY_CDF @reference(uri: "http://qudt.org/vocab/unit/CCY_CDF", versionTag: "v3.1.5")
+
+  """Wir Euro (complementary Currency)"""
+  CCY_CHE @reference(uri: "http://qudt.org/vocab/unit/CCY_CHE", versionTag: "v3.1.5")
+
+  """Swiss Franc"""
+  CCY_CHF @reference(uri: "http://qudt.org/vocab/unit/CCY_CHF", versionTag: "v3.1.5")
+
+  """Wir Franc (complementary Currency)"""
+  CCY_CHW @reference(uri: "http://qudt.org/vocab/unit/CCY_CHW", versionTag: "v3.1.5")
+
+  """Unidades De Formento (funds Code)"""
+  CCY_CLF @reference(uri: "http://qudt.org/vocab/unit/CCY_CLF", versionTag: "v3.1.5")
+
+  """Chilean Peso"""
+  CCY_CLP @reference(uri: "http://qudt.org/vocab/unit/CCY_CLP", versionTag: "v3.1.5")
+
+  """Yuan Renminbi"""
+  CCY_CNY @reference(uri: "http://qudt.org/vocab/unit/CCY_CNY", versionTag: "v3.1.5")
+
+  """Colombian Peso"""
+  CCY_COP @reference(uri: "http://qudt.org/vocab/unit/CCY_COP", versionTag: "v3.1.5")
+
+  """Unidad De Valor Real"""
+  CCY_COU @reference(uri: "http://qudt.org/vocab/unit/CCY_COU", versionTag: "v3.1.5")
+
+  """Costa Rican Colon"""
+  CCY_CRC @reference(uri: "http://qudt.org/vocab/unit/CCY_CRC", versionTag: "v3.1.5")
+
+  """Cuban Peso"""
+  CCY_CUP @reference(uri: "http://qudt.org/vocab/unit/CCY_CUP", versionTag: "v3.1.5")
+
+  """Cape Verde Escudo"""
+  CCY_CVE @reference(uri: "http://qudt.org/vocab/unit/CCY_CVE", versionTag: "v3.1.5")
+
+  """Cyprus Pound"""
+  CCY_CYP @reference(uri: "http://qudt.org/vocab/unit/CCY_CYP", versionTag: "v3.1.5")
+
+  """Czech Koruna"""
+  CCY_CZK @reference(uri: "http://qudt.org/vocab/unit/CCY_CZK", versionTag: "v3.1.5")
+
+  """Djibouti Franc"""
+  CCY_DJF @reference(uri: "http://qudt.org/vocab/unit/CCY_DJF", versionTag: "v3.1.5")
+
+  """Danish Krone"""
+  CCY_DKK @reference(uri: "http://qudt.org/vocab/unit/CCY_DKK", versionTag: "v3.1.5")
+
+  """Dominican Peso"""
+  CCY_DOP @reference(uri: "http://qudt.org/vocab/unit/CCY_DOP", versionTag: "v3.1.5")
+
+  """Algerian Dinar"""
+  CCY_DZD @reference(uri: "http://qudt.org/vocab/unit/CCY_DZD", versionTag: "v3.1.5")
+
+  """Kroon"""
+  CCY_EEK @reference(uri: "http://qudt.org/vocab/unit/CCY_EEK", versionTag: "v3.1.5")
+
+  """Egyptian Pound"""
+  CCY_EGP @reference(uri: "http://qudt.org/vocab/unit/CCY_EGP", versionTag: "v3.1.5")
+
+  """Nakfa"""
+  CCY_ERN @reference(uri: "http://qudt.org/vocab/unit/CCY_ERN", versionTag: "v3.1.5")
+
+  """Ethiopian Birr"""
+  CCY_ETB @reference(uri: "http://qudt.org/vocab/unit/CCY_ETB", versionTag: "v3.1.5")
+
+  """Euro"""
+  CCY_EUR @reference(uri: "http://qudt.org/vocab/unit/CCY_EUR", versionTag: "v3.1.5")
+
+  """Fiji Dollar"""
+  CCY_FJD @reference(uri: "http://qudt.org/vocab/unit/CCY_FJD", versionTag: "v3.1.5")
+
+  """Falkland Islands Pound"""
+  CCY_FKP @reference(uri: "http://qudt.org/vocab/unit/CCY_FKP", versionTag: "v3.1.5")
+
+  """Pound Sterling"""
+  CCY_GBP @reference(uri: "http://qudt.org/vocab/unit/CCY_GBP", versionTag: "v3.1.5")
+
+  """Lari"""
+  CCY_GEL @reference(uri: "http://qudt.org/vocab/unit/CCY_GEL", versionTag: "v3.1.5")
+
+  """Cedi"""
+  CCY_GHS @reference(uri: "http://qudt.org/vocab/unit/CCY_GHS", versionTag: "v3.1.5")
+
+  """Gibraltar Pound"""
+  CCY_GIP @reference(uri: "http://qudt.org/vocab/unit/CCY_GIP", versionTag: "v3.1.5")
+
+  """Dalasi"""
+  CCY_GMD @reference(uri: "http://qudt.org/vocab/unit/CCY_GMD", versionTag: "v3.1.5")
+
+  """Guinea Franc"""
+  CCY_GNF @reference(uri: "http://qudt.org/vocab/unit/CCY_GNF", versionTag: "v3.1.5")
+
+  """Quetzal"""
+  CCY_GTQ @reference(uri: "http://qudt.org/vocab/unit/CCY_GTQ", versionTag: "v3.1.5")
+
+  """Guyana Dollar"""
+  CCY_GYD @reference(uri: "http://qudt.org/vocab/unit/CCY_GYD", versionTag: "v3.1.5")
+
+  """Hong Kong Dollar"""
+  CCY_HKD @reference(uri: "http://qudt.org/vocab/unit/CCY_HKD", versionTag: "v3.1.5")
+
+  """Lempira"""
+  CCY_HNL @reference(uri: "http://qudt.org/vocab/unit/CCY_HNL", versionTag: "v3.1.5")
+
+  """Croatian Kuna"""
+  CCY_HRK @reference(uri: "http://qudt.org/vocab/unit/CCY_HRK", versionTag: "v3.1.5")
+
+  """Haiti Gourde"""
+  CCY_HTG @reference(uri: "http://qudt.org/vocab/unit/CCY_HTG", versionTag: "v3.1.5")
+
+  """Forint"""
+  CCY_HUF @reference(uri: "http://qudt.org/vocab/unit/CCY_HUF", versionTag: "v3.1.5")
+
+  """Rupiah"""
+  CCY_IDR @reference(uri: "http://qudt.org/vocab/unit/CCY_IDR", versionTag: "v3.1.5")
+
+  """New Israeli Shekel"""
+  CCY_ILS @reference(uri: "http://qudt.org/vocab/unit/CCY_ILS", versionTag: "v3.1.5")
+
+  """Indian Rupee"""
+  CCY_INR @reference(uri: "http://qudt.org/vocab/unit/CCY_INR", versionTag: "v3.1.5")
+
+  """Iraqi Dinar"""
+  CCY_IQD @reference(uri: "http://qudt.org/vocab/unit/CCY_IQD", versionTag: "v3.1.5")
+
+  """Iranian Rial"""
+  CCY_IRR @reference(uri: "http://qudt.org/vocab/unit/CCY_IRR", versionTag: "v3.1.5")
+
+  """Iceland Krona"""
+  CCY_ISK @reference(uri: "http://qudt.org/vocab/unit/CCY_ISK", versionTag: "v3.1.5")
+
+  """Jamaican Dollar"""
+  CCY_JMD @reference(uri: "http://qudt.org/vocab/unit/CCY_JMD", versionTag: "v3.1.5")
+
+  """Jordanian Dinar"""
+  CCY_JOD @reference(uri: "http://qudt.org/vocab/unit/CCY_JOD", versionTag: "v3.1.5")
+
+  """Japanese Yen"""
+  CCY_JPY @reference(uri: "http://qudt.org/vocab/unit/CCY_JPY", versionTag: "v3.1.5")
+
+  """Kenyan Shilling"""
+  CCY_KES @reference(uri: "http://qudt.org/vocab/unit/CCY_KES", versionTag: "v3.1.5")
+
+  """Som"""
+  CCY_KGS @reference(uri: "http://qudt.org/vocab/unit/CCY_KGS", versionTag: "v3.1.5")
+
+  """Riel"""
+  CCY_KHR @reference(uri: "http://qudt.org/vocab/unit/CCY_KHR", versionTag: "v3.1.5")
+
+  """Comoro Franc"""
+  CCY_KMF @reference(uri: "http://qudt.org/vocab/unit/CCY_KMF", versionTag: "v3.1.5")
+
+  """North Korean Won"""
+  CCY_KPW @reference(uri: "http://qudt.org/vocab/unit/CCY_KPW", versionTag: "v3.1.5")
+
+  """South Korean Won"""
+  CCY_KRW @reference(uri: "http://qudt.org/vocab/unit/CCY_KRW", versionTag: "v3.1.5")
+
+  """Kuwaiti Dinar"""
+  CCY_KWD @reference(uri: "http://qudt.org/vocab/unit/CCY_KWD", versionTag: "v3.1.5")
+
+  """Cayman Islands Dollar"""
+  CCY_KYD @reference(uri: "http://qudt.org/vocab/unit/CCY_KYD", versionTag: "v3.1.5")
+
+  """Tenge"""
+  CCY_KZT @reference(uri: "http://qudt.org/vocab/unit/CCY_KZT", versionTag: "v3.1.5")
+
+  """Lao Kip"""
+  CCY_LAK @reference(uri: "http://qudt.org/vocab/unit/CCY_LAK", versionTag: "v3.1.5")
+
+  """Lebanese Pound"""
+  CCY_LBP @reference(uri: "http://qudt.org/vocab/unit/CCY_LBP", versionTag: "v3.1.5")
+
+  """Sri Lanka Rupee"""
+  CCY_LKR @reference(uri: "http://qudt.org/vocab/unit/CCY_LKR", versionTag: "v3.1.5")
+
+  """Liberian Dollar"""
+  CCY_LRD @reference(uri: "http://qudt.org/vocab/unit/CCY_LRD", versionTag: "v3.1.5")
+
+  """Loti"""
+  CCY_LSL @reference(uri: "http://qudt.org/vocab/unit/CCY_LSL", versionTag: "v3.1.5")
+
+  """Lithuanian Litas"""
+  CCY_LTL @reference(uri: "http://qudt.org/vocab/unit/CCY_LTL", versionTag: "v3.1.5")
+
+  """Latvian Lats"""
+  CCY_LVL @reference(uri: "http://qudt.org/vocab/unit/CCY_LVL", versionTag: "v3.1.5")
+
+  """Libyan Dinar"""
+  CCY_LYD @reference(uri: "http://qudt.org/vocab/unit/CCY_LYD", versionTag: "v3.1.5")
+
+  """Moroccan Dirham"""
+  CCY_MAD @reference(uri: "http://qudt.org/vocab/unit/CCY_MAD", versionTag: "v3.1.5")
+
+  """Moldovan Leu"""
+  CCY_MDL @reference(uri: "http://qudt.org/vocab/unit/CCY_MDL", versionTag: "v3.1.5")
+
+  """Malagasy Ariary"""
+  CCY_MGA @reference(uri: "http://qudt.org/vocab/unit/CCY_MGA", versionTag: "v3.1.5")
+
+  """Denar"""
+  CCY_MKD @reference(uri: "http://qudt.org/vocab/unit/CCY_MKD", versionTag: "v3.1.5")
+
+  """Kyat"""
+  CCY_MMK @reference(uri: "http://qudt.org/vocab/unit/CCY_MMK", versionTag: "v3.1.5")
+
+  """Mongolian Tugrik"""
+  CCY_MNT @reference(uri: "http://qudt.org/vocab/unit/CCY_MNT", versionTag: "v3.1.5")
+
+  """Pataca"""
+  CCY_MOP @reference(uri: "http://qudt.org/vocab/unit/CCY_MOP", versionTag: "v3.1.5")
+
+  """Ouguiya"""
+  CCY_MRU @reference(uri: "http://qudt.org/vocab/unit/CCY_MRU", versionTag: "v3.1.5")
+
+  """Maltese Lira"""
+  CCY_MTL @reference(uri: "http://qudt.org/vocab/unit/CCY_MTL", versionTag: "v3.1.5")
+
+  """Mauritius Rupee"""
+  CCY_MUR @reference(uri: "http://qudt.org/vocab/unit/CCY_MUR", versionTag: "v3.1.5")
+
+  """Rufiyaa"""
+  CCY_MVR @reference(uri: "http://qudt.org/vocab/unit/CCY_MVR", versionTag: "v3.1.5")
+
+  """Malawi Kwacha"""
+  CCY_MWK @reference(uri: "http://qudt.org/vocab/unit/CCY_MWK", versionTag: "v3.1.5")
+
+  """Mexican Peso"""
+  CCY_MXN @reference(uri: "http://qudt.org/vocab/unit/CCY_MXN", versionTag: "v3.1.5")
+
+  """Mexican Unidad De Inversion (udi) (funds Code)"""
+  CCY_MXV @reference(uri: "http://qudt.org/vocab/unit/CCY_MXV", versionTag: "v3.1.5")
+
+  """Malaysian Ringgit"""
+  CCY_MYR @reference(uri: "http://qudt.org/vocab/unit/CCY_MYR", versionTag: "v3.1.5")
+
+  """Metical"""
+  CCY_MZN @reference(uri: "http://qudt.org/vocab/unit/CCY_MZN", versionTag: "v3.1.5")
+
+  """Namibian Dollar"""
+  CCY_NAD @reference(uri: "http://qudt.org/vocab/unit/CCY_NAD", versionTag: "v3.1.5")
+
+  """Naira"""
+  CCY_NGN @reference(uri: "http://qudt.org/vocab/unit/CCY_NGN", versionTag: "v3.1.5")
+
+  """Cordoba Oro"""
+  CCY_NIO @reference(uri: "http://qudt.org/vocab/unit/CCY_NIO", versionTag: "v3.1.5")
+
+  """Norwegian Krone"""
+  CCY_NOK @reference(uri: "http://qudt.org/vocab/unit/CCY_NOK", versionTag: "v3.1.5")
+
+  """Nepalese Rupee"""
+  CCY_NPR @reference(uri: "http://qudt.org/vocab/unit/CCY_NPR", versionTag: "v3.1.5")
+
+  """New Zealand Dollar"""
+  CCY_NZD @reference(uri: "http://qudt.org/vocab/unit/CCY_NZD", versionTag: "v3.1.5")
+
+  """Rial Omani"""
+  CCY_OMR @reference(uri: "http://qudt.org/vocab/unit/CCY_OMR", versionTag: "v3.1.5")
+
+  """Balboa"""
+  CCY_PAB @reference(uri: "http://qudt.org/vocab/unit/CCY_PAB", versionTag: "v3.1.5")
+
+  """Nuevo Sol"""
+  CCY_PEN @reference(uri: "http://qudt.org/vocab/unit/CCY_PEN", versionTag: "v3.1.5")
+
+  """Kina"""
+  CCY_PGK @reference(uri: "http://qudt.org/vocab/unit/CCY_PGK", versionTag: "v3.1.5")
+
+  """Philippine Peso"""
+  CCY_PHP @reference(uri: "http://qudt.org/vocab/unit/CCY_PHP", versionTag: "v3.1.5")
+
+  """Pakistan Rupee"""
+  CCY_PKR @reference(uri: "http://qudt.org/vocab/unit/CCY_PKR", versionTag: "v3.1.5")
+
+  """Zloty"""
+  CCY_PLN @reference(uri: "http://qudt.org/vocab/unit/CCY_PLN", versionTag: "v3.1.5")
+
+  """Guarani"""
+  CCY_PYG @reference(uri: "http://qudt.org/vocab/unit/CCY_PYG", versionTag: "v3.1.5")
+
+  """Qatari Rial"""
+  CCY_QAR @reference(uri: "http://qudt.org/vocab/unit/CCY_QAR", versionTag: "v3.1.5")
+
+  """Romanian New Leu"""
+  CCY_RON @reference(uri: "http://qudt.org/vocab/unit/CCY_RON", versionTag: "v3.1.5")
+
+  """Serbian Dinar"""
+  CCY_RSD @reference(uri: "http://qudt.org/vocab/unit/CCY_RSD", versionTag: "v3.1.5")
+
+  """Russian Ruble"""
+  CCY_RUB @reference(uri: "http://qudt.org/vocab/unit/CCY_RUB", versionTag: "v3.1.5")
+
+  """Rwanda Franc"""
+  CCY_RWF @reference(uri: "http://qudt.org/vocab/unit/CCY_RWF", versionTag: "v3.1.5")
+
+  """Saudi Riyal"""
+  CCY_SAR @reference(uri: "http://qudt.org/vocab/unit/CCY_SAR", versionTag: "v3.1.5")
+
+  """Solomon Islands Dollar"""
+  CCY_SBD @reference(uri: "http://qudt.org/vocab/unit/CCY_SBD", versionTag: "v3.1.5")
+
+  """Seychelles Rupee"""
+  CCY_SCR @reference(uri: "http://qudt.org/vocab/unit/CCY_SCR", versionTag: "v3.1.5")
+
+  """Sudanese Pound"""
+  CCY_SDG @reference(uri: "http://qudt.org/vocab/unit/CCY_SDG", versionTag: "v3.1.5")
+
+  """Swedish Krona"""
+  CCY_SEK @reference(uri: "http://qudt.org/vocab/unit/CCY_SEK", versionTag: "v3.1.5")
+
+  """Singapore Dollar"""
+  CCY_SGD @reference(uri: "http://qudt.org/vocab/unit/CCY_SGD", versionTag: "v3.1.5")
+
+  """Saint Helena Pound"""
+  CCY_SHP @reference(uri: "http://qudt.org/vocab/unit/CCY_SHP", versionTag: "v3.1.5")
+
+  """Slovak Koruna"""
+  CCY_SKK @reference(uri: "http://qudt.org/vocab/unit/CCY_SKK", versionTag: "v3.1.5")
+
+  """Leone"""
+  CCY_SLE @reference(uri: "http://qudt.org/vocab/unit/CCY_SLE", versionTag: "v3.1.5")
+
+  """Somali Shilling"""
+  CCY_SOS @reference(uri: "http://qudt.org/vocab/unit/CCY_SOS", versionTag: "v3.1.5")
+
+  """Surinam Dollar"""
+  CCY_SRD @reference(uri: "http://qudt.org/vocab/unit/CCY_SRD", versionTag: "v3.1.5")
+
+  """Dobra"""
+  CCY_STN @reference(uri: "http://qudt.org/vocab/unit/CCY_STN", versionTag: "v3.1.5")
+
+  """Syrian Pound"""
+  CCY_SYP @reference(uri: "http://qudt.org/vocab/unit/CCY_SYP", versionTag: "v3.1.5")
+
+  """Lilangeni"""
+  CCY_SZL @reference(uri: "http://qudt.org/vocab/unit/CCY_SZL", versionTag: "v3.1.5")
+
+  """Baht"""
+  CCY_THB @reference(uri: "http://qudt.org/vocab/unit/CCY_THB", versionTag: "v3.1.5")
+
+  """Somoni"""
+  CCY_TJS @reference(uri: "http://qudt.org/vocab/unit/CCY_TJS", versionTag: "v3.1.5")
+
+  """Manat"""
+  CCY_TMT @reference(uri: "http://qudt.org/vocab/unit/CCY_TMT", versionTag: "v3.1.5")
+
+  """Tunisian Dinar"""
+  CCY_TND @reference(uri: "http://qudt.org/vocab/unit/CCY_TND", versionTag: "v3.1.5")
+
+  """Pa'anga"""
+  CCY_TOP @reference(uri: "http://qudt.org/vocab/unit/CCY_TOP", versionTag: "v3.1.5")
+
+  """New Turkish Lira"""
+  CCY_TRY @reference(uri: "http://qudt.org/vocab/unit/CCY_TRY", versionTag: "v3.1.5")
+
+  """Trinidad and Tobago Dollar"""
+  CCY_TTD @reference(uri: "http://qudt.org/vocab/unit/CCY_TTD", versionTag: "v3.1.5")
+
+  """New Taiwan Dollar"""
+  CCY_TWD @reference(uri: "http://qudt.org/vocab/unit/CCY_TWD", versionTag: "v3.1.5")
+
+  """Tanzanian Shilling"""
+  CCY_TZS @reference(uri: "http://qudt.org/vocab/unit/CCY_TZS", versionTag: "v3.1.5")
+
+  """Hryvnia"""
+  CCY_UAH @reference(uri: "http://qudt.org/vocab/unit/CCY_UAH", versionTag: "v3.1.5")
+
+  """Uganda Shilling"""
+  CCY_UGX @reference(uri: "http://qudt.org/vocab/unit/CCY_UGX", versionTag: "v3.1.5")
+
+  """Us Dollar"""
+  CCY_USD @reference(uri: "http://qudt.org/vocab/unit/CCY_USD", versionTag: "v3.1.5")
+
+  """United States Dollar (next Day) (funds Code)"""
+  CCY_USN @reference(uri: "http://qudt.org/vocab/unit/CCY_USN", versionTag: "v3.1.5")
+
+  """United States Dollar (same Day) (funds Code)"""
+  CCY_USS @reference(uri: "http://qudt.org/vocab/unit/CCY_USS", versionTag: "v3.1.5")
+
+  """Peso Uruguayo"""
+  CCY_UYU @reference(uri: "http://qudt.org/vocab/unit/CCY_UYU", versionTag: "v3.1.5")
+
+  """Uzbekistan Som"""
+  CCY_UZS @reference(uri: "http://qudt.org/vocab/unit/CCY_UZS", versionTag: "v3.1.5")
+
+  """Venezuelan Bolvar"""
+  CCY_VES @reference(uri: "http://qudt.org/vocab/unit/CCY_VES", versionTag: "v3.1.5")
+
+  """Vietnamese ??ng"""
+  CCY_VND @reference(uri: "http://qudt.org/vocab/unit/CCY_VND", versionTag: "v3.1.5")
+
+  """Vatu"""
+  CCY_VUV @reference(uri: "http://qudt.org/vocab/unit/CCY_VUV", versionTag: "v3.1.5")
+
+  """Samoan Tala"""
+  CCY_WST @reference(uri: "http://qudt.org/vocab/unit/CCY_WST", versionTag: "v3.1.5")
+
+  """Cfa Franc Beac"""
+  CCY_XAF @reference(uri: "http://qudt.org/vocab/unit/CCY_XAF", versionTag: "v3.1.5")
+
+  """Silver (one Troy Ounce) | UCUM: [oz_tr]{Ag}"""
+  CCY_XAG @reference(uri: "http://qudt.org/vocab/unit/CCY_XAG", versionTag: "v3.1.5")
+
+  """Gold (one Troy Ounce) | UCUM: [oz_tr]{Au}"""
+  CCY_XAU @reference(uri: "http://qudt.org/vocab/unit/CCY_XAU", versionTag: "v3.1.5")
+
+  """European Composite Unit (eurco) (bonds Market Unit)"""
+  CCY_XBA @reference(uri: "http://qudt.org/vocab/unit/CCY_XBA", versionTag: "v3.1.5")
+
+  """European Monetary Unit (e.m.u.-6) (bonds Market Unit)"""
+  CCY_XBB @reference(uri: "http://qudt.org/vocab/unit/CCY_XBB", versionTag: "v3.1.5")
+
+  """European Unit of Account 9 (e.u.a.-9) (bonds Market Unit)"""
+  CCY_XBC @reference(uri: "http://qudt.org/vocab/unit/CCY_XBC", versionTag: "v3.1.5")
+
+  """European Unit of Account 17 (e.u.a.-17) (bonds Market Unit)"""
+  CCY_XBD @reference(uri: "http://qudt.org/vocab/unit/CCY_XBD", versionTag: "v3.1.5")
+
+  """East Caribbean Dollar"""
+  CCY_XCD @reference(uri: "http://qudt.org/vocab/unit/CCY_XCD", versionTag: "v3.1.5")
+
+  """Special Drawing Rights"""
+  CCY_XDR @reference(uri: "http://qudt.org/vocab/unit/CCY_XDR", versionTag: "v3.1.5")
+
+  """Gold Franc (special Settlement Currency)"""
+  CCY_XFO @reference(uri: "http://qudt.org/vocab/unit/CCY_XFO", versionTag: "v3.1.5")
+
+  """Uic Franc (special Settlement Currency)"""
+  CCY_XFU @reference(uri: "http://qudt.org/vocab/unit/CCY_XFU", versionTag: "v3.1.5")
+
+  """Cfa Franc Bceao"""
+  CCY_XOF @reference(uri: "http://qudt.org/vocab/unit/CCY_XOF", versionTag: "v3.1.5")
+
+  """Palladium (one Troy Ounce) | UCUM: [oz_tr]{Pd}"""
+  CCY_XPD @reference(uri: "http://qudt.org/vocab/unit/CCY_XPD", versionTag: "v3.1.5")
+
+  """Cfp Franc"""
+  CCY_XPF @reference(uri: "http://qudt.org/vocab/unit/CCY_XPF", versionTag: "v3.1.5")
+
+  """Platinum (one Troy Ounce) | UCUM: [oz_tr]{Pt}"""
+  CCY_XPT @reference(uri: "http://qudt.org/vocab/unit/CCY_XPT", versionTag: "v3.1.5")
+
+  """Yemeni Rial"""
+  CCY_YER @reference(uri: "http://qudt.org/vocab/unit/CCY_YER", versionTag: "v3.1.5")
+
+  """South African Rand"""
+  CCY_ZAR @reference(uri: "http://qudt.org/vocab/unit/CCY_ZAR", versionTag: "v3.1.5")
+
+  """Zambian Kwacha"""
+  CCY_ZMW @reference(uri: "http://qudt.org/vocab/unit/CCY_ZMW", versionTag: "v3.1.5")
+
+  """Zimbabwe Dollar"""
+  CCY_ZWL @reference(uri: "http://qudt.org/vocab/unit/CCY_ZWL", versionTag: "v3.1.5")
+
+  """Mega Us Dollar"""
+  MEGACCY_USD @reference(uri: "http://qudt.org/vocab/unit/MegaCCY_USD", versionTag: "v3.1.5")
+}

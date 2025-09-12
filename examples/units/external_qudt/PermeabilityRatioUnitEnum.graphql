@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PermeabilityRatioUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PermeabilityRatio", versionTag: "v3.1.5") {
+  """Relative Permeability"""
+  PERMEABILITY_REL @reference(uri: "http://qudt.org/vocab/unit/PERMEABILITY_REL", versionTag: "v3.1.5")
+}

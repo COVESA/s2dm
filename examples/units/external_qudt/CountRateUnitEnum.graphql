@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CountRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CountRate", versionTag: "v3.1.5") {
+  """Number per Hour | UCUM: /h"""
+  NUM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-HR", versionTag: "v3.1.5")
+
+  """Number per Minute"""
+  NUM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-MIN", versionTag: "v3.1.5")
+
+  """Number per Second | UCUM: /s"""
+  NUM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-SEC", versionTag: "v3.1.5")
+
+  """Number per Year | UCUM: /a"""
+  NUM_PER_YR @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-YR", versionTag: "v3.1.5")
+}

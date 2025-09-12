@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SurfaceDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SurfaceDensity", versionTag: "v3.1.5") {
+  """Gram per Square Millimeter | UCUM: g.mm-2"""
+  GM_PER_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MilliM2", versionTag: "v3.1.5")
+
+  """Kilogram per Square Kilometer | UCUM: kg.km-2"""
+  KILOGM_PER_KILOM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-KiloM2", versionTag: "v3.1.5")
+
+  """Kilogram per Square Meter | UCUM: kg.m-2"""
+  KILOGM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M2", versionTag: "v3.1.5")
+
+  """Pound Mass per Square Inch | UCUM: [lb_av].[sin_i]-1"""
+  LB_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/LB-PER-IN2", versionTag: "v3.1.5")
+
+  """Pound Mass per Square Yard | UCUM: [lb_av].[yd_i]-2"""
+  LB_PER_YD2 @reference(uri: "http://qudt.org/vocab/unit/LB-PER-YD2", versionTag: "v3.1.5")
+
+  """Microgram per Square Inch | UCUM: µg.in-2"""
+  MICROGM_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-IN2", versionTag: "v3.1.5")
+
+  """Ounce Mass per Square Inch | UCUM: [oz_av].[in_i]-2"""
+  OZ_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-IN2", versionTag: "v3.1.5")
+}

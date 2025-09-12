@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum RotaryTranslatoryMotionConversionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Rotary-TranslatoryMotionConversion", versionTag: "v3.1.5") {
+  """Inch per Revolution"""
+  IN_PER_REV @reference(uri: "http://qudt.org/vocab/unit/IN-PER-REV", versionTag: "v3.1.5")
+
+  """Meter per Radian | UCUM: m.rad-1"""
+  M_PER_RAD @reference(uri: "http://qudt.org/vocab/unit/M-PER-RAD", versionTag: "v3.1.5")
+}

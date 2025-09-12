@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum QuarticElectricDipoleMomentPerCubicEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/QuarticElectricDipoleMomentPerCubicEnergy", versionTag: "v3.1.5") {
+  """Quartic Coulomb Quartic Meter per Cubic Joule | UCUM: C4.m4.J-3"""
+  C4_M4_PER_J3 @reference(uri: "http://qudt.org/vocab/unit/C4-M4-PER-J3", versionTag: "v3.1.5")
+}

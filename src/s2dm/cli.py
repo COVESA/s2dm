@@ -29,6 +29,7 @@ from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
 from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.validators import validate_language_tag
+from s2dm.units.sync import UNITS_META_FILENAME, UNITS_META_VERSION_KEY, check_latest_qudt_version, sync_qudt_units
 
 schema_option = click.option(
     "--schema",
@@ -53,6 +54,15 @@ optional_output_option = click.option(
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     required=False,
     help="Output file",
+)
+
+units_dir_option = click.option(
+    "--units-dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    required=False,
+    help="Directory containing generated unit enums",
+    default="units",
+    show_default=True,
 )
 
 
@@ -233,6 +243,91 @@ def registry() -> None:
 def search() -> None:
     """Search commands e.g. search graphql for one specific type."""
     pass
+
+
+# units
+# ----------
+@click.group()
+def units() -> None:
+    """QUDT-based unit utilities."""
+    pass
+
+
+@units.command(name="sync")
+@click.option(
+    "--version",
+    "version_",
+    type=str,
+    required=False,
+    help=(
+        "QUDT version tag (e.g., 3.1.4). Defaults to the latest tag; falls back to 'main' when tags are unavailable."
+    ),
+)
+@click.option(
+    "--output-dir",
+    "output_dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    required=True,
+    help="Directory where generated unit enums will be written",
+    default="units",
+    show_default=True,
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be generated without actually writing files",
+)
+@click.pass_obj
+def units_sync(console: Console, version_: str | None, output_dir: Path, dry_run: bool) -> None:
+    """Fetch QUDT quantity kinds and generate GraphQL enums under the output directory."""
+
+    try:
+        version_to_use = version_ or check_latest_qudt_version()
+    except Exception as e:  # pragma: no cover - generic guard for CLI UX
+        console.print(f"[red]✗[/red] Version check failed: {e}")
+        sys.exit(1)
+
+    try:
+        written = sync_qudt_units(output_dir, version_to_use, dry_run=dry_run)
+        if dry_run:
+            console.print(f"[blue]ℹ[/blue] Would generate {len(written)} enum files under {output_dir}")
+            console.print(f"Version: {version_to_use}")
+            console.print("[dim]Use without --dry-run to actually write files[/dim]")
+        else:
+            console.print(f"[green]✓[/green] Generated {len(written)} enum files under {output_dir}")
+            console.print(f"Version: {version_to_use}")
+    except Exception as e:  # pragma: no cover - generic guard for CLI UX
+        console.print(f"[red]✗[/red] Units sync failed: {e}")
+        sys.exit(1)
+
+
+@units.command(name="check-version")
+@units_dir_option
+@click.pass_obj
+def units_check_version(console: Console, units_dir: Path) -> None:
+    """Compare local synced QUDT version with the latest remote version and print a message."""
+
+    meta_path = units_dir / UNITS_META_FILENAME
+    if not meta_path.exists():
+        console.print("[yellow]![/yellow] No metadata.json found. Run 's2dm units sync' first.")
+        sys.exit(1)
+
+    try:
+        local_version = json.loads(meta_path.read_text(encoding="utf-8")).get(UNITS_META_VERSION_KEY, "main")
+    except json.JSONDecodeError as e:
+        console.print(f"[red]✗[/red] Invalid metadata.json: {e}")
+        sys.exit(1)
+
+    try:
+        latest = check_latest_qudt_version()
+    except Exception as e:  # pragma: no cover - generic guard for CLI UX
+        console.print(f"[red]✗[/red] Version check failed: {e}")
+        sys.exit(1)
+
+    if latest == local_version:
+        console.print("[green]✓[/green] Everything is up to date.")
+    else:
+        console.print(f"[yellow]![/yellow] A newer release is available. Local: {local_version}, Latest: {latest}")
 
 
 @click.group()
@@ -643,25 +738,13 @@ def export_concept_uri(console: Console, schema: Path, output: Path | None, name
 # registry -> id
 @registry.command(name="id")
 @schema_option
-@click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
 @optional_output_option
 @click.option("--strict-mode/--no-strict-mode", default=False)
 @click.pass_obj
-def export_id(console: Console, schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
+def export_id(console: Console, schema: Path, output: Path | None, strict_mode: bool) -> None:
     """Generate concept IDs for GraphQL schema fields and enums."""
-    exporter = IDExporter(
-        schema=schema,
-        units_file=units,
-        output=output,
-        strict_mode=strict_mode,
-        dry_run=output is None,
-    )
+
+    exporter = IDExporter(schema=schema, output=output, strict_mode=strict_mode, dry_run=output is None)
     node_ids = exporter.run()
 
     console.rule("[bold blue]Concept IDs")
@@ -671,13 +754,6 @@ def export_id(console: Console, schema: Path, units: Path, output: Path | None, 
 # registry -> init
 @registry.command(name="init")
 @schema_option
-@click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
 @output_option
 @click.option(
     "--concept-namespace",
@@ -689,20 +765,21 @@ def export_id(console: Console, schema: Path, units: Path, output: Path | None, 
     default="ns",
     help="The prefix to use for the concept URIs",
 )
+@units_dir_option
 @click.pass_obj
 def registry_init(
     console: Console,
     schema: Path,
-    units: Path,
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
+    units_dir: Path,
 ) -> None:
     """Initialize your spec history with the given schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
+    id_exporter = IDExporter(schema, None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
@@ -735,13 +812,6 @@ def registry_init(
 @registry.command(name="update")
 @schema_option
 @click.option(
-    "--units",
-    "-u",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to your units.yaml",
-)
-@click.option(
     "--spec-history",
     "-sh",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
@@ -759,21 +829,22 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
+@units_dir_option
 @click.pass_obj
 def registry_update(
     console: Console,
     schema: Path,
-    units: Path,
     spec_history: Path,
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
+    units_dir: Path,
 ) -> None:
     """Update a given spec history file with your new schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
+    id_exporter = IDExporter(schema, None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
@@ -1053,6 +1124,7 @@ cli.add_command(similar)
 cli.add_command(search)
 cli.add_command(stats)
 cli.add_command(validate)
+cli.add_command(units)
 
 if __name__ == "__main__":
     cli()

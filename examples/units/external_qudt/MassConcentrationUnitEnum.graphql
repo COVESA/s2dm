@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassConcentrationUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassConcentration", versionTag: "v3.1.5") {
+  """Kilogram per Cubic Meter | UCUM: kg.m-3"""
+  KILOGM_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M3", versionTag: "v3.1.5")
+
+  """Microgram per Liter | UCUM: ug.L-1"""
+  MICROGM_PER_L @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-L", versionTag: "v3.1.5")
+
+  """Microgram per Milliliter | UCUM: ug.mL-1"""
+  MICROGM_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-MilliL", versionTag: "v3.1.5")
+
+  """Milligram per Liter | UCUM: mg.L-1"""
+  MILLIGM_PER_L @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-L", versionTag: "v3.1.5")
+
+  """Milligram per Cubic Meter | UCUM: mg.m-3"""
+  MILLIGM_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3", versionTag: "v3.1.5")
+
+  """Milligram per Milliliter | UCUM: mg.mL-1"""
+  MILLIGM_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-MilliL", versionTag: "v3.1.5")
+
+  """Nanogram per Liter | UCUM: ng.L-1"""
+  NANOGM_PER_L @reference(uri: "http://qudt.org/vocab/unit/NanoGM-PER-L", versionTag: "v3.1.5")
+
+  """Nanogram per Milliliter | UCUM: ng.mL-1"""
+  NANOGM_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/NanoGM-PER-MilliL", versionTag: "v3.1.5")
+
+  """Picogram per Milliliter | UCUM: pg/mL"""
+  PICOGM_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/PicoGM-PER-MilliL", versionTag: "v3.1.5")
+}

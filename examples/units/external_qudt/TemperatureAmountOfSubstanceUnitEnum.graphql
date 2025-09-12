@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TemperatureAmountOfSubstanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TemperatureAmountOfSubstance", versionTag: "v3.1.5") {
+  """Mole Degree Celsius | UCUM: mol.Cel"""
+  MOL_DEG_C @reference(uri: "http://qudt.org/vocab/unit/MOL-DEG_C", versionTag: "v3.1.5")
+
+  """Mole Kelvin | UCUM: mol.K"""
+  MOL_K @reference(uri: "http://qudt.org/vocab/unit/MOL-K", versionTag: "v3.1.5")
+}

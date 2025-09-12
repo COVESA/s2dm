@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum RadiantIntensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/RadiantIntensity", versionTag: "v3.1.5") {
+  """Watt per Steradian | UCUM: W.sr-1"""
+  W_PER_SR @reference(uri: "http://qudt.org/vocab/unit/W-PER-SR", versionTag: "v3.1.5")
+}

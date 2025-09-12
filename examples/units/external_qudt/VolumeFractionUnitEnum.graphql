@@ -1,0 +1,35 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VolumeFractionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VolumeFraction", versionTag: "v3.1.5") {
+  """Cubic Centimeter per Cubic Centimeter | UCUM: cm3.cm-3"""
+  CENTIM3_PER_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-CentiM3", versionTag: "v3.1.5")
+
+  """Cubic Centimeter per Cubic Meter | UCUM: cm3.m-3"""
+  CENTIM3_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-M3", versionTag: "v3.1.5")
+
+  """Cubic Decimeter per Cubic Meter | UCUM: dm3.m-3"""
+  DECIM3_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-M3", versionTag: "v3.1.5")
+
+  """Liter per Liter | UCUM: L.L-1"""
+  L_PER_L @reference(uri: "http://qudt.org/vocab/unit/L-PER-L", versionTag: "v3.1.5")
+
+  """Cubic Meter per Cubic Meter | UCUM: m3.m-3"""
+  M3_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/M3-PER-M3", versionTag: "v3.1.5")
+
+  """Microliter per Liter | UCUM: uL.L-1"""
+  MICROL_PER_L @reference(uri: "http://qudt.org/vocab/unit/MicroL-PER-L", versionTag: "v3.1.5")
+
+  """Cubic Micrometer per Cubic Meter | UCUM: um3.m-3"""
+  MICROM3_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MicroM3-PER-M3", versionTag: "v3.1.5")
+
+  """Cubic Micrometer per Milliliter | UCUM: um3.mL-1"""
+  MICROM3_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/MicroM3-PER-MilliL", versionTag: "v3.1.5")
+
+  """Milliliter per Liter | UCUM: mL.L-1"""
+  MILLIL_PER_L @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-L", versionTag: "v3.1.5")
+
+  """Milliliter per Cubic Meter | UCUM: mL.m-3"""
+  MILLIL_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-M3", versionTag: "v3.1.5")
+
+  """Cubic Millimeter per Cubic Meter | UCUM: mm3.m-3"""
+  MILLIM3_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliM3-PER-M3", versionTag: "v3.1.5")
+}

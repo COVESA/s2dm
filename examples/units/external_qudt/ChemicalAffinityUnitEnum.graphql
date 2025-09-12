@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ChemicalAffinityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ChemicalAffinity", versionTag: "v3.1.5") {
+  """Joule per Mole | UCUM: J.mol-1"""
+  J_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/J-PER-MOL", versionTag: "v3.1.5")
+}

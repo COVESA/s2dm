@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum NumberDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/NumberDensity", versionTag: "v3.1.5") {
+  """Number per Liter | UCUM: /L"""
+  NUM_PER_L @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-L", versionTag: "v3.1.5")
+
+  """Number per Cubic Meter | UCUM: /m3"""
+  NUM_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-M3", versionTag: "v3.1.5")
+
+  """Number per Microliter | UCUM: /uL"""
+  NUM_PER_MICROL @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-MicroL", versionTag: "v3.1.5")
+
+  """Number per Milliliter | UCUM: /mL"""
+  NUM_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-MilliL", versionTag: "v3.1.5")
+
+  """Number per Cubic Millimeter | UCUM: /mm3"""
+  NUM_PER_MILLIM3 @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-MilliM3", versionTag: "v3.1.5")
+
+  """Number per Nanoliter | UCUM: /nL"""
+  NUM_PER_NANOL @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-NanoL", versionTag: "v3.1.5")
+
+  """Number per Picoliter | UCUM: /pL"""
+  NUM_PER_PICOL @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-PicoL", versionTag: "v3.1.5")
+}

@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum StrainEnergyReleaseRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/StrainEnergyReleaseRate", versionTag: "v3.1.5") {
+  """Erg per Square Centimeter | UCUM: erg.cm-2"""
+  ERG_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Gigajoule per Square Meter | UCUM: GJ.m-2"""
+  GIGAJ_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/GigaJ-PER-M2", versionTag: "v3.1.5")
+
+  """Joule per Square Centimeter | UCUM: J.cm-2"""
+  J_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/J-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Joule per Square Meter | UCUM: J.m-2"""
+  J_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/J-PER-M2", versionTag: "v3.1.5")
+
+  """Megajoule per Square Meter | UCUM: MJ.m-2"""
+  MEGAJ_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-M2", versionTag: "v3.1.5")
+
+  """Millijoule per Square Meter | UCUM: mJ.m-2"""
+  MILLIJ_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliJ-PER-M2", versionTag: "v3.1.5")
+}

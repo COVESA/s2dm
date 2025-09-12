@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TemperaturePerMagneticFluxDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TemperaturePerMagneticFluxDensity", versionTag: "v3.1.5") {
+  """Kelvin per Tesla | UCUM: K.T-1"""
+  K_PER_T @reference(uri: "http://qudt.org/vocab/unit/K-PER-T", versionTag: "v3.1.5")
+}

@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum KermaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Kerma", versionTag: "v3.1.5") {
+  """Centigray"""
+  CENTIGRAY @reference(uri: "http://qudt.org/vocab/unit/CentiGRAY", versionTag: "v3.1.5")
+
+  """Gray | UCUM: Gy"""
+  GRAY @reference(uri: "http://qudt.org/vocab/unit/GRAY", versionTag: "v3.1.5")
+
+  """Kilogray"""
+  KILOGRAY @reference(uri: "http://qudt.org/vocab/unit/KiloGRAY", versionTag: "v3.1.5")
+
+  """Megagray"""
+  MEGAGRAY @reference(uri: "http://qudt.org/vocab/unit/MegaGRAY", versionTag: "v3.1.5")
+
+  """Nanogray"""
+  NANOGRAY @reference(uri: "http://qudt.org/vocab/unit/NanoGRAY", versionTag: "v3.1.5")
+}

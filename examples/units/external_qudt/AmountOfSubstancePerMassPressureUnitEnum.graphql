@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AmountOfSubstancePerMassPressureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AmountOfSubstancePerMassPressure", versionTag: "v3.1.5") {
+  """Mole per Kilogram Bar | UCUM: mol.kg-1.bar-1"""
+  MOL_PER_KILOGM_BAR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-KiloGM-BAR", versionTag: "v3.1.5")
+
+  """Mole per Kilogram Pascal | UCUM: mol.kg-1.Pa-1"""
+  MOL_PER_KILOGM_PA @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-KiloGM-PA", versionTag: "v3.1.5")
+}

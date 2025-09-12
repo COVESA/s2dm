@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CostPerPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CostPerPower", versionTag: "v3.1.5") {
+  """Euro per Kilowatt"""
+  CCY_EUR_PER_KILOW @reference(uri: "http://qudt.org/vocab/unit/CCY_EUR-PER-KiloW", versionTag: "v3.1.5")
+
+  """Euro per Watt"""
+  CCY_EUR_PER_W @reference(uri: "http://qudt.org/vocab/unit/CCY_EUR-PER-W", versionTag: "v3.1.5")
+}

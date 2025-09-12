@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ByteRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ByteRate", versionTag: "v3.1.5") {
+  """Byte per Second | UCUM: By.s-1"""
+  BYTE_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BYTE-PER-SEC", versionTag: "v3.1.5")
+
+  """Gigabyte per Second | UCUM: GBy.s-1"""
+  GIGABYTE_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GigaBYTE-PER-SEC", versionTag: "v3.1.5")
+
+  """Megabyte per Second | UCUM: MBy.s-1"""
+  MEGABYTE_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MegaBYTE-PER-SEC", versionTag: "v3.1.5")
+}

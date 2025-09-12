@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AbsorbedDoseUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AbsorbedDose", versionTag: "v3.1.5") {
+  """Centigray"""
+  CENTIGRAY @reference(uri: "http://qudt.org/vocab/unit/CentiGRAY", versionTag: "v3.1.5")
+
+  """Gray | UCUM: Gy"""
+  GRAY @reference(uri: "http://qudt.org/vocab/unit/GRAY", versionTag: "v3.1.5")
+
+  """Kilogray"""
+  KILOGRAY @reference(uri: "http://qudt.org/vocab/unit/KiloGRAY", versionTag: "v3.1.5")
+
+  """Megagray"""
+  MEGAGRAY @reference(uri: "http://qudt.org/vocab/unit/MegaGRAY", versionTag: "v3.1.5")
+
+  """Microgray | UCUM: uGy"""
+  MICROGRAY @reference(uri: "http://qudt.org/vocab/unit/MicroGRAY", versionTag: "v3.1.5")
+
+  """Milligray | UCUM: mGy"""
+  MILLIGRAY @reference(uri: "http://qudt.org/vocab/unit/MilliGRAY", versionTag: "v3.1.5")
+
+  """Millirad"""
+  MILLIRAD_R @reference(uri: "http://qudt.org/vocab/unit/MilliRAD_R", versionTag: "v3.1.5")
+
+  """Nanogray"""
+  NANOGRAY @reference(uri: "http://qudt.org/vocab/unit/NanoGRAY", versionTag: "v3.1.5")
+
+  """Rad | UCUM: RAD"""
+  RAD_R @reference(uri: "http://qudt.org/vocab/unit/RAD_R", versionTag: "v3.1.5")
+}

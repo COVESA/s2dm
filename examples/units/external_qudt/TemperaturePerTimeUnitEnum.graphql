@@ -1,0 +1,41 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TemperaturePerTimeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TemperaturePerTime", versionTag: "v3.1.5") {
+  """Degree Celsius per Hour | UCUM: Cel.h-1"""
+  DEG_C_PER_HR @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-HR", versionTag: "v3.1.5")
+
+  """Degree Celsius per Minute | UCUM: Cel.min-1"""
+  DEG_C_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-MIN", versionTag: "v3.1.5")
+
+  """Degree Celsius per Second | UCUM: Cel.s-1"""
+  DEG_C_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-SEC", versionTag: "v3.1.5")
+
+  """Degree Celsius per Year | UCUM: Cel.a-1"""
+  DEG_C_PER_YR @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-YR", versionTag: "v3.1.5")
+
+  """Degree Fahrenheit per Hour | UCUM: [degF].h-1"""
+  DEG_F_PER_HR @reference(uri: "http://qudt.org/vocab/unit/DEG_F-PER-HR", versionTag: "v3.1.5")
+
+  """Degree Fahrenheit per Minute | UCUM: [degF].min-1"""
+  DEG_F_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/DEG_F-PER-MIN", versionTag: "v3.1.5")
+
+  """Degree Fahrenheit per Second | UCUM: [degF].s-1"""
+  DEG_F_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/DEG_F-PER-SEC", versionTag: "v3.1.5")
+
+  """Degree Rankine per Hour | UCUM: [degR].h-1"""
+  DEG_R_PER_HR @reference(uri: "http://qudt.org/vocab/unit/DEG_R-PER-HR", versionTag: "v3.1.5")
+
+  """Degree Rankine per Minute | UCUM: [degR].min-1"""
+  DEG_R_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/DEG_R-PER-MIN", versionTag: "v3.1.5")
+
+  """Degree Rankine per Second | UCUM: [degR].s-1"""
+  DEG_R_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/DEG_R-PER-SEC", versionTag: "v3.1.5")
+
+  """Kelvin per Hour | UCUM: K.h-1"""
+  K_PER_HR @reference(uri: "http://qudt.org/vocab/unit/K-PER-HR", versionTag: "v3.1.5")
+
+  """Kelvin per Minute | UCUM: K.min-1"""
+  K_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/K-PER-MIN", versionTag: "v3.1.5")
+
+  """Kelvin per Second | UCUM: K.s-1"""
+  K_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/K-PER-SEC", versionTag: "v3.1.5")
+}

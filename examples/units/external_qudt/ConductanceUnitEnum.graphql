@@ -1,0 +1,32 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ConductanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Conductance", versionTag: "v3.1.5") {
+  """Decisiemens"""
+  DECIS @reference(uri: "http://qudt.org/vocab/unit/DeciS", versionTag: "v3.1.5")
+
+  """Kilosiemens | UCUM: kS"""
+  KILOS @reference(uri: "http://qudt.org/vocab/unit/KiloS", versionTag: "v3.1.5")
+
+  """Megasiemens"""
+  MEGAS @reference(uri: "http://qudt.org/vocab/unit/MegaS", versionTag: "v3.1.5")
+
+  """Mho | UCUM: mho"""
+  MHO @reference(uri: "http://qudt.org/vocab/unit/MHO", versionTag: "v3.1.5")
+
+  """Micromho | UCUM: umho"""
+  MICROMHO @reference(uri: "http://qudt.org/vocab/unit/MicroMHO", versionTag: "v3.1.5")
+
+  """Microsiemens | UCUM: uS"""
+  MICROS @reference(uri: "http://qudt.org/vocab/unit/MicroS", versionTag: "v3.1.5")
+
+  """Millisiemens | UCUM: mS"""
+  MILLIS @reference(uri: "http://qudt.org/vocab/unit/MilliS", versionTag: "v3.1.5")
+
+  """Nanosiemens"""
+  NANOS @reference(uri: "http://qudt.org/vocab/unit/NanoS", versionTag: "v3.1.5")
+
+  """Picosiemens"""
+  PICOS @reference(uri: "http://qudt.org/vocab/unit/PicoS", versionTag: "v3.1.5")
+
+  """Siemens | UCUM: S"""
+  S @reference(uri: "http://qudt.org/vocab/unit/S", versionTag: "v3.1.5")
+}

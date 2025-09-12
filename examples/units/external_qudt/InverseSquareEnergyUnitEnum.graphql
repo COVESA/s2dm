@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseSquareEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseSquareEnergy", versionTag: "v3.1.5") {
+  """Reciprocal Square Electron Volt | UCUM: eV-2"""
+  PER_EV2 @reference(uri: "http://qudt.org/vocab/unit/PER-EV2", versionTag: "v3.1.5")
+
+  """Reciprocal Square Giga Electron Volt | UCUM: GeV-2"""
+  PER_GIGAEV2 @reference(uri: "http://qudt.org/vocab/unit/PER-GigaEV2", versionTag: "v3.1.5")
+
+  """Reciprocal Square Joule | UCUM: J-2"""
+  PER_J2 @reference(uri: "http://qudt.org/vocab/unit/PER-J2", versionTag: "v3.1.5")
+}

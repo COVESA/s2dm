@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LinearEnergyTransferUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LinearEnergyTransfer", versionTag: "v3.1.5") {
+  """Joule per Meter | UCUM: J.m-1"""
+  J_PER_M @reference(uri: "http://qudt.org/vocab/unit/J-PER-M", versionTag: "v3.1.5")
+
+  """Kilo Electron Volt per Micrometer | UCUM: keV.um-1"""
+  KILOEV_PER_MICROM @reference(uri: "http://qudt.org/vocab/unit/KiloEV-PER-MicroM", versionTag: "v3.1.5")
+
+  """Mega Electron Volt per Centimeter | UCUM: MeV.cm-1"""
+  MEGAEV_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/MegaEV-PER-CentiM", versionTag: "v3.1.5")
+}

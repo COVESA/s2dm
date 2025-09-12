@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ConductivityVarianceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ConductivityVariance", versionTag: "v3.1.5") {
+  """Square Microsiemens per Square Centimeter | UCUM: uS2.cm-2"""
+  MICROS2_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/MicroS2-PER-CentiM2", versionTag: "v3.1.5")
+}

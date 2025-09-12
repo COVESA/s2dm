@@ -5,14 +5,14 @@ This directory contains example files and commands to demonstrate how to use the
 ## Sample Files
 
 - `sample.graphql` - A comprehensive GraphQL schema demonstrating vehicle data modeling
-- Uses `units.yaml` for unit definitions
+- Uses QUDT-synced unit enums (no `units.yaml` required)
 
 ## Spec History Generation
 
 Run init to initialize your first spec history file
 
 ```bash
-s2dm registry init -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o spec_history/spec_history.json
+s2dm registry init -s examples/spec-history-registry/sample.graphql -o spec_history/spec_history.json
 ```
 
 This creates:
@@ -47,7 +47,7 @@ The changes are:
 3. Changed `Vehicle_ADAS_ObstacleDetection.distance` from `Float` -> `Int`
 
 ```bash
-s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -u examples/spec-history-registry/units.yaml -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
+s2dm registry update -s examples/spec-history-registry/sample_updated.graphql -sh spec_history/spec_history.json -o spec_history/spec_history_updated.json
 ```
 
 ## Expected Output Files
@@ -69,8 +69,7 @@ examples
 ├── spec-history-registry
 │   ├── README.md
 │   ├── sample.graphql
-│   ├── sample_updated.graphql
-│   └── units.yaml
+│   └── sample_updated.graphql
 └── spec_history_updated.json
 ```
 
@@ -83,7 +82,7 @@ These tools are embedded in the spec history generation but can also be called s
 Generate unique identifiers for schema elements:
 
 ```bash
-s2dm export id -s examples/spec-history-registry/sample.graphql -u examples/spec-history-registry/units.yaml -o examples/concept_ids.json
+s2dm export id -s examples/spec-history-registry/sample.graphql -o examples/concept_ids.json
 ```
 
 This creates `examples/concept_ids.json` with deterministic IDs for each field in the schema.

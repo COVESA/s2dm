@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TotalCurrentDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TotalCurrentDensity", versionTag: "v3.1.5") {
+  """Ampere per Square Meter | UCUM: A.m-2"""
+  A_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/A-PER-M2", versionTag: "v3.1.5")
+}

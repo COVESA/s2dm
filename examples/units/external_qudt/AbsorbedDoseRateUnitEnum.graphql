@@ -1,0 +1,92 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AbsorbedDoseRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AbsorbedDoseRate", versionTag: "v3.1.5") {
+  """Erg per Gram Second | UCUM: erg.g-1.s-1"""
+  ERG_PER_GM_SEC @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-GM-SEC", versionTag: "v3.1.5")
+
+  """Gray per Hour | UCUM: Gy.h-1"""
+  GRAY_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GRAY-PER-HR", versionTag: "v3.1.5")
+
+  """Gray per Minute | UCUM: Gy.min-1"""
+  GRAY_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/GRAY-PER-MIN", versionTag: "v3.1.5")
+
+  """Gray per Second | UCUM: Gy.s-1"""
+  GRAY_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GRAY-PER-SEC", versionTag: "v3.1.5")
+
+  """Microgray per Hour | UCUM: uGy.h-1"""
+  MICROGRAY_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MicroGRAY-PER-HR", versionTag: "v3.1.5")
+
+  """Microgray per Minute | UCUM: uGy.min-1"""
+  MICROGRAY_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MicroGRAY-PER-MIN", versionTag: "v3.1.5")
+
+  """Microgray per Second | UCUM: uGy.s-1"""
+  MICROGRAY_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroGRAY-PER-SEC", versionTag: "v3.1.5")
+
+  """Microsievert per Hour | UCUM: uSv.h-1"""
+  MICROSV_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MicroSV-PER-HR", versionTag: "v3.1.5")
+
+  """Microsievert per Minute | UCUM: uSv.min-1"""
+  MICROSV_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MicroSV-PER-MIN", versionTag: "v3.1.5")
+
+  """Microsievert per Second | UCUM: uSv.s-1"""
+  MICROSV_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroSV-PER-SEC", versionTag: "v3.1.5")
+
+  """Milligray per Hour | UCUM: mGy.h-1"""
+  MILLIGRAY_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MilliGRAY-PER-HR", versionTag: "v3.1.5")
+
+  """Milligray per Minute | UCUM: mGy.min-1"""
+  MILLIGRAY_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliGRAY-PER-MIN", versionTag: "v3.1.5")
+
+  """Milligray per Second | UCUM: mGy.s-1"""
+  MILLIGRAY_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGRAY-PER-SEC", versionTag: "v3.1.5")
+
+  """Millirad per Hour | UCUM: mRAD.h-1"""
+  MILLIRAD_R_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MilliRAD_R-PER-HR", versionTag: "v3.1.5")
+
+  """Millisievert per Hour | UCUM: mSv.h-1"""
+  MILLISV_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MilliSV-PER-HR", versionTag: "v3.1.5")
+
+  """Millisievert per Minute | UCUM: mSv.min-1"""
+  MILLISV_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliSV-PER-MIN", versionTag: "v3.1.5")
+
+  """Millisievert per Second | UCUM: mSv.s-1"""
+  MILLISV_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliSV-PER-SEC", versionTag: "v3.1.5")
+
+  """Milliwatt per Milligram | UCUM: mW.mg-1"""
+  MILLIW_PER_MILLIGM @reference(uri: "http://qudt.org/vocab/unit/MilliW-PER-MilliGM", versionTag: "v3.1.5")
+
+  """Nanogray per Hour"""
+  NANOGRAY_PER_HR @reference(uri: "http://qudt.org/vocab/unit/NanoGRAY-PER-HR", versionTag: "v3.1.5")
+
+  """Nanogray per Minute"""
+  NANOGRAY_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/NanoGRAY-PER-MIN", versionTag: "v3.1.5")
+
+  """Nanogray per Second"""
+  NANOGRAY_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/NanoGRAY-PER-SEC", versionTag: "v3.1.5")
+
+  """Nanosievert per Hour"""
+  NANOSV_PER_HR @reference(uri: "http://qudt.org/vocab/unit/NanoSV-PER-HR", versionTag: "v3.1.5")
+
+  """Nanosievert per Minute"""
+  NANOSV_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/NanoSV-PER-MIN", versionTag: "v3.1.5")
+
+  """Nanosievert per Second"""
+  NANOSV_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/NanoSV-PER-SEC", versionTag: "v3.1.5")
+
+  """Rem per Second | UCUM: REM.s-1"""
+  REM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/REM-PER-SEC", versionTag: "v3.1.5")
+
+  """Sievert per Hour | UCUM: Sv.h-1"""
+  SV_PER_HR @reference(uri: "http://qudt.org/vocab/unit/SV-PER-HR", versionTag: "v3.1.5")
+
+  """Sievert per Minute | UCUM: Sv.min-1"""
+  SV_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/SV-PER-MIN", versionTag: "v3.1.5")
+
+  """Sievert per Second | UCUM: Sv.s-1"""
+  SV_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/SV-PER-SEC", versionTag: "v3.1.5")
+
+  """Watt per Gram | UCUM: W.g-1"""
+  W_PER_GM @reference(uri: "http://qudt.org/vocab/unit/W-PER-GM", versionTag: "v3.1.5")
+
+  """Watt per Kilogram | UCUM: W.kg-1"""
+  W_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/W-PER-KiloGM", versionTag: "v3.1.5")
+}

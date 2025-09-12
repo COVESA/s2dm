@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AttenuationCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AttenuationCoefficient", versionTag: "v3.1.5") {
+  """Percent per Meter | UCUM: %.m-1"""
+  PERCENT_PER_M @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-M", versionTag: "v3.1.5")
+
+  """Reciprocal Kilometer | UCUM: /km"""
+  PER_KILOM @reference(uri: "http://qudt.org/vocab/unit/PER-KiloM", versionTag: "v3.1.5")
+
+  """Reciprocal Meter | UCUM: /m"""
+  PER_M @reference(uri: "http://qudt.org/vocab/unit/PER-M", versionTag: "v3.1.5")
+
+  """Reciprocal Micrometer | UCUM: /um"""
+  PER_MICROM @reference(uri: "http://qudt.org/vocab/unit/PER-MicroM", versionTag: "v3.1.5")
+
+  """Reciprocal Millimeter | UCUM: /mm"""
+  PER_MILLIM @reference(uri: "http://qudt.org/vocab/unit/PER-MilliM", versionTag: "v3.1.5")
+
+  """Reciprocal Nanometer | UCUM: /nm"""
+  PER_NANOM @reference(uri: "http://qudt.org/vocab/unit/PER-NanoM", versionTag: "v3.1.5")
+
+  """Reciprocal Picometer | UCUM: /pm"""
+  PER_PICOM @reference(uri: "http://qudt.org/vocab/unit/PER-PicoM", versionTag: "v3.1.5")
+}

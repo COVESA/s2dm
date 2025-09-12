@@ -1,0 +1,23 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectromagneticWavePhaseSpeedUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectromagneticWavePhaseSpeed", versionTag: "v3.1.5") {
+  """Inch per Year | UCUM: [in_i].a-1"""
+  IN_PER_YR @reference(uri: "http://qudt.org/vocab/unit/IN-PER-YR", versionTag: "v3.1.5")
+
+  """Micrometer per Minute | UCUM: um.min-1"""
+  MICROM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-MIN", versionTag: "v3.1.5")
+
+  """Micrometer per Second | UCUM: um.s-1"""
+  MICROM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-SEC", versionTag: "v3.1.5")
+
+  """Meter per Second | UCUM: m.s-1"""
+  M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC", versionTag: "v3.1.5")
+
+  """Yard per Hour | UCUM: [yd_i].h-1"""
+  YD_PER_HR @reference(uri: "http://qudt.org/vocab/unit/YD-PER-HR", versionTag: "v3.1.5")
+
+  """Yard per Minute | UCUM: [yd_i].min-1"""
+  YD_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/YD-PER-MIN", versionTag: "v3.1.5")
+
+  """Yard per Second | UCUM: [yd_i].s-1"""
+  YD_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/YD-PER-SEC", versionTag: "v3.1.5")
+}

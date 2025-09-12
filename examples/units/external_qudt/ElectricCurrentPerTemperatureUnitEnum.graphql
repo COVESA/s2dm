@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricCurrentPerTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricCurrentPerTemperature", versionTag: "v3.1.5") {
+  """Ampere per Degree Celsius | UCUM: A.Cel-1"""
+  A_PER_DEG_C @reference(uri: "http://qudt.org/vocab/unit/A-PER-DEG_C", versionTag: "v3.1.5")
+
+  """Ampere per Kelvin | UCUM: A.K-1"""
+  A_PER_K @reference(uri: "http://qudt.org/vocab/unit/A-PER-K", versionTag: "v3.1.5")
+
+  """Kiloampere per Kelvin | UCUM: kA.K-1"""
+  KILOA_PER_K @reference(uri: "http://qudt.org/vocab/unit/KiloA-PER-K", versionTag: "v3.1.5")
+
+  """Microampere per Kelvin | UCUM: uA.K-1"""
+  MICROA_PER_K @reference(uri: "http://qudt.org/vocab/unit/MicroA-PER-K", versionTag: "v3.1.5")
+
+  """Milliampere per Kelvin | UCUM: mA.K-1"""
+  MILLIA_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliA-PER-K", versionTag: "v3.1.5")
+
+  """Nanoampere per Kelvin | UCUM: nA.K-1"""
+  NANOA_PER_K @reference(uri: "http://qudt.org/vocab/unit/NanoA-PER-K", versionTag: "v3.1.5")
+}

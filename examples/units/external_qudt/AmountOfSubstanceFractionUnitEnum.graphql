@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AmountOfSubstanceFractionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AmountOfSubstanceFraction", versionTag: "v3.1.5") {
+  """Parts per Billion | UCUM: [ppb]"""
+  PPB @reference(uri: "http://qudt.org/vocab/unit/PPB", versionTag: "v3.1.5")
+
+  """Parts per Million | UCUM: [ppm]"""
+  PPM @reference(uri: "http://qudt.org/vocab/unit/PPM", versionTag: "v3.1.5")
+
+  """Part per Quadrillion | UCUM: [ppq]"""
+  PPQ @reference(uri: "http://qudt.org/vocab/unit/PPQ", versionTag: "v3.1.5")
+
+  """Part per Trillion | UCUM: [ppt]"""
+  PPT @reference(uri: "http://qudt.org/vocab/unit/PPT", versionTag: "v3.1.5")
+
+  """Parts per Thousand | UCUM: [ppth]"""
+  PPTH @reference(uri: "http://qudt.org/vocab/unit/PPTH", versionTag: "v3.1.5")
+
+  """Parts per Ten Million"""
+  PPTM @reference(uri: "http://qudt.org/vocab/unit/PPTM", versionTag: "v3.1.5")
+}

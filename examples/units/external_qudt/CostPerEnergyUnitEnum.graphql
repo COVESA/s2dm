@@ -1,0 +1,41 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CostPerEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CostPerEnergy", versionTag: "v3.1.5") {
+  """Bulgarian Lev per Kilowatt Hour"""
+  CCY_BGN_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_BGN-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Swiss Franc per Kilowatt Hour"""
+  CCY_CHF_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_CHF-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Czech Koruna per Kilowatt Hour"""
+  CCY_CZK_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_CZK-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Danish Krone per Kilowatt Hour"""
+  CCY_DKK_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_DKK-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Euro per Kilowatt Hour"""
+  CCY_EUR_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_EUR-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Euro per Watt Hour"""
+  CCY_EUR_PER_W_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_EUR-PER-W-HR", versionTag: "v3.1.5")
+
+  """Euro per Watt Second"""
+  CCY_EUR_PER_W_SEC @reference(uri: "http://qudt.org/vocab/unit/CCY_EUR-PER-W-SEC", versionTag: "v3.1.5")
+
+  """Pound Sterling per Kilowatt Hour"""
+  CCY_GBP_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_GBP-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Forint per Kilowatt Hour"""
+  CCY_HUF_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_HUF-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Norwegian Krone per Kilowatt Hour"""
+  CCY_NOK_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_NOK-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Zloty per Kilowatt Hour"""
+  CCY_PLN_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_PLN-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Romanian New Leu per Kilowatt Hour"""
+  CCY_RON_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_RON-PER-KiloW-HR", versionTag: "v3.1.5")
+
+  """Swedish Krona per Kilowatt Hour"""
+  CCY_SEK_PER_KILOW_HR @reference(uri: "http://qudt.org/vocab/unit/CCY_SEK-PER-KiloW-HR", versionTag: "v3.1.5")
+}

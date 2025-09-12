@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum FloatingPointCalculationCapabilityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/FloatingPointCalculationCapability", versionTag: "v3.1.5") {
+  """Floating Point Operations per Second"""
+  FLOPS @reference(uri: "http://qudt.org/vocab/unit/FLOPS", versionTag: "v3.1.5")
+
+  """Giga Floating Point Operations per Second"""
+  GIGAFLOPS @reference(uri: "http://qudt.org/vocab/unit/GigaFLOPS", versionTag: "v3.1.5")
+
+  """Mega Floating Point Operations per Second"""
+  MEGAFLOPS @reference(uri: "http://qudt.org/vocab/unit/MegaFLOPS", versionTag: "v3.1.5")
+
+  """Peta Floating Point Operations per Second"""
+  PETAFLOPS @reference(uri: "http://qudt.org/vocab/unit/PetaFLOPS", versionTag: "v3.1.5")
+
+  """Tera Floating Point Operations per Second"""
+  TERAFLOPS @reference(uri: "http://qudt.org/vocab/unit/TeraFLOPS", versionTag: "v3.1.5")
+}

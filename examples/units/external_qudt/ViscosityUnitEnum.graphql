@@ -1,0 +1,68 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ViscosityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Viscosity", versionTag: "v3.1.5") {
+  """Centipoise | UCUM: cP"""
+  CENTIPOISE @reference(uri: "http://qudt.org/vocab/unit/CentiPOISE", versionTag: "v3.1.5")
+
+  """Decapoise | UCUM: daP"""
+  DECAPOISE @reference(uri: "http://qudt.org/vocab/unit/DecaPOISE", versionTag: "v3.1.5")
+
+  """Gram per Centimeter Second | UCUM: g.cm-1.s-1"""
+  GM_PER_CENTIM_SEC @reference(uri: "http://qudt.org/vocab/unit/GM-PER-CentiM-SEC", versionTag: "v3.1.5")
+
+  """Kilogram per Meter Day | UCUM: kg.m-1.d-1"""
+  KILOGM_PER_M_DAY @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M-DAY", versionTag: "v3.1.5")
+
+  """Kilogram per Meter Hour | UCUM: kg.m-1.h-1"""
+  KILOGM_PER_M_HR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M-HR", versionTag: "v3.1.5")
+
+  """Kilogram per Meter Minute | UCUM: kg.m-1.min-1"""
+  KILOGM_PER_M_MIN @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M-MIN", versionTag: "v3.1.5")
+
+  """Kilogram per Meter Second | UCUM: kg.m-1.s-1"""
+  KILOGM_PER_M_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M-SEC", versionTag: "v3.1.5")
+
+  """Kilopoise | UCUM: kP"""
+  KILOPOISE @reference(uri: "http://qudt.org/vocab/unit/KiloPOISE", versionTag: "v3.1.5")
+
+  """Pound Force Second per Square Foot | UCUM: [lbf_av].s.[sft_i]-1"""
+  LB_F_SEC_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/LB_F-SEC-PER-FT2", versionTag: "v3.1.5")
+
+  """Pound Force Second per Square Inch | UCUM: [lbf_av].s.[sin_i]-1"""
+  LB_F_SEC_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/LB_F-SEC-PER-IN2", versionTag: "v3.1.5")
+
+  """Pound Mass per Foot Day | UCUM: [lb_av].[ft_i]-1.d-1"""
+  LB_PER_FT_DAY @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT-DAY", versionTag: "v3.1.5")
+
+  """Pound Mass per Foot Hour | UCUM: [lb_av].[ft_i]-1.h-1"""
+  LB_PER_FT_HR @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT-HR", versionTag: "v3.1.5")
+
+  """Pound Mass per Foot Minute | UCUM: [lb_av].[ft_i]-1.min-1"""
+  LB_PER_FT_MIN @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT-MIN", versionTag: "v3.1.5")
+
+  """Pound Mass per Foot Second | UCUM: [lb_av].[ft_i]-1.s-1"""
+  LB_PER_FT_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT-SEC", versionTag: "v3.1.5")
+
+  """Micropoise | UCUM: uP"""
+  MICROPOISE @reference(uri: "http://qudt.org/vocab/unit/MicroPOISE", versionTag: "v3.1.5")
+
+  """Millipascal Second | UCUM: mPa.s"""
+  MILLIPA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliPA-SEC", versionTag: "v3.1.5")
+
+  """Newton Second per Square Meter | UCUM: N.s.m-2"""
+  N_SEC_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/N-SEC-PER-M2", versionTag: "v3.1.5")
+
+  """Pascal Second | UCUM: Pa.s"""
+  PA_SEC @reference(uri: "http://qudt.org/vocab/unit/PA-SEC", versionTag: "v3.1.5")
+
+  """Poundal Second per Square Foot | UCUM: [lb_av].[ft_i].s-2.s.[ft_i]-2"""
+  PDL_SEC_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/PDL-SEC-PER-FT2", versionTag: "v3.1.5")
+
+  """Poundal Second per Square Inch | UCUM: [lb_av].[ft_i].s-2.s.[in_i]-2"""
+  PDL_SEC_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/PDL-SEC-PER-IN2", versionTag: "v3.1.5")
+
+  """Poise | UCUM: P"""
+  POISE @reference(uri: "http://qudt.org/vocab/unit/POISE", versionTag: "v3.1.5")
+
+  """Slug per Foot Second"""
+  SLUG_PER_FT_SEC @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-FT-SEC", versionTag: "v3.1.5")
+}

@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AtmosphericHydroxylationRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AtmosphericHydroxylationRate", versionTag: "v3.1.5") {
+  """Cubic Centimeter per Mole Second | UCUM: cm3.mol-1.s-1"""
+  CENTIM3_PER_MOL_SEC @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-MOL-SEC", versionTag: "v3.1.5")
+
+  """Liter per Mole Second | UCUM: L.mol-1.s-1"""
+  L_PER_MOL_SEC @reference(uri: "http://qudt.org/vocab/unit/L-PER-MOL-SEC", versionTag: "v3.1.5")
+
+  """Cubic Meter per Mole Second | UCUM: m3.mol-1.s-1"""
+  M3_PER_MOL_SEC @reference(uri: "http://qudt.org/vocab/unit/M3-PER-MOL-SEC", versionTag: "v3.1.5")
+}

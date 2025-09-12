@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaRatioUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaRatio", versionTag: "v3.1.5") {
+  """Square Meter per Hectare | UCUM: m2.har-1"""
+  M2_PER_HA @reference(uri: "http://qudt.org/vocab/unit/M2-PER-HA", versionTag: "v3.1.5")
+
+  """Square Meter per Square Meter | UCUM: m2.m-2"""
+  M2_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/M2-PER-M2", versionTag: "v3.1.5")
+}

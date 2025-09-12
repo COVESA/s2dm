@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MagneticReluctivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MagneticReluctivity", versionTag: "v3.1.5") {
+  """Meter per Volt Second | UCUM: m.V-1.s-1"""
+  M_PER_V_SEC @reference(uri: "http://qudt.org/vocab/unit/M-PER-V-SEC", versionTag: "v3.1.5")
+
+  """Reciprocal Tesla Meter | UCUM: T-1.m-1"""
+  PER_T_M @reference(uri: "http://qudt.org/vocab/unit/PER-T-M", versionTag: "v3.1.5")
+}

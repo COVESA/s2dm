@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseSquareMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseSquareMass", versionTag: "v3.1.5") {
+  """Reciprocal Square Kilogram | UCUM: kg-2"""
+  PER_KILOGM2 @reference(uri: "http://qudt.org/vocab/unit/PER-KiloGM2", versionTag: "v3.1.5")
+
+  """Reciprocal Square Planck Mass"""
+  PER_PLANCKMASS2 @reference(uri: "http://qudt.org/vocab/unit/PER-PlanckMass2", versionTag: "v3.1.5")
+}

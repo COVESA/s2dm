@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum CorrelatedColorTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/CorrelatedColorTemperature", versionTag: "v3.1.5") {
+  """Decakelvin"""
+  DECAK @reference(uri: "http://qudt.org/vocab/unit/DecaK", versionTag: "v3.1.5")
+
+  """Kelvin | UCUM: K"""
+  K @reference(uri: "http://qudt.org/vocab/unit/K", versionTag: "v3.1.5")
+
+  """Megakelvin"""
+  MEGAK @reference(uri: "http://qudt.org/vocab/unit/MegaK", versionTag: "v3.1.5")
+
+  """Millikelvin"""
+  MILLIK @reference(uri: "http://qudt.org/vocab/unit/MilliK", versionTag: "v3.1.5")
+}

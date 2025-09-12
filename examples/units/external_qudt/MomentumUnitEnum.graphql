@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MomentumUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Momentum", versionTag: "v3.1.5") {
+  """Kilogram Meter per Second | UCUM: kg.m.s-1"""
+  KILOGM_M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM-M-PER-SEC", versionTag: "v3.1.5")
+
+  """Mega Electron Volt per Speed of Light | UCUM: MeV.[c]-1"""
+  MEGAEV_PER_SPEEDOFLIGHT @reference(uri: "http://qudt.org/vocab/unit/MegaEV-PER-SpeedOfLight", versionTag: "v3.1.5")
+
+  """Newton Meter Second per Meter | UCUM: N.m.s.m-1"""
+  N_M_SEC_PER_M @reference(uri: "http://qudt.org/vocab/unit/N-M-SEC-PER-M", versionTag: "v3.1.5")
+
+  """Newton Second | UCUM: N.s"""
+  N_SEC @reference(uri: "http://qudt.org/vocab/unit/N-SEC", versionTag: "v3.1.5")
+
+  """Planck Momentum"""
+  PLANCKMOMENTUM @reference(uri: "http://qudt.org/vocab/unit/PlanckMomentum", versionTag: "v3.1.5")
+}

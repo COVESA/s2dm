@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PeriodUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Period", versionTag: "v3.1.5") {
+  """Megasecond"""
+  MEGASEC @reference(uri: "http://qudt.org/vocab/unit/MegaSEC", versionTag: "v3.1.5")
+
+  """Second | UCUM: s"""
+  SEC @reference(uri: "http://qudt.org/vocab/unit/SEC", versionTag: "v3.1.5")
+}

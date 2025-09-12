@@ -1,0 +1,32 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricChargePerMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricChargePerMass", versionTag: "v3.1.5") {
+  """Ampere Hour per Kilogram | UCUM: A.h.kg-1"""
+  A_HR_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/A-HR-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Ampere Square Meter per Joule Second | UCUM: A.m2.J-1.s-1"""
+  A_M2_PER_J_SEC @reference(uri: "http://qudt.org/vocab/unit/A-M2-PER-J-SEC", versionTag: "v3.1.5")
+
+  """Coulomb per Kilogram | UCUM: C.kg-1"""
+  C_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/C-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Hertz per Tesla | UCUM: Hz.T-1"""
+  HZ_PER_T @reference(uri: "http://qudt.org/vocab/unit/HZ-PER-T", versionTag: "v3.1.5")
+
+  """Kiloroentgen | UCUM: kR"""
+  KILOR @reference(uri: "http://qudt.org/vocab/unit/KiloR", versionTag: "v3.1.5")
+
+  """Megahertz per Tesla | UCUM: MHz.T-1"""
+  MEGAHZ_PER_T @reference(uri: "http://qudt.org/vocab/unit/MegaHZ-PER-T", versionTag: "v3.1.5")
+
+  """Millicoulomb per Kilogram | UCUM: mC.kg-1"""
+  MILLIC_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/MilliC-PER-KiloGM", versionTag: "v3.1.5")
+
+  """Milliroentgen | UCUM: mR"""
+  MILLIR @reference(uri: "http://qudt.org/vocab/unit/MilliR", versionTag: "v3.1.5")
+
+  """Reciprocal Tesla Second | UCUM: T-1.s-1"""
+  PER_T_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-T-SEC", versionTag: "v3.1.5")
+
+  """Roentgen | UCUM: R"""
+  R @reference(uri: "http://qudt.org/vocab/unit/R", versionTag: "v3.1.5")
+}

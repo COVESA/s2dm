@@ -1,0 +1,38 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricPower", versionTag: "v3.1.5") {
+  """Exawatt"""
+  EXAW @reference(uri: "http://qudt.org/vocab/unit/ExaW", versionTag: "v3.1.5")
+
+  """Gigawatt | UCUM: GW"""
+  GIGAW @reference(uri: "http://qudt.org/vocab/unit/GigaW", versionTag: "v3.1.5")
+
+  """Kilowatt | UCUM: kW"""
+  KILOW @reference(uri: "http://qudt.org/vocab/unit/KiloW", versionTag: "v3.1.5")
+
+  """Megawatt | UCUM: MW"""
+  MEGAW @reference(uri: "http://qudt.org/vocab/unit/MegaW", versionTag: "v3.1.5")
+
+  """Microwatt | UCUM: uW"""
+  MICROW @reference(uri: "http://qudt.org/vocab/unit/MicroW", versionTag: "v3.1.5")
+
+  """Milliwatt | UCUM: mW"""
+  MILLIW @reference(uri: "http://qudt.org/vocab/unit/MilliW", versionTag: "v3.1.5")
+
+  """Nanowatt | UCUM: nW"""
+  NANOW @reference(uri: "http://qudt.org/vocab/unit/NanoW", versionTag: "v3.1.5")
+
+  """Petawatt"""
+  PETAW @reference(uri: "http://qudt.org/vocab/unit/PetaW", versionTag: "v3.1.5")
+
+  """Picowatt | UCUM: pW"""
+  PICOW @reference(uri: "http://qudt.org/vocab/unit/PicoW", versionTag: "v3.1.5")
+
+  """Terajoule per Second | UCUM: TJ.s-1"""
+  TERAJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/TeraJ-PER-SEC", versionTag: "v3.1.5")
+
+  """Terawatt | UCUM: TW"""
+  TERAW @reference(uri: "http://qudt.org/vocab/unit/TeraW", versionTag: "v3.1.5")
+
+  """Watt | UCUM: W"""
+  W @reference(uri: "http://qudt.org/vocab/unit/W", versionTag: "v3.1.5")
+}

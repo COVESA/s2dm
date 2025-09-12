@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaPerTimeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaPerTime", versionTag: "v3.1.5") {
+  """Square Centimeter per Second | UCUM: cm2.s-1"""
+  CENTIM2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/CentiM2-PER-SEC", versionTag: "v3.1.5")
+
+  """Square Foot per Hour | UCUM: [sft_i].h-1"""
+  FT2_PER_HR @reference(uri: "http://qudt.org/vocab/unit/FT2-PER-HR", versionTag: "v3.1.5")
+
+  """Square Foot per Second | UCUM: [sft_i].s-1"""
+  FT2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/FT2-PER-SEC", versionTag: "v3.1.5")
+
+  """Square Inch per Second | UCUM: [sin_i].s-1"""
+  IN2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/IN2-PER-SEC", versionTag: "v3.1.5")
+
+  """Square Meter Hertz | UCUM: m2.Hz"""
+  M2_HZ @reference(uri: "http://qudt.org/vocab/unit/M2-HZ", versionTag: "v3.1.5")
+
+  """Square Meter per Hour | UCUM: m2.h-1"""
+  M2_PER_HR @reference(uri: "http://qudt.org/vocab/unit/M2-PER-HR", versionTag: "v3.1.5")
+
+  """Square Meter per Second | UCUM: m2.s-1"""
+  M2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SEC", versionTag: "v3.1.5")
+
+  """Square Millimeter per Second | UCUM: mm2.s-1"""
+  MILLIM2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliM2-PER-SEC", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassStoppingPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassStoppingPower", versionTag: "v3.1.5") {
+  """Erg Square Centimeter | UCUM: erg.cm2"""
+  ERG_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/ERG-CentiM2", versionTag: "v3.1.5")
+}

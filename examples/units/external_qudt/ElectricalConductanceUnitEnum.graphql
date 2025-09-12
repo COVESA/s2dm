@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricalConductanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricalConductance", versionTag: "v3.1.5") {
+  """Picosiemens"""
+  PICOS @reference(uri: "http://qudt.org/vocab/unit/PicoS", versionTag: "v3.1.5")
+}

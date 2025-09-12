@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum HenrysLawVolatilityConstantUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/HenrysLawVolatilityConstant", versionTag: "v3.1.5") {
+  """Standard Atmosphere Cubic Meter per Mole | UCUM: atm.m3.mol-1"""
+  ATM_M3_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/ATM-M3-PER-MOL", versionTag: "v3.1.5")
+}

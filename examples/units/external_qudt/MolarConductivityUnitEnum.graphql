@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MolarConductivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MolarConductivity", versionTag: "v3.1.5") {
+  """Siemens Square Meter per Mole | UCUM: S.m2.mol-1"""
+  S_M2_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/S-M2-PER-MOL", versionTag: "v3.1.5")
+}

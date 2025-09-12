@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ForcePerElectricChargeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ForcePerElectricCharge", versionTag: "v3.1.5") {
+  """Newton per Coulomb | UCUM: N.C-1"""
+  N_PER_C @reference(uri: "http://qudt.org/vocab/unit/N-PER-C", versionTag: "v3.1.5")
+}

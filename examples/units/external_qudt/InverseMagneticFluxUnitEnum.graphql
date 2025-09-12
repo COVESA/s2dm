@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum InverseMagneticFluxUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/InverseMagneticFlux", versionTag: "v3.1.5") {
+  """Hertz per Volt | UCUM: Hz.V-1"""
+  HZ_PER_V @reference(uri: "http://qudt.org/vocab/unit/HZ-PER-V", versionTag: "v3.1.5")
+
+  """Reciprocal Weber | UCUM: /Wb"""
+  PER_WB @reference(uri: "http://qudt.org/vocab/unit/PER-WB", versionTag: "v3.1.5")
+}

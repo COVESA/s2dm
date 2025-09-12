@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PowerPerAreaQuarticTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PowerPerAreaQuarticTemperature", versionTag: "v3.1.5") {
+  """Watt per Square Meter Quartic Kelvin | UCUM: W.m-2.K-4"""
+  W_PER_M2_K4 @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2-K4", versionTag: "v3.1.5")
+}

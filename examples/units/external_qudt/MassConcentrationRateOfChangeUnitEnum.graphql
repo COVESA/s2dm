@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassConcentrationRateOfChangeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassConcentrationRateOfChange", versionTag: "v3.1.5") {
+  """Microgram per Liter Day | UCUM: ug.L-1.d-1"""
+  MICROGM_PER_L_DAY @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-L-DAY", versionTag: "v3.1.5")
+}

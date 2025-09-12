@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyPerAreaElectricChargeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/EnergyPerAreaElectricCharge", versionTag: "v3.1.5") {
+  """Volt per Square Meter | UCUM: V.m-2"""
+  V_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/V-PER-M2", versionTag: "v3.1.5")
+}

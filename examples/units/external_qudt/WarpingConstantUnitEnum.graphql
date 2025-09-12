@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum WarpingConstantUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/WarpingConstant", versionTag: "v3.1.5") {
+  """Sextic Centimeter | UCUM: cm6"""
+  CENTIM6 @reference(uri: "http://qudt.org/vocab/unit/CentiM6", versionTag: "v3.1.5")
+
+  """Sextic Meter | UCUM: m6"""
+  M6 @reference(uri: "http://qudt.org/vocab/unit/M6", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LengthTemperatureTimeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LengthTemperatureTime", versionTag: "v3.1.5") {
+  """Centimeter Second Degree Celsius | UCUM: cm.s.Cel-1"""
+  CENTIM_SEC_DEG_C @reference(uri: "http://qudt.org/vocab/unit/CentiM-SEC-DEG_C", versionTag: "v3.1.5")
+}

@@ -1,0 +1,26 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LuminanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Luminance", versionTag: "v3.1.5") {
+  """Candela per Square Foot | UCUM: cd.[ft_i]-2"""
+  CD_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/CD-PER-FT2", versionTag: "v3.1.5")
+
+  """Candela per Square Inch | UCUM: cd.[in_i]-2"""
+  CD_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/CD-PER-IN2", versionTag: "v3.1.5")
+
+  """Candela per Square Meter | UCUM: cd.m-2"""
+  CD_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/CD-PER-M2", versionTag: "v3.1.5")
+
+  """Lambert | UCUM: Lmb"""
+  LA @reference(uri: "http://qudt.org/vocab/unit/LA", versionTag: "v3.1.5")
+
+  """Foot Lambert | UCUM: [ft-Lmb]"""
+  LA_FT @reference(uri: "http://qudt.org/vocab/unit/LA_FT", versionTag: "v3.1.5")
+
+  """Lumen per Square Foot | UCUM: lm.[ft_i]-2"""
+  LM_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/LM-PER-FT2", versionTag: "v3.1.5")
+
+  """Lumen per Square Meter | UCUM: lm.m-2"""
+  LM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/LM-PER-M2", versionTag: "v3.1.5")
+
+  """Stilb | UCUM: sb"""
+  STILB @reference(uri: "http://qudt.org/vocab/unit/STILB", versionTag: "v3.1.5")
+}

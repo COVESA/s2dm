@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ExtentOfReactionUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ExtentOfReaction", versionTag: "v3.1.5") {
+  """Centimole"""
+  CENTIMOL @reference(uri: "http://qudt.org/vocab/unit/CentiMOL", versionTag: "v3.1.5")
+
+  """Femtomole | UCUM: fmol"""
+  FEMTOMOL @reference(uri: "http://qudt.org/vocab/unit/FemtoMOL", versionTag: "v3.1.5")
+
+  """Mole | UCUM: mol"""
+  MOL @reference(uri: "http://qudt.org/vocab/unit/MOL", versionTag: "v3.1.5")
+
+  """Nanomole"""
+  NANOMOL @reference(uri: "http://qudt.org/vocab/unit/NanoMOL", versionTag: "v3.1.5")
+
+  """Picomole"""
+  PICOMOL @reference(uri: "http://qudt.org/vocab/unit/PicoMOL", versionTag: "v3.1.5")
+}

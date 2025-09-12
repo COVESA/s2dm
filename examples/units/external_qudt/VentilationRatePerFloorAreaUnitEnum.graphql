@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VentilationRatePerFloorAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VentilationRatePerFloorArea", versionTag: "v3.1.5") {
+  """Liter per Second Square Meter | UCUM: L.s-1.m-2"""
+  L_PER_SEC_M2 @reference(uri: "http://qudt.org/vocab/unit/L-PER-SEC-M2", versionTag: "v3.1.5")
+}

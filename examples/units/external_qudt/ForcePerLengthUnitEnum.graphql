@@ -1,0 +1,62 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ForcePerLengthUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ForcePerLength", versionTag: "v3.1.5") {
+  """Centinewton Meter per Square Meter | UCUM: cN.m.m-2"""
+  CENTIN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/CentiN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Dyne per Centimeter | UCUM: dyn.cm-1"""
+  DYN_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/DYN-PER-CentiM", versionTag: "v3.1.5")
+
+  """Giganewton Meter per Square Meter"""
+  GIGAN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/GigaN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Kilo Gram Force Meter per Square Centimeter | UCUM: kgf.m.cm-2"""
+  KILOGM_F_M_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F-M-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Kilo Pound Force per Foot | UCUM: [klbf_av].[ft_i]-1"""
+  KILOLB_F_PER_FT @reference(uri: "http://qudt.org/vocab/unit/KiloLB_F-PER-FT", versionTag: "v3.1.5")
+
+  """Kilonewton Meter per Square Meter | UCUM: kN.m.m-2"""
+  KILON_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Kilonewton per Meter | UCUM: kN.m-1"""
+  KILON_PER_M @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-M", versionTag: "v3.1.5")
+
+  """Pound Force per Foot | UCUM: [lbf_av].[ft_i]-1"""
+  LB_F_PER_FT @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-FT", versionTag: "v3.1.5")
+
+  """Pound Force per Inch | UCUM: [lbf_av].[in_i]-1"""
+  LB_F_PER_IN @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-IN", versionTag: "v3.1.5")
+
+  """Pound Force per Yard | UCUM: [lbf_av].[yd_i]-1"""
+  LB_F_PER_YD @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-YD", versionTag: "v3.1.5")
+
+  """Meganewton Meter per Square Meter | UCUM: m.MN.m-2"""
+  MEGAN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MegaN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Micronewton Meter per Square Meter | UCUM: m.uN.m-2"""
+  MICRON_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MicroN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Millinewton Meter per Square Meter | UCUM: m.mN.m-2"""
+  MILLIN_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Millinewton per Meter | UCUM: mN.m-1"""
+  MILLIN_PER_M @reference(uri: "http://qudt.org/vocab/unit/MilliN-PER-M", versionTag: "v3.1.5")
+
+  """Nanonewton Meter per Square Meter"""
+  NANON_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/NanoN-M-PER-M2", versionTag: "v3.1.5")
+
+  """Newton Meter per Square Meter | UCUM: N.m.m-2"""
+  N_M_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-M2", versionTag: "v3.1.5")
+
+  """Newton per Centimeter | UCUM: N.cm-1"""
+  N_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/N-PER-CentiM", versionTag: "v3.1.5")
+
+  """Newton per Meter | UCUM: N.m-1"""
+  N_PER_M @reference(uri: "http://qudt.org/vocab/unit/N-PER-M", versionTag: "v3.1.5")
+
+  """Newton per Millimeter | UCUM: N.mm-1"""
+  N_PER_MILLIM @reference(uri: "http://qudt.org/vocab/unit/N-PER-MilliM", versionTag: "v3.1.5")
+
+  """Poundal per Inch | UCUM: [lb_av].[ft_i].s-2.[in_i]-1"""
+  PDL_PER_IN @reference(uri: "http://qudt.org/vocab/unit/PDL-PER-IN", versionTag: "v3.1.5")
+}

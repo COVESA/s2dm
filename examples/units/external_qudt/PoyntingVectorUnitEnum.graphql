@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PoyntingVectorUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PoyntingVector", versionTag: "v3.1.5") {
+  """Nanowatt per Square Meter | UCUM: nW.m-2"""
+  NANOW_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/NanoW-PER-M2", versionTag: "v3.1.5")
+
+  """Watt per Square Meter | UCUM: W.m-2"""
+  W_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2", versionTag: "v3.1.5")
+}

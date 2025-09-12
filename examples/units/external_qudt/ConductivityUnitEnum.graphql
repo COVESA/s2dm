@@ -1,0 +1,38 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ConductivityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Conductivity", versionTag: "v3.1.5") {
+  """Decisiemens per Meter | UCUM: dS.m-1"""
+  DECIS_PER_M @reference(uri: "http://qudt.org/vocab/unit/DeciS-PER-M", versionTag: "v3.1.5")
+
+  """Kilosiemens per Meter | UCUM: kS.m-1"""
+  KILOS_PER_M @reference(uri: "http://qudt.org/vocab/unit/KiloS-PER-M", versionTag: "v3.1.5")
+
+  """Megasiemens per Meter | UCUM: MS.m-1"""
+  MEGAS_PER_M @reference(uri: "http://qudt.org/vocab/unit/MegaS-PER-M", versionTag: "v3.1.5")
+
+  """Microsiemens per Centimeter | UCUM: uS.cm-1"""
+  MICROS_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/MicroS-PER-CentiM", versionTag: "v3.1.5")
+
+  """Microsiemens per Meter | UCUM: uS.m-1"""
+  MICROS_PER_M @reference(uri: "http://qudt.org/vocab/unit/MicroS-PER-M", versionTag: "v3.1.5")
+
+  """Millisiemens per Centimeter | UCUM: mS.cm-1"""
+  MILLIS_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/MilliS-PER-CentiM", versionTag: "v3.1.5")
+
+  """Millisiemens per Meter | UCUM: mS.m-1"""
+  MILLIS_PER_M @reference(uri: "http://qudt.org/vocab/unit/MilliS-PER-M", versionTag: "v3.1.5")
+
+  """Nanosiemens per Centimeter | UCUM: nS.cm-1"""
+  NANOS_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/NanoS-PER-CentiM", versionTag: "v3.1.5")
+
+  """Nanosiemens per Meter | UCUM: nS.m-1"""
+  NANOS_PER_M @reference(uri: "http://qudt.org/vocab/unit/NanoS-PER-M", versionTag: "v3.1.5")
+
+  """Picosiemens per Meter | UCUM: pS.m-1"""
+  PICOS_PER_M @reference(uri: "http://qudt.org/vocab/unit/PicoS-PER-M", versionTag: "v3.1.5")
+
+  """Siemens per Centimeter | UCUM: S.cm-1"""
+  S_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/S-PER-CentiM", versionTag: "v3.1.5")
+
+  """Siemens per Meter | UCUM: S.m-1"""
+  S_PER_M @reference(uri: "http://qudt.org/vocab/unit/S-PER-M", versionTag: "v3.1.5")
+}

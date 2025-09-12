@@ -1,0 +1,56 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassPerEnergyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassPerEnergy", versionTag: "v3.1.5") {
+  """Gram per Cubic Centimeter Bar | UCUM: g.cm-3.bar-1"""
+  GM_PER_CENTIM3_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-CentiM3-BAR", versionTag: "v3.1.5")
+
+  """Gram per Cubic Decimeter Bar | UCUM: g.dm-3.bar-1"""
+  GM_PER_DECIM3_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-DeciM3-BAR", versionTag: "v3.1.5")
+
+  """Gram per Liter Bar | UCUM: g.L-1.bar-1"""
+  GM_PER_L_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-L-BAR", versionTag: "v3.1.5")
+
+  """Gram per Cubic Meter Bar | UCUM: g.m-3.bar-1"""
+  GM_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M3-BAR", versionTag: "v3.1.5")
+
+  """Gram per Milliliter Bar | UCUM: g.mL-1.bar-1"""
+  GM_PER_MILLIL_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MilliL-BAR", versionTag: "v3.1.5")
+
+  """Kilogram per Cubic Centimeter Bar | UCUM: kg.cm-3.bar-1"""
+  KILOGM_PER_CENTIM3_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-CentiM3-BAR", versionTag: "v3.1.5")
+
+  """Kilogram per Cubic Decimeter Bar | UCUM: kg.dm-3.bar-1"""
+  KILOGM_PER_DECIM3_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-DeciM3-BAR", versionTag: "v3.1.5")
+
+  """Kilogram per Gigajoule | UCUM: kg.GJ-1"""
+  KILOGM_PER_GIGAJ @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-GigaJ", versionTag: "v3.1.5")
+
+  """Kilogram per Joule | UCUM: kg.J-1"""
+  KILOGM_PER_J @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-J", versionTag: "v3.1.5")
+
+  """Kilogram per Liter Bar | UCUM: kg.L-1.bar-1"""
+  KILOGM_PER_L_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-L-BAR", versionTag: "v3.1.5")
+
+  """Kilogram per Cubic Meter Bar | UCUM: kg.m-3.bar-1"""
+  KILOGM_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M3-BAR", versionTag: "v3.1.5")
+
+  """Kilogram per Cubic Meter Pascal | UCUM: kg.m-3.Pa-1"""
+  KILOGM_PER_M3_PA @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M3-PA", versionTag: "v3.1.5")
+
+  """Kilogram per Mega British Thermal Unit (international Definition) | UCUM: k[g].[MBtu_IT]-1"""
+  KILOGM_PER_MEGABTU_IT @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-MegaBTU_IT", versionTag: "v3.1.5")
+
+  """Pound Mass per Cubic Foot Psi | UCUM: [lb_av].[ft_i]-3.[psi]-1"""
+  LB_PER_FT3_PSI @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT3-PSI", versionTag: "v3.1.5")
+
+  """Pound Mass per Cubic Inch Psi | UCUM: [lb_av].[in_i]-3.[psi]-1"""
+  LB_PER_IN3_PSI @reference(uri: "http://qudt.org/vocab/unit/LB-PER-IN3-PSI", versionTag: "v3.1.5")
+
+  """Microgram per Cubic Meter Bar | UCUM: ug.m-3.bar-1"""
+  MICROGM_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-M3-BAR", versionTag: "v3.1.5")
+
+  """Milligram per Cubic Meter Bar | UCUM: mg.m-3.bar-1"""
+  MILLIGM_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-BAR", versionTag: "v3.1.5")
+
+  """Tonne per Cubic Meter Bar | UCUM: t.m-3.bar-1"""
+  TONNE_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-M3-BAR", versionTag: "v3.1.5")
+}

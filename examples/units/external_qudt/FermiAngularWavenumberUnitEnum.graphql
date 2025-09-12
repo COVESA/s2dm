@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum FermiAngularWavenumberUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/FermiAngularWavenumber", versionTag: "v3.1.5") {
+  """Degree per Meter | UCUM: deg.m-1"""
+  DEG_PER_M @reference(uri: "http://qudt.org/vocab/unit/DEG-PER-M", versionTag: "v3.1.5")
+
+  """Radian per Meter | UCUM: rad.m-1"""
+  RAD_PER_M @reference(uri: "http://qudt.org/vocab/unit/RAD-PER-M", versionTag: "v3.1.5")
+}

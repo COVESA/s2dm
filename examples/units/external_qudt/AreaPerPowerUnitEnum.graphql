@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaPerPowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaPerPower", versionTag: "v3.1.5") {
+  """Square Meter per Kilowatt | UCUM: m2.kW-1"""
+  M2_PER_KILOW @reference(uri: "http://qudt.org/vocab/unit/M2-PER-KiloW", versionTag: "v3.1.5")
+
+  """Square Meter per Watt | UCUM: m2.W-1"""
+  M2_PER_W @reference(uri: "http://qudt.org/vocab/unit/M2-PER-W", versionTag: "v3.1.5")
+}

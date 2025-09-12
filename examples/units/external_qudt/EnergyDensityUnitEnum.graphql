@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum EnergyDensityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/EnergyDensity", versionTag: "v3.1.5") {
+  """British Thermal Unit (international Definition) per Cubic Foot | UCUM: [Btu_IT].[ft_i]-3"""
+  BTU_IT_PER_FT3 @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-FT3", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Cubic Foot | UCUM: [Btu_th].[ft_i]-3"""
+  BTU_TH_PER_FT3 @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-FT3", versionTag: "v3.1.5")
+
+  """Erg per Cubic Centimeter | UCUM: erg.cm-3"""
+  ERG_PER_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-CentiM3", versionTag: "v3.1.5")
+
+  """Joule per Cubic Meter | UCUM: J.m-3"""
+  J_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/J-PER-M3", versionTag: "v3.1.5")
+
+  """Megajoule per Cubic Meter | UCUM: MJ.m-3"""
+  MEGAJ_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-M3", versionTag: "v3.1.5")
+
+  """Watt Hour per Cubic Meter | UCUM: W.h.m-3"""
+  W_HR_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/W-HR-PER-M3", versionTag: "v3.1.5")
+}

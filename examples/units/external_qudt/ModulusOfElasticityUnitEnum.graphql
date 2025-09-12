@@ -1,0 +1,53 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ModulusOfElasticityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ModulusOfElasticity", versionTag: "v3.1.5") {
+  """Decapascal | UCUM: daPa"""
+  DECAPA @reference(uri: "http://qudt.org/vocab/unit/DecaPA", versionTag: "v3.1.5")
+
+  """Gigapascal | UCUM: GPa"""
+  GIGAPA @reference(uri: "http://qudt.org/vocab/unit/GigaPA", versionTag: "v3.1.5")
+
+  """Hectopascal | UCUM: hPa"""
+  HECTOPA @reference(uri: "http://qudt.org/vocab/unit/HectoPA", versionTag: "v3.1.5")
+
+  """Kilo Pound Force per Square Inch | UCUM: k[lbf_av].[sin_i]-1"""
+  KILOLB_F_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/KiloLB_F-PER-IN2", versionTag: "v3.1.5")
+
+  """Kilonewton per Square Centimeter | UCUM: kN.mm-2"""
+  KILON_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-CentiM2", versionTag: "v3.1.5")
+
+  """Kilonewton per Square Meter | UCUM: kN.m-2"""
+  KILON_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-M2", versionTag: "v3.1.5")
+
+  """Kilonewton per Square Millimeter | UCUM: kN.mm-2"""
+  KILON_PER_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-MilliM2", versionTag: "v3.1.5")
+
+  """Kilopascal | UCUM: kPa"""
+  KILOPA @reference(uri: "http://qudt.org/vocab/unit/KiloPA", versionTag: "v3.1.5")
+
+  """Kip per Square Inch | UCUM: k[lbf_av].[in_i]-2"""
+  KIP_F_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/KIP_F-PER-IN2", versionTag: "v3.1.5")
+
+  """Pound Force per Square Inch | UCUM: [lbf_av].[sin_i]-1"""
+  LB_F_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-IN2", versionTag: "v3.1.5")
+
+  """Megapascal | UCUM: MPa"""
+  MEGAPA @reference(uri: "http://qudt.org/vocab/unit/MegaPA", versionTag: "v3.1.5")
+
+  """Megapsi | UCUM: [Mpsi]"""
+  MEGAPSI @reference(uri: "http://qudt.org/vocab/unit/MegaPSI", versionTag: "v3.1.5")
+
+  """Micropascal | UCUM: uPa"""
+  MICROPA @reference(uri: "http://qudt.org/vocab/unit/MicroPA", versionTag: "v3.1.5")
+
+  """Millipascal | UCUM: mPa"""
+  MILLIPA @reference(uri: "http://qudt.org/vocab/unit/MilliPA", versionTag: "v3.1.5")
+
+  """Pascal | UCUM: Pa"""
+  PA @reference(uri: "http://qudt.org/vocab/unit/PA", versionTag: "v3.1.5")
+
+  """Picopascal"""
+  PICOPA @reference(uri: "http://qudt.org/vocab/unit/PicoPA", versionTag: "v3.1.5")
+
+  """Psi | UCUM: [psi]"""
+  PSI @reference(uri: "http://qudt.org/vocab/unit/PSI", versionTag: "v3.1.5")
+}

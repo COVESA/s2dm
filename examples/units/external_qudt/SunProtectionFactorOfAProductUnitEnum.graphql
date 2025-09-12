@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SunProtectionFactorOfAProductUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SunProtectionFactorOfAProduct", versionTag: "v3.1.5") {
+  """Sun Protection Factor"""
+  SPF @reference(uri: "http://qudt.org/vocab/unit/SPF", versionTag: "v3.1.5")
+}

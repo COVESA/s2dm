@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ThrusterPowerToThrustEfficiencyUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ThrusterPowerToThrustEfficiency", versionTag: "v3.1.5") {
+  """Pound Mass per Hour Psi | UCUM: [lb_av].h-1.[psi]-1"""
+  LB_PER_HR_PSI @reference(uri: "http://qudt.org/vocab/unit/LB-PER-HR-PSI", versionTag: "v3.1.5")
+
+  """Pound Mass per Minute Psi | UCUM: [lb_av].min-1.[psi]-1"""
+  LB_PER_MIN_PSI @reference(uri: "http://qudt.org/vocab/unit/LB-PER-MIN-PSI", versionTag: "v3.1.5")
+
+  """Pound Mass per Second Psi | UCUM: [lb_av].s-1.[psi]-1"""
+  LB_PER_SEC_PSI @reference(uri: "http://qudt.org/vocab/unit/LB-PER-SEC-PSI", versionTag: "v3.1.5")
+}

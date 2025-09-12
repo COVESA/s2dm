@@ -1,0 +1,17 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LengthMassUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/LengthMass", versionTag: "v3.1.5") {
+  """Gram Millimeter | UCUM: g.mm"""
+  GM_MILLIM @reference(uri: "http://qudt.org/vocab/unit/GM-MilliM", versionTag: "v3.1.5")
+
+  """Pound Mass Inch | UCUM: [lb_av].[in_i]"""
+  LB_IN @reference(uri: "http://qudt.org/vocab/unit/LB-IN", versionTag: "v3.1.5")
+
+  """Meter Kilogram | UCUM: m.kg"""
+  M_KILOGM @reference(uri: "http://qudt.org/vocab/unit/M-KiloGM", versionTag: "v3.1.5")
+
+  """Ounce Mass Foot | UCUM: [oz_av].[ft_i]"""
+  OZ_FT @reference(uri: "http://qudt.org/vocab/unit/OZ-FT", versionTag: "v3.1.5")
+
+  """Ounce Mass Inch | UCUM: [oz_av].[in_i]"""
+  OZ_IN @reference(uri: "http://qudt.org/vocab/unit/OZ-IN", versionTag: "v3.1.5")
+}

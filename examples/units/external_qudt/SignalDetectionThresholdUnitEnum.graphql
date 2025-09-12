@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SignalDetectionThresholdUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SignalDetectionThreshold", versionTag: "v3.1.5") {
+  """Decibel Carrier Unit"""
+  DECIB_C @reference(uri: "http://qudt.org/vocab/unit/DeciB_C", versionTag: "v3.1.5")
+}

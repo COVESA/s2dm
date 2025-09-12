@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ThermalCapacitanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ThermalCapacitance", versionTag: "v3.1.5") {
+  """British Thermal Unit (thermochemical Definition) per Degree Fahrenheit | UCUM: [Btu_th].[degF]-1"""
+  BTU_TH_PER_DEG_F @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-DEG_F", versionTag: "v3.1.5")
+
+  """British Thermal Unit (thermochemical Definition) per Degree Rankine | UCUM: [Btu_th].[degR]-1"""
+  BTU_TH_PER_DEG_R @reference(uri: "http://qudt.org/vocab/unit/BTU_TH-PER-DEG_R", versionTag: "v3.1.5")
+}

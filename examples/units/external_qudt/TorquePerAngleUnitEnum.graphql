@@ -1,0 +1,14 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TorquePerAngleUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TorquePerAngle", versionTag: "v3.1.5") {
+  """Newton Meter per Arcminute | UCUM: N.m.'-1"""
+  N_M_PER_ARCMIN @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-ARCMIN", versionTag: "v3.1.5")
+
+  """Newton Meter per Degree | UCUM: N.m.deg-1"""
+  N_M_PER_DEG @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-DEG", versionTag: "v3.1.5")
+
+  """Newton Meter per Minute Angle | UCUM: N.m.'-1"""
+  N_M_PER_MIN_ANGLE @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-MIN_Angle", versionTag: "v3.1.5")
+
+  """Newton Meter per Radian | UCUM: N.m.rad-1"""
+  N_M_PER_RAD @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-RAD", versionTag: "v3.1.5")
+}

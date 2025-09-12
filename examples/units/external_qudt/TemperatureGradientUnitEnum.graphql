@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TemperatureGradientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/TemperatureGradient", versionTag: "v3.1.5") {
+  """Degree Celsius per Meter | UCUM: Cel.m-1"""
+  DEG_C_PER_M @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-M", versionTag: "v3.1.5")
+
+  """Kelvin per Meter | UCUM: K.m-1"""
+  K_PER_M @reference(uri: "http://qudt.org/vocab/unit/K-PER-M", versionTag: "v3.1.5")
+}

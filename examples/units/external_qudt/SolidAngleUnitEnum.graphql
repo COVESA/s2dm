@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum SolidAngleUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/SolidAngle", versionTag: "v3.1.5") {
+  """Square Degree | UCUM: deg2"""
+  DEG2 @reference(uri: "http://qudt.org/vocab/unit/DEG2", versionTag: "v3.1.5")
+
+  """Fractional Area"""
+  FA @reference(uri: "http://qudt.org/vocab/unit/FA", versionTag: "v3.1.5")
+
+  """Steradian | UCUM: sr"""
+  SR @reference(uri: "http://qudt.org/vocab/unit/SR", versionTag: "v3.1.5")
+}

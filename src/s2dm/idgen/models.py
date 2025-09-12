@@ -237,7 +237,6 @@ class IDGenerationSpec:
         parent_name: str,
         field_name: str,
         field: GraphQLField,
-        unit_lookup: dict[str, str],
     ) -> "IDGenerationSpec":
         """Create an IDGenerationSpec from a GraphQL field.
 
@@ -271,9 +270,9 @@ class IDGenerationSpec:
         # Allowed values are resolved from the field's type (string of allowed values for enums)
         allowed = IDGenerationSpec._resolve_allowed(inside_field_type_wrapped)
 
-        # Unit is resolved from the field's "unit" argument
+        # Unit is resolved from the field's "unit" argument (enum default value)
         field_args = field.args or {}
-        unit = IDGenerationSpec._resolve_unit(field_args, unit_lookup)
+        unit = IDGenerationSpec._resolve_unit(field_args)
 
         # Minimum and maximum are resolved from the field's @range directive
         minimum = IDGenerationSpec._resolve_minimum(field)
@@ -334,23 +333,29 @@ class IDGenerationSpec:
         return field.get_allowed_enum_values()
 
     @staticmethod
-    def _resolve_unit(field_args: dict[str, GraphQLArgument], unit_lookup: dict[str, str]) -> str:
+    def _resolve_unit(field_args: dict[str, GraphQLArgument]) -> str:
         """Resolve unit from field arguments.
 
         Args:
             field_args: Dictionary of field arguments
-            unit_lookup: Dictionary mapping unit names to unit values
 
         Returns:
-            The resolved unit string
+            The resolved unit symbol string (enum default) or empty string
 
         Raises:
-            KeyError: If the unit is not found in the unit lookup
+            None
         """
         unit = field_args.get("unit", "")
         if unit and isinstance(unit, GraphQLArgument):
             unit = unit.default_value
-            return unit_lookup[unit]
+            # default_value is expected to be the enum symbol already
+            if isinstance(unit, str):
+                return unit
+            try:
+                # Fallback to string conversion if different type
+                return str(unit)
+            except Exception:
+                return ""
         return ""
 
     @staticmethod

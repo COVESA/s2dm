@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PropellantBurnRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PropellantBurnRate", versionTag: "v3.1.5") {
+  """Inch per Second | UCUM: [in_i].s-1"""
+  IN_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/IN-PER-SEC", versionTag: "v3.1.5")
+}

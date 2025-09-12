@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MagnetomotiveForceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MagnetomotiveForce", versionTag: "v3.1.5") {
+  """Ampere | UCUM: A"""
+  A @reference(uri: "http://qudt.org/vocab/unit/A", versionTag: "v3.1.5")
+
+  """Ampere Turn"""
+  AT @reference(uri: "http://qudt.org/vocab/unit/AT", versionTag: "v3.1.5")
+
+  """Attoampere"""
+  ATTOA @reference(uri: "http://qudt.org/vocab/unit/AttoA", versionTag: "v3.1.5")
+
+  """Femtoampere"""
+  FEMTOA @reference(uri: "http://qudt.org/vocab/unit/FemtoA", versionTag: "v3.1.5")
+
+  """Gilbert | UCUM: Gb"""
+  GI @reference(uri: "http://qudt.org/vocab/unit/GI", versionTag: "v3.1.5")
+
+  """Gigaampere"""
+  GIGAA @reference(uri: "http://qudt.org/vocab/unit/GigaA", versionTag: "v3.1.5")
+
+  """Oersted Centimeter | UCUM: Oe.cm"""
+  OERSTED_CENTIM @reference(uri: "http://qudt.org/vocab/unit/OERSTED-CentiM", versionTag: "v3.1.5")
+
+  """Petaampere"""
+  PETAA @reference(uri: "http://qudt.org/vocab/unit/PetaA", versionTag: "v3.1.5")
+
+  """Teraampere"""
+  TERAA @reference(uri: "http://qudt.org/vocab/unit/TeraA", versionTag: "v3.1.5")
+}

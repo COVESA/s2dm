@@ -1,0 +1,50 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ElectricCurrentUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricCurrent", versionTag: "v3.1.5") {
+  """Ampere | UCUM: A"""
+  A @reference(uri: "http://qudt.org/vocab/unit/A", versionTag: "v3.1.5")
+
+  """Attoampere"""
+  ATTOA @reference(uri: "http://qudt.org/vocab/unit/AttoA", versionTag: "v3.1.5")
+
+  """Abampere | UCUM: Bi"""
+  A_AB @reference(uri: "http://qudt.org/vocab/unit/A_Ab", versionTag: "v3.1.5")
+
+  """Statampere"""
+  A_STAT @reference(uri: "http://qudt.org/vocab/unit/A_Stat", versionTag: "v3.1.5")
+
+  """Biot | UCUM: Bi"""
+  BIOT @reference(uri: "http://qudt.org/vocab/unit/BIOT", versionTag: "v3.1.5")
+
+  """Femtoampere"""
+  FEMTOA @reference(uri: "http://qudt.org/vocab/unit/FemtoA", versionTag: "v3.1.5")
+
+  """Gigaampere"""
+  GIGAA @reference(uri: "http://qudt.org/vocab/unit/GigaA", versionTag: "v3.1.5")
+
+  """Kiloampere | UCUM: kA"""
+  KILOA @reference(uri: "http://qudt.org/vocab/unit/KiloA", versionTag: "v3.1.5")
+
+  """Megaampere | UCUM: MA"""
+  MEGAA @reference(uri: "http://qudt.org/vocab/unit/MegaA", versionTag: "v3.1.5")
+
+  """Microampere | UCUM: uA"""
+  MICROA @reference(uri: "http://qudt.org/vocab/unit/MicroA", versionTag: "v3.1.5")
+
+  """Milliampere | UCUM: mA"""
+  MILLIA @reference(uri: "http://qudt.org/vocab/unit/MilliA", versionTag: "v3.1.5")
+
+  """Nanoampere | UCUM: nA"""
+  NANOA @reference(uri: "http://qudt.org/vocab/unit/NanoA", versionTag: "v3.1.5")
+
+  """Petaampere"""
+  PETAA @reference(uri: "http://qudt.org/vocab/unit/PetaA", versionTag: "v3.1.5")
+
+  """Picoampere | UCUM: pA"""
+  PICOA @reference(uri: "http://qudt.org/vocab/unit/PicoA", versionTag: "v3.1.5")
+
+  """Planck Current"""
+  PLANCKCURRENT @reference(uri: "http://qudt.org/vocab/unit/PlanckCurrent", versionTag: "v3.1.5")
+
+  """Teraampere"""
+  TERAA @reference(uri: "http://qudt.org/vocab/unit/TeraA", versionTag: "v3.1.5")
+}

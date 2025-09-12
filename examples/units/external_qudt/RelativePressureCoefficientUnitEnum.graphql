@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version 3.1.5
+enum RelativePressureCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/RelativePressureCoefficient", versionTag: "v3.1.5") {
+  """Reciprocal Degree Fahrenheit | UCUM: /[degF]"""
+  PER_DEG_F @reference(uri: "http://qudt.org/vocab/unit/PER-DEG_F", versionTag: "v3.1.5")
+
+  """Reciprocal Kelvin | UCUM: /K"""
+  PER_K @reference(uri: "http://qudt.org/vocab/unit/PER-K", versionTag: "v3.1.5")
+
+  """Reciprocal Megakelvin"""
+  PER_MEGAK @reference(uri: "http://qudt.org/vocab/unit/PER-MegaK", versionTag: "v3.1.5")
+}

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PowerAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PowerArea", versionTag: "v3.1.5") {
+  """Watt Square Meter | UCUM: W.m2"""
+  W_M2 @reference(uri: "http://qudt.org/vocab/unit/W-M2", versionTag: "v3.1.5")
+}

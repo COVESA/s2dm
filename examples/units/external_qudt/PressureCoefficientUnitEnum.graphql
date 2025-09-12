@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version 3.1.5
+enum PressureCoefficientUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/PressureCoefficient", versionTag: "v3.1.5") {
+  """Bar per Degree Celsius | UCUM: bar.Cel-1"""
+  BAR_PER_DEG_C @reference(uri: "http://qudt.org/vocab/unit/BAR-PER-DEG_C", versionTag: "v3.1.5")
+
+  """Bar per Kelvin | UCUM: bar.K-1"""
+  BAR_PER_K @reference(uri: "http://qudt.org/vocab/unit/BAR-PER-K", versionTag: "v3.1.5")
+
+  """Hectopascal per Kelvin | UCUM: hPa.K-1"""
+  HECTOPA_PER_K @reference(uri: "http://qudt.org/vocab/unit/HectoPA-PER-K", versionTag: "v3.1.5")
+
+  """Kilopascal per Kelvin | UCUM: kPa.K-1"""
+  KILOPA_PER_K @reference(uri: "http://qudt.org/vocab/unit/KiloPA-PER-K", versionTag: "v3.1.5")
+
+  """Megapascal per Kelvin | UCUM: MPa.K-1"""
+  MEGAPA_PER_K @reference(uri: "http://qudt.org/vocab/unit/MegaPA-PER-K", versionTag: "v3.1.5")
+
+  """Pascal per Kelvin | UCUM: Pa.K-1"""
+  PA_PER_K @reference(uri: "http://qudt.org/vocab/unit/PA-PER-K", versionTag: "v3.1.5")
+}

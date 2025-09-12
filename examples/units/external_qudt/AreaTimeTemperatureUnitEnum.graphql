@@ -1,0 +1,8 @@
+# Generated from QUDT units catalog version 3.1.5
+enum AreaTimeTemperatureUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/AreaTimeTemperature", versionTag: "v3.1.5") {
+  """Square Foot Hour Degree Fahrenheit | UCUM: [sft_i].h.[degF]"""
+  FT2_HR_DEG_F @reference(uri: "http://qudt.org/vocab/unit/FT2-HR-DEG_F", versionTag: "v3.1.5")
+
+  """Square Foot Second Degree Fahrenheit | UCUM: [sft_i].s.[degF]"""
+  FT2_SEC_DEG_F @reference(uri: "http://qudt.org/vocab/unit/FT2-SEC-DEG_F", versionTag: "v3.1.5")
+}
