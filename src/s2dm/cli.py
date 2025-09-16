@@ -32,6 +32,9 @@ from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchSe
 from s2dm.tools.validators import validate_language_tag
 from s2dm.units.sync import UNITS_META_FILENAME, UNITS_META_VERSION_KEY, check_latest_qudt_version, sync_qudt_units
 
+S2DM_HOME = Path.home() / ".s2dm"
+DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
+
 
 class PathResolverOption(click.Option):
     def process_value(self, ctx: click.Context, value: Any) -> list[Path] | None:
@@ -52,7 +55,6 @@ schema_option = click.option(
     help="The GraphQL schema file or directory containing schema files. Can be specified multiple times.",
 )
 
-
 output_option = click.option(
     "--output",
     "-o",
@@ -69,12 +71,12 @@ optional_output_option = click.option(
     help="Output file",
 )
 
-units_dir_option = click.option(
-    "--units-dir",
+qudt_units_dir_option = click.option(
+    "--qudt-units-dir",
     type=click.Path(path_type=Path, file_okay=False),
     required=False,
-    help="Directory containing generated unit enums",
-    default="units",
+    help="Directory containing generated QUDT unit enums",
+    default=DEFAULT_QUDT_UNITS_DIR,
     show_default=True,
 )
 
@@ -281,8 +283,8 @@ def units() -> None:
     "output_dir",
     type=click.Path(path_type=Path, file_okay=False),
     required=True,
-    help="Directory where generated unit enums will be written",
-    default="units",
+    help="Directory where generated QUDT unit enums will be written",
+    default=DEFAULT_QUDT_UNITS_DIR,
     show_default=True,
 )
 @click.option(
@@ -315,12 +317,12 @@ def units_sync(console: Console, version_: str | None, output_dir: Path, dry_run
 
 
 @units.command(name="check-version")
-@units_dir_option
+@qudt_units_dir_option
 @click.pass_obj
-def units_check_version(console: Console, units_dir: Path) -> None:
+def units_check_version(console: Console, qudt_units_dir: Path) -> None:
     """Compare local synced QUDT version with the latest remote version and print a message."""
 
-    meta_path = units_dir / UNITS_META_FILENAME
+    meta_path = qudt_units_dir / UNITS_META_FILENAME
     if not meta_path.exists():
         console.print("[yellow]![/yellow] No metadata.json found. Run 's2dm units sync' first.")
         sys.exit(1)
@@ -783,7 +785,7 @@ def export_id(console: Console, schema: Path, output: Path | None, strict_mode: 
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@units_dir_option
+@qudt_units_dir_option
 @click.pass_obj
 def registry_init(
     console: Console,
@@ -791,6 +793,7 @@ def registry_init(
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
+    qudt_units_dir: Path,
 ) -> None:
     """Initialize your spec history with the given schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -846,7 +849,7 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@units_dir_option
+@qudt_units_dir_option
 @click.pass_obj
 def registry_update(
     console: Console,
@@ -855,7 +858,7 @@ def registry_update(
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
-    units_dir: Path,
+    qudt_units_dir: Path,
 ) -> None:
     """Update a given spec history file with your new schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
