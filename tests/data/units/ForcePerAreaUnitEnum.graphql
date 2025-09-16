@@ -1,0 +1,203 @@
+# Generated from QUDT units catalog version 3.1.5
+enum ForcePerAreaUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ForcePerArea", versionTag: "3.1.5") {
+  """Standard Atmosphere | UCUM: atm"""
+  ATM @reference(uri: "http://qudt.org/vocab/unit/ATM", versionTag: "3.1.5")
+
+  """Technical Atmosphere | UCUM: att"""
+  ATM_T @reference(uri: "http://qudt.org/vocab/unit/ATM_T", versionTag: "3.1.5")
+
+  """Bar | UCUM: bar"""
+  BAR @reference(uri: "http://qudt.org/vocab/unit/BAR", versionTag: "3.1.5")
+
+  """Barad"""
+  BARAD @reference(uri: "http://qudt.org/vocab/unit/BARAD", versionTag: "3.1.5")
+
+  """Barye"""
+  BARYE @reference(uri: "http://qudt.org/vocab/unit/BARYE", versionTag: "3.1.5")
+
+  """Bar Absolute"""
+  BAR_A @reference(uri: "http://qudt.org/vocab/unit/BAR_A", versionTag: "3.1.5")
+
+  """Centibar | UCUM: cbar"""
+  CENTIBAR @reference(uri: "http://qudt.org/vocab/unit/CentiBAR", versionTag: "3.1.5")
+
+  """Conventional Centimeter of Water | UCUM: cm[H2O]"""
+  CENTIM_H2O @reference(uri: "http://qudt.org/vocab/unit/CentiM_H2O", versionTag: "3.1.5")
+
+  """Centimetre of Water (4 °C)"""
+  CENTIM_H2O_4DEG_C @reference(uri: "http://qudt.org/vocab/unit/CentiM_H2O_4DEG_C", versionTag: "3.1.5")
+
+  """Centimeter of Mercury | UCUM: cm[Hg]"""
+  CENTIM_HG @reference(uri: "http://qudt.org/vocab/unit/CentiM_HG", versionTag: "3.1.5")
+
+  """Centimetre of Mercury (0 °C)"""
+  CENTIM_HG_0DEG_C @reference(uri: "http://qudt.org/vocab/unit/CentiM_HG_0DEG_C", versionTag: "3.1.5")
+
+  """Decapascal | UCUM: daPa"""
+  DECAPA @reference(uri: "http://qudt.org/vocab/unit/DecaPA", versionTag: "3.1.5")
+
+  """Decibar | UCUM: dbar"""
+  DECIBAR @reference(uri: "http://qudt.org/vocab/unit/DeciBAR", versionTag: "3.1.5")
+
+  """Dyne per Square Centimeter | UCUM: dyn.cm-2"""
+  DYN_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/DYN-PER-CentiM2", versionTag: "3.1.5")
+
+  """Foot of Water | UCUM: [ft_i'H2O]"""
+  FT_H2O @reference(uri: "http://qudt.org/vocab/unit/FT_H2O", versionTag: "3.1.5")
+
+  """Foot of Water (39.2 °F)"""
+  FT_H2O_39DOT2DEG_F @reference(uri: "http://qudt.org/vocab/unit/FT_H2O_39dot2DEG_F", versionTag: "3.1.5")
+
+  """Foot of Mercury | UCUM: [ft_i'Hg]"""
+  FT_HG @reference(uri: "http://qudt.org/vocab/unit/FT_HG", versionTag: "3.1.5")
+
+  """Gigapascal | UCUM: GPa"""
+  GIGAPA @reference(uri: "http://qudt.org/vocab/unit/GigaPA", versionTag: "3.1.5")
+
+  """Gram Force per Square Centimeter | UCUM: gf.cm-2"""
+  GM_F_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/GM_F-PER-CentiM2", versionTag: "3.1.5")
+
+  """Hectobar | UCUM: hbar"""
+  HECTOBAR @reference(uri: "http://qudt.org/vocab/unit/HectoBAR", versionTag: "3.1.5")
+
+  """Hectopascal | UCUM: hPa"""
+  HECTOPA @reference(uri: "http://qudt.org/vocab/unit/HectoPA", versionTag: "3.1.5")
+
+  """Inch of Water | UCUM: [in_i'H2O]"""
+  IN_H2O @reference(uri: "http://qudt.org/vocab/unit/IN_H2O", versionTag: "3.1.5")
+
+  """Inch of Water (39.2 °F)"""
+  IN_H2O_39DOT2DEG_F @reference(uri: "http://qudt.org/vocab/unit/IN_H2O_39dot2DEG_F", versionTag: "3.1.5")
+
+  """Inch of Water (60 °F)"""
+  IN_H2O_60DEG_F @reference(uri: "http://qudt.org/vocab/unit/IN_H2O_60DEG_F", versionTag: "3.1.5")
+
+  """Inch of Mercury | UCUM: [in_i'Hg]"""
+  IN_HG @reference(uri: "http://qudt.org/vocab/unit/IN_HG", versionTag: "3.1.5")
+
+  """Inch of Mercury (32 °F)"""
+  IN_HG_32DEG_F @reference(uri: "http://qudt.org/vocab/unit/IN_HG_32DEG_F", versionTag: "3.1.5")
+
+  """Inch of Mercury (60 °F)"""
+  IN_HG_60DEG_F @reference(uri: "http://qudt.org/vocab/unit/IN_HG_60DEG_F", versionTag: "3.1.5")
+
+  """Kilobar | UCUM: kbar"""
+  KILOBAR @reference(uri: "http://qudt.org/vocab/unit/KiloBAR", versionTag: "3.1.5")
+
+  """Kilo Gram Force per Square Centimeter | UCUM: kgf.cm-2"""
+  KILOGM_F_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F-PER-CentiM2", versionTag: "3.1.5")
+
+  """Kilo Gram Force per Square Meter | UCUM: kgf.m-2"""
+  KILOGM_F_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F-PER-M2", versionTag: "3.1.5")
+
+  """Kilo Gram Force per Square Millimeter | UCUM: kgf.mm-2"""
+  KILOGM_F_PER_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F-PER-MilliM2", versionTag: "3.1.5")
+
+  """Kilogram per Meter Square Second | UCUM: kg.m-1.s-2"""
+  KILOGM_PER_M_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M-SEC2", versionTag: "3.1.5")
+
+  """Kilo Pound Force per Square Inch | UCUM: k[lbf_av].[sin_i]-1"""
+  KILOLB_F_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/KiloLB_F-PER-IN2", versionTag: "3.1.5")
+
+  """Kilonewton per Square Centimeter | UCUM: kN.mm-2"""
+  KILON_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-CentiM2", versionTag: "3.1.5")
+
+  """Kilonewton per Square Meter | UCUM: kN.m-2"""
+  KILON_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-M2", versionTag: "3.1.5")
+
+  """Kilonewton per Square Millimeter | UCUM: kN.mm-2"""
+  KILON_PER_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/KiloN-PER-MilliM2", versionTag: "3.1.5")
+
+  """Kilopascal | UCUM: kPa"""
+  KILOPA @reference(uri: "http://qudt.org/vocab/unit/KiloPA", versionTag: "3.1.5")
+
+  """Kilopascal Absolute | UCUM: kPa{absolute}"""
+  KILOPA_A @reference(uri: "http://qudt.org/vocab/unit/KiloPA_A", versionTag: "3.1.5")
+
+  """Kip per Square Inch | UCUM: k[lbf_av].[in_i]-2"""
+  KIP_F_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/KIP_F-PER-IN2", versionTag: "3.1.5")
+
+  """Pound Force per Square Foot | UCUM: [lbf_av].[sft_i]-1"""
+  LB_F_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-FT2", versionTag: "3.1.5")
+
+  """Pound Force per Square Inch | UCUM: [lbf_av].[sin_i]-1"""
+  LB_F_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/LB_F-PER-IN2", versionTag: "3.1.5")
+
+  """Megabar | UCUM: Mbar"""
+  MEGABAR @reference(uri: "http://qudt.org/vocab/unit/MegaBAR", versionTag: "3.1.5")
+
+  """Meganewton per Square Meter | UCUM: kN.mm-2"""
+  MEGAN_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MegaN-PER-M2", versionTag: "3.1.5")
+
+  """Megapascal | UCUM: MPa"""
+  MEGAPA @reference(uri: "http://qudt.org/vocab/unit/MegaPA", versionTag: "3.1.5")
+
+  """Megapsi | UCUM: [Mpsi]"""
+  MEGAPSI @reference(uri: "http://qudt.org/vocab/unit/MegaPSI", versionTag: "3.1.5")
+
+  """Micro Standard Atmosphere | UCUM: uatm"""
+  MICROATM @reference(uri: "http://qudt.org/vocab/unit/MicroATM", versionTag: "3.1.5")
+
+  """Microbar | UCUM: ubar"""
+  MICROBAR @reference(uri: "http://qudt.org/vocab/unit/MicroBAR", versionTag: "3.1.5")
+
+  """Micropascal | UCUM: uPa"""
+  MICROPA @reference(uri: "http://qudt.org/vocab/unit/MicroPA", versionTag: "3.1.5")
+
+  """Microtorr"""
+  MICROTORR @reference(uri: "http://qudt.org/vocab/unit/MicroTORR", versionTag: "3.1.5")
+
+  """Millibar | UCUM: mbar"""
+  MILLIBAR @reference(uri: "http://qudt.org/vocab/unit/MilliBAR", versionTag: "3.1.5")
+
+  """Milli Bar Absolute"""
+  MILLIBAR_A @reference(uri: "http://qudt.org/vocab/unit/MilliBAR_A", versionTag: "3.1.5")
+
+  """Conventional Millimeter of Water | UCUM: mm[H2O]"""
+  MILLIM_H2O @reference(uri: "http://qudt.org/vocab/unit/MilliM_H2O", versionTag: "3.1.5")
+
+  """Millimeter of Mercury | UCUM: mm[Hg]"""
+  MILLIM_HG @reference(uri: "http://qudt.org/vocab/unit/MilliM_HG", versionTag: "3.1.5")
+
+  """Millimeter of Mercury - Absolute | UCUM: mm[Hg]{absolute}"""
+  MILLIM_HGA @reference(uri: "http://qudt.org/vocab/unit/MilliM_HGA", versionTag: "3.1.5")
+
+  """Millipascal | UCUM: mPa"""
+  MILLIPA @reference(uri: "http://qudt.org/vocab/unit/MilliPA", versionTag: "3.1.5")
+
+  """Millitorr"""
+  MILLITORR @reference(uri: "http://qudt.org/vocab/unit/MilliTORR", versionTag: "3.1.5")
+
+  """Conventional Metre of Water"""
+  M_H2O @reference(uri: "http://qudt.org/vocab/unit/M_H2O", versionTag: "3.1.5")
+
+  """Newton per Square Centimeter | UCUM: N.cm-2"""
+  N_PER_CENTIM2 @reference(uri: "http://qudt.org/vocab/unit/N-PER-CentiM2", versionTag: "3.1.5")
+
+  """Newton per Square Meter | UCUM: N.m-2"""
+  N_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/N-PER-M2", versionTag: "3.1.5")
+
+  """Newton per Square Millimeter | UCUM: N.mm-2"""
+  N_PER_MILLIM2 @reference(uri: "http://qudt.org/vocab/unit/N-PER-MilliM2", versionTag: "3.1.5")
+
+  """Pascal | UCUM: Pa"""
+  PA @reference(uri: "http://qudt.org/vocab/unit/PA", versionTag: "3.1.5")
+
+  """Poundal per Square Foot | UCUM: [lb_av].[ft_i].s-2.[sft_i]-1"""
+  PDL_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/PDL-PER-FT2", versionTag: "3.1.5")
+
+  """Poundal per Square Inch | UCUM: [lb_av].[ft_i].s-2.[in_i]-2"""
+  PDL_PER_IN2 @reference(uri: "http://qudt.org/vocab/unit/PDL-PER-IN2", versionTag: "3.1.5")
+
+  """Picopascal"""
+  PICOPA @reference(uri: "http://qudt.org/vocab/unit/PicoPA", versionTag: "3.1.5")
+
+  """Planck Pressure"""
+  PLANCKPRESSURE @reference(uri: "http://qudt.org/vocab/unit/PlanckPressure", versionTag: "3.1.5")
+
+  """Psi | UCUM: [psi]"""
+  PSI @reference(uri: "http://qudt.org/vocab/unit/PSI", versionTag: "3.1.5")
+
+  """Torr"""
+  TORR @reference(uri: "http://qudt.org/vocab/unit/TORR", versionTag: "3.1.5")
+}

@@ -7,7 +7,7 @@ type VehicleTrailer {
     trailerKind: VehicleTrailerKindEnum
 
     """The sum of the static vertical loads of the trailer axles."""
-    axleLoadSum(unit: Mass_Unit_Enum = KILOGRAM): UInt32
+    axleLoadSum(unit: MassUnitEnum = KILOGM): UInt32
 
     """The customer's name for the trailer"""
     customerTrailerName: String

@@ -1,0 +1,110 @@
+# Generated from QUDT units catalog version 3.1.5
+enum VelocityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Velocity", versionTag: "3.1.5") {
+  """Centimeter per Hour | UCUM: cm.h-1"""
+  CENTIM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-HR", versionTag: "3.1.5")
+
+  """Centimeter per Kiloyear | UCUM: cm.ka-1"""
+  CENTIM_PER_KILOYR @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-KiloYR", versionTag: "3.1.5")
+
+  """Centimeter per Second | UCUM: cm.s-1"""
+  CENTIM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-SEC", versionTag: "3.1.5")
+
+  """Centimeter per Year | UCUM: cm.a-1"""
+  CENTIM_PER_YR @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-YR", versionTag: "3.1.5")
+
+  """Foot per Day | UCUM: [ft_i].d-1"""
+  FT_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/FT-PER-DAY", versionTag: "3.1.5")
+
+  """Foot per Hour | UCUM: [ft_i].h-1"""
+  FT_PER_HR @reference(uri: "http://qudt.org/vocab/unit/FT-PER-HR", versionTag: "3.1.5")
+
+  """Foot per Minute | UCUM: [ft_i].min-1"""
+  FT_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/FT-PER-MIN", versionTag: "3.1.5")
+
+  """Foot per Second | UCUM: [ft_i].s-1"""
+  FT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/FT-PER-SEC", versionTag: "3.1.5")
+
+  """Gigahertz Meter | UCUM: GHz.m"""
+  GIGAHZ_M @reference(uri: "http://qudt.org/vocab/unit/GigaHZ-M", versionTag: "3.1.5")
+
+  """Inch per Minute | UCUM: [in_i].min-1"""
+  IN_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/IN-PER-MIN", versionTag: "3.1.5")
+
+  """Inch per Second | UCUM: [in_i].s-1"""
+  IN_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/IN-PER-SEC", versionTag: "3.1.5")
+
+  """Inch per Year | UCUM: [in_i].a-1"""
+  IN_PER_YR @reference(uri: "http://qudt.org/vocab/unit/IN-PER-YR", versionTag: "3.1.5")
+
+  """Kilometer per Day | UCUM: km.d-1"""
+  KILOM_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/KiloM-PER-DAY", versionTag: "3.1.5")
+
+  """Kilometer per Hour | UCUM: km.h-1"""
+  KILOM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloM-PER-HR", versionTag: "3.1.5")
+
+  """Kilometer per Second | UCUM: km.s-1"""
+  KILOM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloM-PER-SEC", versionTag: "3.1.5")
+
+  """Knot | UCUM: [kn_i]"""
+  KN @reference(uri: "http://qudt.org/vocab/unit/KN", versionTag: "3.1.5")
+
+  """Micrometer per Minute | UCUM: um.min-1"""
+  MICROM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-MIN", versionTag: "3.1.5")
+
+  """Micrometer per Second | UCUM: um.s-1"""
+  MICROM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-SEC", versionTag: "3.1.5")
+
+  """Millimeter per Day | UCUM: mm.d-1"""
+  MILLIM_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-DAY", versionTag: "3.1.5")
+
+  """Millimeter per Hour | UCUM: mm.h-1"""
+  MILLIM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-HR", versionTag: "3.1.5")
+
+  """Millimeter per Minute | UCUM: mm.min-1"""
+  MILLIM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-MIN", versionTag: "3.1.5")
+
+  """Millimeter per Second | UCUM: mm.s-1"""
+  MILLIM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-SEC", versionTag: "3.1.5")
+
+  """Millimeter per Year | UCUM: mm.a-1"""
+  MILLIM_PER_YR @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-YR", versionTag: "3.1.5")
+
+  """Nautical Mile per Hour | UCUM: [nmi_i].h-1"""
+  MI_N_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MI_N-PER-HR", versionTag: "3.1.5")
+
+  """Nautical Mile per Minute | UCUM: [nmi_i].min-1"""
+  MI_N_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MI_N-PER-MIN", versionTag: "3.1.5")
+
+  """International Mile per Hour | UCUM: [mi_i].h-1"""
+  MI_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MI-PER-HR", versionTag: "3.1.5")
+
+  """International Mile per Minute | UCUM: [mi_i].min-1"""
+  MI_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MI-PER-MIN", versionTag: "3.1.5")
+
+  """International Mile per Second | UCUM: [mi_i].sec-1"""
+  MI_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MI-PER-SEC", versionTag: "3.1.5")
+
+  """Meter per Day | UCUM: m.d-1"""
+  M_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/M-PER-DAY", versionTag: "3.1.5")
+
+  """Meter per Hour | UCUM: m.h-1"""
+  M_PER_HR @reference(uri: "http://qudt.org/vocab/unit/M-PER-HR", versionTag: "3.1.5")
+
+  """Meter per Minute | UCUM: m.min-1"""
+  M_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/M-PER-MIN", versionTag: "3.1.5")
+
+  """Meter per Second | UCUM: m.s-1"""
+  M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC", versionTag: "3.1.5")
+
+  """Meter per Year | UCUM: m.a-1"""
+  M_PER_YR @reference(uri: "http://qudt.org/vocab/unit/M-PER-YR", versionTag: "3.1.5")
+
+  """Yard per Hour | UCUM: [yd_i].h-1"""
+  YD_PER_HR @reference(uri: "http://qudt.org/vocab/unit/YD-PER-HR", versionTag: "3.1.5")
+
+  """Yard per Minute | UCUM: [yd_i].min-1"""
+  YD_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/YD-PER-MIN", versionTag: "3.1.5")
+
+  """Yard per Second | UCUM: [yd_i].s-1"""
+  YD_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/YD-PER-SEC", versionTag: "3.1.5")
+}
