@@ -49,24 +49,10 @@ def build_schema_str(graphql_schema_path: Path) -> str:
     custom_scalar_types_file = SPEC_DIR_PATH / "custom_scalars.graphql"
     custom_scalar_types_str = custom_scalar_types_file.read_text()
 
-    # Read unit enums from file
-    unit_enums_file = SPEC_DIR_PATH / "unit_enums.graphql"
-    unit_enums_str = unit_enums_file.read_text()
-
     # Build schema with custom directives
     # TODO: Improve this part with schema merge function with a whole directory.
     # TODO: For example: with Ariadne https://ariadnegraphql.org/docs/modularization#defining-schema-in-graphql-files
-    schema_str = (
-        custom_directives_str
-        + "\n"
-        + common_types_str
-        + "\n"
-        + custom_scalar_types_str
-        + "\n"
-        + schema_str
-        + "\n"
-        + unit_enums_str
-    )
+    schema_str = custom_directives_str + "\n" + common_types_str + "\n" + custom_scalar_types_str + "\n" + schema_str
     return schema_str
 
 

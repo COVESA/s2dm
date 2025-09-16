@@ -421,6 +421,4 @@ def check_latest_qudt_version() -> str:
     # Tags are objects with 'name', e.g., 'v3.1.4'. Pick the first entry.
     if not data:
         return "main"
-    name = data[0]["name"]
-    # Ensure it starts with 'v'
-    return name.lstrip("v")  # type: ignore[no-any-return]
+    return data[0]["name"]  # type: ignore[no-any-return]
