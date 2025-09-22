@@ -4,7 +4,7 @@ description = "S2DM - Signal to Data Model documentation"
 images = ["preview.png"]
 
 # mainSections
-mainSections = ["approach-overview", "data-modeling-guideline", "tools", "examples", "faqs", "others"]
+mainSections = ["approach-overview", "data-modeling-guideline", "tools", "examples"]
 # Doks (@hyas/doks-core)
 [doks]
   # Color mode
@@ -40,7 +40,7 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
   bootstrapJavascript = false # false (default) or true
 
   # Nav
-  sectionNav = ["docs", "examples", "faqs", "others"] # ["docs"] (default) or list of sections (e.g. ["docs", "guides"])
+  sectionNav = ["docs", "examples"] # ["docs"] (default) or list of sections (e.g. ["docs", "guides"])
   toTopButton = false # false (default) or true
   breadcrumbTrail = true # false (default) or true
   headlineHash = true # true (default) or false

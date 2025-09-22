@@ -17,8 +17,10 @@ type MyObject {
 ```
 
 ## Modeling Guide
-> **NOTE:** This document explains how to contribute to an specific model (new or existing).
-If you want to contribute to the data modeling approach itself, then see the [Contributing Guide](/guides/contributing/) instead.
+{{< callout context="note" >}}
+This document explains how to contribute to a specific model (new or existing).
+If you want to contribute to the data modeling approach itself, see the [Contributing Guide](/guides/contributing/) instead.
+{{< /callout >}}
 
 > TODO: Work in progress...
 

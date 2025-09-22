@@ -14,6 +14,8 @@ yarn-error.log*
 public/
 .hugo_build.lock
 hugo_stats.json
+resources/_gen/
+docs-gen/resources/_gen/
 
 # Local configuration files
 .envrc

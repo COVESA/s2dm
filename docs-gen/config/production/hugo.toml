@@ -1,7 +1,7 @@
 # Overrides for production environment
-baseURL = "https://giaccomole.github.io/s2dm/"
+baseURL = "/s2dm/"
 relativeURLs = false
-canonifyURLs = true
+canonifyURLs = false
 disableLiveReload = true
 enableRobotsTXT = true
 

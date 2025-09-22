@@ -10,18 +10,6 @@
   url = "examples/"
   weight = 20
 
-[[main]]
-  name = "FAQs"
-  identifier = "faqs"
-  url = "faqs/"
-  weight = 30
-
-[[main]]
-  name = "Others"
-  identifier = "others"
-  url = "others/"
-  weight = 40
-
 # Docs submenu items
 [[docs]]
   name = "Approach Overview"
