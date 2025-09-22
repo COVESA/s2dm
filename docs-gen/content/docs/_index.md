@@ -12,8 +12,8 @@ Welcome to the complete documentation for the **Simplified Semantic Data Modelin
 
 The documentation is structured to guide you through understanding, implementing, and using S2DM:
 
-- **[Approach Overview](/s2dm/docs/approach-overview/)** - Learn the fundamental concepts and principles of S2DM
-- **[Data Modeling Guideline](/s2dm/docs/data-modeling-guideline/)** - Step-by-step guide to modeling your domain with S2DM
-- **[Tools](/s2dm/docs/tools/)** - Available tools and utilities to support your S2DM implementation
+- **[Approach Overview](/docs/approach-overview/)** - Learn the fundamental concepts and principles of S2DM
+- **[Data Modeling Guideline](/docs/data-modeling-guideline/)** - Step-by-step guide to modeling your domain with S2DM
+- **[Tools](/docs/tools/)** - Available tools and utilities to support your S2DM implementation
 
 Each section contains detailed information to help you effectively use the S2DM approach for your data modeling needs.
