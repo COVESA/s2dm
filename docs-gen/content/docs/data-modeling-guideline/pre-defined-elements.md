@@ -4,7 +4,7 @@ weight: 10
 chapter: false
 ---
 
-![fig:s2dm_pre_defined_elements](/s2dm/images/s2dm_pre_def_elements.png)
+![fig:s2dm_pre_defined_elements](/images/s2dm_pre_def_elements.png)
 
 ### Units
 Units are represented as enum values. For example:
