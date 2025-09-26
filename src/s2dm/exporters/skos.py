@@ -226,7 +226,7 @@ def validate_skos_graph(graph: Graph) -> list[str]:
 
 
 def generate_skos_skeleton(
-    schema_path: Path,
+    schema_paths: list[Path],
     output_stream: TextIO,
     namespace: str,
     prefix: str,
@@ -236,7 +236,7 @@ def generate_skos_skeleton(
     """Generate SKOS skeleton RDF file from GraphQL schema.
 
     Args:
-        schema_path: Path to the GraphQL schema file
+        schema_paths: List of paths to the GraphQL schema files
         output_stream: The output stream to write to
         namespace: The namespace for the concepts
         prefix: The prefix to use for the concepts
@@ -246,10 +246,10 @@ def generate_skos_skeleton(
     Raises:
         ValueError: If validation is enabled and the generated RDF has errors
     """
-    logging.info(f"Processing schema '{schema_path}' for SKOS generation")
+    logging.info(f"Processing schema '{schema_paths}' for SKOS generation")
 
     # Load schema and extract concepts
-    graphql_schema = load_schema(schema_path)
+    graphql_schema = load_schema(schema_paths)
     named_types = get_all_named_types(graphql_schema)
     concepts = iter_all_concepts(named_types)
 

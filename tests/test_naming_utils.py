@@ -254,7 +254,7 @@ class TestConvertFieldNames:
     def test_skip_instance_tag_field_conversion(self) -> None:
         """Test that instanceTag fields pointing to @instanceTag types are not converted."""
         schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
-        schema = load_schema(schema_path)
+        schema = load_schema([schema_path])
 
         door_type = schema.get_type("Door")
         assert isinstance(door_type, GraphQLObjectType)
@@ -320,7 +320,7 @@ class TestInstanceTagConversion:
     def test_expand_instance_tag_with_naming_config(self) -> None:
         """Test that instance tag expansion applies naming conversion."""
         schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
-        schema = load_schema(schema_path)
+        schema = load_schema([schema_path])
         object_types = get_all_object_types(schema)
         instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
 
@@ -337,7 +337,7 @@ class TestInstanceTagConversion:
     def test_expand_instance_tag_without_naming_config(self) -> None:
         """Test that instance tag expansion works without naming config."""
         schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
-        schema = load_schema(schema_path)
+        schema = load_schema([schema_path])
         object_types = get_all_object_types(schema)
         instance_tag_objects = get_all_objects_with_directive(object_types, "instanceTag")
 

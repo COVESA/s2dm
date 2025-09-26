@@ -1,0 +1,43 @@
+"""Signals form Obstacle Sensor System."""
+type Vehicle_ADAS_ObstacleDetection {
+  id: ID!
+  distance(unit: Length_Unit_Enum = METER): Int
+  isEnabled: Boolean
+  warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
+}
+
+
+"""Occupant (Driver or Passenger) data."""
+type Vehicle_Occupant {
+  id: ID!
+  instanceLabel: String
+  identifier: Vehicle_Occupant_Identifier
+}
+
+
+"""Identifier attributes based on OAuth 2.0."""
+type Vehicle_Occupant_Identifier {
+  issuer: String
+  subject: String
+}
+
+
+"""All body components."""
+type Vehicle_Body {
+  """Body type code as defined by ISO 3779."""
+  bodyType: String
+  mirrors_s: [Vehicle_Body_Mirrors]
+}
+
+
+"""All mirrors."""
+type Vehicle_Body_Mirrors {
+  id: ID!
+  isFolded: Boolean
+}
+
+type Person {
+  id: ID!
+  name: String
+  height: Int
+}

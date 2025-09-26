@@ -8,7 +8,7 @@ from s2dm.exporters.utils.schema_loader import load_schema
 
 
 def process_schema(
-    schema: Path,
+    schema: list[Path],
     output: Path | None,
     namespace: str,
     prefix: str,

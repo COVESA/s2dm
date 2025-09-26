@@ -48,7 +48,7 @@ def transform(
 
 
 def translate_to_jsonschema(
-    schema_path: Path,
+    schema_paths: list[Path],
     root_type: str | None = None,
     strict: bool = False,
     expanded_instances: bool = False,
@@ -58,7 +58,7 @@ def translate_to_jsonschema(
     Translate a GraphQL schema file to JSON Schema format.
 
     Args:
-        schema_path: Path to a GraphQL schema file or directory containing schema files
+        schema_paths: List of paths to GraphQL schema files or directories
         root_type: Optional root type name for the JSON schema
         strict: Enforce strict field nullability translation from GraphQL to JSON Schema
         expanded_instances: Expand instance tags into nested structure instead of arrays
@@ -66,9 +66,9 @@ def translate_to_jsonschema(
     Returns:
         str: JSON Schema representation as a string
     """
-    log.info(f"Loading GraphQL schema from: {schema_path}")
+    log.info(f"Loading GraphQL schema from: {schema_paths}")
 
-    graphql_schema = load_schema_with_naming(schema_path, naming_config)
+    graphql_schema = load_schema_with_naming(schema_paths, naming_config)
     log.info(f"Successfully loaded GraphQL schema with {len(graphql_schema.type_map)} types")
 
     return transform(graphql_schema, root_type, strict, expanded_instances, naming_config)

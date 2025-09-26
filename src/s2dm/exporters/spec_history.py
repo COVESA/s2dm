@@ -19,7 +19,7 @@ from s2dm.exporters.utils.schema_loader import build_schema_str
 class SpecHistoryExporter:
     def __init__(
         self,
-        schema: Path,
+        schema: list[Path],
         output: Path | None,
         history_dir: Path,
     ):
@@ -102,7 +102,7 @@ class SpecHistoryExporter:
         new_concepts: list[str],
         updated_ids: list[str],
         concept_ids: dict[str, str],
-        schema_path: Path,
+        schema_path: list[Path],
         history_dir: Path,
     ) -> None:
         """
@@ -290,7 +290,7 @@ class SpecHistoryExporter:
 def main(
     concept_uri: Path,
     ids: Path,
-    schema: Path,
+    schema: list[Path],
     init: bool,
     spec_history: Path | None,
     output: Path | None,

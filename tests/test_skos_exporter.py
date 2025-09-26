@@ -264,7 +264,7 @@ class TestIntegration:
         # Test both StringIO and file output in one test
         output_stream = StringIO()
         generate_skos_skeleton(
-            schema_path=schema_file,
+            schema_paths=[schema_file],
             output_stream=output_stream,
             namespace="https://test.org/",
             prefix="test",
@@ -291,7 +291,7 @@ class TestIntegration:
         output_stream = StringIO()
         # Should not raise even if there were validation issues
         generate_skos_skeleton(
-            schema_path=schema_file,
+            schema_paths=[schema_file],
             output_stream=output_stream,
             namespace="https://test.org/",
             prefix="test",
@@ -318,7 +318,7 @@ class TestIntegration:
             output_stream = StringIO()
             with pytest.raises(ValueError, match="Generated SKOS has validation errors"):
                 generate_skos_skeleton(
-                    schema_path=schema_file,
+                    schema_paths=[schema_file],
                     output_stream=output_stream,
                     namespace="https://test.org/",
                     prefix="test",

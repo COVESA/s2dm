@@ -162,9 +162,9 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def translate_to_vspec(schema_path: Path, naming_config: dict[str, Any] | None = None) -> str:
+def translate_to_vspec(schema_paths: list[Path], naming_config: dict[str, Any] | None = None) -> str:
     """Translate a GraphQL schema to YAML."""
-    schema = load_schema_with_naming(schema_path, naming_config)
+    schema = load_schema_with_naming(schema_paths, naming_config)
 
     all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")
@@ -379,7 +379,7 @@ def reconstruct_paths(nested_types: list[tuple[str, str]]) -> list[str]:
 @click.argument("schema", type=click.Path(exists=True), required=True)
 @click.argument("output", type=click.Path(dir_okay=False, writable=True, path_type=Path), required=True)
 def main(
-    schema: Path,
+    schema: list[Path],
     output: Path,
 ) -> None:
     result = translate_to_vspec(schema)
