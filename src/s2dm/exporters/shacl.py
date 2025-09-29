@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from graphql import (
     GraphQLEnumType,
@@ -14,20 +14,12 @@ from rdflib import RDF, RDFS, SH, XSD, BNode, Graph, Literal, Namespace, Node, U
 from rdflib.collection import Collection
 
 from s2dm import log
-from s2dm.exporters.utils import (
-    Cardinality,
-    FieldCase,
-    expand_instance_tag,
-    get_all_object_types,
-    get_argument_content,
-    get_cardinality,
-    get_field_case_extended,
-    get_instance_tag_object,
-    has_directive,
-    has_valid_instance_tag_field,
-    load_schema,
-    print_field_sdl,
-)
+from s2dm.exporters.utils.directive import get_argument_content, has_given_directive
+from s2dm.exporters.utils.extraction import get_all_object_types
+from s2dm.exporters.utils.field import Cardinality, FieldCase, get_cardinality, get_field_case_extended, print_field_sdl
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
+from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, has_valid_instance_tag_field
+from s2dm.exporters.utils.schema import load_schema_with_naming
 
 SUPPORTED_FIELD_CASES = {
     FieldCase.DEFAULT,
@@ -66,6 +58,7 @@ def translate_to_shacl(
     shapes_namespace_prefix: str,
     model_namespace: str,
     model_namespace_prefix: str,
+    naming_config: dict[str, Any] | None = None,
 ) -> Graph:
     """Translate a GraphQL schema to SHACL."""
     namespaces = Namespaces(
@@ -74,7 +67,7 @@ def translate_to_shacl(
         Namespace(model_namespace),
         Namespace(model_namespace_prefix),
     )
-    schema = load_schema(schema_path)
+    schema = load_schema_with_naming(schema_path, naming_config)
     graph = Graph()
     graph.bind(namespaces.shapes_prefix, namespaces.shapes)
     graph.bind(namespaces.model_prefix, namespaces.model)
@@ -83,19 +76,23 @@ def translate_to_shacl(
     log.debug(f"Object types: {object_types}")
 
     for object_type in object_types:
-        if object_type.name == "Query":
-            log.debug("Skipping Query object type.")
+        if is_introspection_or_root_type(object_type.name):
+            log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
-        if has_directive(object_type, "instanceTag"):
+        if has_given_directive(object_type, "instanceTag"):
             log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
             continue
-        process_object_type(namespaces, object_type, graph, schema)
+        process_object_type(namespaces, object_type, graph, schema, naming_config)
 
     return graph
 
 
 def process_object_type(
-    namespaces: Namespaces, object_type: GraphQLObjectType, graph: Graph, schema: GraphQLSchema
+    namespaces: Namespaces,
+    object_type: GraphQLObjectType,
+    graph: Graph,
+    schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
 ) -> None:
     """Process a GraphQL object type and generate the corresponding SHACL triples."""
     log.info(f"Processing object type '{object_type.name}'.")
@@ -107,7 +104,7 @@ def process_object_type(
         _ = graph.add((shape_node, SH.description, Literal(object_type.description)))
 
     for field_name, field in object_type.fields.items():
-        process_field(namespaces, field_name, field, shape_node, graph, schema)
+        process_field(namespaces, field_name, field, shape_node, graph, schema, naming_config)
 
 
 def create_property_shape_with_literal(
@@ -189,6 +186,7 @@ def process_field(
     shape_node: URIRef,
     graph: Graph,
     schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
 ) -> None:
     """Process a field of a GraphQL object type and generate the corresponding SHACL triples."""
     log.info(f"Processing field... '{print_field_sdl(field)}'")
@@ -269,7 +267,7 @@ def process_field(
                 if has_valid_instance_tag_field(object_type=unwrapped_field_type, schema=schema):
                     instance_tag_object = get_instance_tag_object(unwrapped_field_type, schema)
                     if instance_tag_object is not None:
-                        expanded_tags = expand_instance_tag(instance_tag_object)
+                        expanded_tags = expand_instance_tag(instance_tag_object, naming_config)
                         for tag in expanded_tags:
                             create_property_shape_with_iri(
                                 namespaces=namespaces,

@@ -14,7 +14,8 @@ from graphql import (
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
-from s2dm.exporters.utils import ensure_query, get_all_named_types
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.schema_loader import ensure_query
 from s2dm.idgen.models import IDGenerationSpec
 
 SCALAR_TYPES = ["String", "Int", "Float", "Boolean"]

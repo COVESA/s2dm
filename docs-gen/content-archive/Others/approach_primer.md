@@ -43,10 +43,10 @@ The reference mapping between the Vehicle Signal Specification (VSS) and this S2
 | **Support for cross-domain references** | Multiple cross-referenced domains are supported natively by the language (useful for contextual data). |
 | **Community & Tools** | Data model can be used in multiple up-to-date public tools. Modeling approach is based on a language that is already established in the open community. |
 
-![Goal](/images/vss-limits-criteria.jpg)
+![Goal](/s2dm/images/vss-limits-criteria.jpg)
 #### Goal
 - To minimize the effort needed to develop, extend, and maintain vehicle-related semantic data models.
-![Goal](/images/current-vs-desired.jpg)
+![Goal](/s2dm/images/current-vs-desired.jpg)
 #### Artifact
 - A guideline on how to model vehicle-related data with proper semantics and good practices.
 
@@ -64,7 +64,7 @@ In the case that no existing data matches his needs, simple steps must allow the
 To that end, such a process is proposed with the following ideas:
 
 
-![General flow](/images/general-flow.jpg)
+![General flow](/s2dm/images/general-flow.jpg)
 
 ### Idea (1): Maintain Entity and Property sets
 In an application, most of the value is centered around what one can read or write.

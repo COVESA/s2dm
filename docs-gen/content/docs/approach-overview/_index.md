@@ -3,7 +3,7 @@ title: Approach overview
 weight: 10
 ---
 
-![Fig:s2dm_role](/images/s2dm_overview.png)
+![Fig:s2dm_role](/s2dm/images/s2dm_overview.png)
 The design of `S2DM` can be summarized in these parts:
 
 1. [Objects & Fields](objects-and-fields/)

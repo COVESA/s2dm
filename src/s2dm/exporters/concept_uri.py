@@ -3,7 +3,8 @@ from pathlib import Path
 
 from s2dm import log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
-from s2dm.exporters.utils import get_all_named_types, load_schema
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.schema_loader import load_schema
 
 
 def process_schema(

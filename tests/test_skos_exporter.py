@@ -14,7 +14,7 @@ from s2dm.exporters.skos import (
     generate_skos_skeleton,
     validate_skos_graph,
 )
-from s2dm.exporters.utils import get_all_named_types
+from s2dm.exporters.utils.extraction import get_all_named_types
 
 
 class TestSKOSConcept:

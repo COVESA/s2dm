@@ -13,7 +13,9 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils import get_all_named_types, load_schema
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.graphql_type import is_id_type, is_introspection_or_root_type
+from s2dm.exporters.utils.schema_loader import load_schema
 from s2dm.idgen.idgen import fnv1_32_wrapper
 from s2dm.idgen.models import IDGenerationSpec
 
@@ -55,7 +57,7 @@ class IDExporter:
     ) -> Generator[IDGenerationSpec, None, None]:
         # Only care about enums, objects and their fields
         for named_type in named_types:
-            if named_type.name in ("Query", "Mutation"):
+            if is_introspection_or_root_type(named_type.name):
                 continue
 
             if isinstance(named_type, GraphQLEnumType):
@@ -69,7 +71,7 @@ class IDExporter:
                 log.debug(f"Processing object: {named_type.name}")
                 # Get the ID of all fields in the object
                 for field_name, field in named_type.fields.items():
-                    if field_name.lower() == "id":
+                    if is_id_type(field_name):
                         continue
 
                     id_spec = IDGenerationSpec.from_field(

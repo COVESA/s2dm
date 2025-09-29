@@ -90,6 +90,6 @@
 {{- end -}}
 
 <script {{ with $load }}{{ . | safeHTMLAttr }}{{ end }}
-  src="{{- $js.Permalink -}}"
+  src="{{- $js.RelPermalink -}}"
   integrity="{{- $js.Data.Integrity -}}">
 </script>
