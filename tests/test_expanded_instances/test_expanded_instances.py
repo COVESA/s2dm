@@ -11,11 +11,11 @@ class TestExpandedInstances:
     """Test the expanded instances functionality for JSON Schema export."""
 
     @pytest.fixture
-    def test_schema_path(self) -> Path:
+    def test_schema_path(self) -> list[Path]:
         """Path to the test GraphQL schema."""
-        return Path(__file__).parent / "test_schema.graphql"
+        return [Path(__file__).parent / "test_schema.graphql"]
 
-    def test_default_behavior_creates_arrays(self, test_schema_path: Path) -> None:
+    def test_default_behavior_creates_arrays(self, test_schema_path: list[Path]) -> None:
         """Test that the default behavior creates arrays for instance tagged objects."""
         result = translate_to_jsonschema(test_schema_path, root_type="Cabin")
         schema = json.loads(result)
@@ -30,7 +30,7 @@ class TestExpandedInstances:
         assert seats_def["type"] == "array"
         assert "items" in seats_def
 
-    def test_expanded_instances_creates_nested_objects(self, test_schema_path: Path) -> None:
+    def test_expanded_instances_creates_nested_objects(self, test_schema_path: list[Path]) -> None:
         """Test that expanded_instances=True creates nested object structures."""
         result = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=True)
         schema = json.loads(result)
@@ -54,7 +54,7 @@ class TestExpandedInstances:
         driver_door = row1["properties"]["DRIVERSIDE"]
         assert driver_door == {"$ref": "#/$defs/Door"}
 
-    def test_expanded_instances_for_seats(self, test_schema_path: Path) -> None:
+    def test_expanded_instances_for_seats(self, test_schema_path: list[Path]) -> None:
         """Test expanded instances for seats with 3-level nesting."""
         result = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=True)
         schema = json.loads(result)
@@ -80,7 +80,7 @@ class TestExpandedInstances:
         left_seat = row1["properties"]["LEFT"]
         assert left_seat == {"$ref": "#/$defs/Seat"}
 
-    def test_non_instance_tagged_objects_remain_arrays(self, test_schema_path: Path) -> None:
+    def test_non_instance_tagged_objects_remain_arrays(self, test_schema_path: list[Path]) -> None:
         """Test that objects without instance tags remain as arrays even with expanded_instances=True."""
         # Create a schema with both instance-tagged and regular arrays
         extended_schema = """
@@ -120,7 +120,7 @@ class TestExpandedInstances:
             temp_path = Path(f.name)
 
         try:
-            result = translate_to_jsonschema(temp_path, root_type="TestObject", expanded_instances=True)
+            result = translate_to_jsonschema([temp_path], root_type="TestObject", expanded_instances=True)
             schema = json.loads(result)
 
             # Instance-tagged doors should be expanded and use singular name
@@ -136,7 +136,7 @@ class TestExpandedInstances:
         finally:
             temp_path.unlink()
 
-    def test_expanded_instances_with_strict_mode(self, test_schema_path: Path) -> None:
+    def test_expanded_instances_with_strict_mode(self, test_schema_path: list[Path]) -> None:
         """Test that expanded instances work correctly with strict mode."""
         result = translate_to_jsonschema(test_schema_path, root_type="Cabin", strict=True, expanded_instances=True)
         schema = json.loads(result)
@@ -150,7 +150,7 @@ class TestExpandedInstances:
         driver_door = door_def["properties"]["ROW1"]["properties"]["DRIVERSIDE"]
         assert driver_door == {"$ref": "#/$defs/Door"}
 
-    def test_singular_naming_for_expanded_instances(self, test_schema_path: Path) -> None:
+    def test_singular_naming_for_expanded_instances(self, test_schema_path: list[Path]) -> None:
         """Test that expanded instances use singular type names instead of field names."""
         result_normal = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=False)
         result_expanded = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=True)
@@ -175,7 +175,7 @@ class TestExpandedInstances:
         # Create a nested schema path
         nested_schema_path = Path(__file__).parent / "test_nested_schema.graphql"
 
-        result = translate_to_jsonschema(nested_schema_path, root_type="Chassis", expanded_instances=True)
+        result = translate_to_jsonschema([nested_schema_path], root_type="Chassis", expanded_instances=True)
         schema = json.loads(result)
 
         # Check that Chassis -> Axle uses proper expansion with $ref

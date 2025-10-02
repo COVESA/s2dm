@@ -62,9 +62,9 @@ def search_schema(
     return results
 
 
-def load_schema_with_naming(schema_path: Path, naming_config: dict[str, Any] | None = None) -> GraphQLSchema:
+def load_schema_with_naming(schema_paths: list[Path], naming_config: dict[str, Any] | None = None) -> GraphQLSchema:
     """Load schema and apply naming conversion."""
-    schema = load_schema(schema_path)
+    schema = load_schema(schema_paths)
     if naming_config:
         apply_naming_to_schema(schema, naming_config)
     return schema

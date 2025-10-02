@@ -23,7 +23,7 @@ from s2dm.idgen.models import IDGenerationSpec
 class IDExporter:
     def __init__(
         self,
-        schema: Path,
+        schema: list[Path],
         units_file: Path,
         output: Path | None,
         strict_mode: bool,

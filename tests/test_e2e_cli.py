@@ -8,8 +8,10 @@ from click.testing import CliRunner
 from s2dm.cli import cli
 
 TESTS_DATA = Path(__file__).parent / "data"
-SAMPLE1 = TESTS_DATA / "schema1.graphql"
-SAMPLE2 = TESTS_DATA / "schema2.graphql"
+SAMPLE1_1 = TESTS_DATA / "schema1-1.graphql"
+SAMPLE1_2 = TESTS_DATA / "schema1-2.graphql"
+SAMPLE2_1 = TESTS_DATA / "schema2-1.graphql"
+SAMPLE2_2 = TESTS_DATA / "schema2-2.graphql"
 SAMPLE3 = TESTS_DATA / "schema3.graphql"
 UNITS = TESTS_DATA / "test_units.yaml"
 
@@ -50,52 +52,70 @@ def contains_value(obj: dict[str, Any], target: str) -> bool:
 # ToDo(DA): please update this test to do proper asserts for the shacl exporter
 def test_export_shacl(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "shacl.ttl"
-    result = runner.invoke(cli, ["export", "shacl", "-s", str(SAMPLE1), "-o", str(out), "-f", "ttl"])
+    result = runner.invoke(
+        cli, ["export", "shacl", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out), "-f", "ttl"]
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert "shapes:Vehicle" in content
+    assert "shapes:Vehicle_ADAS_ObstacleDetection" in content
 
 
 # ToDo(DA): please update this test to do proper asserts for the vspec exporter
 def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "vspec.yaml"
-    result = runner.invoke(cli, ["export", "vspec", "-s", str(SAMPLE1), "-o", str(out)])
+    result = runner.invoke(cli, ["export", "vspec", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert "Vehicle:" in content
+    assert "Vehicle_ADAS_ObstacleDetection:" in content
 
 
 def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "skos_skeleton.ttl"
-    result = runner.invoke(cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1), "-o", str(out)])
+    result = runner.invoke(
+        cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)]
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
-
-    # Check that the generated file contains basic SKOS vocabulary
     with open(out, encoding="utf-8") as f:
         content = f.read()
 
-    # Verify SKOS prefixes and vocabulary are present
     assert "@prefix skos:" in content
     assert "skos:Concept" in content
     assert "skos:prefLabel" in content
 
-    # Verify at least one concept from the schema is generated
     assert "Vehicle" in content
+    assert "Vehicle_ADAS_ObstacleDetection" in content
 
 
 @pytest.mark.parametrize(
     "schema_file,previous_file,expected_output",
     [
-        (NO_CHANGE_SCHEMA, BASE_SCHEMA, "No version bump needed"),
-        (NON_BREAKING_SCHEMA, BASE_SCHEMA, "Patch version bump needed"),
-        (DANGEROUS_SCHEMA, BASE_SCHEMA, "Minor version bump needed"),
-        (BREAKING_SCHEMA, BASE_SCHEMA, "Detected breaking changes, major version bump needed"),
+        ([NO_CHANGE_SCHEMA], [BASE_SCHEMA], "No version bump needed"),
+        ([NON_BREAKING_SCHEMA], [BASE_SCHEMA], "Patch version bump needed"),
+        ([DANGEROUS_SCHEMA], [BASE_SCHEMA], "Minor version bump needed"),
+        ([BREAKING_SCHEMA], [BASE_SCHEMA], "Detected breaking changes, major version bump needed"),
         # Keep original test cases for backward compatibility
-        (SAMPLE1, SAMPLE1, "No version bump needed"),
-        (SAMPLE1, SAMPLE2, "Detected breaking changes, major version bump needed"),
+        ([SAMPLE1_1, SAMPLE1_2], [SAMPLE1_1, SAMPLE1_2], "No version bump needed"),
+        ([SAMPLE1_1, SAMPLE1_2], [SAMPLE2_1, SAMPLE2_2], "Detected breaking changes, major version bump needed"),
     ],
 )
-def test_check_version_bump(runner: CliRunner, schema_file: Path, previous_file: Path, expected_output: str) -> None:
-    result = runner.invoke(cli, ["check", "version-bump", "-s", str(schema_file), "--previous", str(previous_file)])
+def test_check_version_bump(
+    runner: CliRunner, schema_file: list[Path], previous_file: list[Path], expected_output: str
+) -> None:
+    result = runner.invoke(
+        cli,
+        ["check", "version-bump"]
+        + [item for schema in schema_file for item in ["-s", str(schema)]]
+        + [item for previous in previous_file for item in ["--previous", str(previous)]],
+    )
     assert result.exit_code == 0, result.output
     assert expected_output.lower() in result.output.lower()
 
@@ -125,38 +145,57 @@ def test_check_version_bump_output_type(
 @pytest.mark.parametrize(
     "input_file,expected_output",
     [
-        (SAMPLE1, "All constraints passed"),
+        ((SAMPLE1_1, SAMPLE1_2), "All constraints passed"),
     ],
 )
-def test_check_constraints(runner: CliRunner, input_file: Path, expected_output: str) -> None:
-    result = runner.invoke(cli, ["check", "constraints", "-s", str(input_file)])
+def test_check_constraints(runner: CliRunner, input_file: tuple[Path, Path], expected_output: str) -> None:
+    result = runner.invoke(cli, ["check", "constraints", "-s", str(input_file[0]), "-s", str(input_file[1])])
     assert expected_output.lower() in result.output.lower()
     assert result.exit_code in (0, 1)
 
 
 def test_validate_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "validate.json"
-    result = runner.invoke(cli, ["validate", "graphql", "-s", str(SAMPLE1), "-o", str(out)])
+    result = runner.invoke(cli, ["validate", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
     with open(out) as f:
         file_content = f.read()
     assert "Vehicle" in file_content
+    assert "Person" in file_content
 
 
 @pytest.mark.parametrize(
-    "input_files,expected_output",
+    "schemas,val_schemas,expected_output",
     [
-        ((SAMPLE1, SAMPLE1), "No changes detected"),
-        ((SAMPLE1, SAMPLE2), "Detected"),
+        ((SAMPLE1_1, SAMPLE1_2), (SAMPLE1_1, SAMPLE1_2), "No changes detected"),
+        ((SAMPLE1_1, SAMPLE1_2), (SAMPLE2_1, SAMPLE2_2), "Detected"),
     ],
 )
 def test_diff_graphql(
-    runner: CliRunner, tmp_outputs: Path, input_files: tuple[Path, Path], expected_output: str
+    runner: CliRunner,
+    tmp_outputs: Path,
+    schemas: tuple[Path, Path],
+    val_schemas: tuple[Path, Path],
+    expected_output: str,
 ) -> None:
-    out = tmp_outputs / f"diff_{input_files[0].stem}_{input_files[1].stem}.json"
+    out = tmp_outputs / "diff.json"
     result = runner.invoke(
-        cli, ["diff", "graphql", "-s", str(input_files[0]), "--val-schema", str(input_files[1]), "-o", str(out)]
+        cli,
+        [
+            "diff",
+            "graphql",
+            "-s",
+            str(schemas[0]),
+            "-s",
+            str(schemas[1]),
+            "--val-schema",
+            str(val_schemas[0]),
+            "--val-schema",
+            str(val_schemas[1]),
+            "-o",
+            str(out),
+        ],
     )
     assert out.exists()
     with open(out) as f:
@@ -172,7 +211,9 @@ def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> No
             "registry",
             "concept-uri",
             "-s",
-            str(SAMPLE1),
+            str(SAMPLE1_1),
+            "-s",
+            str(SAMPLE1_2),
             "-o",
             str(out),
         ],
@@ -184,10 +225,12 @@ def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> No
 
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
-    # Recursively search for the value 'ns:Vehicle.averageSpeed' in the output
     assert contains_value(
         data, "ns:Vehicle.averageSpeed"
     ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    assert contains_value(
+        data, "ns:Person.name"
+    ), 'Expected value "ns:Person.name" not found in the concept URI output.'
 
 
 def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
@@ -198,7 +241,9 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
             "registry",
             "id",
             "-s",
-            str(SAMPLE1),
+            str(SAMPLE1_1),
+            "-s",
+            str(SAMPLE1_2),
             "-u",
             str(UNITS),
             "-o",
@@ -211,58 +256,104 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
         data = json.load(f)
 
     assert any("Vehicle.averageSpeed" in k for k in data)
+    assert any("Person.name" in k for k in data)
 
 
 def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "spec_history.json"
-    result = runner.invoke(cli, ["registry", "init", "-s", str(SAMPLE1), "-u", str(UNITS), "-o", str(out)])
+    result = runner.invoke(
+        cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-u", str(UNITS), "-o", str(out)]
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
     with open(out) as f:
         data = json.load(f)
-    found = False
-    # The output may be a dict with a list under a key, or a list directly
+
+    found_vehicle = False
+    found_person = False
     entries = data if isinstance(data, list) else data.get("@graph") or data.get("items") or []
     for entry in entries:
-        if isinstance(entry, dict) and entry.get("@id") == "ns:Vehicle.averageSpeed":
-            spec_history = entry.get("specHistory", [])
-            if (
-                spec_history
-                and isinstance(spec_history, list)
-                and isinstance(spec_history[0], dict)
-                and spec_history[0].get("@id") == "0xEC20D822"
-            ):
-                found = True
-                break
-    assert found, 'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id "0xEC20D822" not found.'
+        if isinstance(entry, dict):
+            if entry.get("@id") == "ns:Vehicle.averageSpeed":
+                spec_history = entry.get("specHistory", [])
+                if (
+                    spec_history
+                    and isinstance(spec_history, list)
+                    and isinstance(spec_history[0], dict)
+                    and spec_history[0].get("@id") == "0xEC20D822"
+                ):
+                    found_vehicle = True
+            elif entry.get("@id") == "ns:Person.height":
+                spec_history = entry.get("specHistory", [])
+                if (
+                    spec_history
+                    and isinstance(spec_history, list)
+                    and isinstance(spec_history[0], dict)
+                    and spec_history[0].get("@id") == "0xC3D633BB"
+                ):
+                    found_person = True
+        if found_vehicle and found_person:
+            break
+    assert (
+        found_vehicle
+    ), 'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id "0xEC20D822" not found.'
+    assert found_person, 'Expected entry with "@id": "ns:Person.height" and specHistory id "0xC3D633BB" not found.'
 
 
 def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "spec_history_update.json"
     # First, create a spec history file
     init_out = tmp_outputs / "spec_history.json"
-    runner.invoke(cli, ["registry", "init", "-s", str(SAMPLE1), "-u", str(UNITS), "-o", str(init_out)])
     runner.invoke(
-        cli, ["registry", "update", "-s", str(SAMPLE2), "-u", str(UNITS), "-sh", str(init_out), "-o", str(out)]
+        cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-u", str(UNITS), "-o", str(init_out)]
+    )
+    runner.invoke(
+        cli,
+        [
+            "registry",
+            "update",
+            "-s",
+            str(SAMPLE2_1),
+            "-s",
+            str(SAMPLE2_2),
+            "-u",
+            str(UNITS),
+            "-sh",
+            str(init_out),
+            "-o",
+            str(out),
+        ],
     )
     assert out.exists()
     with open(out) as f:
         data = json.load(f)
-    found_old = False
-    found_new = False
-    # New IDs are always appended to the specHistory entry
+    found_vehicle_old = False
+    found_vehicle_new = False
+    found_person_old = False
+    found_person_new = False
     entries = data if isinstance(data, list) else data.get("@graph") or data.get("items") or []
     for entry in entries:
-        if isinstance(entry, dict) and entry.get("@id") == "ns:Vehicle.averageSpeed":
-            spec_history = entry.get("specHistory", [])
-            ids = [h.get("@id") for h in spec_history if isinstance(h, dict)]
-            if "0xEC20D822" in ids:
-                found_old = True
-            if "0xB86BF561" in ids:
-                found_new = True
+        if isinstance(entry, dict):
+            if entry.get("@id") == "ns:Vehicle.averageSpeed":
+                spec_history = entry.get("specHistory", [])
+                ids = [h.get("@id") for h in spec_history if isinstance(h, dict)]
+                if "0xEC20D822" in ids:
+                    found_vehicle_old = True
+                if "0xB86BF561" in ids:
+                    found_vehicle_new = True
+            elif entry.get("@id") == "ns:Person.height":
+                spec_history = entry.get("specHistory", [])
+                ids = [h.get("@id") for h in spec_history if isinstance(h, dict)]
+                if "0xC3D633BB" in ids:
+                    found_person_old = True
+                if "0xBB5A2DD0" in ids:
+                    found_person_new = True
+        if found_vehicle_old and found_vehicle_new and found_person_old and found_person_new:
             break
-    assert found_old, 'Expected old specHistory id "0xEC20D822" not found.'
-    assert found_new, 'Expected new specHistory id "0xB86BF561" not found.'
+    assert found_vehicle_old, 'Expected old specHistory id "0xEC20D822" for Vehicle.averageSpeed not found.'
+    assert found_vehicle_new, 'Expected new specHistory id "0xB86BF561" for Vehicle.averageSpeed not found.'
+    assert found_person_old, 'Expected old specHistory id "0xC3D633BB" for Person.height not found.'
+    assert found_person_new, 'Expected new specHistory id "0xBB5A2DD0" for Person.height not found.'
 
 
 @pytest.mark.parametrize(
@@ -276,24 +367,25 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
     ],
 )
 def test_search_graphql(runner: CliRunner, search_term: str, expected_output: str) -> None:
-    result = runner.invoke(cli, ["search", "graphql", "-s", str(SAMPLE1), "-t", search_term, "--exact"])
+    result = runner.invoke(
+        cli, ["search", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-t", search_term, "--exact"]
+    )
     assert result.exit_code == 0, result.output
     assert expected_output.lower() in result.output.lower()
 
 
 def test_search_skos(runner: CliRunner, tmp_outputs: Path) -> None:
-    # First generate a SKOS file
     skos_file = tmp_outputs / "test_skos.ttl"
-    result = runner.invoke(cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1), "-o", str(skos_file)])
+    result = runner.invoke(
+        cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(skos_file)]
+    )
     assert result.exit_code == 0, result.output
     assert skos_file.exists()
 
-    # Test searching for "Vehicle" in the generated SKOS file
     result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "Vehicle"])
     assert result.exit_code == 0, result.output
     assert "Vehicle" in result.output
 
-    # Test case-insensitive search
     result = runner.invoke(
         cli,
         ["search", "skos", "-f", str(skos_file), "-t", "vehicle", "--case-insensitive"],
@@ -301,7 +393,6 @@ def test_search_skos(runner: CliRunner, tmp_outputs: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "Vehicle" in result.output
 
-    # Test search for something that shouldn't exist
     result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "NonExistentConcept"])
     assert result.exit_code == 0, result.output
     assert "No matches found" in result.output
@@ -315,7 +406,9 @@ def test_similar_graphql(
     runner: CliRunner, tmp_outputs: Path, search_term: str, expected_returncode: int, expected_output: str
 ) -> None:
     out = tmp_outputs / "similar.json"
-    result = runner.invoke(cli, ["similar", "graphql", "-s", str(SAMPLE1), "-k", search_term, "-o", str(out)])
+    result = runner.invoke(
+        cli, ["similar", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-k", search_term, "-o", str(out)]
+    )
     assert expected_returncode == result.exit_code, result.output
     assert expected_output in result.output
     assert out.exists()
@@ -323,14 +416,14 @@ def test_similar_graphql(
 
 def test_compose_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-o", str(out)])
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
 
     composed_content = out.read_text()
     assert "type Vehicle" in composed_content
     assert "type Vehicle_ADAS" in composed_content
-    assert "type InCabinArea2x2" in composed_content
+    assert "type Vehicle_ADAS_ObstacleDetection" in composed_content
     assert "enum Acceleration_Unit_Enum" in composed_content
     assert "directive @range" in composed_content
 
@@ -339,19 +432,27 @@ def test_compose_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
 
 def test_compose_graphql_with_root_type(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed_filtered.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-r", "Vehicle", "-o", str(out)])
+    result = runner.invoke(
+        cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-r", "Vehicle", "-o", str(out)]
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
 
     composed_content = out.read_text()
+    assert "type Query" in composed_content
+
     assert "type Vehicle" in composed_content
     assert "type Vehicle_ADAS" in composed_content
     assert "Successfully composed schema with root type 'Vehicle'" in result.output
 
+    assert "type Person" not in composed_content
+
 
 def test_compose_graphql_with_root_type_nonexistent(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed_error.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-r", "NonExistentType", "-o", str(out)])
+    result = runner.invoke(
+        cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-r", "NonExistentType", "-o", str(out)]
+    )
 
     assert result.exit_code == 1
     assert not out.exists()
@@ -360,15 +461,17 @@ def test_compose_graphql_with_root_type_nonexistent(runner: CliRunner, tmp_outpu
 
 def test_compose_graphql_root_type_filters_unreferenced_types(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed_filtered.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE3), "-r", "Vehicle_ADAS", "-o", str(out)])
+    result = runner.invoke(
+        cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-r", "Vehicle_ADAS", "-o", str(out)]
+    )
     assert result.exit_code == 0
 
     composed_content = out.read_text()
 
     assert "type Vehicle_ADAS" in composed_content
     assert "type Vehicle_ADAS_ABS" in composed_content
-    assert "type Vehicle_Body" in composed_content
 
+    assert "type Vehicle_Body" not in composed_content
     assert "type Vehicle_Occupant" not in composed_content
     assert "type InCabinArea2x2" not in composed_content
 
@@ -376,7 +479,7 @@ def test_compose_graphql_root_type_filters_unreferenced_types(runner: CliRunner,
 def test_compose_preserves_custom_directives(runner: CliRunner, tmp_outputs: Path) -> None:
     """Test that compose preserves all types of custom directives and formatting."""
     out = tmp_outputs / "directive_preservation_test.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1), "-o", str(out)])
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
 
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -388,12 +491,83 @@ def test_compose_preserves_custom_directives(runner: CliRunner, tmp_outputs: Pat
     assert "directive @noDuplicates on FIELD_DEFINITION" in composed_content
     assert "directive @instanceTag on OBJECT" in composed_content
 
-    assert "type InCabinArea2x2 @instanceTag" in composed_content
+    assert "type Vehicle" in composed_content
+    assert "type Vehicle_ADAS_ObstacleDetection" in composed_content
+
+
+def test_compose_adds_reference_directives(runner: CliRunner, tmp_outputs: Path) -> None:
+    """Test that compose adds @reference directives to track source files."""
+    out = tmp_outputs / "reference_directives_test.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    composed_content = out.read_text()
+
+    assert 'type Vehicle @reference(source: "schema1-1.graphql")' in composed_content
+    assert 'type Vehicle_ADAS @reference(source: "schema1-1.graphql")' in composed_content
+    assert 'enum Vehicle_ADAS_ActiveAutonomyLevel_Enum @reference(source: "schema1-1.graphql")' in composed_content
+
+    assert 'type Vehicle_ADAS_ObstacleDetection @reference(source: "schema1-2.graphql")' in composed_content
+    assert 'type Vehicle_Occupant @reference(source: "schema1-2.graphql")' in composed_content
+    assert 'type Person @reference(uri: "http://example.com")' in composed_content
+
+    assert 'type InCabinArea2x2 @instanceTag @reference(source: "S2DM Spec")' in composed_content
+
+
+def test_compose_reference_directive_placement_after_other_directives(runner: CliRunner, tmp_outputs: Path) -> None:
+    """Test that @reference directives are placed correctly after implements clause."""
+    # Create test schema with implements clause
+    test_schema_dir = tmp_outputs / "test_schemas"
+    test_schema_dir.mkdir()
+
+    schema_file = test_schema_dir / "test.graphql"
+    schema_file.write_text("""
+scalar DateTime
+
+interface Node {
+  id: ID!
+}
+
+interface Timestamped {
+  createdAt: String
+  updatedAt: String
+}
+
+type User implements Node {
+  id: ID!
+  name: String
+}
+
+type Admin implements Node & Timestamped @instanceTag {
+  id: ID!
+  role: String
+  createdAt: String
+  updatedAt: String
+}
+
+union Person = User | Admin
+""")
+
+    out = tmp_outputs / "implements_test.graphql"
+    result = runner.invoke(cli, ["compose", "-s", str(schema_file), "-o", str(out)])
+
+    assert result.exit_code == 0, result.output
+    composed_content = out.read_text()
+
+    assert 'type User implements Node @reference(source: "test.graphql")' in composed_content
+    assert (
+        'type Admin implements Node & Timestamped @instanceTag @reference(source: "test.graphql")' in composed_content
+    )
+
+    assert 'scalar DateTime @reference(source: "test.graphql")' in composed_content
+    assert 'union Person @reference(source: "test.graphql")' in composed_content
 
 
 # ToDo(DA): needs refactoring after final decision how stats will work
 def test_stats_graphql(runner: CliRunner) -> None:
-    result = runner.invoke(cli, ["stats", "graphql", "-s", str(SAMPLE1)])
+    result = runner.invoke(cli, ["stats", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2)])
     print(f"{result.output=}")
     assert result.exit_code == 0, result.output
     assert "'UInt32': 1" in result.output

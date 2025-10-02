@@ -19,7 +19,7 @@ from s2dm.exporters.utils.schema_loader import build_schema_str
 class SpecHistoryExporter:
     def __init__(
         self,
-        schema: Path,
+        schemas: list[Path],
         output: Path | None,
         history_dir: Path,
     ):
@@ -27,13 +27,13 @@ class SpecHistoryExporter:
         Args:
             concept_uri: Path to the concept URI JSON-LD file
             ids: Path to the IDs JSON file
-            schema: Path to GraphQL schema file to extract type definitions
+            schemas: List of paths to GraphQL schema files to extract type definitions
             init: Whether to initialize a new spec history (True) or update (False)
             spec_history: Path to an existing spec history JSON-LD file (for updates)
             output: Path to the output spec history JSON-LD file
             history_dir: Directory to store type history files
         """
-        self.schema = schema
+        self.schemas = schemas
         self.output = output
         self.history_dir = history_dir
 
@@ -102,7 +102,7 @@ class SpecHistoryExporter:
         new_concepts: list[str],
         updated_ids: list[str],
         concept_ids: dict[str, str],
-        schema_path: Path,
+        schema_paths: list[Path],
         history_dir: Path,
     ) -> None:
         """
@@ -112,13 +112,13 @@ class SpecHistoryExporter:
             new_concepts: List of new concept names
             updated_ids: List of updated concept names
             concept_ids: Dictionary mapping concept names to their IDs
-            schema_path: Path to the GraphQL schema file
+            schema_paths: List of paths to the GraphQL schema files
             history_dir: Directory to save type definitions in
         """
         log.info(f"Processing type definitions for {len(new_concepts)} new and {len(updated_ids)} updated concepts")
         timestamp = datetime.now(UTC)
         concepts_to_process = new_concepts + updated_ids
-        schema_content = build_schema_str(schema_path)
+        schema_content = build_schema_str(schema_paths)
         for concept_name in concepts_to_process:
             if concept_name not in concept_ids:
                 log.warning(f"No ID found for concept {concept_name}, skipping")
@@ -149,7 +149,7 @@ class SpecHistoryExporter:
         - An existing spec history file (self.spec_history)
 
         For saving type definitions:
-        - A GraphQL schema file (self.schema)
+        - A GraphQL schema file (self.schemas)
         - Optionally, a directory to store type history (self.history_dir, default: "./history")
         """
         log.debug(f"Initializing new spec history from {concept_uris} and {concept_ids}")
@@ -159,7 +159,7 @@ class SpecHistoryExporter:
             log.info(f"Spec history initialized and saved to {self.output}")
         else:
             log.debug(result.model_dump(by_alias=True))
-        self.process_type_definitions(list(concept_ids.keys()), [], concept_ids, self.schema, self.history_dir)
+        self.process_type_definitions(list(concept_ids.keys()), [], concept_ids, self.schemas, self.history_dir)
         return result
 
     def update_spec_history_model(
@@ -182,7 +182,7 @@ class SpecHistoryExporter:
         - An existing spec history file (self.spec_history)
 
         For saving type definitions:
-        - A GraphQL schema file (self.schema)
+        - A GraphQL schema file (self.schemas)
         - Optionally, a directory to store type history (self.history_dir, default: "./history")
         """
         if spec_history_path is None:
@@ -203,7 +203,7 @@ class SpecHistoryExporter:
             for updated_id in updated_ids:
                 log.info(f"  {updated_id}")
         if new_concepts or updated_ids:
-            self.process_type_definitions(new_concepts, updated_ids, concept_ids, self.schema, self.history_dir)
+            self.process_type_definitions(new_concepts, updated_ids, concept_ids, self.schemas, self.history_dir)
         if self.output:
             save_spec_history(existing_history, self.output)
             log.info(f"Updated spec history saved to {self.output}")
@@ -230,7 +230,7 @@ class SpecHistoryExporter:
         - An existing spec history file (self.spec_history)
 
         For saving type definitions:
-        - A GraphQL schema file (self.schema)
+        - A GraphQL schema file (self.schemas)
         - Optionally, a directory to store type history (self.history_dir, default: "./history")
         """
         # Load the concept URIs and IDs
@@ -290,7 +290,7 @@ class SpecHistoryExporter:
 def main(
     concept_uri: Path,
     ids: Path,
-    schema: Path,
+    schemas: list[Path],
     init: bool,
     spec_history: Path | None,
     output: Path | None,
@@ -298,7 +298,7 @@ def main(
 ) -> None:
     """CLI entrypoint: instantiate SpecHistoryExporter and run."""
     exporter = SpecHistoryExporter(
-        schema=schema,
+        schemas=schemas,
         output=output,
         history_dir=history_dir,
     )

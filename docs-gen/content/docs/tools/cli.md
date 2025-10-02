@@ -4,6 +4,77 @@ weight: 1
 chapter: false
 ---
 
+## Compose Command
+
+The `compose` command merges multiple GraphQL schema files into a single unified schema file. It automatically adds `@reference` directives to track which file each type was obtained from.
+
+### Basic Usage
+
+```bash
+s2dm compose -s <schema1> -s <schema2> -o <output_file>
+```
+
+### Options
+
+- `-s, --schema PATH`: GraphQL schema file or directory (required, can be specified multiple times)
+- `-r, --root-type TEXT`: Root type name for filtering the schema (optional)
+- `-o, --output FILE`: Output file path (required)
+
+### Examples
+
+#### Compose Multiple Schema Files
+
+Merge multiple GraphQL schema files into a single output:
+
+```bash
+s2dm compose -s schema1.graphql -s schema2.graphql -o composed.graphql
+```
+
+#### Compose from Directories
+
+Merge all `.graphql` files from multiple directories:
+
+```bash
+s2dm compose -s ./schemas/vehicle -s ./schemas/person -o composed.graphql
+```
+
+#### Filter by Root Type
+
+Compose only types reachable from a specific root type:
+
+```bash
+s2dm compose -s schema1.graphql -s schema2.graphql -o composed.graphql -r Vehicle
+```
+
+This will include only the `Vehicle` type and all types transitively referenced by it, filtering out unreferenced types like `Person` if they're not connected to `Vehicle`.
+
+### Reference Directives
+
+The compose command automatically adds `@reference(source: String!)` directives to all types to track their source:
+
+```graphql
+type Vehicle @reference(source: "schema1.graphql") {
+  id: ID!
+  name: String
+}
+
+type Person @reference(source: "schema2.graphql") {
+  id: ID!
+  name: String
+}
+```
+
+Types from the S2DM specification (common types, scalars, directives) are marked with:
+
+```graphql
+type InCabinArea2x2 @instanceTag @reference(source: "S2DM Spec") {
+  row: TwoRowsInCabinEnum
+  column: TwoColumnsInCabinEnum
+}
+```
+
+**Note:** If a type already has a `@reference` directive in the source schema, it will be preserved and not overwritten.
+
 ## Export Commands
 
 ### Naming Configuration
