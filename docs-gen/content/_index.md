@@ -1,5 +1,6 @@
 ---
 title:  Simplified Semantic Data Modeling
+title:  Simplified Semantic Data Modeling
 lead: An approach for modeling data of multiple domains that enables Subject Matter Experts to contribute to controlled vocabularies with minimal data modeling expertise.
 ---
 
@@ -8,6 +9,7 @@ It is **_simple_** in the sense that any _Subject Matter Expert_ (SME) could con
 Likewise, it is **_semantic_** in the sense that it specifies meaningful data structures, their cross-domain relationships, and arbitrary classification schemes.
 
 {{< callout context="note">}}
+{{< callout context="note">}}
 Bear in mind the word _**Simplified**_ in the name.
 This approach aims to foster the adoption of (some) good data modeling practices.
 It does not intend to re-invent or replace long-standing standards, such as those of the [Semantic Web](https://www.w3.org/2001/sw/wiki/Main_Page).
@@ -15,7 +17,7 @@ Therefore, it does not incorporate advanced reasoning capabilities or comprehens
 {{< /callout >}}
 
 <div class="w-100 my-4">
-  <img src="/s2dm/images/s2dm_role.png" alt="S2DM Role Overview" class="img-fluid w-100" style="max-width: 100%; height: auto;">
+  <img src="/images/s2dm_role.png" alt="S2DM Role Overview" class="img-fluid w-100" style="max-width: 100%; height: auto;">
 </div>
 
 The figure above ilustrates the role of the `S2DM` approach.
@@ -27,6 +29,7 @@ the re-use of existing resources (left), the artifacts offered by `S2DM` (center
 * Model your domain following the [S2DM data modeling guideline](/s2dm/docs/data-modeling-guideline).
 * Maintain your domain model with the support of the provided [S2DM tools](/s2dm/docs/tools).
 
+{{< callout context="tip" >}}
 {{< callout context="tip" >}}
 `S2DM` artifacts are based on the following existing resources. Getting familiar with them is recommended.
 
