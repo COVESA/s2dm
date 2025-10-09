@@ -7,3 +7,5 @@ directive @noDuplicates on FIELD_DEFINITION
 directive @instanceTag on OBJECT
 
 directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT
+
+directive @reference(uri: String, source: String, versionTag: String) on OBJECT | INTERFACE | UNION | ENUM | ENUM_VALUE | SCALAR | INPUT_OBJECT | FIELD_DEFINITION

@@ -1,3 +1,4 @@
+import re
 import tempfile
 from pathlib import Path
 from typing import Any, cast
@@ -26,72 +27,116 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils.directive import add_directives_to_schema, build_directive_map, has_given_directive
+from s2dm.exporters.utils.directive import (
+    GRAPHQL_TYPE_DEFINITION_PATTERN,
+    add_directives_to_schema,
+    build_directive_map,
+    has_given_directive,
+)
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 
 SPEC_DIR_PATH = Path(__file__).parent.parent.parent / "spec"
+SPEC_FILES = [
+    SPEC_DIR_PATH / "custom_directives.graphql",
+    SPEC_DIR_PATH / "common_types.graphql",
+    SPEC_DIR_PATH / "custom_scalars.graphql",
+    SPEC_DIR_PATH / "unit_enums.graphql",
+]
 
 
-def build_schema_str(graphql_schema_path: Path) -> str:
+def _extract_type_names_from_content(content: str) -> list[str]:
+    """Extract type names from GraphQL schema content."""
+    type_names: list[str] = []
+    matches = re.finditer(GRAPHQL_TYPE_DEFINITION_PATTERN, content, re.MULTILINE)
+    type_names.extend(match.group(2) for match in matches)
+    return type_names
+
+
+def resolve_graphql_files(paths: list[Path]) -> list[Path]:
+    """Resolve a list of paths (files and directories) into a flat list of unique GraphQL files.
+
+    Args:
+        paths: List of file or directory paths
+
+    Returns:
+        Flat list of unique GraphQL file paths (deduplicated and sorted)
+    """
+    resolved_files: set[Path] = set()
+
+    for path in paths:
+        if path.is_file():
+            resolved_files.add(path.resolve())
+        elif path.is_dir():
+            for file in path.rglob("*.graphql"):
+                resolved_files.add(file.resolve())
+
+    return sorted(resolved_files)
+
+
+def build_schema_str_with_optional_source_map(
+    graphql_schema_paths: list[Path], with_source_map: bool
+) -> tuple[str, dict[str, str]]:
+    """Build a GraphQL schema from a file or folder, returning also a source map."""
+    schema_str = ""
+    source_map: dict[str, str] = {}
+    S2DM_SPEC_SOURCE = "S2DM Spec"
+
+    for graphql_file in graphql_schema_paths:
+        content = load_schema_from_path(graphql_file)
+        schema_str += content + "\n"
+        if with_source_map:
+            type_names = _extract_type_names_from_content(content)
+            for type_name in type_names:
+                source_map[type_name] = graphql_file.name
+
+    # Read spec files
+    spec_contents = []
+    for spec_file in SPEC_FILES:
+        content = spec_file.read_text()
+        spec_contents.append(content)
+        if with_source_map:
+            type_names = _extract_type_names_from_content(content)
+            for type_name in type_names:
+                source_map[type_name] = S2DM_SPEC_SOURCE
+
+    schema_str = "\n".join(spec_contents) + "\n" + schema_str
+
+    return schema_str, source_map
+
+
+def build_schema_str(graphql_schema_paths: list[Path]) -> str:
     """Build a GraphQL schema from a file or folder."""
-    # Load and merge schemas from the directory
-    schema_str = load_schema_from_path(graphql_schema_path)
-
-    # Read custom directives from file
-    custom_directives_file = SPEC_DIR_PATH / "custom_directives.graphql"
-    custom_directives_str = custom_directives_file.read_text()
-
-    # Read common types from file
-    common_types_file = SPEC_DIR_PATH / "common_types.graphql"
-    common_types_str = common_types_file.read_text()
-
-    # Read custom scalar types from file
-    custom_scalar_types_file = SPEC_DIR_PATH / "custom_scalars.graphql"
-    custom_scalar_types_str = custom_scalar_types_file.read_text()
-
-    # Read unit enums from file
-    unit_enums_file = SPEC_DIR_PATH / "unit_enums.graphql"
-    unit_enums_str = unit_enums_file.read_text()
-
-    # Build schema with custom directives
-    # TODO: Improve this part with schema merge function with a whole directory.
-    # TODO: For example: with Ariadne https://ariadnegraphql.org/docs/modularization#defining-schema-in-graphql-files
-    schema_str = (
-        custom_directives_str
-        + "\n"
-        + common_types_str
-        + "\n"
-        + custom_scalar_types_str
-        + "\n"
-        + schema_str
-        + "\n"
-        + unit_enums_str
-    )
+    schema_str, _ = build_schema_str_with_optional_source_map(graphql_schema_paths, with_source_map=False)
     return schema_str
 
 
-def load_schema(graphql_schema_path: Path) -> GraphQLSchema:
-    """Load and build a GraphQL schema from a file or folder."""
-    schema_str = build_schema_str(graphql_schema_path)
+def build_schema_with_query(schema_str: str) -> GraphQLSchema:
+    """Build a GraphQL schema from a schema string, ensuring it has a Query type."""
     schema = build_schema(schema_str)  # Convert GraphQL SDL to a GraphQLSchema object
-    log.info("Successfully loaded the given GraphQL schema file.")
+    log.info("Successfully built the given GraphQL schema string.")
     log.debug(f"Read schema: \n{print_schema(schema)}")
     return ensure_query(schema)
 
 
-def load_schema_filtered(graphql_schema_path: Path, root_type: str) -> GraphQLSchema:
-    """Load and build GraphQL schema filtered by root type.
+def load_schema(graphql_schema_paths: list[Path]) -> GraphQLSchema:
+    """Load and build a GraphQL schema from files or folders."""
+    schema_str = build_schema_str(graphql_schema_paths)
+    return build_schema_with_query(schema_str)
+
+
+def filter_schema(graphql_schema: GraphQLSchema, root_type: str) -> GraphQLSchema:
+    """Filter a GraphQL schema by root type.
 
     Args:
-        graphql_schema_path: Path to the GraphQL schema file or directory
+        graphql_schema: The GraphQL schema to filter
         root_type: Root type name to filter the schema
+
     Returns:
         Filtered GraphQL schema as GraphQLSchema object
+
     Raises:
         ValueError: If root type is not found in schema
     """
-    graphql_schema = load_schema(graphql_schema_path)
-
     if root_type not in graphql_schema.type_map:
         raise ValueError(f"Root type '{root_type}' not found in schema")
 
@@ -100,10 +145,31 @@ def load_schema_filtered(graphql_schema_path: Path, root_type: str) -> GraphQLSc
     referenced_types = get_referenced_types(graphql_schema, root_type)
     named_types = [t for t in referenced_types if isinstance(t, GraphQLNamedType)]
 
+    filtered_query_type = None
+
+    if root_type == "Query":
+        filtered_query_type = graphql_schema.query_type
+    elif graphql_schema.query_type:
+        query_field = {}
+        for field_name, field in graphql_schema.query_type.fields.items():
+            field_type = field.type
+            while hasattr(field_type, "of_type"):
+                field_type = field_type.of_type
+
+            if getattr(field_type, "name", "") == root_type:
+                query_field[field_name] = field
+                break
+
+        if query_field:
+            filtered_query_type = GraphQLObjectType(name="Query", fields=query_field)
+
+    mutation_type = graphql_schema.mutation_type if root_type == "Mutation" else None
+    subscription_type = graphql_schema.subscription_type if root_type == "Subscription" else None
+
     filtered_schema = GraphQLSchema(
-        query=graphql_schema.query_type,
-        mutation=graphql_schema.mutation_type,
-        subscription=graphql_schema.subscription_type,
+        query=filtered_query_type,
+        mutation=mutation_type,
+        subscription=subscription_type,
         types=named_types,
         directives=graphql_schema.directives,
         description=graphql_schema.description,
@@ -112,26 +178,66 @@ def load_schema_filtered(graphql_schema_path: Path, root_type: str) -> GraphQLSc
 
     log.info(f"Filtered schema from {len(graphql_schema.type_map)} to {len(referenced_types)} types")
 
-    return filtered_schema
+    return ensure_query(filtered_schema)
 
 
-def print_schema_with_directives_preserved(schema: GraphQLSchema) -> str:
+def load_schema_filtered(graphql_schema_paths: list[Path], root_type: str) -> GraphQLSchema:
+    """Load and build GraphQL schema filtered by root type.
+
+    Args:
+        graphql_schema_paths: List of paths to the GraphQL schema files or directories
+        root_type: Root type name to filter the schema
+        add_references: Whether to add @reference directives to types
+    Returns:
+        Filtered GraphQL schema as GraphQLSchema object
+    Raises:
+        ValueError: If root type is not found in schema
+    """
+    graphql_schema = load_schema(graphql_schema_paths)
+    return filter_schema(graphql_schema, root_type)
+
+
+def print_schema_with_directives_preserved(schema: GraphQLSchema, source_map: dict[str, str] | None = None) -> str:
+    """Print schema while preserving custom directives.
+
+    Args:
+        schema: The GraphQL schema to print
+        source_map: Optional mapping of type names to URIs for @reference directives
+
+    Returns:
+        Schema string with all directives preserved
+    """
     directive_map = build_directive_map(schema)
+
+    if source_map:
+        for type_name, uri in source_map.items():
+            if type_name in schema.type_map:
+                existing_directives = directive_map.get(type_name, [])
+
+                has_reference = any(d.startswith("@reference") for d in existing_directives)
+
+                if not has_reference:
+                    existing_directives.append(f'@reference(source: "{uri}")')
+                    directive_map[type_name] = existing_directives
+
     base_schema = print_schema(schema)
     return add_directives_to_schema(base_schema, directive_map)
 
 
-def load_schema_as_str(graphql_schema_path: Path) -> str:
+def load_schema_as_str(graphql_schema_paths: list[Path], add_references: bool = False) -> str:
     """Load and build GraphQL schema but return as str."""
-    return print_schema_with_directives_preserved(load_schema(graphql_schema_path))
+    schema_str, source_map = build_schema_str_with_optional_source_map(graphql_schema_paths, add_references)
+    schema = build_schema_with_query(schema_str)
+    return print_schema_with_directives_preserved(schema, source_map)
 
 
-def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> str:
+def load_schema_as_str_filtered(graphql_schema_paths: list[Path], root_type: str, add_references: bool = False) -> str:
     """Load and build GraphQL schema filtered by root type, return as str.
 
     Args:
-        graphql_schema_path: Path to the GraphQL schema file or directory
+        graphql_schema_paths: List of paths to the GraphQL schema files or directories
         root_type: Root type name to filter the schema
+        add_references: Whether to add @reference directives to types
 
     Returns:
         Filtered GraphQL schema as string
@@ -139,14 +245,17 @@ def load_schema_as_str_filtered(graphql_schema_path: Path, root_type: str) -> st
     Raises:
         ValueError: If root type is not found in schema
     """
-    return print_schema_with_directives_preserved(load_schema_filtered(graphql_schema_path, root_type))
+    schema_str, source_map = build_schema_str_with_optional_source_map(graphql_schema_paths, add_references)
+    schema = build_schema_with_query(schema_str)
+    filtered_schema = filter_schema(schema, root_type)
+    return print_schema_with_directives_preserved(filtered_schema, source_map)
 
 
-def create_tempfile_to_composed_schema(graphql_schema_path: Path) -> Path:
+def create_tempfile_to_composed_schema(graphql_schema_paths: list[Path]) -> Path:
     """Load, build, and create temp file for schema to feed to e.g. GraphQL inspector."""
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".graphql", delete=False) as temp_file:
         temp_path: str = temp_file.name
-        temp_file.write(load_schema_as_str(graphql_schema_path))
+        temp_file.write(load_schema_as_str(graphql_schema_paths))
 
     return Path(temp_path)
 

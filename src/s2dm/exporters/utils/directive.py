@@ -15,6 +15,8 @@ from graphql import (
 )
 from graphql.language.ast import StringValueNode
 
+GRAPHQL_TYPE_DEFINITION_PATTERN = r"^(type|interface|input|enum|union|scalar)\s+(\w+)"
+
 
 def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive_name: str) -> dict[str, Any]:
     """
@@ -158,12 +160,24 @@ def build_directive_map(schema: GraphQLSchema) -> dict[str | tuple[str, str], li
 
 
 def add_directives_to_schema(schema_str: str, directive_map: dict[str | tuple[str, str], list[str]]) -> str:
+    def find_first_unquoted_brace(line: str) -> int:
+        """Find the first { that is not inside a string literal. Returns -1 if not found."""
+        in_comment = False
+        i = 0
+        while i < len(line):
+            if line[i] == '"' and (i == 0 or line[i - 1] != "\\"):
+                in_comment = not in_comment
+            elif line[i] == "{" and not in_comment:
+                return i
+            i += 1
+        return -1
+
     lines = schema_str.split("\n")
     result_lines = []
     current_type = None
 
     for line in lines:
-        type_match = re.match(r"^(type|interface|input|enum|union|scalar)\s+(\w+)", line)
+        type_match = re.match(GRAPHQL_TYPE_DEFINITION_PATTERN, line)
         if type_match:
             type_kind = type_match.group(1)
             type_name = type_match.group(2)
@@ -171,7 +185,12 @@ def add_directives_to_schema(schema_str: str, directive_map: dict[str | tuple[st
 
             if type_name in directive_map:
                 directives_str = " " + " ".join(directive_map[type_name])
-                line = line.replace(f"{type_kind} {type_name}", f"{type_kind} {type_name}{directives_str}")
+
+                brace_pos = find_first_unquoted_brace(line)
+                if brace_pos != -1:
+                    line = line[:brace_pos].rstrip() + directives_str + " " + line[brace_pos:]
+                else:
+                    line = line.replace(f"{type_kind} {type_name}", f"{type_kind} {type_name}{directives_str}")
 
         elif current_type:
             field_match = re.match(r"^\s+(\w+)(?:\([^)]*\))?\s*:\s*", line)

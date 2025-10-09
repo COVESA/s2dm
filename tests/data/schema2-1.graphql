@@ -1,0 +1,49 @@
+type Query {
+  vehicle: Vehicle
+}
+
+enum Vehicle_ADAS_ActiveAutonomyLevel_Enum {
+  SAE_0
+  SAE_5
+}
+
+enum Vehicle_ADAS_ObstacleDetection_WarningType_Enum {
+  UNDEFINED
+  CROSS_TRAFFIC
+  BLIND_SPOT
+  COLLISION_PREVENTION
+}
+
+enum Vehicle_LowVoltageSystemState_Enum {
+  UNDEFINED
+  LOCK
+  OFF
+  ACC
+  ON
+  START
+}
+
+"""High-level vehicle data."""
+type Vehicle {
+  id: ID!
+  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Int
+  isAutoPowerOptimize: Boolean
+  lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
+  adas: Vehicle_ADAS
+  body: Vehicle_Body
+  occupant_s: [Vehicle_Occupant]
+}
+
+"""All Advanced Driver Assist Systems data."""
+type Vehicle_ADAS {
+  activeAutonomyLevel: Vehicle_ADAS_ActiveAutonomyLevel_Enum
+  isAutoPowerOptimize: Boolean
+  abs: Vehicle_ADAS_ABS
+  obstacleDetection_s: [Vehicle_ADAS_ObstacleDetection]
+}
+
+"""Antilock Braking System signals."""
+type Vehicle_ADAS_ABS {
+  isEngaged: Boolean
+  isError: Boolean
+}

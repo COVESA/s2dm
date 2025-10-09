@@ -53,7 +53,7 @@ def add_comment_to_property_node(field: GraphQLField, property_node: BNode, grap
 
 
 def translate_to_shacl(
-    schema_path: Path,
+    schema_paths: list[Path],
     shapes_namespace: str,
     shapes_namespace_prefix: str,
     model_namespace: str,
@@ -67,7 +67,7 @@ def translate_to_shacl(
         Namespace(model_namespace),
         Namespace(model_namespace_prefix),
     )
-    schema = load_schema_with_naming(schema_path, naming_config)
+    schema = load_schema_with_naming(schema_paths, naming_config)
     graph = Graph()
     graph.bind(namespaces.shapes_prefix, namespaces.shapes)
     graph.bind(namespaces.model_prefix, namespaces.model)

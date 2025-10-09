@@ -12,7 +12,7 @@ from s2dm.exporters.utils.schema_loader import load_schema
 def test_schema():  # type: ignore[no-untyped-def]
     """Load the test schema from test_spec.graphql."""
     schema_path = Path(__file__).parent / "test_type_modifiers" / "test_spec.graphql"
-    return load_schema(schema_path)
+    return load_schema([schema_path])
 
 
 @pytest.mark.parametrize(
