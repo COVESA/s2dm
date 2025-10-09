@@ -4,6 +4,6 @@ weight: 30
 chapter: false
 ---
 
-![Frame 3: Multi hierarchies](/images/Frame%203.png)
+![Frame 3: Multi hierarchies](/s2dm/images/Frame%203.png)
 
 Under construction...

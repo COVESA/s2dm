@@ -1,5 +1,11 @@
 type Query {
   vehicle: Vehicle
+  person: Person
+}
+
+type Person {
+  id: ID!
+  name: String
 }
 
 enum Vehicle_ADAS_ActiveAutonomyLevel_Enum {

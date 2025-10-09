@@ -12,7 +12,7 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils import get_directive_arguments, has_directive
+from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 
 
 class FieldTypeWrapper:
@@ -381,7 +381,7 @@ class IDGenerationSpec:
         Returns:
             Dictionary with range values or empty dict if no range directive
         """
-        if has_directive(field, "range"):
+        if has_given_directive(field, "range"):
             return get_directive_arguments(field, "range")
         return {}
 

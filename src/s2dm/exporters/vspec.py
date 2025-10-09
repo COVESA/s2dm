@@ -14,16 +14,17 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils import (
-    FieldCase,
+from s2dm.exporters.utils.directive import has_given_directive
+from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
+from s2dm.exporters.utils.field import FieldCase
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
+from s2dm.exporters.utils.instance_tag import (
     get_all_expanded_instance_tags,
-    get_all_object_types,
-    get_all_objects_with_directive,
     get_instance_tag_dict,
     get_instance_tag_object,
-    has_directive,
-    load_schema,
 )
+from s2dm.exporters.utils.naming import apply_naming_to_instance_values
+from s2dm.exporters.utils.schema import load_schema_with_naming
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
     "MILLIMETER": "mm",
@@ -161,9 +162,9 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def translate_to_vspec(schema_path: Path) -> str:
+def translate_to_vspec(schema_paths: list[Path], naming_config: dict[str, Any] | None = None) -> str:
     """Translate a GraphQL schema to YAML."""
-    schema = load_schema(schema_path)
+    schema = load_schema_with_naming(schema_paths, naming_config)
 
     all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")
@@ -176,20 +177,20 @@ def translate_to_vspec(schema_path: Path) -> str:
     nested_types: list[tuple[str, str]] = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
     for object_type in object_types:
-        if object_type.name == "Query":
-            log.debug("Skipping Query object type.")
+        if is_introspection_or_root_type(object_type.name):
+            log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
 
         # Add a VSS branch structure for the object type
         if object_type.name not in yaml_dict:
-            yaml_dict.update(process_object_type(object_type, schema))
+            yaml_dict.update(process_object_type(object_type, schema, naming_config))
         else:
             # TODO: Check if the processed object type is already in the yaml_dict
             log.debug(f"Object type '{object_type.name}' already exists in the YAML dictionary. Skipping.")
         # Process the fields of the object type
         for field_name, field in object_type.fields.items():
             # Add a VSS leaf structure for the field
-            field_result = process_field(field_name, field, object_type, schema, nested_types)
+            field_result = process_field(field_name, field, object_type, schema, nested_types, naming_config)
             if field_result is not None:
                 yaml_dict.update(field_result)
             else:
@@ -214,7 +215,9 @@ def translate_to_vspec(schema_path: Path) -> str:
     return yaml.dump(yaml_dict, default_flow_style=False, Dumper=CustomDumper, sort_keys=True)
 
 
-def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -> dict[str, dict[str, Any]]:
+def process_object_type(
+    object_type: GraphQLObjectType, schema: GraphQLSchema, naming_config: dict[str, Any] | None = None
+) -> dict[str, dict[str, Any]]:
     """Process a GraphQL object type and generate the corresponding YAML."""
     log.info(f"Processing object type '{object_type.name}'.")
 
@@ -227,7 +230,12 @@ def process_object_type(object_type: GraphQLObjectType, schema: GraphQLSchema) -
     instance_tag_object = get_instance_tag_object(object_type, schema)
     if instance_tag_object:
         log.debug(f"Object type '{object_type.name}' has instance tag '{instance_tag_object}'.")
-        obj_dict["instances"] = list(get_instance_tag_dict(instance_tag_object).values())
+        instance_dict = get_instance_tag_dict(instance_tag_object)
+        converted_instances = []
+        for values in instance_dict.values():
+            converted_values = apply_naming_to_instance_values(values, naming_config)
+            converted_instances.append(converted_values)
+        obj_dict["instances"] = converted_instances
     else:
         log.debug(f"Object type '{object_type.name}' does not have an instance tag.")
 
@@ -240,6 +248,7 @@ def process_field(
     object_type: GraphQLObjectType,
     schema: GraphQLSchema,
     nested_types: list[tuple[str, str]],
+    naming_config: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Process a GraphQL field and generate the corresponding YAML."""
     log.info(f"Processing field '{field_name}'.")
@@ -252,7 +261,7 @@ def process_field(
             "datatype": SCALAR_DATATYPE_MAP[output_type.name],
         }
         # TODO: Fix numbers that are appearing with quotes as strings.
-        if has_directive(field, "range") and field.ast_node and field.ast_node.directives:
+        if has_given_directive(field, "range") and field.ast_node and field.ast_node.directives:
             range_directive = next(
                 (directive for directive in field.ast_node.directives if directive.name.value == "range"), None
             )
@@ -284,7 +293,7 @@ def process_field(
             if unit_arg is not None:
                 field_dict["unit"] = UNITS_DICT[unit_arg]
 
-        if has_directive(field, "metadata"):
+        if has_given_directive(field, "metadata"):
             metadata_directive = None
             if field.ast_node and field.ast_node.directives:
                 metadata_directive = next(
@@ -312,7 +321,7 @@ def process_field(
         log.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
         named_type = get_named_type(field.type)
         if isinstance(named_type, GraphQLObjectType):
-            return process_object_type(named_type, schema)  # Nested object type, process it recursively
+            return process_object_type(named_type, schema, naming_config)  # Nested object type, process it recursively
         else:
             log.debug(f"Skipping nested type '{named_type}' as it is not a GraphQLObjectType.")
             return {}
@@ -367,13 +376,13 @@ def reconstruct_paths(nested_types: list[tuple[str, str]]) -> list[str]:
 
 
 @click.command()
-@click.argument("schema", type=click.Path(exists=True), required=True)
+@click.argument("schema", type=click.Path(exists=True, path_type=Path), required=True)
 @click.argument("output", type=click.Path(dir_okay=False, writable=True, path_type=Path), required=True)
 def main(
-    schema: Path,
+    schemas: list[Path],
     output: Path,
 ) -> None:
-    result = translate_to_vspec(schema)
+    result = translate_to_vspec(schemas)
     log.info(f"Result:\n{result}")
     with open(output, "w", encoding="utf-8") as output_file:
         log.info(f"Writing data to '{output}'")

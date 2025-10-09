@@ -4,14 +4,15 @@ from pathlib import Path
 
 import pytest
 
-from s2dm.exporters.utils import FieldCase, get_field_case, get_field_case_extended, load_schema
+from s2dm.exporters.utils.field import FieldCase, get_field_case, get_field_case_extended
+from s2dm.exporters.utils.schema_loader import load_schema
 
 
 @pytest.fixture
 def test_schema():  # type: ignore[no-untyped-def]
     """Load the test schema from test_spec.graphql."""
     schema_path = Path(__file__).parent / "test_type_modifiers" / "test_spec.graphql"
-    return load_schema(schema_path)
+    return load_schema([schema_path])
 
 
 @pytest.mark.parametrize(
