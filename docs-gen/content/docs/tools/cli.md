@@ -18,6 +18,7 @@ s2dm compose -s <schema1> -s <schema2> -o <output_file>
 
 - `-s, --schema PATH`: GraphQL schema file or directory (required, can be specified multiple times)
 - `-r, --root-type TEXT`: Root type name for filtering the schema (optional)
+- `-q, --selection-query PATH`: GraphQL query file for filtering schema based on selected fields (optional)
 - `-o, --output FILE`: Output file path (required)
 
 ### Examples
@@ -47,6 +48,37 @@ s2dm compose -s schema1.graphql -s schema2.graphql -o composed.graphql -r Vehicl
 ```
 
 This will include only the `Vehicle` type and all types transitively referenced by it, filtering out unreferenced types like `Person` if they're not connected to `Vehicle`.
+
+#### Filter by Selection Query
+
+Compose only types and fields selected in a GraphQL query:
+
+```bash
+s2dm compose -s schema1.graphql -s schema2.graphql -q query.graphql -o composed.graphql
+```
+
+Given a query file `query.graphql`:
+
+```graphql
+query Selection {
+  vehicle(instance: "id") {
+    averageSpeed
+    adas {
+      abs {
+        isEngaged
+      }
+    }
+  }
+}
+```
+
+The composed schema will include:
+- Only the selected types: `vehicle`, `adas`, `abs`
+- Only the selected fields within each type
+- Types referenced by field arguments (e.g., enums used in field arguments)
+- Only directive definitions that are actually used in the filtered schema
+
+**Note:** The query must be valid against the composed schema. Root fields in the query (e.g., `vehicle`) must exist in the `Query` type of the schema.
 
 ### Reference Directives
 
