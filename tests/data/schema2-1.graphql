@@ -1,5 +1,6 @@
 type Query {
-  vehicle: Vehicle
+  vehicle(instance: ID!): Vehicle
+  person: Person
 }
 
 enum Vehicle_ADAS_ActiveAutonomyLevel_Enum {

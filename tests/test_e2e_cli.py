@@ -577,6 +577,44 @@ union Person = User | Admin
     assert 'union Person @reference(source: "test.graphql")' in composed_content
 
 
+def test_compose_with_invalid_selection_query(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_invalid_query.graphql"
+    result = runner.invoke(
+        cli,
+        ["compose", "-s", str(TSD.SAMPLE2_1), "-s", str(TSD.SAMPLE2_2), "-q", str(TSD.INVALID_QUERY), "-o", str(out)],
+    )
+    assert result.exit_code == 1
+
+
+def test_compose_with_valid_selection_query_prunes_schema(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_pruned.graphql"
+    result = runner.invoke(
+        cli, ["compose", "-s", str(TSD.SAMPLE2_1), "-s", str(TSD.SAMPLE2_2), "-q", str(TSD.VALID_QUERY), "-o", str(out)]
+    )
+    assert result.exit_code == 0
+
+    composed_content = out.read_text()
+
+    assert "type Vehicle" in composed_content
+    assert "type Vehicle_ADAS" in composed_content
+    assert "type Vehicle_ADAS_ABS" in composed_content
+    assert "enum Vehicle_LowVoltageSystemState_Enum" in composed_content
+    assert "enum VelocityUnitEnum" in composed_content
+
+    assert "type Person" not in composed_content
+    assert "type Vehicle_Body" not in composed_content
+    assert "type Vehicle_Occupant" not in composed_content
+    assert "enum Vehicle_ADAS_ActiveAutonomyLevel_Enum" not in composed_content
+
+    assert "directive @reference" in composed_content
+
+    assert "directive @range" not in composed_content
+    assert "directive @cardinality" not in composed_content
+    assert "directive @noDuplicates" not in composed_content
+    assert "directive @instanceTag" not in composed_content
+    assert "directive @metadata" not in composed_content
+
+
 # ToDo(DA): needs refactoring after final decision how stats will work
 def test_stats_graphql(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["stats", "graphql", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2)])
