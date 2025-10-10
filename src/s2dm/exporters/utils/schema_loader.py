@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from ariadne import load_schema_from_path
 from graphql import (
+    DocumentNode,
     GraphQLField,
     GraphQLInputObjectType,
     GraphQLInterfaceType,
@@ -17,6 +18,7 @@ from graphql import (
     GraphQLType,
     GraphQLUnionType,
     build_schema,
+    get_named_type,
     is_input_object_type,
     is_interface_type,
     is_list_type,
@@ -25,6 +27,7 @@ from graphql import (
     is_union_type,
     print_schema,
 )
+from graphql.language.ast import SelectionSetNode
 
 from s2dm import log
 from s2dm.exporters.utils.directive import (
@@ -64,10 +67,10 @@ def resolve_graphql_files(paths: list[Path]) -> list[Path]:
 
     for path in paths:
         if path.is_file():
-            resolved_files.add(path.resolve())
+            resolved_files.add(path)
         elif path.is_dir():
             for file in path.rglob("*.graphql"):
-                resolved_files.add(file.resolve())
+                resolved_files.add(file)
 
     return sorted(resolved_files)
 
@@ -259,6 +262,7 @@ def create_tempfile_to_composed_schema(graphql_schema_paths: list[Path]) -> Path
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".graphql", delete=False) as temp_file:
         temp_path: str = temp_file.name
         temp_file.write(load_schema_as_str(graphql_schema_paths))
+        temp_file.flush()
 
     return Path(temp_path)
 
@@ -365,3 +369,116 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
 
     log.info(f"Found {len(referenced)} referenced types from root type '{root_type}'")
     return referenced
+
+
+def prune_schema_using_query_selection(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema:
+    """
+    Filter schema by pruning unselected fields and types based on query selections.
+
+    Args:
+        schema: The original GraphQL schema
+        document: Parsed query document
+
+    Returns:
+        The modified schema with only the selected fields and types
+    """
+    if not schema.query_type:
+        raise ValueError("Schema has no query type defined")
+
+    fields_to_keep: dict[str, set[str]] = {}
+    types_to_keep: set[str] = set()
+
+    def collect_selections(type_name: str, selection_set: SelectionSetNode) -> None:
+        """Recursively collect field names and type names to keep."""
+        type_obj = schema.type_map.get(type_name)
+        if not type_obj:
+            return
+
+        types_to_keep.add(type_name)
+
+        if not (is_object_type(type_obj) or is_interface_type(type_obj)):
+            return
+
+        if type_name not in fields_to_keep:
+            fields_to_keep[type_name] = set()
+
+        obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+
+        for selection in selection_set.selections:
+            if hasattr(selection, "name"):
+                field_name = selection.name.value
+                fields_to_keep[type_name].add(field_name)
+
+                if field_name in obj_type.fields:
+                    field = obj_type.fields[field_name]
+                    field_type = get_named_type(field.type)
+
+                    if field_type and hasattr(field_type, "name"):
+                        types_to_keep.add(field_type.name)
+
+                    if hasattr(field, "args"):
+                        for _, arg in field.args.items():
+                            arg_type = get_named_type(arg.type)
+                            if arg_type and hasattr(arg_type, "name"):
+                                types_to_keep.add(arg_type.name)
+
+                    if (
+                        hasattr(selection, "selection_set")
+                        and selection.selection_set
+                        and field_type
+                        and hasattr(field_type, "name")
+                    ):
+                        collect_selections(field_type.name, selection.selection_set)
+
+    query_operations = [
+        definition
+        for definition in document.definitions
+        if hasattr(definition, "operation") and definition.operation.value == "query"
+    ]
+
+    if not query_operations:
+        raise ValueError("No query operation found in selection document")
+
+    query_operation = query_operations[0]
+    if hasattr(query_operation, "selection_set"):
+        collect_selections(schema.query_type.name, query_operation.selection_set)
+
+    for type_name, fields_to_keep_set in fields_to_keep.items():
+        type_obj = schema.type_map.get(type_name)
+        if type_obj and (is_object_type(type_obj) or is_interface_type(type_obj)):
+            obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+            fields_to_delete = [fname for fname in obj_type.fields if fname not in fields_to_keep_set]
+            for fname in fields_to_delete:
+                del obj_type.fields[fname]
+
+    types_to_delete = [
+        type_name
+        for type_name in list(schema.type_map.keys())
+        if type_name not in types_to_keep and not type_name.startswith("__")
+    ]
+    for type_name in types_to_delete:
+        del schema.type_map[type_name]
+
+    directives_used: set[str] = set()
+
+    for type_name in types_to_keep:
+        type_obj = schema.type_map.get(type_name)
+        if not type_obj:
+            continue
+
+        if hasattr(type_obj, "ast_node") and type_obj.ast_node and hasattr(type_obj.ast_node, "directives"):
+            for directive in type_obj.ast_node.directives:
+                directives_used.add(directive.name.value)
+
+        if is_object_type(type_obj) or is_interface_type(type_obj):
+            obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+            for field in obj_type.fields.values():
+                if hasattr(field, "ast_node") and field.ast_node and hasattr(field.ast_node, "directives"):
+                    for directive in field.ast_node.directives:
+                        directives_used.add(directive.name.value)
+
+    schema.directives = tuple(directive for directive in schema.directives if directive.name in directives_used)
+
+    log.info(f"Composed filtered schema with {len(fields_to_keep)} object types")
+
+    return schema
