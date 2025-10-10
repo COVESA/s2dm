@@ -15,24 +15,21 @@ References:
 
 import json
 import re
-import urllib.request
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
 import rdflib
+import requests
 from graphql import build_schema
+from packaging import version
 from rdflib.namespace import RDFS
 
 QUDT_UNITS_TTL_URL_TEMPLATE: str = (
-    "https://raw.githubusercontent.com/qudt/qudt-public-repo/v{version}/src/main/rdf/vocab/unit/"
-    "VOCAB_QUDT-UNITS-ALL.ttl"
+    "https://raw.githubusercontent.com/qudt/qudt-public-repo/{version}/src/main/rdf/vocab/unit/VOCAB_QUDT-UNITS-ALL.ttl"
 )
 
-QUDT_UNITS_TTL_URL_MAIN: str = (
-    "https://raw.githubusercontent.com/qudt/qudt-public-repo/main/src/main/rdf/vocab/unit/VOCAB_QUDT-UNITS-ALL.ttl"
-)
 
 QUDT_GITHUB_API_URL: str = "https://api.github.com/repos/qudt/qudt-public-repo/tags"
 
@@ -378,7 +375,7 @@ def sync_qudt_units(units_root: Path, version: str | None = None, *, dry_run: bo
     if not dry_run:
         _cleanup_units_directory(units_root)
 
-    url = QUDT_UNITS_TTL_URL_MAIN if version is None else QUDT_UNITS_TTL_URL_TEMPLATE.format(version=version)
+    url = QUDT_UNITS_TTL_URL_TEMPLATE.format(version=version)
 
     g = _load_graph_from_url(url)
     rows = _query_units(g)
@@ -410,15 +407,22 @@ def sync_qudt_units(units_root: Path, version: str | None = None, *, dry_run: bo
     return written
 
 
-def check_latest_qudt_version() -> str:
+def get_latest_qudt_version(fallback: str = "main") -> str:
     """Return a string representing the latest known QUDT tag for the public repo.
 
     Minimal, non-overengineered approach: read Git tags via GitHub's tags API.
     We avoid adding heavy dependencies; this can be replaced later if needed.
     """
-    with urllib.request.urlopen(QUDT_GITHUB_API_URL) as resp:  # nosec - public metadata
-        data = json.loads(resp.read().decode("utf-8"))
-    # Tags are objects with 'name', e.g., 'v3.1.4'. Pick the first entry.
-    if not data:
-        return "main"
-    return data[0]["name"]  # type: ignore[no-any-return]
+    resp = requests.get(QUDT_GITHUB_API_URL, timeout=10)
+    if not resp.ok:
+        return fallback
+
+    tags = resp.json()
+    if not tags:
+        return fallback
+
+    # Pick the latest version
+    try:
+        return str(max(version.parse(tag["name"]) for tag in tags))
+    except version.InvalidVersion:
+        return fallback

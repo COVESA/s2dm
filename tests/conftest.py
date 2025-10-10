@@ -174,7 +174,7 @@ def mock_qudt_version() -> str:
 
 
 @pytest.fixture
-def mock_check_latest_qudt_version(mock_qudt_version: str) -> Callable[[], str]:
+def mock_get_latest_qudt_version(mock_qudt_version: str) -> Callable[[], str]:
     """Mock function for checking latest QUDT version."""
 
     def _mock() -> str:
@@ -213,12 +213,12 @@ def mock_sync_qudt_units() -> Callable[..., list[Path]]:
 def units_sync_mocks(
     monkeypatch: pytest.MonkeyPatch,
     mock_sync_qudt_units: Callable[..., list[Path]],
-    mock_check_latest_qudt_version: Callable[[], str],
+    mock_get_latest_qudt_version: Callable[[], str],
 ) -> tuple[Callable[..., list[Path]], Callable[[], str]]:
     """Fixture that applies all units sync mocks at once."""
     monkeypatch.setattr("s2dm.cli.sync_qudt_units", mock_sync_qudt_units)
-    monkeypatch.setattr("s2dm.cli.check_latest_qudt_version", mock_check_latest_qudt_version)
-    return mock_sync_qudt_units, mock_check_latest_qudt_version
+    monkeypatch.setattr("s2dm.cli.get_latest_qudt_version", mock_get_latest_qudt_version)
+    return mock_sync_qudt_units, mock_get_latest_qudt_version
 
 
 def create_test_unit_row(
