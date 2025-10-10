@@ -570,7 +570,7 @@ def test_units_sync_cli(
     tmp_outputs: Path,
     monkeypatch: pytest.MonkeyPatch,
     mock_sync_qudt_units: Callable[..., list[Path]],
-    mock_check_latest_qudt_version: Callable[[], str],
+    mock_get_latest_qudt_version: Callable[[], str],
 ) -> None:
     """Test that the units sync CLI command works end-to-end."""
 
@@ -580,7 +580,7 @@ def test_units_sync_cli(
 
     # Apply mocks to avoid network calls
     monkeypatch.setattr("s2dm.cli.sync_qudt_units", simple_mock)
-    monkeypatch.setattr("s2dm.cli.check_latest_qudt_version", mock_check_latest_qudt_version)
+    monkeypatch.setattr("s2dm.cli.get_latest_qudt_version", mock_get_latest_qudt_version)
 
     output_dir = tmp_outputs / "units_cli_test"
 

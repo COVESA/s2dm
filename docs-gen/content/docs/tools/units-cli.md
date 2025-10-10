@@ -34,13 +34,13 @@ s2dm units sync --output-dir <path> [--version <version>] [--dry-run]
 s2dm units sync --output-dir units
 
 # Sync specific version
-s2dm units sync --version 3.1.5 --output-dir units
+s2dm units sync --version v3.1.5 --output-dir units
 
 # Check what would be generated without creating files
 s2dm units sync --output-dir units --dry-run
 
 # Sync to custom directory
-s2dm units sync --version 3.1.5 --output-dir path/to/qudt/units/
+s2dm units sync --version v3.1.5 --output-dir path/to/qudt/units/
 ```
 
 **Options:**
@@ -120,7 +120,7 @@ units/
 
 1. **Initial Setup**: Sync units from QUDT
    ```bash
-   s2dm units sync --version 3.1.5 --output-dir units/external_qudt
+   s2dm units sync --version v3.1.5 --output-dir units/external_qudt
    ```
 
 2. **Use Units in Schema Development**: Reference generated enums
@@ -138,7 +138,7 @@ units/
 
 4. **Update When Needed**: Sync newer versions as they become available
    ```bash
-   s2dm units sync --version 3.2.0 --output-dir units/external_qudt
+   s2dm units sync --version v3.2.0 --output-dir units/external_qudt
    ```
 
 ## Why URI-Based Symbols?

@@ -28,13 +28,13 @@ Synchronizes unit definitions from the QUDT repository and generates GraphQL enu
 s2dm units sync --output-dir units
 
 # Sync specific version
-s2dm units sync --version 3.1.5 --output-dir units
+s2dm units sync --version v3.1.5 --output-dir units
 
 # Check what would be generated without creating files
 s2dm units sync --output-dir units --dry-run
 
 # Sync with custom output directory
-s2dm units sync --version 3.1.5 --output-dir path/to/custom/units
+s2dm units sync --version v3.1.5 --output-dir path/to/custom/units
 ```
 
 
@@ -130,7 +130,7 @@ s2dm registry update -s new_schema.graphql -r registry.json
 
 1. **Initial Setup**: Sync units from QUDT
    ```bash
-   s2dm units sync --version 3.1.5 --output-dir units
+   s2dm units sync --version v3.1.5 --output-dir units
    ```
 
 2. **Use Units in Schema Development**: Reference generated enums in your GraphQL schemas
@@ -153,7 +153,7 @@ s2dm registry update -s new_schema.graphql -r registry.json
 
 5. **Update When Needed**: Sync newer versions as they become available
    ```bash
-   s2dm units sync --version 3.2.0 --output-dir units
+   s2dm units sync --version v3.2.0 --output-dir units
    ```
 
 ## Technical Details
@@ -194,7 +194,7 @@ This URI-based approach ensures consistent, reliable enum symbols that directly 
 ## Dependencies
 
 - **rdflib**: For parsing RDF/TTL files and executing SPARQL queries
-- **urllib**: For fetching TTL files and GitHub API calls
+- **requests**: For fetching TTL files and GitHub API calls
 - **click**: For CLI interface and error handling
 
 ## Version Compatibility

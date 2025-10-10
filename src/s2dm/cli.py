@@ -30,7 +30,7 @@ from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
 from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.validators import validate_language_tag
-from s2dm.units.sync import UNITS_META_FILENAME, UNITS_META_VERSION_KEY, check_latest_qudt_version, sync_qudt_units
+from s2dm.units.sync import UNITS_META_FILENAME, UNITS_META_VERSION_KEY, get_latest_qudt_version, sync_qudt_units
 
 S2DM_HOME = Path.home() / ".s2dm"
 DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
@@ -271,18 +271,17 @@ def units() -> None:
 @units.command(name="sync")
 @click.option(
     "--version",
-    "version_",
+    "version",
     type=str,
     required=False,
     help=(
-        "QUDT version tag (e.g., 3.1.4). Defaults to the latest tag; falls back to 'main' when tags are unavailable."
+        "QUDT version tag (e.g., 3.1.4). Defaults to the latest tag, falls back to 'main' when tags are unavailable."
     ),
 )
 @click.option(
     "--output-dir",
-    "output_dir",
     type=click.Path(path_type=Path, file_okay=False),
-    required=True,
+    required=False,
     help="Directory where generated QUDT unit enums will be written",
     default=DEFAULT_QUDT_UNITS_DIR,
     show_default=True,
@@ -293,11 +292,11 @@ def units() -> None:
     help="Show what would be generated without actually writing files",
 )
 @click.pass_obj
-def units_sync(console: Console, version_: str | None, output_dir: Path, dry_run: bool) -> None:
+def units_sync(console: Console, version: str | None, output_dir: Path, dry_run: bool) -> None:
     """Fetch QUDT quantity kinds and generate GraphQL enums under the output directory."""
 
     try:
-        version_to_use = version_ or check_latest_qudt_version()
+        version_to_use = version or get_latest_qudt_version()
     except Exception as e:  # pragma: no cover - generic guard for CLI UX
         console.print(f"[red]✗[/red] Version check failed: {e}")
         sys.exit(1)
@@ -334,7 +333,7 @@ def units_check_version(console: Console, qudt_units_dir: Path) -> None:
         sys.exit(1)
 
     try:
-        latest = check_latest_qudt_version()
+        latest = get_latest_qudt_version()
     except Exception as e:  # pragma: no cover - generic guard for CLI UX
         console.print(f"[red]✗[/red] Version check failed: {e}")
         sys.exit(1)
