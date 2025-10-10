@@ -14,6 +14,8 @@ SAMPLE2_1 = TESTS_DATA / "schema2-1.graphql"
 SAMPLE2_2 = TESTS_DATA / "schema2-2.graphql"
 SAMPLE3 = TESTS_DATA / "schema3.graphql"
 UNITS = TESTS_DATA / "test_units.yaml"
+VALID_QUERY = TESTS_DATA / "valid_query.graphql"
+INVALID_QUERY = TESTS_DATA / "invalid_query.graphql"
 
 # Version bump test schemas
 BASE_SCHEMA = TESTS_DATA / "base.graphql"
@@ -563,6 +565,43 @@ union Person = User | Admin
 
     assert 'scalar DateTime @reference(source: "test.graphql")' in composed_content
     assert 'union Person @reference(source: "test.graphql")' in composed_content
+
+
+def test_compose_with_invalid_selection_query(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_invalid_query.graphql"
+    result = runner.invoke(
+        cli, ["compose", "-s", str(SAMPLE2_1), "-s", str(SAMPLE2_2), "-q", str(INVALID_QUERY), "-o", str(out)]
+    )
+    assert result.exit_code == 1
+
+
+def test_compose_with_valid_selection_query_prunes_schema(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_pruned.graphql"
+    result = runner.invoke(
+        cli, ["compose", "-s", str(SAMPLE2_1), "-s", str(SAMPLE2_2), "-q", str(VALID_QUERY), "-o", str(out)]
+    )
+    assert result.exit_code == 0
+
+    composed_content = out.read_text()
+
+    assert "type Vehicle" in composed_content
+    assert "type Vehicle_ADAS" in composed_content
+    assert "type Vehicle_ADAS_ABS" in composed_content
+    assert "enum Vehicle_LowVoltageSystemState_Enum" in composed_content
+    assert "enum Velocity_Unit_Enum" in composed_content
+
+    assert "type Person" not in composed_content
+    assert "type Vehicle_Body" not in composed_content
+    assert "type Vehicle_Occupant" not in composed_content
+    assert "enum Vehicle_ADAS_ActiveAutonomyLevel_Enum" not in composed_content
+
+    assert "directive @reference" in composed_content
+
+    assert "directive @range" not in composed_content
+    assert "directive @cardinality" not in composed_content
+    assert "directive @noDuplicates" not in composed_content
+    assert "directive @instanceTag" not in composed_content
+    assert "directive @metadata" not in composed_content
 
 
 # ToDo(DA): needs refactoring after final decision how stats will work
