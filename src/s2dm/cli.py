@@ -6,6 +6,8 @@ from typing import Any
 
 import rich_click as click
 import yaml
+from graphql import build_schema, parse
+from graphql import validate as graphql_validate
 from rich.console import Console
 from rich.traceback import install
 
@@ -23,6 +25,8 @@ from s2dm.exporters.utils.schema_loader import (
     load_schema,
     load_schema_as_str,
     load_schema_as_str_filtered,
+    print_schema_with_directives_preserved,
+    prune_schema_using_query_selection,
     resolve_graphql_files,
 )
 from s2dm.exporters.vspec import translate_to_vspec
@@ -274,9 +278,17 @@ def validate() -> None:
     type=str,
     help="Root type name for filtering the schema",
 )
+@click.option(
+    "--selection-query",
+    "-q",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="GraphQL query file to filter the composed schema",
+)
 @output_option
 @click.pass_obj
-def compose(console: Console, schemas: list[Path], root_type: str | None, output: Path) -> None:
+def compose(
+    console: Console, schemas: list[Path], root_type: str | None, selection_query: Path | None, output: Path
+) -> None:
     """Compose GraphQL schema files into a single output file."""
     try:
         if root_type:
@@ -284,9 +296,37 @@ def compose(console: Console, schemas: list[Path], root_type: str | None, output
         else:
             composed_schema_str = load_schema_as_str(schemas, add_references=True)
 
+        graphql_schema = build_schema(composed_schema_str)
+
+        if selection_query:
+            console.print("[blue]Validating selection query against composed schema...[/blue]")
+
+            query_document = parse(selection_query.read_text())
+            errors = graphql_validate(graphql_schema, query_document)
+
+            if errors:
+                console.print("[red]✗[/red] Selection query validation failed:")
+                for error in errors:
+                    console.print(f"  {error.message}")
+                sys.exit(1)
+
+            console.print("[green]✓[/green] Selection query validated successfully")
+
+            console.print("[blue]Filtering schema based on selection query...[/blue]")
+
+            graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
+
+            console.print("[green]✓[/green] Filtered schema based on query selections")
+
+        composed_schema_str = print_schema_with_directives_preserved(graphql_schema)
+
         output.write_text(composed_schema_str)
 
-        if root_type:
+        if selection_query:
+            console.print(
+                f"[green]✓[/green] Successfully composed and filtered schema based on selection query to {output}"
+            )
+        elif root_type:
             console.print(f"[green]✓[/green] Successfully composed schema with root type '{root_type}' to {output}")
         else:
             console.print(f"[green]✓[/green] Successfully composed schema to {output}")
