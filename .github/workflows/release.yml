@@ -12,6 +12,11 @@ jobs:
   release:
     if: github.repository_owner == 'covesa'
     runs-on: ubuntu-latest
+    environment: 
+      name: pypi
+      url: https://pypi.org/p/s2dm
+    permissions:
+      id-token: write  # For trusted publishing (future enhancement)
     steps:
       - name: checkout
         uses: actions/checkout@v5
@@ -163,3 +168,64 @@ jobs:
             --notes "## Changes
 
           ${CHANGELOG}"
+
+      - name: build package for PyPI
+        if: steps.version.outputs.bump != 'none'
+        run: uv build
+
+      - name: test package installation
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          echo "Testing package installation and CLI functionality..."
+          
+          # Create a fresh virtual environment for testing
+          python -m venv test_env
+          source test_env/bin/activate
+          
+          # Install the built package
+          pip install dist/*.whl
+          
+          # Test that s2dm command is available and working
+          echo "Testing s2dm command availability..."
+          which s2dm
+          
+          # Test version command
+          echo "Testing s2dm version..."
+          s2dm --version
+          
+          # Test help command to ensure CLI is functional
+          echo "Testing s2dm help..."
+          s2dm --help
+          
+          # Get the expected version from the package
+          EXPECTED_VERSION=$(grep -E '^__version__ = ' src/s2dm/__init__.py | cut -d'"' -f2)
+          ACTUAL_VERSION=$(s2dm --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          
+          echo "Expected version: $EXPECTED_VERSION"
+          echo "Actual version: $ACTUAL_VERSION"
+          
+          # Verify versions match
+          if [ "$EXPECTED_VERSION" = "$ACTUAL_VERSION" ]; then
+            echo "✅ Version verification passed!"
+          else
+            echo "❌ Version mismatch!"
+            exit 1
+          fi
+          
+          # Clean up
+          deactivate
+          rm -rf test_env
+          
+          echo "✅ Package installation test completed successfully!"
+
+      - name: publish to PyPI
+        if: steps.version.outputs.bump != 'none'
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          echo "Publishing to PyPI using uv..."
+          
+          # Publish using uv (simpler and consistent with your toolchain)
+          uv publish
+          
+          echo "✅ Successfully published to PyPI!"
