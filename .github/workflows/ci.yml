@@ -30,7 +30,7 @@ jobs:
           node-version: "20"
 
       - name: uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: npm install gql-inspector
         run: npm i --global @graphql-inspector/cli graphql
