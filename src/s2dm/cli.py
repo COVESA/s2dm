@@ -6,7 +6,6 @@ from typing import Any
 
 import rich_click as click
 import yaml
-from rich.console import Console
 from rich.traceback import install
 
 from s2dm import __version__, log
@@ -203,8 +202,7 @@ def load_naming_config(config_path: Path | None) -> dict[str, Any] | None:
     help="Log file",
 )
 @click.version_option(__version__)
-@click.pass_context
-def cli(ctx: click.Context, log_level: str, log_file: Path | None) -> None:
+def cli(log_level: str, log_file: Path | None) -> None:
     if log_file:
         file_handler = logging.FileHandler(log_file, mode="w")
         file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
@@ -213,7 +211,6 @@ def cli(ctx: click.Context, log_level: str, log_file: Path | None) -> None:
     log.setLevel(log_level)
     if log_level == "DEBUG":
         _ = install(show_locals=True)
-    ctx.obj = Console()
 
 
 @click.group()
@@ -291,57 +288,52 @@ def units() -> None:
     is_flag=True,
     help="Show what would be generated without actually writing files",
 )
-@click.pass_obj
-def units_sync(console: Console, version: str | None, output_dir: Path, dry_run: bool) -> None:
+def units_sync(version: str | None, output_dir: Path, dry_run: bool) -> None:
     """Fetch QUDT quantity kinds and generate GraphQL enums under the output directory."""
 
-    try:
-        version_to_use = version or get_latest_qudt_version()
-    except Exception as e:  # pragma: no cover - generic guard for CLI UX
-        console.print(f"[red]✗[/red] Version check failed: {e}")
-        sys.exit(1)
+    version_to_use = version or get_latest_qudt_version()
 
     try:
         written = sync_qudt_units(output_dir, version_to_use, dry_run=dry_run)
-        if dry_run:
-            console.print(f"[blue]ℹ[/blue] Would generate {len(written)} enum files under {output_dir}")
-            console.print(f"Version: {version_to_use}")
-            console.print("[dim]Use without --dry-run to actually write files[/dim]")
-        else:
-            console.print(f"[green]✓[/green] Generated {len(written)} enum files under {output_dir}")
-            console.print(f"Version: {version_to_use}")
     except Exception as e:  # pragma: no cover - generic guard for CLI UX
-        console.print(f"[red]✗[/red] Units sync failed: {e}")
+        log.error(f"Units sync failed: {e}")
         sys.exit(1)
+
+    if dry_run:
+        log.info(f"Would generate {len(written)} enum files under {output_dir}")
+        log.print(f"Version: {version_to_use}")
+        log.hint("Use without --dry-run to actually write files")
+    else:
+        log.success(f"Generated {len(written)} enum files under {output_dir}")
+        log.print(f"Version: {version_to_use}")
 
 
 @units.command(name="check-version")
 @qudt_units_dir_option
-@click.pass_obj
-def units_check_version(console: Console, qudt_units_dir: Path) -> None:
+def units_check_version(qudt_units_dir: Path) -> None:
     """Compare local synced QUDT version with the latest remote version and print a message."""
 
     meta_path = qudt_units_dir / UNITS_META_FILENAME
     if not meta_path.exists():
-        console.print("[yellow]![/yellow] No metadata.json found. Run 's2dm units sync' first.")
+        log.warning("No metadata.json found. Run 's2dm units sync' first.")
         sys.exit(1)
 
     try:
         local_version = json.loads(meta_path.read_text(encoding="utf-8")).get(UNITS_META_VERSION_KEY, "main")
     except json.JSONDecodeError as e:
-        console.print(f"[red]✗[/red] Invalid metadata.json: {e}")
+        log.error(f"Invalid metadata.json: {e}")
         sys.exit(1)
 
     try:
         latest = get_latest_qudt_version()
     except Exception as e:  # pragma: no cover - generic guard for CLI UX
-        console.print(f"[red]✗[/red] Version check failed: {e}")
+        log.error(f"Version check failed: {e}")
         sys.exit(1)
 
     if latest == local_version:
-        console.print("[green]✓[/green] Units are up to date.")
+        log.success("Units are up to date.")
     else:
-        console.print(f"[yellow]![/yellow] A newer release is available. Local: {local_version}, Latest: {latest}")
+        log.warning(f"A newer release is available. Local: {local_version}, Latest: {latest}")
 
 
 @click.group()
@@ -371,8 +363,7 @@ def validate() -> None:
     help="Root type name for filtering the schema",
 )
 @output_option
-@click.pass_obj
-def compose(console: Console, schemas: list[Path], root_type: str | None, output: Path) -> None:
+def compose(schemas: list[Path], root_type: str | None, output: Path) -> None:
     """Compose GraphQL schema files into a single output file."""
     try:
         if root_type:
@@ -383,18 +374,18 @@ def compose(console: Console, schemas: list[Path], root_type: str | None, output
         output.write_text(composed_schema_str)
 
         if root_type:
-            console.print(f"[green]✓[/green] Successfully composed schema with root type '{root_type}' to {output}")
+            log.success(f"Successfully composed schema with root type '{root_type}' to {output}")
         else:
-            console.print(f"[green]✓[/green] Successfully composed schema to {output}")
+            log.success(f"Successfully composed schema to {output}")
 
     except OSError as e:
-        console.print(f"[red]✗[/red] File I/O error: {e}")
+        log.error(f"File I/O error: {e}")
         sys.exit(1)
     except ValueError as e:
-        console.print(f"[red]✗[/red] Invalid schema: {e}")
+        log.error(f"Invalid schema: {e}")
         sys.exit(1)
     except Exception as e:
-        console.print(f"[red]✗[/red] Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         sys.exit(1)
 
 
@@ -587,8 +578,7 @@ def skos_skeleton(
     default=False,
     help="Output the version bump type for pipeline usage",
 )
-@click.pass_obj
-def version_bump(console: Console, schemas: list[Path], previous: list[Path], output_type: bool) -> None:
+def version_bump(schemas: list[Path], previous: list[Path], output_type: bool) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     Returns:
@@ -610,31 +600,31 @@ def version_bump(console: Console, schemas: list[Path], previous: list[Path], ou
 
     if diff_result.returncode == 0:
         if "No changes detected" in diff_result.output:
-            console.print("[green]No version bump needed")
+            log.success("No version bump needed")
             version_bump_type = None
         elif "No breaking changes detected" in diff_result.output:
             # Check for dangerous changes (⚠ symbols)
             if "⚠" in diff_result.output:
-                console.print("[yellow]Minor version bump needed")
+                log.warning("Minor version bump needed")
                 version_bump_type = "minor"
             else:
-                console.print("[green]Patch version bump needed")
+                log.success("Patch version bump needed")
                 version_bump_type = "patch"
         else:
-            console.print("[red]Unknown state, please check your input with 'diff' tool.")
+            log.error("Unknown state, please check your input with 'diff' tool.")
     else:
         if "Detected" in diff_result.output and "breaking changes" in diff_result.output:
-            console.print("[red]Detected breaking changes, major version bump needed")
+            log.error("Detected breaking changes, major version bump needed")
             version_bump_type = "major"
         else:
-            console.print("[red]Unknown error occurred during schema comparison")
+            log.error("Unknown error occurred during schema comparison")
 
     # Output the version bump type for pipeline usage
     if output_type:
         if version_bump_type:
-            console.print(version_bump_type)
+            log.print(version_bump_type)
         else:
-            console.print("none")
+            log.print("none")
 
     # Exit with success code
     sys.exit(0)
@@ -642,8 +632,7 @@ def version_bump(console: Console, schemas: list[Path], previous: list[Path], ou
 
 @check.command(name="constraints")
 @schema_option
-@click.pass_obj
-def check_constraints(console: Console, schemas: list[Path]) -> None:
+def check_constraints(schemas: list[Path]) -> None:
     """
     Enforce intended use of custom directives and naming conventions.
     Checks:
@@ -658,12 +647,12 @@ def check_constraints(console: Console, schemas: list[Path]) -> None:
     errors = constraint_checker.run(objects)
 
     if errors:
-        console.rule("[bold red]Constraint Violations")
+        log.rule("Constraint Violations", style="bold red")
         for err in errors:
-            console.print(f"[red]- {err}")
+            log.error(f"- {err}")
         raise sys.exit(1)
     else:
-        console.print("[green]All constraints passed!")
+        log.success("All constraints passed!")
 
 
 # validate -> graphql
@@ -671,14 +660,13 @@ def check_constraints(console: Console, schemas: list[Path]) -> None:
 @validate.command(name="graphql")
 @schema_option
 @output_option
-@click.pass_obj
-def validate_graphql(console: Console, schemas: list[Path], output: Path) -> None:
+def validate_graphql(schemas: list[Path], output: Path) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
     inspector = GraphQLInspector(schema_temp_path)
     validation_result = inspector.introspect(output)
 
-    console.print(validation_result.output)
+    log.print(validation_result.output)
     sys.exit(validation_result.returncode)
 
 
@@ -700,8 +688,7 @@ def validate_graphql(console: Console, schemas: list[Path], output: Path) -> Non
         "to validate against. Can be specified multiple times."
     ),
 )
-@click.pass_obj
-def diff_graphql(console: Console, schemas: list[Path], val_schemas: list[Path], output: Path | None) -> None:
+def diff_graphql(schemas: list[Path], val_schemas: list[Path], output: Path | None) -> None:
     """Diff for two GraphQL schemas."""
     log.info(f"Comparing schemas: {schemas} and {val_schemas} and writing output to {output}")
 
@@ -717,7 +704,7 @@ def diff_graphql(console: Console, schemas: list[Path], val_schemas: list[Path],
         processed = pretty_print_dict_json(diff_result.as_dict())
         output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
 
-    console.print(diff_result.output)
+    log.print(diff_result.output)
     sys.exit(diff_result.returncode)
 
 
@@ -735,8 +722,7 @@ def diff_graphql(console: Console, schemas: list[Path], val_schemas: list[Path],
     default="ns",
     help="The prefix to use for the URIs",
 )
-@click.pass_obj
-def export_concept_uri(console: Console, schemas: list[Path], output: Path | None, namespace: str, prefix: str) -> None:
+def export_concept_uri(schemas: list[Path], output: Path | None, namespace: str, prefix: str) -> None:
     """Generate concept URIs for a GraphQL schema and output as JSON-LD."""
     graphql_schema = load_schema(schemas)
     concepts = iter_all_concepts(get_all_named_types(graphql_schema))
@@ -748,10 +734,10 @@ def export_concept_uri(console: Console, schemas: list[Path], output: Path | Non
         with open(output, "w", encoding="utf-8") as output_file:
             log.info(f"Writing data to '{output}'")
             json.dump(data, output_file, indent=2)
-        console.print(f"[green]Concept URIs written to {output}")
+        log.success(f"Concept URIs written to {output}")
 
-    console.rule("[bold blue]Concept URIs (JSON-LD)")
-    console.print_json(json.dumps(data, indent=2))
+    log.rule("Concept URIs (JSON-LD)")
+    log.print_json(json.dumps(data, indent=2))
 
 
 # registry -> id
@@ -759,15 +745,14 @@ def export_concept_uri(console: Console, schemas: list[Path], output: Path | Non
 @schema_option
 @optional_output_option
 @click.option("--strict-mode/--no-strict-mode", default=False)
-@click.pass_obj
-def export_id(console: Console, schema: Path, output: Path | None, strict_mode: bool) -> None:
+def export_id(schema: Path, output: Path | None, strict_mode: bool) -> None:
     """Generate concept IDs for GraphQL schema fields and enums."""
 
     exporter = IDExporter(schema=schema, output=output, strict_mode=strict_mode, dry_run=output is None)
     node_ids = exporter.run()
 
-    console.rule("[bold blue]Concept IDs")
-    console.print(node_ids)
+    log.rule("Concept IDs")
+    log.print(node_ids)
 
 
 # registry -> init
@@ -785,9 +770,7 @@ def export_id(console: Console, schema: Path, output: Path | None, strict_mode: 
     help="The prefix to use for the concept URIs",
 )
 @qudt_units_dir_option
-@click.pass_obj
 def registry_init(
-    console: Console,
     schemas: list[Path],
     output: Path,
     concept_namespace: str,
@@ -819,12 +802,12 @@ def registry_init(
     )
     spec_history_result = spec_history_exporter.init_spec_history_model(concept_uris, concept_ids, concept_uri_model)
 
-    console.rule("[bold blue]Concept IDs")
-    console.print(concept_ids)
-    console.rule("[bold blue]Concept URIs")
-    console.print(concept_uris)
-    console.rule("[bold blue]Spec history (updated)")
-    console.print(spec_history_result)
+    log.rule("Concept IDs")
+    log.print(concept_ids)
+    log.rule("Concept URIs")
+    log.print(concept_uris)
+    log.rule("Spec history (updated)")
+    log.print(spec_history_result)
 
 
 # registry -> update
@@ -849,9 +832,7 @@ def registry_init(
     help="The prefix to use for the concept URIs",
 )
 @qudt_units_dir_option
-@click.pass_obj
 def registry_update(
-    console: Console,
     schemas: list[Path],
     spec_history: Path,
     output: Path,
@@ -889,12 +870,12 @@ def registry_update(
         spec_history_path=spec_history,
     )
 
-    console.rule("[bold blue]Concept IDs")
-    console.print(concept_ids)
-    console.rule("[bold blue]Concept URIs")
-    console.print(concept_uris)
-    console.rule("[bold blue]Spec history (updated)")
-    console.print(spec_history_result)
+    log.rule("Concept IDs")
+    log.print(concept_ids)
+    log.rule("Concept URIs")
+    log.print(concept_uris)
+    log.rule("Spec history (updated)")
+    log.print(spec_history_result)
 
 
 # search -> graphql
@@ -903,8 +884,7 @@ def registry_update(
 @click.option("--type", "-t", required=True, help="Type or field you want to search the graphql schema for.")
 @click.option("--case-insensitive", "-i", is_flag=True, default=False, help="Perform a case-insensitive search.")
 @click.option("--exact", is_flag=True, default=False, help="Perform an exact match search.")
-@click.pass_obj
-def search_graphql(console: Console, schemas: list[Path], type: str, case_insensitive: bool, exact: bool) -> None:
+def search_graphql(schemas: list[Path], type: str, case_insensitive: bool, exact: bool) -> None:
     """Search for a type or field in the GraphQL schema. If type was found returns type including all fields,
     if fields was found returns only field in parent type"""
     gql_schema = load_schema(schemas)
@@ -923,19 +903,21 @@ def search_graphql(console: Console, schemas: list[Path], type: str, case_insens
         partial=not exact,
         case_insensitive=case_insensitive,
     )
-    console.rule(f"[bold blue] Search results for '{type}'")
+    log.rule(f"Search results for '{type}'")
     if not type_results and not field_results:
-        console.print(f"[yellow]No matches found for '{type}'.")
+        log.warning(f"No matches found for '{type}'.")
     else:
         for tname, fields in type_results.items():
-            console.print(f"[green]{tname}[/green]: {fields}")
+            log.colored(tname, style="green")
+            if fields:
+                for field in fields:
+                    log.list_item(str(field), prefix="  •")
         for tname, fields in field_results.items():
             if fields:
-                console.print(f"[green]{tname}[/green]: {fields}")
+                log.key_value(tname, str(fields), key_style="green")
 
 
 def display_search_results(
-    console: Console,
     results: list[SearchResult],
     term: str,
     limit_value: int | None = None,
@@ -944,27 +926,25 @@ def display_search_results(
     """Display SKOS search results in a formatted way.
 
     Args:
-        console: Rich console for output
         results: List of SearchResult objects
         term: The search term that was used
         limit_value: The parsed limit value (None if unlimited, 0 if zero limit)
         total_count: Total number of matches found (before applying limit)
     """
     if not results:
-        console.print(f"[yellow]No matches found for '{term}'[/yellow]")
+        log.warning(f"No matches found for '{term}'")
         return
 
     # Show result count with appropriate message format
     if total_count is not None and limit_value is not None and limit_value > 0 and len(results) < total_count:
         # Limited results: show "Found X matches, showing only Y:"
-        result_message = f"[green]Found {total_count} match(es) for '{term}', showing only {len(results)}:[/green]"
+        log.success(f"Found {total_count} match(es) for '{term}', showing only {len(results)}:")
     else:
         # Unlimited results or showing all: show "Found X matches for 'term':"
         actual_count = total_count if total_count is not None else len(results)
-        result_message = f"[green]Found {actual_count} match(es) for '{term}':[/green]"
+        log.success(f"Found {actual_count} match(es) for '{term}':")
 
-    console.print(result_message)
-    console.print()
+    log.print("")
 
     for i, result in enumerate(results, 1):
         concept_uri = result.subject
@@ -973,11 +953,15 @@ def display_search_results(
         value = result.object_value
         match_type = result.match_type
 
-        console.print(f"[bold cyan]{i}. {concept_name}[/bold cyan] [dim]({match_type} match)[/dim]")
-        console.print(f"   [dim]URI:[/dim] {concept_uri}")
-        console.print(f"   [dim]Property:[/dim] {property_type}")
-        console.print(f"   [dim]Value:[/dim] {value}")
-        console.print()
+        # Display numbered item with match type
+        log.colored(f"{i}. {concept_name}")
+        log.hint(f"   ({match_type} match)")
+
+        # Display structured key-value pairs with indentation
+        log.key_value("\tURI", concept_uri)
+        log.key_value("\tProperty", property_type)
+        log.key_value("\tValue", value)
+        log.print("")
 
 
 @search.command(name="skos")
@@ -1008,8 +992,7 @@ def display_search_results(
     show_default=True,
     help=f"Maximum number of results to return. Use {list(NO_LIMIT_KEYWORDS)} for unlimited results.",
 )
-@click.pass_obj
-def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: bool, limit: str) -> None:
+def search_skos(ttl_file: Path, term: str, case_insensitive: bool, limit: str) -> None:
     """Search for terms in SKOS concepts using SPARQL.
 
     This command searches through RDF/Turtle files containing SKOS concepts,
@@ -1027,10 +1010,10 @@ def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: b
     try:
         service = SKOSSearchService(ttl_file)
     except FileNotFoundError as e:
-        console.print(f"[red]File not found: {e}[/red]")
+        log.error(f"File not found: {e}")
         raise click.ClickException(f"TTL file not found: {e}") from e
     except ValueError as e:
-        console.print(f"[red]Invalid TTL file: {e}[/red]")
+        log.error(f"Invalid TTL file: {e}")
         raise click.ClickException(f"TTL file parsing failed: {e}") from e
 
     with service:
@@ -1041,18 +1024,18 @@ def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: b
         try:
             total_count = service.count_keyword_matches(term, ignore_case=case_insensitive)
         except ValueError as e:
-            console.print(f"[red]Count query failed: {e}[/red]")
+            log.error(f"Count query failed: {e}")
             raise click.ClickException(f"SKOS count query failed: {e}") from e
 
         # Get limited results
         try:
             results = service.search_keyword(term, ignore_case=case_insensitive, limit_value=limit_value)
         except ValueError as e:
-            console.print(f"[red]Search query failed: {e}[/red]")
+            log.error(f"Search query failed: {e}")
             raise click.ClickException(f"SKOS search query failed: {e}") from e
 
-    console.rule(f"[bold blue]SKOS Search Results for '{term}'")
-    display_search_results(console, results, term, limit_value, total_count)
+    log.rule(f"SKOS Search Results for '{term}'")
+    display_search_results(results, term, limit_value, total_count)
 
 
 # similar -> graphql
@@ -1068,8 +1051,7 @@ def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: b
     required=False,
     help="Output file, only .json allowed here",
 )
-@click.pass_obj
-def similar_graphql(console: Console, schemas: list[Path], keyword: str, output: Path | None) -> None:
+def similar_graphql(schemas: list[Path], keyword: str, output: Path | None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
     whole schema (in %)."""
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
@@ -1080,8 +1062,8 @@ def similar_graphql(console: Console, schemas: list[Path], keyword: str, output:
     # if keyword == "all" search all elements otherwise only keyword
     search_result = inspector.similar(output) if keyword == "all" else inspector.similar_keyword(keyword, output)
 
-    console.rule(f"[bold blue] Search result for '{keyword}'")
-    console.print(search_result.output)
+    log.rule(f"Search result for '{keyword}'")
+    log.print(search_result.output)
     sys.exit(search_result.returncode)
 
 
@@ -1089,8 +1071,7 @@ def similar_graphql(console: Console, schemas: list[Path], keyword: str, output:
 # ----------
 @stats.command(name="graphql")
 @schema_option
-@click.pass_obj
-def stats_graphql(console: Console, schemas: list[Path]) -> None:
+def stats_graphql(schemas: list[Path]) -> None:
     """Get stats of schema."""
     gql_schema = load_schema(schemas)
 
@@ -1126,8 +1107,8 @@ def stats_graphql(console: Console, schemas: list[Path]) -> None:
         if kind == "GraphQLScalarType" and not is_builtin_scalar_type(name):
             type_counts["custom_types"][name] = type_counts["custom_types"].get(name, 0) + 1
 
-    console.rule("[bold blue]GraphQL Schema Type Counts")
-    console.print(type_counts)
+    log.rule("GraphQL Schema Type Counts")
+    log.print(type_counts)
 
 
 cli.add_command(check)
