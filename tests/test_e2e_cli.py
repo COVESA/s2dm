@@ -77,6 +77,20 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     assert "Vehicle_ADAS_ObstacleDetection:" in content
 
 
+def test_export_jsonschema(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "jsonschema.yaml"
+    result = runner.invoke(
+        cli, ["export", "jsonschema", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)]
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert '"Vehicle"' in content
+    assert '"Vehicle_ADAS_ObstacleDetection"' in content
+
+
 def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "skos_skeleton.ttl"
     result = runner.invoke(

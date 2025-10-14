@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, cast
 
 from graphql import (
@@ -19,7 +18,6 @@ from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.exporters.utils.field import Cardinality, FieldCase, get_cardinality, get_field_case_extended, print_field_sdl
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, has_valid_instance_tag_field
-from s2dm.exporters.utils.schema import load_schema_with_naming
 
 SUPPORTED_FIELD_CASES = {
     FieldCase.DEFAULT,
@@ -53,7 +51,7 @@ def add_comment_to_property_node(field: GraphQLField, property_node: BNode, grap
 
 
 def translate_to_shacl(
-    schema_paths: list[Path],
+    schema: GraphQLSchema,
     shapes_namespace: str,
     shapes_namespace_prefix: str,
     model_namespace: str,
@@ -67,7 +65,6 @@ def translate_to_shacl(
         Namespace(model_namespace),
         Namespace(model_namespace_prefix),
     )
-    schema = load_schema_with_naming(schema_paths, naming_config)
     graph = Graph()
     graph.bind(namespaces.shapes_prefix, namespaces.shapes)
     graph.bind(namespaces.model_prefix, namespaces.model)

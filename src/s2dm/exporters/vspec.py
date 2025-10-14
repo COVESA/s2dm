@@ -191,9 +191,8 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def translate_to_vspec(schema_paths: list[Path], naming_config: dict[str, Any] | None = None) -> str:
+def translate_to_vspec(schema: GraphQLSchema, naming_config: dict[str, Any] | None = None) -> str:
     """Translate a GraphQL schema to YAML."""
-    schema = load_schema_with_naming(schema_paths, naming_config)
 
     all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")
@@ -411,7 +410,9 @@ def main(
     schemas: list[Path],
     output: Path,
 ) -> None:
-    result = translate_to_vspec(schemas)
+    # TODO: deprecate
+    graphql_schema = load_schema_with_naming(schemas, None)
+    result = translate_to_vspec(graphql_schema)
     log.info(f"Result:\n{result}")
     with open(output, "w", encoding="utf-8") as output_file:
         log.info(f"Writing data to '{output}'")

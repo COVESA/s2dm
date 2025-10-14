@@ -27,6 +27,7 @@ from graphql import (
     is_union_type,
     print_schema,
 )
+from graphql import validate as graphql_validate
 from graphql.language.ast import SelectionSetNode
 
 from s2dm import log
@@ -371,6 +372,21 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
     return referenced
 
 
+def validate_schema(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema | None:
+    log.debug("Validating schema against the provided document")
+
+    errors = graphql_validate(schema, document)
+    if errors:
+        log.error("Schema validation failed:")
+        for error in errors:
+            log.error(f" - {error}")
+        return None
+
+    log.debug("Schema validation succeeded")
+
+    return schema
+
+
 def prune_schema_using_query_selection(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema:
     """
     Filter schema by pruning unselected fields and types based on query selections.
@@ -384,6 +400,9 @@ def prune_schema_using_query_selection(schema: GraphQLSchema, document: Document
     """
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
+
+    if validate_schema(schema, document) is None:
+        raise ValueError("Schema validation failed")
 
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
@@ -439,6 +458,8 @@ def prune_schema_using_query_selection(schema: GraphQLSchema, document: Document
     if not query_operations:
         raise ValueError("No query operation found in selection document")
 
+    log.debug("Composing filtered schema based on query selections")
+
     query_operation = query_operations[0]
     if hasattr(query_operation, "selection_set"):
         collect_selections(schema.query_type.name, query_operation.selection_set)
@@ -479,6 +500,6 @@ def prune_schema_using_query_selection(schema: GraphQLSchema, document: Document
 
     schema.directives = tuple(directive for directive in schema.directives if directive.name in directives_used)
 
-    log.info(f"Composed filtered schema with {len(fields_to_keep)} object types")
+    log.debug(f"Composed filtered schema with {len(fields_to_keep)} object types")
 
     return schema
