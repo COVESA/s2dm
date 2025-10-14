@@ -413,16 +413,15 @@ def get_latest_qudt_version(fallback: str = "main") -> str:
     Minimal, non-overengineered approach: read Git tags via GitHub's tags API.
     We avoid adding heavy dependencies; this can be replaced later if needed.
     """
-    resp = requests.get(QUDT_GITHUB_API_URL, timeout=10)
-    if not resp.ok:
-        return fallback
-
-    tags = resp.json()
-    if not tags:
-        return fallback
-
-    # Pick the latest version
     try:
-        return str(max(version.parse(tag["name"]) for tag in tags))
-    except version.InvalidVersion:
+        resp = requests.get(QUDT_GITHUB_API_URL, timeout=10)
+        resp.raise_for_status()
+        tags = resp.json()
+
+        if not tags:
+            return fallback
+
+        # Pick the latest version
+        return max(tags, key=lambda tag: version.parse(tag["name"]))["name"]
+    except (requests.RequestException, json.JSONDecodeError, version.InvalidVersion):
         return fallback
