@@ -29,7 +29,13 @@ from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.graphql_inspector import GraphQLInspector
 from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.validators import validate_language_tag
-from s2dm.units.sync import UNITS_META_FILENAME, UNITS_META_VERSION_KEY, get_latest_qudt_version, sync_qudt_units
+from s2dm.units.sync import (
+    UNITS_META_FILENAME,
+    UNITS_META_VERSION_KEY,
+    UnitEnumError,
+    get_latest_qudt_version,
+    sync_qudt_units,
+)
 
 S2DM_HOME = Path.home() / ".s2dm"
 DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
@@ -295,7 +301,7 @@ def units_sync(version: str | None, output_dir: Path, dry_run: bool) -> None:
 
     try:
         written = sync_qudt_units(output_dir, version_to_use, dry_run=dry_run)
-    except Exception as e:  # pragma: no cover - generic guard for CLI UX
+    except UnitEnumError as e:
         log.error(f"Units sync failed: {e}")
         sys.exit(1)
 
@@ -319,16 +325,12 @@ def units_check_version(qudt_units_dir: Path) -> None:
         sys.exit(1)
 
     try:
-        local_version = json.loads(meta_path.read_text(encoding="utf-8")).get(UNITS_META_VERSION_KEY, "main")
-    except json.JSONDecodeError as e:
+        local_version = json.loads(meta_path.read_text(encoding="utf-8"))[UNITS_META_VERSION_KEY]
+    except (json.JSONDecodeError, KeyError) as e:
         log.error(f"Invalid metadata.json: {e}")
         sys.exit(1)
 
-    try:
-        latest = get_latest_qudt_version()
-    except Exception as e:  # pragma: no cover - generic guard for CLI UX
-        log.error(f"Version check failed: {e}")
-        sys.exit(1)
+    latest = get_latest_qudt_version()
 
     if latest == local_version:
         log.success("Units are up to date.")

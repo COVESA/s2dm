@@ -15,6 +15,7 @@ References:
 
 import json
 import re
+import shutil
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -317,34 +318,6 @@ def _write_metadata(units_root: Path, version: str) -> Path:
     return meta_path
 
 
-def _cleanup_units_directory(units_root: Path) -> None:
-    """Clean up existing unit enum files and metadata from the units directory.
-
-    Removes all *.graphql files and metadata.json to ensure a fresh sync.
-    This prevents stale files from previous syncs when units are deprecated,
-    renamed, or the catalog structure changes.
-
-    Args:
-        units_root: Root directory containing unit enums
-    """
-    if not units_root.exists():
-        return
-
-    # Remove all GraphQL enum files
-    for graphql_file in units_root.glob("**/*.graphql"):
-        graphql_file.unlink()
-
-    # Remove metadata file if it exists
-    metadata_file = units_root / UNITS_META_FILENAME
-    if metadata_file.exists():
-        metadata_file.unlink()
-
-    # Remove empty directories (but keep the root directory)
-    for item in units_root.iterdir():
-        if item.is_dir() and not any(item.iterdir()):
-            item.rmdir()
-
-
 def _load_graph_from_url(url: str) -> rdflib.Graph:
     """Load a TTL file from a URL directly into an RDFLib graph.
 
@@ -359,7 +332,7 @@ def _load_graph_from_url(url: str) -> rdflib.Graph:
     return g
 
 
-def sync_qudt_units(units_root: Path, version: str | None = None, *, dry_run: bool = False) -> list[Path]:
+def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) -> list[Path]:
     """Fetch QUDT quantity kinds TTL and generate GraphQL enums per quantity kind.
 
     Cleans up existing unit enum files before generating new ones to prevent stale data.
@@ -372,8 +345,11 @@ def sync_qudt_units(units_root: Path, version: str | None = None, *, dry_run: bo
         List of enum file paths that were written (or would be written in dry-run mode)
     """
     # Clean up existing files before sync (but not during dry run)
-    if not dry_run:
-        _cleanup_units_directory(units_root)
+    if not dry_run and units_root.exists():
+        try:
+            shutil.rmtree(units_root)
+        except OSError as e:
+            raise UnitEnumError(f"Failed to clean up units directory: {e}") from e
 
     url = QUDT_UNITS_TTL_URL_TEMPLATE.format(version=version)
 
@@ -386,13 +362,12 @@ def sync_qudt_units(units_root: Path, version: str | None = None, *, dry_run: bo
         grouped[row.quantity_kind_label].append(row)
 
     written: list[Path] = []
-    effective_version = version or "main"
 
     for qk_label, items in grouped.items():
         if not items:  # Skip empty groups
             continue
         qk_iri = items[0].quantity_kind_iri
-        sdl = _emit_enum_sdl(qk_label, qk_iri, items, effective_version)
+        sdl = _emit_enum_sdl(qk_label, qk_iri, items, version)
 
         if dry_run:
             # Simulate the file path that would be written without actually writing
@@ -403,7 +378,7 @@ def sync_qudt_units(units_root: Path, version: str | None = None, *, dry_run: bo
             written.append(_write_units(units_root, qk_label, sdl))
 
     if not dry_run:
-        _write_metadata(units_root, effective_version)
+        _write_metadata(units_root, version)
     return written
 
 

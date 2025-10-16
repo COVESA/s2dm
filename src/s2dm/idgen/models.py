@@ -348,14 +348,7 @@ class IDGenerationSpec:
         unit = field_args.get("unit", "")
         if unit and isinstance(unit, GraphQLArgument):
             unit = unit.default_value
-            # default_value is expected to be the enum symbol already
-            if isinstance(unit, str):
-                return unit
-            try:
-                # Fallback to string conversion if different type
-                return str(unit)
-            except Exception:
-                return ""
+            return str(unit)
         return ""
 
     @staticmethod

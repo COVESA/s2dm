@@ -13,7 +13,6 @@ from s2dm.units.sync import (
     UnitEnumError,
     UnitEnumErrorMessages,
     UnitRow,
-    _cleanup_units_directory,
     _extract_uri_segment,
     _uri_to_enum_symbol,
     sync_qudt_units,
@@ -164,27 +163,6 @@ def test_sync_qudt_units_path_generation(
     # Should generate path based on quantity kind
     expected_path = units_root / "LengthUnitEnum.graphql"
     assert expected_path in result_paths
-
-
-def test_cleanup_units_directory(tmp_path: Path) -> None:
-    """Test that cleanup removes GraphQL files and metadata but preserves other files."""
-    units_dir = tmp_path / "units"
-    units_dir.mkdir()
-
-    # Create files that should be cleaned up
-    (units_dir / "TestEnum.graphql").write_text("# old enum")
-    (units_dir / "metadata.json").write_text('{"version": "old"}')
-
-    # Create file that should be preserved
-    (units_dir / "README.md").write_text("should remain")
-
-    # Run cleanup
-    _cleanup_units_directory(units_dir)
-
-    # Check results
-    assert not (units_dir / "TestEnum.graphql").exists()
-    assert not (units_dir / "metadata.json").exists()
-    assert (units_dir / "README.md").exists()
 
 
 def test_sync_with_cleanup(
