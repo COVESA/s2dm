@@ -23,7 +23,6 @@ from s2dm.exporters.utils.schema_loader import (
     load_schema,
     load_schema_as_str,
     load_schema_as_str_filtered,
-    resolve_graphql_files,
 )
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.tools.constraint_checker import ConstraintChecker
@@ -31,24 +30,12 @@ from s2dm.tools.graphql_inspector import GraphQLInspector
 from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.validators import validate_language_tag
 
-
-class PathResolverOption(click.Option):
-    def process_value(self, ctx: click.Context, value: Any) -> list[Path] | None:
-        value = super().process_value(ctx, value)
-        if value:
-            return resolve_graphql_files(list(value))
-        return None
-
-
 schema_option = click.option(
     "--schema",
     "-s",
-    "schemas",
-    type=click.Path(exists=True, path_type=Path),
-    cls=PathResolverOption,
+    type=click.Path(exists=True),
     required=True,
-    multiple=True,
-    help="The GraphQL schema file or directory containing schema files. Can be specified multiple times.",
+    help="The GraphQL schema file",
 )
 
 
@@ -267,7 +254,13 @@ def validate() -> None:
 
 
 @click.command()
-@schema_option
+@click.option(
+    "--schema",
+    "-s",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="GraphQL schema file or directory containing schema files",
+)
 @click.option(
     "--root-type",
     "-r",
@@ -276,13 +269,13 @@ def validate() -> None:
 )
 @output_option
 @click.pass_obj
-def compose(console: Console, schemas: list[Path], root_type: str | None, output: Path) -> None:
+def compose(console: Console, schema: Path, root_type: str | None, output: Path) -> None:
     """Compose GraphQL schema files into a single output file."""
     try:
         if root_type:
-            composed_schema_str = load_schema_as_str_filtered(schemas, root_type, add_references=True)
+            composed_schema_str = load_schema_as_str_filtered(schema, root_type)
         else:
-            composed_schema_str = load_schema_as_str(schemas, add_references=True)
+            composed_schema_str = load_schema_as_str(schema)
 
         output.write_text(composed_schema_str)
 
@@ -350,7 +343,7 @@ def compose(console: Console, schemas: list[Path], root_type: str | None, output
 @click.pass_context
 def shacl(
     ctx: click.Context,
-    schemas: list[Path],
+    schema: Path,
     output: Path,
     serialization_format: str,
     shapes_namespace: str,
@@ -361,7 +354,7 @@ def shacl(
     """Generate SHACL shapes from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
     result = translate_to_shacl(
-        schemas,
+        schema,
         shapes_namespace,
         shapes_namespace_prefix,
         model_namespace,
@@ -378,10 +371,10 @@ def shacl(
 @schema_option
 @output_option
 @click.pass_context
-def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
+def vspec(ctx: click.Context, schema: Path, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
-    result = translate_to_vspec(schemas, naming_config)
+    result = translate_to_vspec(schema, naming_config)
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(result)
 
@@ -413,11 +406,11 @@ def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
 )
 @click.pass_context
 def jsonschema(
-    ctx: click.Context, schemas: list[Path], output: Path, root_type: str | None, strict: bool, expanded_instances: bool
+    ctx: click.Context, schema: Path, output: Path, root_type: str | None, strict: bool, expanded_instances: bool
 ) -> None:
     """Generate JSON Schema from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
-    result = translate_to_jsonschema(schemas, root_type, strict, expanded_instances, naming_config)
+    result = translate_to_jsonschema(schema, root_type, strict, expanded_instances, naming_config)
     _ = output.write_text(result)
 
 
@@ -444,7 +437,7 @@ def jsonschema(
     show_default=True,
 )
 def skos_skeleton(
-    schemas: list[Path],
+    schema: Path,
     output: Path,
     namespace: str,
     prefix: str,
@@ -456,7 +449,7 @@ def skos_skeleton(
     try:
         with output.open("w") as output_stream:
             generate_skos_skeleton(
-                schema_paths=schemas,
+                schema_path=schema,
                 output_stream=output_stream,
                 namespace=namespace,
                 prefix=prefix,
@@ -476,14 +469,9 @@ def skos_skeleton(
 @click.option(
     "--previous",
     "-p",
-    type=click.Path(exists=True, path_type=Path),
-    cls=PathResolverOption,
+    type=click.Path(exists=True),
     required=True,
-    multiple=True,
-    help=(
-        "The previous GraphQL schema file or directory containing schema files "
-        "to validate against. Can be specified multiple times."
-    ),
+    help="The GraphQL schema file to validate against",
 )
 @click.option(
     "--output-type",
@@ -492,7 +480,7 @@ def skos_skeleton(
     help="Output the version bump type for pipeline usage",
 )
 @click.pass_obj
-def version_bump(console: Console, schemas: list[Path], previous: list[Path], output_type: bool) -> None:
+def version_bump(console: Console, schema: Path, previous: Path, output_type: bool) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     Returns:
@@ -506,7 +494,7 @@ def version_bump(console: Console, schemas: list[Path], previous: list[Path], ou
     previous_schema_temp_path = create_tempfile_to_composed_schema(previous)
     inspector = GraphQLInspector(previous_schema_temp_path)
 
-    schema_temp_path = create_tempfile_to_composed_schema(schemas)
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
     diff_result = inspector.diff(schema_temp_path)
 
     # Determine version bump type based on output analysis
@@ -547,7 +535,7 @@ def version_bump(console: Console, schemas: list[Path], previous: list[Path], ou
 @check.command(name="constraints")
 @schema_option
 @click.pass_obj
-def check_constraints(console: Console, schemas: list[Path]) -> None:
+def check_constraints(console: Console, schema: Path) -> None:
     """
     Enforce intended use of custom directives and naming conventions.
     Checks:
@@ -555,7 +543,7 @@ def check_constraints(console: Console, schemas: list[Path]) -> None:
     - @range and @cardinality min/max
     - Naming conventions (TBD)
     """
-    gql_schema = load_schema(schemas)
+    gql_schema = load_schema(schema)
     objects = get_all_object_types(gql_schema)
 
     constraint_checker = ConstraintChecker(gql_schema)
@@ -576,9 +564,9 @@ def check_constraints(console: Console, schemas: list[Path]) -> None:
 @schema_option
 @output_option
 @click.pass_obj
-def validate_graphql(console: Console, schemas: list[Path], output: Path) -> None:
+def validate_graphql(console: Console, schema: Path, output: Path) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
-    schema_temp_path = create_tempfile_to_composed_schema(schemas)
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     validation_result = inspector.introspect(output)
 
@@ -594,25 +582,19 @@ def validate_graphql(console: Console, schemas: list[Path], output: Path) -> Non
 @click.option(
     "--val-schema",
     "-v",
-    "val_schemas",
-    type=click.Path(exists=True, path_type=Path),
-    cls=PathResolverOption,
+    type=click.Path(exists=True),
     required=True,
-    multiple=True,
-    help=(
-        "The GraphQL schema file or directory containing schema files "
-        "to validate against. Can be specified multiple times."
-    ),
+    help="The GraphQL schema file to validate against",
 )
 @click.pass_obj
-def diff_graphql(console: Console, schemas: list[Path], val_schemas: list[Path], output: Path | None) -> None:
+def diff_graphql(console: Console, schema: Path, val_schema: Path, output: Path | None) -> None:
     """Diff for two GraphQL schemas."""
-    log.info(f"Comparing schemas: {schemas} and {val_schemas} and writing output to {output}")
+    log.info(f"Comparing schemas: {schema} and {val_schema} and writing output to {output}")
 
-    input_temp_path = create_tempfile_to_composed_schema(schemas)
+    input_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(input_temp_path)
 
-    val_temp_path = create_tempfile_to_composed_schema(val_schemas)
+    val_temp_path = create_tempfile_to_composed_schema(val_schema)
     diff_result = inspector.diff(val_temp_path)
 
     if output is not None:
@@ -640,9 +622,9 @@ def diff_graphql(console: Console, schemas: list[Path], val_schemas: list[Path],
     help="The prefix to use for the URIs",
 )
 @click.pass_obj
-def export_concept_uri(console: Console, schemas: list[Path], output: Path | None, namespace: str, prefix: str) -> None:
+def export_concept_uri(console: Console, schema: Path, output: Path | None, namespace: str, prefix: str) -> None:
     """Generate concept URIs for a GraphQL schema and output as JSON-LD."""
-    graphql_schema = load_schema(schemas)
+    graphql_schema = load_schema(schema)
     concepts = iter_all_concepts(get_all_named_types(graphql_schema))
     concept_uri_model = create_concept_uri_model(concepts, namespace, prefix)
     data = concept_uri_model.to_json_ld()
@@ -664,17 +646,17 @@ def export_concept_uri(console: Console, schemas: list[Path], output: Path | Non
 @click.option(
     "--units",
     "-u",
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(exists=True),
     required=True,
     help="Path to your units.yaml",
 )
 @optional_output_option
 @click.option("--strict-mode/--no-strict-mode", default=False)
 @click.pass_obj
-def export_id(console: Console, schemas: list[Path], units: Path, output: Path | None, strict_mode: bool) -> None:
+def export_id(console: Console, schema: Path, units: Path, output: Path | None, strict_mode: bool) -> None:
     """Generate concept IDs for GraphQL schema fields and enums."""
     exporter = IDExporter(
-        schema=schemas,
+        schema=schema,
         units_file=units,
         output=output,
         strict_mode=strict_mode,
@@ -692,7 +674,7 @@ def export_id(console: Console, schemas: list[Path], units: Path, output: Path |
 @click.option(
     "--units",
     "-u",
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(exists=True),
     required=True,
     help="Path to your units.yaml",
 )
@@ -710,7 +692,7 @@ def export_id(console: Console, schemas: list[Path], units: Path, output: Path |
 @click.pass_obj
 def registry_init(
     console: Console,
-    schemas: list[Path],
+    schema: Path,
     units: Path,
     output: Path,
     concept_namespace: str,
@@ -720,11 +702,11 @@ def registry_init(
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schemas, units, None, strict_mode=False, dry_run=False)
+    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
-    graphql_schema = load_schema(schemas)
+    graphql_schema = load_schema(schema)
     all_named_types = get_all_named_types(graphql_schema)
     concepts = iter_all_concepts(all_named_types)
     concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
@@ -735,7 +717,7 @@ def registry_init(
     history_dir = output_real.parent / "history"
 
     spec_history_exporter = SpecHistoryExporter(
-        schemas=schemas,
+        schema=schema,
         output=output,
         history_dir=history_dir,
     )
@@ -755,7 +737,7 @@ def registry_init(
 @click.option(
     "--units",
     "-u",
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(exists=True),
     required=True,
     help="Path to your units.yaml",
 )
@@ -780,7 +762,7 @@ def registry_init(
 @click.pass_obj
 def registry_update(
     console: Console,
-    schemas: list[Path],
+    schema: Path,
     units: Path,
     spec_history: Path,
     output: Path,
@@ -791,11 +773,11 @@ def registry_update(
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schemas, units, None, strict_mode=False, dry_run=False)
+    id_exporter = IDExporter(schema, units, None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
-    graphql_schema = load_schema(schemas)
+    graphql_schema = load_schema(schema)
     all_named_types = get_all_named_types(graphql_schema)
     concepts = iter_all_concepts(all_named_types)
     concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
@@ -806,7 +788,7 @@ def registry_update(
     history_dir = output_real.parent / "history"
 
     spec_history_exporter = SpecHistoryExporter(
-        schemas=schemas,
+        schema=schema,
         output=output,
         history_dir=history_dir,
     )
@@ -832,10 +814,11 @@ def registry_update(
 @click.option("--case-insensitive", "-i", is_flag=True, default=False, help="Perform a case-insensitive search.")
 @click.option("--exact", is_flag=True, default=False, help="Perform an exact match search.")
 @click.pass_obj
-def search_graphql(console: Console, schemas: list[Path], type: str, case_insensitive: bool, exact: bool) -> None:
+def search_graphql(console: Console, schema: Path, type: str, case_insensitive: bool, exact: bool) -> None:
     """Search for a type or field in the GraphQL schema. If type was found returns type including all fields,
     if fields was found returns only field in parent type"""
-    gql_schema = load_schema(schemas)
+
+    gql_schema = load_schema(schema)
 
     type_results = search_schema(
         gql_schema,
@@ -997,10 +980,10 @@ def search_skos(console: Console, ttl_file: Path, term: str, case_insensitive: b
     help="Output file, only .json allowed here",
 )
 @click.pass_obj
-def similar_graphql(console: Console, schemas: list[Path], keyword: str, output: Path | None) -> None:
+def similar_graphql(console: Console, schema: Path, keyword: str, output: Path | None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
     whole schema (in %)."""
-    schema_temp_path = create_tempfile_to_composed_schema(schemas)
+    schema_temp_path = create_tempfile_to_composed_schema(schema)
     inspector = GraphQLInspector(schema_temp_path)
     if output:
         log.info(f"Search will write file to {output}")
@@ -1018,9 +1001,9 @@ def similar_graphql(console: Console, schemas: list[Path], keyword: str, output:
 @stats.command(name="graphql")
 @schema_option
 @click.pass_obj
-def stats_graphql(console: Console, schemas: list[Path]) -> None:
+def stats_graphql(console: Console, schema: Path) -> None:
     """Get stats of schema."""
-    gql_schema = load_schema(schemas)
+    gql_schema = load_schema(schema)
 
     # Count types by kind
     type_map = gql_schema.type_map
