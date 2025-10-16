@@ -1,7 +1,7 @@
 title = "S2DM"
 baseURL= ""
-relativeURLs= true
-canonifyURLs= false
+relativeURLs= false
+canonifyURLs= true
 publishDir = "../docs"
 disableAliases = true
 disableHugoGeneratorInject = true
