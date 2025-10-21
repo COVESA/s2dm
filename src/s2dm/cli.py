@@ -44,9 +44,19 @@ DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
 class PathResolverOption(click.Option):
     def process_value(self, ctx: click.Context, value: Any) -> list[Path] | None:
         value = super().process_value(ctx, value)
-        if value:
-            return resolve_graphql_files(list(value))
-        return None
+        if not value:
+            return None
+        paths = set(value)
+
+        # Include the default QUDT units directory if it exists, otherwise warn and don't include it
+        if DEFAULT_QUDT_UNITS_DIR.exists():
+            paths.add(DEFAULT_QUDT_UNITS_DIR)
+        else:
+            log.warning(
+                f"No QUDT units directory found at {DEFAULT_QUDT_UNITS_DIR}. Please run 's2dm units sync' first."
+            )
+
+        return resolve_graphql_files(list(paths))
 
 
 schema_option = click.option(
@@ -74,15 +84,6 @@ optional_output_option = click.option(
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     required=False,
     help="Output file",
-)
-
-qudt_units_dir_option = click.option(
-    "--qudt-units-dir",
-    type=click.Path(path_type=Path, file_okay=False),
-    required=False,
-    help="Directory containing generated QUDT unit enums",
-    default=DEFAULT_QUDT_UNITS_DIR,
-    show_default=True,
 )
 
 
@@ -278,48 +279,42 @@ def units() -> None:
     type=str,
     required=False,
     help=(
-        "QUDT version tag (e.g., 3.1.4). Defaults to the latest tag, falls back to 'main' when tags are unavailable."
+        "QUDT version tag (e.g., 3.1.6). Defaults to the latest tag, falls back to 'main' when tags are unavailable."
     ),
-)
-@click.option(
-    "--output-dir",
-    type=click.Path(path_type=Path, file_okay=False),
-    required=False,
-    help="Directory where generated QUDT unit enums will be written",
-    default=DEFAULT_QUDT_UNITS_DIR,
-    show_default=True,
 )
 @click.option(
     "--dry-run",
     is_flag=True,
     help="Show what would be generated without actually writing files",
 )
-def units_sync(version: str | None, output_dir: Path, dry_run: bool) -> None:
+def units_sync(version: str | None, dry_run: bool) -> None:
     """Fetch QUDT quantity kinds and generate GraphQL enums under the output directory."""
 
     version_to_use = version or get_latest_qudt_version()
 
     try:
-        written = sync_qudt_units(output_dir, version_to_use, dry_run=dry_run)
+        written = sync_qudt_units(DEFAULT_QUDT_UNITS_DIR, version_to_use, dry_run=dry_run)
     except UnitEnumError as e:
         log.error(f"Units sync failed: {e}")
         sys.exit(1)
 
     if dry_run:
-        log.info(f"Would generate {len(written)} enum files under {output_dir}")
+        log.info(f"Would generate {len(written)} enum files under {DEFAULT_QUDT_UNITS_DIR}")
         log.print(f"Version: {version_to_use}")
         log.hint("Use without --dry-run to actually write files")
     else:
-        log.success(f"Generated {len(written)} enum files under {output_dir}")
+        log.success(f"Generated {len(written)} enum files under {DEFAULT_QUDT_UNITS_DIR}")
         log.print(f"Version: {version_to_use}")
 
 
 @units.command(name="check-version")
-@qudt_units_dir_option
-def units_check_version(qudt_units_dir: Path) -> None:
-    """Compare local synced QUDT version with the latest remote version and print a message."""
+def units_check_version() -> None:
+    """Compare local synced QUDT version with the latest remote version and print a message.
+    Args:
+        qudt_units_dir: Directory containing generated QUDT unit enums (default: ~/.s2dm/units/qudt)
+    """
 
-    meta_path = qudt_units_dir / UNITS_META_FILENAME
+    meta_path = DEFAULT_QUDT_UNITS_DIR / UNITS_META_FILENAME
     if not meta_path.exists():
         log.warning("No metadata.json found. Run 's2dm units sync' first.")
         sys.exit(1)
@@ -747,10 +742,11 @@ def export_concept_uri(schemas: list[Path], output: Path | None, namespace: str,
 @schema_option
 @optional_output_option
 @click.option("--strict-mode/--no-strict-mode", default=False)
-def export_id(schema: Path, output: Path | None, strict_mode: bool) -> None:
+def export_id(schemas: list[Path], output: Path | None, strict_mode: bool) -> None:
     """Generate concept IDs for GraphQL schema fields and enums."""
 
-    exporter = IDExporter(schema=schema, output=output, strict_mode=strict_mode, dry_run=output is None)
+    composed_schema = load_schema(schemas)
+    exporter = IDExporter(schema=composed_schema, output=output, strict_mode=strict_mode, dry_run=output is None)
     node_ids = exporter.run()
 
     log.rule("Concept IDs")
@@ -771,19 +767,18 @@ def export_id(schema: Path, output: Path | None, strict_mode: bool) -> None:
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@qudt_units_dir_option
 def registry_init(
     schemas: list[Path],
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
-    qudt_units_dir: Path,
 ) -> None:
     """Initialize your spec history with the given schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schemas, None, strict_mode=False, dry_run=False)
+    composed_schema = load_schema(schemas)
+    id_exporter = IDExporter(schema=composed_schema, output=None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs
@@ -833,20 +828,19 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
-@qudt_units_dir_option
 def registry_update(
     schemas: list[Path],
     spec_history: Path,
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
-    qudt_units_dir: Path,
 ) -> None:
     """Update a given spec history file with your new schema."""
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate concept IDs
-    id_exporter = IDExporter(schemas, None, strict_mode=False, dry_run=False)
+    schema = load_schema(schemas)
+    id_exporter = IDExporter(schema=schema, output=None, strict_mode=False, dry_run=False)
     concept_ids = id_exporter.run()
 
     # Generate concept URIs

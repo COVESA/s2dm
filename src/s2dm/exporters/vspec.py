@@ -27,70 +27,99 @@ from s2dm.exporters.utils.naming import apply_naming_to_instance_values
 from s2dm.exporters.utils.schema import load_schema_with_naming
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
-    "MILLIMETER": "mm",
-    "CENTIMETER": "cm",
-    "METER": "m",
-    "KILOMETER": "km",
-    "INCH": "inch",
-    "KILOMETER_PER_HOUR": "km/h",
-    "METERS_PER_SECOND": "m/s",
-    "METERS_PER_SECOND_SQUARED": "m/s^2",
-    "CENTIMETERS_PER_SECOND_SQUARED": "cm/s^2",
-    "MILLILITER": "ml",
-    "LITER": "l",
-    "CUBIC_CENTIMETERS": "cm^3",
-    "DEGREE_CELSIUS": "celsius",
-    "DEGREE": "degrees",
-    "DEGREE_PER_SECOND": "degrees/s",
-    "RADIANS_PER_SECOND": "rad/s",
-    "WATT": "W",
-    "KILOWATT": "kW",
-    "HORSEPOWER": "PS",
-    "KILOWATT_HOURS": "kWh",
-    "GRAM": "g",
-    "KILOGRAM": "kg",
-    "POUND": "lbs",
-    "VOLT": "V",
+    # Using the QUDT unit names
+    # LengthUnitEnum
+    "MILLIM": "mm",
+    "CENTIM": "cm",
+    "M": "m",
+    "KILOM": "km",
+    "IN": "inch",
+    # VelocityUnitEnum
+    "KILOM_PER_HR": "km/h",
+    "M_PER_SEC": "m/s",
+    # AccelerationUnitEnum
+    "M_PER_SEC2": "m/s^2",
+    "CENTIM_PER_SEC2": "cm/s^2",
+    # VolumeUnitEnum
+    "MILLIL": "ml",
+    "L": "l",  # Liter
+    "CENTIM3": "cm^3",
+    # TemperatureUnitEnum
+    "DEG_C": "celsius",
+    # AngleUnitEnum
+    "DEG": "degrees",
+    # AngularVelocityUnitEnum
+    "DEG_PER_SEC": "degrees/s",
+    "RAD_PER_SEC": "rad/s",
+    # PowerUnitEnum
+    "HP": "PS",  # Horsepower
+    # ElectricPowerUnitEnum
+    "W": "W",  # Watt
+    "KILOW": "kW",  # Kilowatt
+    # MassUnitEnum
+    "GM": "g",  # Gram
+    "KILOGM": "kg",  # Kilogram
+    "LB": "lbs",  # Pound
+    # ElectricPotentialUnitEnum
+    "V": "V",  # Volt
+    # DisplacementCurrentUnitEnum
     "AMPERE": "A",
-    "AMPERE_HOURS": "Ah",
-    "MILLISECOND": "ms",
-    "SECOND": "s",
-    "MINUTE": "min",
-    "HOUR": "h",
-    "DAYS": "day",
-    "WEEKS": "weeks",
-    "MONTHS": "months",
-    "YEARS": "years",
+    # ElectricChargeUnitEnum
+    "A_HR": "Ah",  # Ampere Hour
+    # TimeUnitEnum
+    "MILLISEC": "ms",  # Millisecond
+    "SEC": "s",  # Second
+    "MIN": "min",  # Minute
+    "HR": "h",  # Hour
+    "DAY": "day",  # Day
+    "WK": "weeks",  # Week
+    "MO": "months",  # Month
+    "YR": "years",  # Year
+    # ForcePerAreaUnitEnum
+    "MILLIBAR": "mbar",
+    "PA": "Pa",  # Pascal
+    "KILOPA": "kPa",  # Kilopascal
+    "PSI": "psi",  # Pound per square inch
+    # MassFlowRateUnitEnum
+    "GRAMS_PER_SECOND": "g/s",
+    # MassPerLengthUnitEnum
+    "GM_PER_KILOM": "g/km",
+    # VolumeFlowRateUnitEnum
+    "L_PER_HR": "l/h",
+    # ForceUnitEnum
+    "N": "N",  # Newton
+    "KILON": "kN",
+    # TorqueUnitEnum
+    "N_M": "Nm",  # Newton meter
+    # RotationalVelocityUnitEnum
+    "REV_PER_MIN": "rpm",
+    "HZ": "Hz",  # Hertz
+    # HeartRateUnitEnum
+    "BEAT_PER_MIN": "bpm",
+    # DimensionlessRatioUnitEnum
+    "PERCENT": "percent",
+    # UnknownUnitEnum
+    "DECIB_MILLIW": "dBm",
+    # SoundPowerLevelUnitEnum
+    "DECIB": "dB",
+    # ResistanceUnitEnum
+    "OHM": "Ohm",
+    # LuminousFluxPerAreaUnitEnum
+    "LUX": "lx",
+    # Custom units
+    "KILOWATT_HOURS": "kWh",
     "UNIX_TIMESTAMP": "unix-time",
     "ISO_8601": "iso8601",
-    "MILLIBAR": "mbar",
-    "PASCAL": "Pa",
-    "KILOPASCAL": "kPa",
-    "POUNDS_PER_SQUARE_INCH": "psi",
     "STARS": "stars",
-    "GRAMS_PER_SECOND": "g/s",
-    "GRAMS_PER_KILOMETER": "g/km",
     "KILOWATT_HOURS_PER_100_KILOMETERS": "kWh/100km",
     "WATT_HOUR_PER_KM": "Wh/km",
     "MILLILITER_PER_100_KILOMETERS": "ml/100km",
     "LITER_PER_100_KILOMETERS": "l/100km",
-    "LITER_PER_HOUR": "l/h",
     "MILES_PER_GALLON": "mpg",
     "KILOMETERS_PER_LITER": "km/l",
-    "NEWTON": "N",
-    "KILO_NEWTON": "kN",
-    "NEWTON_METER": "Nm",
-    "REVOLUTIONS_PER_MINUTE": "rpm",
-    "HERTZ": "Hz",
     "CYCLES_PER_MINUTE": "cpm",
-    "BEATS_PER_MINUTE": "bpm",
     "RATIO": "ratio",
-    "PERCENT": "percent",
     "NANO_METER_PER_KILOMETER": "nm/km",
-    "DECIBEL_MILLIWATT": "dBm",
-    "DECIBEL": "dB",
-    "OHM": "Ohm",
-    "LUX": "lx",
 }
 
 SUPPORTED_FIELD_CASES = {

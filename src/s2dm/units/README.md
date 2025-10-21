@@ -21,44 +21,38 @@ The QUDT units integration replaces static YAML-based unit definitions with a dy
 
 ### `s2dm units sync`
 
-Synchronizes unit definitions from the QUDT repository and generates GraphQL enum files.
+Synchronizes unit definitions from the QUDT repository and generates GraphQL enum files in the `S2DM_HOME` directory (`~/.s2dm/units/qudt`).
+
+> **Note:** Unit files are downloaded to `~/.s2dm/units/qudt` to prevent users from modifying them. This is a temporary solution. In the future, QUDT unit GraphQL files will be moved to a separate repository and referenced/downloaded from there.
 
 ```bash
 # Sync latest version
-s2dm units sync --output-dir units
+s2dm units sync
 
 # Sync specific version
-s2dm units sync --version v3.1.5 --output-dir units
+s2dm units sync --version v3.1.5
 
 # Check what would be generated without creating files
-s2dm units sync --output-dir units --dry-run
-
-# Sync with custom output directory
-s2dm units sync --version v3.1.5 --output-dir path/to/custom/units
+s2dm units sync --dry-run
 ```
 
-
 **Options:**
-- `--output-dir` (required): Directory where generated unit enums will be written
 - `--version` (optional): QUDT version string. Defaults to latest release if not specified
-- `--dry-run` flag shows how many enum files would be generated without actually creating any files, useful for testing and validation.
+- `--dry-run` (optional): Shows how many enum files would be generated without actually creating any files, useful for testing and validation
 
 **Output:**
-- Creates `/units/<QuantityKindUnitEnum>.graphql` files
+- Creates `<QuantityKindUnitEnum>.graphql` files in `~/.s2dm/units/qudt`
 - Generates `metadata.json` with version information
 - Reports number of enum files generated
 
 ### `s2dm units check-version`
 
-Compares the local synced QUDT version with the latest available version.
+Compares the local synced QUDT version with the latest available version. By default, checks the `~/.s2dm/units/qudt` directory.
 
 ```bash
 # Check if units are up to date
-s2dm units check-version --qudt-units-dir units
+s2dm units check-version
 ```
-
-**Options:**
-- `--qudt-units-dir` (required, ~/.s2dm/untis/qudt by default): Directory containing generated unit enums
 
 **Output:**
 - `✓ Units are up to date.` if current version matches latest
@@ -66,8 +60,10 @@ s2dm units check-version --qudt-units-dir units
 
 ## Generated Output Structure
 
+QUDT units are stored in the `S2DM_HOME` directory:
+
 ```
-units/
+~/.s2dm/units/qudt/                    # QUDT units (generated, read-only)
 ├── metadata.json                      # Version metadata
 ├── LengthUnitEnum.graphql             # Length units
 ├── AccelerationUnitEnum.graphql       # Acceleration units
@@ -130,8 +126,9 @@ s2dm registry update -s new_schema.graphql -r registry.json
 
 1. **Initial Setup**: Sync units from QUDT
    ```bash
-   s2dm units sync --version v3.1.5 --output-dir units
+   s2dm units sync --version v3.1.5
    ```
+   This downloads unit enums to `~/.s2dm/units/qudt`.
 
 2. **Use Units in Schema Development**: Reference generated enums in your GraphQL schemas
    ```graphql
@@ -148,12 +145,12 @@ s2dm registry update -s new_schema.graphql -r registry.json
 
 4. **Check for Updates**: Periodically check for new QUDT versions
    ```bash
-   s2dm units check-version --qudt-units-dir units
+   s2dm units check-version
    ```
 
 5. **Update When Needed**: Sync newer versions as they become available
    ```bash
-   s2dm units sync --version v3.2.0 --output-dir units
+   s2dm units sync --version v3.2.0
    ```
 
 ## Technical Details

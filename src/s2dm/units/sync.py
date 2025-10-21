@@ -4,7 +4,7 @@ This module focuses on the scope:
 - Fetch a single QUDT quantity kinds catalog TTL for a given version (default: latest known)
 - Parse via RDFLib efficiently
 - Group units by quantity kind and emit GraphQL enum files under
-  `/units/<quantityKind>/<QuantityKind>_Unit_Enum.graphql`
+  `/units/<quantityKind>/<QuantityKind>UnitEnum.graphql`
 - Persist a simple metadata file with the synced version to support a future
   `check-version` command
 

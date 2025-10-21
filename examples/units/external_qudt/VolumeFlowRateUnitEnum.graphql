@@ -1,0 +1,293 @@
+# Generated from QUDT units catalog version v3.1.6
+enum VolumeFlowRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/VolumeFlowRate", versionTag: "v3.1.6") {
+  """Barrel (UK Petroleum) per Day"""
+  BBL_UK_PET_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/BBL_UK_PET-PER-DAY", versionTag: "v3.1.6")
+
+  """Barrel (UK Petroleum) per Hour"""
+  BBL_UK_PET_PER_HR @reference(uri: "http://qudt.org/vocab/unit/BBL_UK_PET-PER-HR", versionTag: "v3.1.6")
+
+  """Barrel (UK Petroleum) per Minute"""
+  BBL_UK_PET_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/BBL_UK_PET-PER-MIN", versionTag: "v3.1.6")
+
+  """Barrel (UK Petroleum) per Second"""
+  BBL_UK_PET_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BBL_UK_PET-PER-SEC", versionTag: "v3.1.6")
+
+  """Barrel (US) per Day | UCUM: [bbl_us].d-1"""
+  BBL_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/BBL_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Barrel (US) per Minute | UCUM: [bbl_us].min-1"""
+  BBL_US_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/BBL_US-PER-MIN", versionTag: "v3.1.6")
+
+  """Barrel (us Petroleum) per Hour | UCUM: [bbl_us].h-1"""
+  BBL_US_PET_PER_HR @reference(uri: "http://qudt.org/vocab/unit/BBL_US_PET-PER-HR", versionTag: "v3.1.6")
+
+  """Barrel (us Petroleum) per Second | UCUM: [bbl_us].s-1"""
+  BBL_US_PET_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BBL_US_PET-PER-SEC", versionTag: "v3.1.6")
+
+  """Bushel (UK) per Day | UCUM: [bu_br].d-1"""
+  BU_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/BU_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Bushel (UK) per Hour | UCUM: [bu_br].h-1"""
+  BU_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/BU_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Bushel (UK) per Minute | UCUM: [bu_br].min-1"""
+  BU_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/BU_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Bushel (UK) per Second | UCUM: [bu_br].s-1"""
+  BU_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BU_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Bushel (US Dry) per Day | UCUM: [bu_us].d-1"""
+  BU_US_DRY_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/BU_US_DRY-PER-DAY", versionTag: "v3.1.6")
+
+  """Bushel (US Dry) per Hour | UCUM: [bu_us].h-1"""
+  BU_US_DRY_PER_HR @reference(uri: "http://qudt.org/vocab/unit/BU_US_DRY-PER-HR", versionTag: "v3.1.6")
+
+  """Bushel (US Dry) per Minute | UCUM: [bu_us].min-1"""
+  BU_US_DRY_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/BU_US_DRY-PER-MIN", versionTag: "v3.1.6")
+
+  """Bushel (US Dry) per Second | UCUM: [bu_us].s-1"""
+  BU_US_DRY_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BU_US_DRY-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Day | UCUM: cm3.d-1"""
+  CENTIM3_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-DAY", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Hour | UCUM: cm3.h-1"""
+  CENTIM3_PER_HR @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-HR", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Minute | UCUM: cm3.min-1"""
+  CENTIM3_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-MIN", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Second | UCUM: cm3.s-1"""
+  CENTIM3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Decimeter per Day | UCUM: dm3.d-1"""
+  DECIM3_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-DAY", versionTag: "v3.1.6")
+
+  """Cubic Decimeter per Hour | UCUM: dm3.h-1"""
+  DECIM3_PER_HR @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-HR", versionTag: "v3.1.6")
+
+  """Cubic Decimeter per Minute | UCUM: dm3.min-1"""
+  DECIM3_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-MIN", versionTag: "v3.1.6")
+
+  """Cubic Decimeter per Second | UCUM: dm3.s-1"""
+  DECIM3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/DeciM3-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Foot per Day | UCUM: [ft_i]3.d-1"""
+  FT3_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/FT3-PER-DAY", versionTag: "v3.1.6")
+
+  """Cubic Foot per Hour | UCUM: [ft_i]3.h-1"""
+  FT3_PER_HR @reference(uri: "http://qudt.org/vocab/unit/FT3-PER-HR", versionTag: "v3.1.6")
+
+  """Cubic Foot per Minute | UCUM: [ft_i]3.min-1"""
+  FT3_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/FT3-PER-MIN", versionTag: "v3.1.6")
+
+  """Cubic Foot per Second | UCUM: [ft_i]3.s-1"""
+  FT3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/FT3-PER-SEC", versionTag: "v3.1.6")
+
+  """Gallon (UK) per Day | UCUM: [gal_br].d-1"""
+  GAL_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/GAL_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Gallon (UK) per Hour | UCUM: [gal_br].h-1"""
+  GAL_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GAL_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Gallon (UK) per Minute | UCUM: [gal_br].min-1"""
+  GAL_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/GAL_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Gallon (UK) per Second | UCUM: [gal_br].s-1"""
+  GAL_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GAL_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Us Gallon per Day | UCUM: [gal_us].d-1"""
+  GAL_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/GAL_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Us Gallon per Hour | UCUM: [gal_us].h-1"""
+  GAL_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GAL_US-PER-HR", versionTag: "v3.1.6")
+
+  """Us Gallon per Minute | UCUM: [gal_us].min-1"""
+  GAL_US_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/GAL_US-PER-MIN", versionTag: "v3.1.6")
+
+  """Us Gallon per Second | UCUM: [gal_us].s-1"""
+  GAL_US_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GAL_US-PER-SEC", versionTag: "v3.1.6")
+
+  """Gill (UK) per Day | UCUM: [gil_br].d-1"""
+  GI_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/GI_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Gill (UK) per Hour | UCUM: [gil_br].h-1"""
+  GI_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GI_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Gill (UK) per Minute | UCUM: [gil_br].min-1"""
+  GI_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/GI_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Gill (UK) per Second | UCUM: [gil_br].s-1"""
+  GI_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GI_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Gill (US) per Day | UCUM: [gil_us].d-1"""
+  GI_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/GI_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Gill (US) per Hour | UCUM: [gil_us].h-1"""
+  GI_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GI_US-PER-HR", versionTag: "v3.1.6")
+
+  """Gill (US) per Minute | UCUM: [gil_us].min-1"""
+  GI_US_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/GI_US-PER-MIN", versionTag: "v3.1.6")
+
+  """Gill (US) per Second | UCUM: [gil_us].s-1"""
+  GI_US_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GI_US-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Inch per Hour | UCUM: [in_i]3.h-1"""
+  IN3_PER_HR @reference(uri: "http://qudt.org/vocab/unit/IN3-PER-HR", versionTag: "v3.1.6")
+
+  """Cubic Inch per Minute | UCUM: [in_i]3.min-1"""
+  IN3_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/IN3-PER-MIN", versionTag: "v3.1.6")
+
+  """Cubic Inch per Second | UCUM: [in_i]3.s-1"""
+  IN3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/IN3-PER-SEC", versionTag: "v3.1.6")
+
+  """Kiloliter per Hour | UCUM: kL.h-1"""
+  KILOL_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloL-PER-HR", versionTag: "v3.1.6")
+
+  """Liter per Day | UCUM: L.d-1"""
+  L_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/L-PER-DAY", versionTag: "v3.1.6")
+
+  """Liter per Hour | UCUM: L.h-1"""
+  L_PER_HR @reference(uri: "http://qudt.org/vocab/unit/L-PER-HR", versionTag: "v3.1.6")
+
+  """Liter per Minute | UCUM: L.min-1"""
+  L_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/L-PER-MIN", versionTag: "v3.1.6")
+
+  """Liter per Second | UCUM: L.s-1"""
+  L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/L-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Meter per Day | UCUM: m3.d-1"""
+  M3_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/M3-PER-DAY", versionTag: "v3.1.6")
+
+  """Cubic Meter per Hour | UCUM: m3.h-1"""
+  M3_PER_HR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-HR", versionTag: "v3.1.6")
+
+  """Cubic Meter per Minute | UCUM: m3.min-1"""
+  M3_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/M3-PER-MIN", versionTag: "v3.1.6")
+
+  """Cubic Meter per Second | UCUM: m3.s-1"""
+  M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M3-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Meter per Year | UCUM: m3.a-1"""
+  M3_PER_YR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-YR", versionTag: "v3.1.6")
+
+  """Milliliter per Day | UCUM: mL.d-1"""
+  MILLIL_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-DAY", versionTag: "v3.1.6")
+
+  """Milliliter per Hour | UCUM: mL.h-1"""
+  MILLIL_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-HR", versionTag: "v3.1.6")
+
+  """Milliliter per Minute | UCUM: mL.min-1"""
+  MILLIL_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-MIN", versionTag: "v3.1.6")
+
+  """Milliliter per Second | UCUM: mL.s-1"""
+  MILLIL_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-SEC", versionTag: "v3.1.6")
+
+  """Fluid Ounce (UK) per Day | UCUM: [foz_br].d-1"""
+  OZ_VOL_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Fluid Ounce (UK) per Hour | UCUM: [foz_br].h-1"""
+  OZ_VOL_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Fluid Ounce (UK) per Minute | UCUM: [foz_br].min-1"""
+  OZ_VOL_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Fluid Ounce (UK) per Second | UCUM: [foz_br].s-1"""
+  OZ_VOL_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Us Liquid Ounce per Day | UCUM: [foz_us].d-1"""
+  OZ_VOL_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Us Liquid Ounce per Hour | UCUM: [foz_us].h-1"""
+  OZ_VOL_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_US-PER-HR", versionTag: "v3.1.6")
+
+  """Us Liquid Ounce per Minute | UCUM: [foz_us].min-1"""
+  OZ_VOL_US_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_US-PER-MIN", versionTag: "v3.1.6")
+
+  """Us Liquid Ounce per Second | UCUM: [foz_us].s-1"""
+  OZ_VOL_US_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_US-PER-SEC", versionTag: "v3.1.6")
+
+  """Pint (UK) per Day | UCUM: [pt_br].d-1"""
+  PINT_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/PINT_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Pint (UK) per Hour | UCUM: [pt_br].h-1"""
+  PINT_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/PINT_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Pint (UK) per Minute | UCUM: [pt_br].min-1"""
+  PINT_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/PINT_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Pint (UK) per Second | UCUM: [pt_br].s-1"""
+  PINT_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PINT_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Us Liquid Pint per Day | UCUM: [pt_us].d-1"""
+  PINT_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/PINT_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Us Liquid Pint per Hour | UCUM: [pt_us].h-1"""
+  PINT_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/PINT_US-PER-HR", versionTag: "v3.1.6")
+
+  """Us Liquid Pint per Minute | UCUM: [pt_us].min-1"""
+  PINT_US_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/PINT_US-PER-MIN", versionTag: "v3.1.6")
+
+  """Us Liquid Pint per Second | UCUM: [pt_us].s-1"""
+  PINT_US_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PINT_US-PER-SEC", versionTag: "v3.1.6")
+
+  """Peck (UK) per Day | UCUM: [pk_br].d-1"""
+  PK_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/PK_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Peck (UK) per Hour | UCUM: [pk_br].h-1"""
+  PK_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/PK_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Peck (UK) per Minute | UCUM: [pk_br].min-1"""
+  PK_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/PK_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Peck (UK) per Second | UCUM: [pk_br].s-1"""
+  PK_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PK_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Us Peck per Day | UCUM: [pk_us].d-1"""
+  PK_US_DRY_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/PK_US_DRY-PER-DAY", versionTag: "v3.1.6")
+
+  """Us Peck per Hour | UCUM: [pk_us].h-1"""
+  PK_US_DRY_PER_HR @reference(uri: "http://qudt.org/vocab/unit/PK_US_DRY-PER-HR", versionTag: "v3.1.6")
+
+  """Us Peck per Minute | UCUM: [pk_us].min-1"""
+  PK_US_DRY_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/PK_US_DRY-PER-MIN", versionTag: "v3.1.6")
+
+  """Us Peck per Second | UCUM: [pk_us].s-1"""
+  PK_US_DRY_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PK_US_DRY-PER-SEC", versionTag: "v3.1.6")
+
+  """Quart (UK) per Day | UCUM: [qt_br].d-1"""
+  QT_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/QT_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Quart (UK) per Hour | UCUM: [qt_br].h-1"""
+  QT_UK_PER_HR @reference(uri: "http://qudt.org/vocab/unit/QT_UK-PER-HR", versionTag: "v3.1.6")
+
+  """Quart (UK) per Minute | UCUM: [qt_br].min-1"""
+  QT_UK_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/QT_UK-PER-MIN", versionTag: "v3.1.6")
+
+  """Quart (UK) per Second | UCUM: [qt_br].s-1"""
+  QT_UK_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/QT_UK-PER-SEC", versionTag: "v3.1.6")
+
+  """Us Liquid Quart per Day | UCUM: [qt_us].d-1"""
+  QT_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/QT_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Us Liquid Quart per Hour | UCUM: [qt_us].h-1"""
+  QT_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/QT_US-PER-HR", versionTag: "v3.1.6")
+
+  """Us Liquid Quart per Minute | UCUM: [qt_us].min-1"""
+  QT_US_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/QT_US-PER-MIN", versionTag: "v3.1.6")
+
+  """Us Liquid Quart per Second | UCUM: [qt_us].s-1"""
+  QT_US_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/QT_US-PER-SEC", versionTag: "v3.1.6")
+
+  """Cubic Yard per Day | UCUM: [yd_i]3.d-1"""
+  YD3_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/YD3-PER-DAY", versionTag: "v3.1.6")
+
+  """Cubic Yard per Hour | UCUM: [yd_i]3.h-1"""
+  YD3_PER_HR @reference(uri: "http://qudt.org/vocab/unit/YD3-PER-HR", versionTag: "v3.1.6")
+
+  """Cubic Yard per Minute | UCUM: [yd_i]3.min-1"""
+  YD3_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/YD3-PER-MIN", versionTag: "v3.1.6")
+
+  """Cubic Yard per Second | UCUM: [yd_i]3.s-1"""
+  YD3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/YD3-PER-SEC", versionTag: "v3.1.6")
+}

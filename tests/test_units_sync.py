@@ -167,7 +167,6 @@ def test_sync_qudt_units_path_generation(
 
 def test_sync_with_cleanup(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
     mock_sync_setup: tuple[Mock, Mock],
     single_unit: list[UnitRow],
 ) -> None:

@@ -7,20 +7,8 @@ import pytest
 from click.testing import CliRunner
 
 from s2dm.cli import cli
-
-TESTS_DATA = Path(__file__).parent / "data"
-SAMPLE1_1 = TESTS_DATA / "schema1-1.graphql"
-SAMPLE1_2 = TESTS_DATA / "schema1-2.graphql"
-SAMPLE2_1 = TESTS_DATA / "schema2-1.graphql"
-SAMPLE2_2 = TESTS_DATA / "schema2-2.graphql"
-SAMPLE3 = TESTS_DATA / "schema3.graphql"
-
-# Version bump test schemas
-BASE_SCHEMA = TESTS_DATA / "base.graphql"
-NO_CHANGE_SCHEMA = TESTS_DATA / "no-change.graphql"
-NON_BREAKING_SCHEMA = TESTS_DATA / "non-breaking.graphql"
-DANGEROUS_SCHEMA = TESTS_DATA / "dangerous.graphql"
-BREAKING_SCHEMA = TESTS_DATA / "breaking.graphql"
+from s2dm.tools.string import normalize_whitespace
+from tests.conftest import TestSchemaData as TSD
 
 
 @pytest.fixture(scope="module")
@@ -34,7 +22,19 @@ def tmp_outputs(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return tmp_path_factory.mktemp("e2e_outputs")
 
 
-def contains_value(obj: dict[str, Any], target: str) -> bool:
+class ExpectedIds:
+    """Expected spec history IDs for the test cases.
+
+    The IDs are based on the test data files.
+    """
+
+    VEHICLE_AVG_SPEED_ID = "0x2B6F41EE"  # schema1-1.graphql
+    NEW_VEHICLE_AVG_SPEED_ID = "0x6002D5AD"  # schema1-2.graphql
+    PERSON_HEIGHT_ID = "0xC3D633BB"  # schema1-1.graphql
+    NEW_PERSON_HEIGHT_ID = "0xBB5A2DD0"  # schema1-2.graphql
+
+
+def contains_value(obj: dict[str, Any] | list | str, target: str) -> bool:
     """Helper function to recursively search dicts"""
     if isinstance(obj, dict):
         for v in obj.values():
@@ -53,7 +53,7 @@ def contains_value(obj: dict[str, Any], target: str) -> bool:
 def test_export_shacl(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "shacl.ttl"
     result = runner.invoke(
-        cli, ["export", "shacl", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out), "-f", "ttl"]
+        cli, ["export", "shacl", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out), "-f", "ttl"]
     )
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -67,7 +67,7 @@ def test_export_shacl(runner: CliRunner, tmp_outputs: Path) -> None:
 # ToDo(DA): please update this test to do proper asserts for the vspec exporter
 def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "vspec.yaml"
-    result = runner.invoke(cli, ["export", "vspec", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+    result = runner.invoke(cli, ["export", "vspec", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
     with open(out, encoding="utf-8") as f:
@@ -80,7 +80,7 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
 def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "skos_skeleton.ttl"
     result = runner.invoke(
-        cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)]
+        cli, ["generate", "skos-skeleton", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)]
     )
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -98,13 +98,17 @@ def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
 @pytest.mark.parametrize(
     "schema_file,previous_file,expected_output",
     [
-        ([NO_CHANGE_SCHEMA], [BASE_SCHEMA], "No version bump needed"),
-        ([NON_BREAKING_SCHEMA], [BASE_SCHEMA], "Patch version bump needed"),
-        ([DANGEROUS_SCHEMA], [BASE_SCHEMA], "Minor version bump needed"),
-        ([BREAKING_SCHEMA], [BASE_SCHEMA], "Detected breaking changes, major version bump needed"),
+        ([TSD.NO_CHANGE_SCHEMA], [TSD.BASE_SCHEMA], "No version bump needed"),
+        ([TSD.NON_BREAKING_SCHEMA], [TSD.BASE_SCHEMA], "Patch version bump needed"),
+        ([TSD.DANGEROUS_SCHEMA], [TSD.BASE_SCHEMA], "Minor version bump needed"),
+        ([TSD.BREAKING_SCHEMA], [TSD.BASE_SCHEMA], "Detected breaking changes, major version bump needed"),
         # Keep original test cases for backward compatibility
-        ([SAMPLE1_1, SAMPLE1_2], [SAMPLE1_1, SAMPLE1_2], "No version bump needed"),
-        ([SAMPLE1_1, SAMPLE1_2], [SAMPLE2_1, SAMPLE2_2], "Detected breaking changes, major version bump needed"),
+        ([TSD.SAMPLE1_1, TSD.SAMPLE1_2], [TSD.SAMPLE1_1, TSD.SAMPLE1_2], "No version bump needed"),
+        (
+            [TSD.SAMPLE1_1, TSD.SAMPLE1_2],
+            [TSD.SAMPLE2_1, TSD.SAMPLE2_2],
+            "Detected breaking changes, major version bump needed",
+        ),
     ],
 )
 def test_check_version_bump(
@@ -117,16 +121,17 @@ def test_check_version_bump(
         + [item for previous in previous_file for item in ["--previous", str(previous)]],
     )
     assert result.exit_code == 0, result.output
-    assert expected_output.lower() in result.output.lower()
+    # Replace all newlines and additional spaces with a single space with regex
+    assert expected_output.lower() in normalize_whitespace(result.output).lower()
 
 
 @pytest.mark.parametrize(
     "schema_file,previous_file,expected_type",
     [
-        (NO_CHANGE_SCHEMA, BASE_SCHEMA, "none"),
-        (NON_BREAKING_SCHEMA, BASE_SCHEMA, "patch"),
-        (DANGEROUS_SCHEMA, BASE_SCHEMA, "minor"),
-        (BREAKING_SCHEMA, BASE_SCHEMA, "major"),
+        (TSD.NO_CHANGE_SCHEMA, TSD.BASE_SCHEMA, "none"),
+        (TSD.NON_BREAKING_SCHEMA, TSD.BASE_SCHEMA, "patch"),
+        (TSD.DANGEROUS_SCHEMA, TSD.BASE_SCHEMA, "minor"),
+        (TSD.BREAKING_SCHEMA, TSD.BASE_SCHEMA, "major"),
     ],
 )
 def test_check_version_bump_output_type(
@@ -145,18 +150,20 @@ def test_check_version_bump_output_type(
 @pytest.mark.parametrize(
     "input_file,expected_output",
     [
-        ((SAMPLE1_1, SAMPLE1_2), "All constraints passed"),
+        ((TSD.SAMPLE1_1, TSD.SAMPLE1_2), "All constraints passed"),
     ],
 )
 def test_check_constraints(runner: CliRunner, input_file: tuple[Path, Path], expected_output: str) -> None:
     result = runner.invoke(cli, ["check", "constraints", "-s", str(input_file[0]), "-s", str(input_file[1])])
-    assert expected_output.lower() in result.output.lower()
+    assert expected_output.lower() in normalize_whitespace(result.output).lower()
     assert result.exit_code in (0, 1)
 
 
 def test_validate_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "validate.json"
-    result = runner.invoke(cli, ["validate", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+    result = runner.invoke(
+        cli, ["validate", "graphql", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)]
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
     with open(out) as f:
@@ -168,8 +175,8 @@ def test_validate_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
 @pytest.mark.parametrize(
     "schemas,val_schemas,expected_output",
     [
-        ((SAMPLE1_1, SAMPLE1_2), (SAMPLE1_1, SAMPLE1_2), "No changes detected"),
-        ((SAMPLE1_1, SAMPLE1_2), (SAMPLE2_1, SAMPLE2_2), "Detected"),
+        ((TSD.SAMPLE1_1, TSD.SAMPLE1_2), (TSD.SAMPLE1_1, TSD.SAMPLE1_2), "No changes detected"),
+        ((TSD.SAMPLE1_1, TSD.SAMPLE1_2), (TSD.SAMPLE2_1, TSD.SAMPLE2_2), "Detected"),
     ],
 )
 def test_diff_graphql(
@@ -211,9 +218,9 @@ def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> No
             "registry",
             "concept-uri",
             "-s",
-            str(SAMPLE1_1),
+            str(TSD.SAMPLE1_1),
             "-s",
-            str(SAMPLE1_2),
+            str(TSD.SAMPLE1_2),
             "-o",
             str(out),
         ],
@@ -225,12 +232,12 @@ def test_registry_export_concept_uri(runner: CliRunner, tmp_outputs: Path) -> No
 
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
-    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
-        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
-    )
-    assert contains_value(data, "ns:Person.name"), (
-        'Expected value "ns:Person.name" not found in the concept URI output.'
-    )
+    assert contains_value(
+        data, "ns:Vehicle.averageSpeed"
+    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    assert contains_value(
+        data, "ns:Person.name"
+    ), 'Expected value "ns:Person.name" not found in the concept URI output.'
 
 
 def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
@@ -241,25 +248,26 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path) -> None:
             "registry",
             "id",
             "-s",
-            str(SAMPLE1_1),
+            str(TSD.SAMPLE1_1),
             "-s",
-            str(SAMPLE1_2),
+            str(TSD.SAMPLE1_2),
             "-o",
             str(out),
         ],
     )
-    assert result.exit_code == 0, result.output
-    assert out.exists()
+    assert result.exit_code == 0, f"Expected exit code 0, but got {result.exit_code}."
+    assert out.exists(), f"Expected output file {out} not found."
     with open(out) as f:
         data = json.load(f)
-
-    assert any("Vehicle.averageSpeed" in k for k in data)
-    assert any("Person.name" in k for k in data)
+    assert any("Vehicle.averageSpeed" in k for k in data), "Expected 'Vehicle.averageSpeed' not found in the output."
+    assert any("Person.name" in k for k in data), "Expected 'Person.name' not found in the output."
 
 
 def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "spec_history.json"
-    result = runner.invoke(cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+    result = runner.invoke(
+        cli, ["registry", "init", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)]
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
     with open(out) as f:
@@ -276,7 +284,7 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:
                     spec_history
                     and isinstance(spec_history, list)
                     and isinstance(spec_history[0], dict)
-                    and spec_history[0].get("@id") == "0xEC20D822"
+                    and spec_history[0].get("@id") == ExpectedIds.VEHICLE_AVG_SPEED_ID
                 ):
                     found_vehicle = True
             elif entry.get("@id") == "ns:Person.height":
@@ -285,31 +293,34 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path) -> None:
                     spec_history
                     and isinstance(spec_history, list)
                     and isinstance(spec_history[0], dict)
-                    and spec_history[0].get("@id") == "0xC3D633BB"
+                    and spec_history[0].get("@id") == ExpectedIds.PERSON_HEIGHT_ID
                 ):
                     found_person = True
         if found_vehicle and found_person:
             break
     assert found_vehicle, (
-        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id "0xEC20D822" not found.'
+        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id'
+        + f'"{ExpectedIds.VEHICLE_AVG_SPEED_ID}" not found.'
     )
-    assert found_person, 'Expected entry with "@id": "ns:Person.height" and specHistory id "0xC3D633BB" not found.'
+    assert (
+        found_person
+    ), f'Expected entry with "@id": "ns:Person.height" and specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" not found.'
 
 
 def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "spec_history_update.json"
     # First, create a spec history file
     init_out = tmp_outputs / "spec_history.json"
-    runner.invoke(cli, ["registry", "init", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(init_out)])
+    runner.invoke(cli, ["registry", "init", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(init_out)])
     runner.invoke(
         cli,
         [
             "registry",
             "update",
             "-s",
-            str(SAMPLE2_1),
+            str(TSD.SAMPLE2_1),
             "-s",
-            str(SAMPLE2_2),
+            str(TSD.SAMPLE2_2),
             "-sh",
             str(init_out),
             "-o",
@@ -329,23 +340,31 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
             if entry.get("@id") == "ns:Vehicle.averageSpeed":
                 spec_history = entry.get("specHistory", [])
                 ids = [h.get("@id") for h in spec_history if isinstance(h, dict)]
-                if "0xEC20D822" in ids:
+                if ExpectedIds.VEHICLE_AVG_SPEED_ID in ids:
                     found_vehicle_old = True
-                if "0xB86BF561" in ids:
+                if ExpectedIds.NEW_VEHICLE_AVG_SPEED_ID in ids:
                     found_vehicle_new = True
             elif entry.get("@id") == "ns:Person.height":
                 spec_history = entry.get("specHistory", [])
                 ids = [h.get("@id") for h in spec_history if isinstance(h, dict)]
-                if "0xC3D633BB" in ids:
+                if ExpectedIds.PERSON_HEIGHT_ID in ids:
                     found_person_old = True
-                if "0xBB5A2DD0" in ids:
+                if ExpectedIds.NEW_PERSON_HEIGHT_ID in ids:
                     found_person_new = True
         if found_vehicle_old and found_vehicle_new and found_person_old and found_person_new:
             break
-    assert found_vehicle_old, 'Expected old specHistory id "0xEC20D822" for Vehicle.averageSpeed not found.'
-    assert found_vehicle_new, 'Expected new specHistory id "0xB86BF561" for Vehicle.averageSpeed not found.'
-    assert found_person_old, 'Expected old specHistory id "0xC3D633BB" for Person.height not found.'
-    assert found_person_new, 'Expected new specHistory id "0xBB5A2DD0" for Person.height not found.'
+    assert (
+        found_vehicle_old
+    ), f'Expected old specHistory id "{ExpectedIds.VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
+    assert (
+        found_vehicle_new
+    ), f'Expected new specHistory id "{ExpectedIds.NEW_VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
+    assert (
+        found_person_old
+    ), f'Expected old specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" for Person.height not found.'
+    assert (
+        found_person_new
+    ), f'Expected new specHistory id "{ExpectedIds.NEW_PERSON_HEIGHT_ID}" for Person.height not found.'
 
 
 @pytest.mark.parametrize(
@@ -360,34 +379,34 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path) -> None:
 )
 def test_search_graphql(runner: CliRunner, search_term: str, expected_output: str) -> None:
     result = runner.invoke(
-        cli, ["search", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-t", search_term, "--exact"]
+        cli, ["search", "graphql", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-t", search_term, "--exact"]
     )
     assert result.exit_code == 0, result.output
-    assert expected_output.lower() in result.output.lower()
+    assert expected_output.lower() in normalize_whitespace(result.output).lower()
 
 
 def test_search_skos(runner: CliRunner, tmp_outputs: Path) -> None:
     skos_file = tmp_outputs / "test_skos.ttl"
     result = runner.invoke(
-        cli, ["generate", "skos-skeleton", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(skos_file)]
+        cli, ["generate", "skos-skeleton", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(skos_file)]
     )
     assert result.exit_code == 0, result.output
     assert skos_file.exists()
 
     result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "Vehicle"])
     assert result.exit_code == 0, result.output
-    assert "Vehicle" in result.output
+    assert "Vehicle" in normalize_whitespace(result.output)
 
     result = runner.invoke(
         cli,
         ["search", "skos", "-f", str(skos_file), "-t", "vehicle", "--case-insensitive"],
     )
     assert result.exit_code == 0, result.output
-    assert "Vehicle" in result.output
+    assert "Vehicle" in normalize_whitespace(result.output)
 
     result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "NonExistentConcept"])
     assert result.exit_code == 0, result.output
-    assert "No matches found" in result.output
+    assert "No matches found" in normalize_whitespace(result.output)
 
 
 @pytest.mark.parametrize(
@@ -399,16 +418,17 @@ def test_similar_graphql(
 ) -> None:
     out = tmp_outputs / "similar.json"
     result = runner.invoke(
-        cli, ["similar", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-k", search_term, "-o", str(out)]
+        cli,
+        ["similar", "graphql", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-k", search_term, "-o", str(out)],
     )
     assert expected_returncode == result.exit_code, result.output
-    assert expected_output in result.output
+    assert expected_output in normalize_whitespace(result.output)
     assert out.exists()
 
 
 def test_compose_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+    result = runner.invoke(cli, ["compose", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)])
     assert result.exit_code == 0, result.output
     assert out.exists()
 
@@ -416,16 +436,16 @@ def test_compose_graphql(runner: CliRunner, tmp_outputs: Path) -> None:
     assert "type Vehicle" in composed_content
     assert "type Vehicle_ADAS" in composed_content
     assert "type Vehicle_ADAS_ObstacleDetection" in composed_content
-    assert "enum Acceleration_Unit_Enum" in composed_content
+    assert "enum AccelerationUnitEnum" in composed_content
     assert "directive @range" in composed_content
 
-    assert "Successfully composed schema" in result.output
+    assert "Successfully composed schema" in normalize_whitespace(result.output)
 
 
 def test_compose_graphql_with_root_type(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed_filtered.graphql"
     result = runner.invoke(
-        cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-r", "Vehicle", "-o", str(out)]
+        cli, ["compose", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-r", "Vehicle", "-o", str(out)]
     )
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -435,7 +455,7 @@ def test_compose_graphql_with_root_type(runner: CliRunner, tmp_outputs: Path) ->
 
     assert "type Vehicle" in composed_content
     assert "type Vehicle_ADAS" in composed_content
-    assert "Successfully composed schema with root type 'Vehicle'" in result.output
+    assert "Successfully composed schema with root type 'Vehicle'" in normalize_whitespace(result.output)
 
     assert "type Person" not in composed_content
 
@@ -443,18 +463,18 @@ def test_compose_graphql_with_root_type(runner: CliRunner, tmp_outputs: Path) ->
 def test_compose_graphql_with_root_type_nonexistent(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed_error.graphql"
     result = runner.invoke(
-        cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-r", "NonExistentType", "-o", str(out)]
+        cli, ["compose", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-r", "NonExistentType", "-o", str(out)]
     )
 
     assert result.exit_code == 1
     assert not out.exists()
-    assert "Root type 'NonExistentType' not found in schema" in result.output
+    assert "Root type 'NonExistentType' not found in schema" in normalize_whitespace(result.output)
 
 
 def test_compose_graphql_root_type_filters_unreferenced_types(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "composed_filtered.graphql"
     result = runner.invoke(
-        cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-r", "Vehicle_ADAS", "-o", str(out)]
+        cli, ["compose", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-r", "Vehicle_ADAS", "-o", str(out)]
     )
     assert result.exit_code == 0
 
@@ -471,7 +491,7 @@ def test_compose_graphql_root_type_filters_unreferenced_types(runner: CliRunner,
 def test_compose_preserves_custom_directives(runner: CliRunner, tmp_outputs: Path) -> None:
     """Test that compose preserves all types of custom directives and formatting."""
     out = tmp_outputs / "directive_preservation_test.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+    result = runner.invoke(cli, ["compose", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)])
 
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -490,7 +510,7 @@ def test_compose_preserves_custom_directives(runner: CliRunner, tmp_outputs: Pat
 def test_compose_adds_reference_directives(runner: CliRunner, tmp_outputs: Path) -> None:
     """Test that compose adds @reference directives to track source files."""
     out = tmp_outputs / "reference_directives_test.graphql"
-    result = runner.invoke(cli, ["compose", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2), "-o", str(out)])
+    result = runner.invoke(cli, ["compose", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)])
 
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -559,37 +579,25 @@ union Person = User | Admin
 
 # ToDo(DA): needs refactoring after final decision how stats will work
 def test_stats_graphql(runner: CliRunner) -> None:
-    result = runner.invoke(cli, ["stats", "graphql", "-s", str(SAMPLE1_1), "-s", str(SAMPLE1_2)])
+    result = runner.invoke(cli, ["stats", "graphql", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2)])
     print(f"{result.output=}")
     assert result.exit_code == 0, result.output
-    assert "'UInt32': 1" in result.output
+    assert "'UInt32': 1" in normalize_whitespace(result.output)
 
 
 def test_units_sync_cli(
     runner: CliRunner,
-    tmp_outputs: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    mock_sync_qudt_units: Callable[..., list[Path]],
-    mock_get_latest_qudt_version: Callable[[], str],
+    units_sync_mocks: tuple[Callable[..., list[Path]], Callable[[], str]],
 ) -> None:
     """Test that the units sync CLI command works end-to-end."""
-
-    # Simple mock that just returns a few paths
-    def simple_mock(units_root: Path, version: str | None = None, *, dry_run: bool = False) -> list[Path]:
-        return mock_sync_qudt_units(units_root, version, dry_run=dry_run, num_paths=2)
-
-    # Apply mocks to avoid network calls
-    monkeypatch.setattr("s2dm.cli.sync_qudt_units", simple_mock)
-    monkeypatch.setattr("s2dm.cli.get_latest_qudt_version", mock_get_latest_qudt_version)
-
-    output_dir = tmp_outputs / "units_cli_test"
-
     # Test basic CLI functionality
-    result = runner.invoke(cli, ["units", "sync", "--output-dir", str(output_dir)])
+    result = runner.invoke(cli, ["units", "sync"])
     assert result.exit_code == 0, result.output
-    assert "Generated" in result.output or "enum files" in result.output
+    assert "Generated" in normalize_whitespace(result.output) or "enum files" in normalize_whitespace(result.output)
 
     # Test that --dry-run flag is accepted (detailed behavior tested in unit tests)
-    result = runner.invoke(cli, ["units", "sync", "--output-dir", str(output_dir), "--dry-run"])
+    result = runner.invoke(cli, ["units", "sync", "--dry-run"])
     assert result.exit_code == 0, result.output
-    assert "Would generate" in result.output or "dry" in result.output.lower()
+    assert (
+        "Would generate" in normalize_whitespace(result.output) or "dry" in normalize_whitespace(result.output).lower()
+    )

@@ -40,7 +40,6 @@ SPEC_FILES = [
     SPEC_DIR_PATH / "custom_directives.graphql",
     SPEC_DIR_PATH / "common_types.graphql",
     SPEC_DIR_PATH / "custom_scalars.graphql",
-    SPEC_DIR_PATH / "unit_enums.graphql",
 ]
 
 
@@ -118,8 +117,12 @@ def build_schema_with_query(schema_str: str) -> GraphQLSchema:
     return ensure_query(schema)
 
 
-def load_schema(graphql_schema_paths: list[Path]) -> GraphQLSchema:
+def load_schema(graphql_schema_paths: Path | list[Path]) -> GraphQLSchema:
     """Load and build a GraphQL schema from files or folders."""
+
+    if isinstance(graphql_schema_paths, Path):
+        graphql_schema_paths = [graphql_schema_paths]
+
     schema_str = build_schema_str(graphql_schema_paths)
     return build_schema_with_query(schema_str)
 

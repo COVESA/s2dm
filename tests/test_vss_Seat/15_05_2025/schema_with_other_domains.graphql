@@ -131,7 +131,7 @@ directive @range(min: Float, max: Float) on FIELD_DEFINITION
                       Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 =
                     Lowermost position supported.
                       """
-                      height(unit: Length_Unit_Enum = MILLIMETER): UInt16
+                      height(unit: LengthUnitEnum = MILLIM): UInt16
 
                       """Seat backward switch engaged."""
                       isBackwardSwitchEngaged: Boolean
@@ -179,13 +179,13 @@ directive @range(min: Float, max: Float) on FIELD_DEFINITION
                       Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 =
                     Frontmost position supported.
                       """
-                      position(unit: Length_Unit_Enum = MILLIMETER): UInt16
+                      position(unit: LengthUnitEnum = MILLIM): UInt16
 
                       """
                       Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 =
                     Lowermost position supported.
                       """
-                      seatBeltHeight(unit: Length_Unit_Enum = MILLIMETER): UInt16
+                      seatBeltHeight(unit: LengthUnitEnum = MILLIM): UInt16
 
                       """
                       Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and
@@ -238,7 +238,7 @@ directive @range(min: Float, max: Float) on FIELD_DEFINITION
                       Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 =
                     Lowermost position supported.
                       """
-                      lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8
+                      lumbarHeight(unit: LengthUnitEnum = MILLIM): UInt8
 
                       """
                       Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
@@ -267,7 +267,7 @@ directive @range(min: Float, max: Float) on FIELD_DEFINITION
                       """
                       Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
                       """
-                      height(unit: Length_Unit_Enum = MILLIMETER): UInt8
+                      height(unit: LengthUnitEnum = MILLIM): UInt8
 
                       """Head rest backward switch engaged."""
                       isBackwardSwitchEngaged: Boolean
@@ -293,7 +293,7 @@ directive @range(min: Float, max: Float) on FIELD_DEFINITION
                       """
                       Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).
                       """
-                      length(unit: Length_Unit_Enum = MILLIMETER): UInt16
+                      length(unit: LengthUnitEnum = MILLIM): UInt16
                     }
 
                     """High-level vehicle data."""
@@ -375,12 +375,12 @@ directive @range(min: Float, max: Float) on FIELD_DEFINITION
                       LUX
                     }
 
-                    enum Length_Unit_Enum {
+                    enum LengthUnitEnum {
                       CENTIMETER
                       INCH
                       KILOMETER
                       METER
-                      MILLIMETER
+                      MILLIM
                     }
 
                     enum Mass_Unit_Enum {

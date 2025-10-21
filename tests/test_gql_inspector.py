@@ -6,16 +6,14 @@ import pytest
 
 from s2dm.exporters.utils.schema_loader import create_tempfile_to_composed_schema
 from s2dm.tools.graphql_inspector import GraphQLInspector
-
-DATA_DIR: Path = Path(__file__).parent / "data"
-SCHEMA1: Path = DATA_DIR / "schema1.graphql"
-SCHEMA2: Path = DATA_DIR / "schema2.graphql"
+from s2dm.tools.string import normalize_whitespace
+from tests.conftest import TestSchemaData as TSD
 
 
 @pytest.fixture(scope="module")
 def schema1_tmp() -> Generator[Path, None, None]:
-    assert SCHEMA1.exists(), f"Missing test file: {SCHEMA1}"
-    tmp: Path = create_tempfile_to_composed_schema([SCHEMA1])
+    assert TSD.SCHEMA1.exists(), f"Missing test file: {TSD.SCHEMA1}"
+    tmp: Path = create_tempfile_to_composed_schema([TSD.SCHEMA1, TSD.UNITS_SCHEMA_PATH])
     yield tmp
     if tmp.exists():
         tmp.unlink()
@@ -23,8 +21,8 @@ def schema1_tmp() -> Generator[Path, None, None]:
 
 @pytest.fixture(scope="module")
 def schema2_tmp() -> Generator[Path, None, None]:
-    assert SCHEMA2.exists(), f"Missing test file: {SCHEMA2}"
-    tmp: Path = create_tempfile_to_composed_schema([SCHEMA2])
+    assert TSD.SCHEMA2.exists(), f"Missing test file: {TSD.SCHEMA2}"
+    tmp: Path = create_tempfile_to_composed_schema([TSD.SCHEMA2, TSD.UNITS_SCHEMA_PATH])
     yield tmp
     if tmp.exists():
         tmp.unlink()
@@ -117,7 +115,9 @@ def test_similar_keyword_output(schema1_tmp: Path, output_to_file: bool) -> None
     assert hasattr(result, "output")
     assert result.returncode == 0 or result.returncode == 1
     if result.returncode == 0:
-        assert keyword in result.output or (output_to_file and file_content and keyword in file_content)
+        assert keyword in normalize_whitespace(result.output) or (
+            output_to_file and file_content and keyword in file_content
+        )
 
 
 # ToDo: add a test for validate if we have a query file

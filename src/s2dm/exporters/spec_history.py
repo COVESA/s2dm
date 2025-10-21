@@ -53,7 +53,6 @@ class SpecHistoryExporter:
         match = re.search(pattern, content, re.DOTALL)
         if match:
             return match.group(0)
-        log.warning(f"Could not find type definition for {type_name} in schema")
         return None
 
     @staticmethod
@@ -129,7 +128,7 @@ class SpecHistoryExporter:
             if type_def:
                 self.save_type_definition(id_value, parent_type, type_def, history_dir, timestamp)
             else:
-                log.warning(f"Could not extract type definition for {parent_type}")
+                log.debug(f"Could not extract type definition for {parent_type}")
 
     def init_spec_history_model(
         self, concept_uris: dict[str, Any], concept_ids: dict[str, Any], concept_uri_model: ConceptUriModel

@@ -1,0 +1,5 @@
+# Generated from QUDT units catalog version v3.1.6
+enum HeartRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/HeartRate", versionTag: "v3.1.6") {
+  """Heart Beats per Minute | UCUM: min-1{H.B.}"""
+  BEAT_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/BEAT-PER-MIN", versionTag: "v3.1.6")
+}

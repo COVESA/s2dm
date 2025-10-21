@@ -22,6 +22,38 @@ from s2dm.units.sync import UnitRow, _uri_to_enum_symbol
 SCALAR_TYPES = ["String", "Int", "Float", "Boolean"]
 
 
+class TestSchemaData:
+    TESTS_DATA_DIR: Path = Path(__file__).parent / "data"
+    SCHEMA1: Path = TESTS_DATA_DIR / "schema1.graphql"
+    SCHEMA2: Path = TESTS_DATA_DIR / "schema2.graphql"
+    SCHEMA3: Path = TESTS_DATA_DIR / "schema3.graphql"
+    UNITS_SCHEMA_PATH: Path = TESTS_DATA_DIR / "units"
+
+    SAMPLE1_1 = TESTS_DATA_DIR / "schema1-1.graphql"
+    SAMPLE1_2 = TESTS_DATA_DIR / "schema1-2.graphql"
+    SAMPLE2_1 = TESTS_DATA_DIR / "schema2-1.graphql"
+    SAMPLE2_2 = TESTS_DATA_DIR / "schema2-2.graphql"
+    SAMPLE3 = TESTS_DATA_DIR / "schema3.graphql"
+
+    # Version bump test schemas
+    BASE_SCHEMA = TESTS_DATA_DIR / "base.graphql"
+    NO_CHANGE_SCHEMA = TESTS_DATA_DIR / "no-change.graphql"
+    NON_BREAKING_SCHEMA = TESTS_DATA_DIR / "non-breaking.graphql"
+    DANGEROUS_SCHEMA = TESTS_DATA_DIR / "dangerous.graphql"
+    BREAKING_SCHEMA = TESTS_DATA_DIR / "breaking.graphql"
+
+
+def parsed_console_output() -> str:
+    return
+
+
+@pytest.fixture(scope="module")
+def schema_path() -> list[Path]:
+    assert TestSchemaData.SCHEMA1.exists(), f"Missing test file: {TestSchemaData.SCHEMA1}"
+    assert TestSchemaData.UNITS_SCHEMA_PATH.exists(), f"Missing units folder: {TestSchemaData.UNITS_SCHEMA_PATH}"
+    return [TestSchemaData.SCHEMA1, TestSchemaData.UNITS_SCHEMA_PATH]
+
+
 @dataclass
 class MockFieldData:
     name: str
@@ -53,7 +85,7 @@ class MockFieldData:
 
     @property
     def unit_enum_name(self) -> str:
-        return f"{self.unit.capitalize()}_Unit_Enum"
+        return f"{self.unit.capitalize()}UnitEnum"
 
     @property
     def unit_default_value(self) -> str:
@@ -67,7 +99,7 @@ class MockFieldData:
     def non_enum_field_data(cls, faker: Faker) -> "MockFieldData":
         """Generates a random non-enum field data with a random values
         e.g.
-        length(unit: Length_Unit_Enum = MILLIMETER): Int
+        length(unit: LengthUnitEnum = MILLIMETER): Int
         """
         name = faker.unique.word().lower()
         data_type = faker.random_element(SCALAR_TYPES)
@@ -153,7 +185,7 @@ def mock_named_types_strategy(
 
 # Constants for common test values
 MOCK_QUDT_VERSION = "3.1.5"
-MOCK_ENUM_CONTENT = "enum TestEnum { TEST }"
+MOCK_ENUM_CONTENT = "enum TestEnum { TEST1 }"
 
 # QUDT constants for unit testing
 QUDT_UNIT_BASE = "http://qudt.org/vocab/unit"
@@ -214,8 +246,13 @@ def units_sync_mocks(
     monkeypatch: pytest.MonkeyPatch,
     mock_sync_qudt_units: Callable[..., list[Path]],
     mock_get_latest_qudt_version: Callable[[], str],
+    tmp_path: Path,
 ) -> tuple[Callable[..., list[Path]], Callable[[], str]]:
-    """Fixture that applies all units sync mocks at once."""
+    """Fixture that applies all units sync mocks at once and isolates DEFAULT_QUDT_UNITS_DIR."""
+    # Patch DEFAULT_QUDT_UNITS_DIR to use a temporary directory for test isolation
+    test_units_dir = tmp_path / "test_units"
+    monkeypatch.setattr("s2dm.cli.DEFAULT_QUDT_UNITS_DIR", test_units_dir)
+
     monkeypatch.setattr("s2dm.cli.sync_qudt_units", mock_sync_qudt_units)
     monkeypatch.setattr("s2dm.cli.get_latest_qudt_version", mock_get_latest_qudt_version)
     return mock_sync_qudt_units, mock_get_latest_qudt_version

@@ -1,7 +1,7 @@
 """Signals form Obstacle Sensor System."""
 type Vehicle_ADAS_ObstacleDetection {
   id: ID!
-  distance(unit: Length_Unit_Enum = METER): Int
+  distance(unit: LengthUnitEnum = M): Int
   isEnabled: Boolean
   warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
 }

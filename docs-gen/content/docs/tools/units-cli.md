@@ -21,54 +21,46 @@ The S2DM Units CLI provides integration with the [QUDT (Quantities, Units, Dimen
 
 ### `s2dm units sync`
 
-Synchronizes unit definitions from the QUDT repository and generates GraphQL enum files.
+Synchronizes unit definitions from the QUDT repository and generates GraphQL enum files in the `S2DM_HOME` directory (`~/.s2dm/units/qudt`).
+
+{{% notice note %}}
+Unit files are downloaded to `~/.s2dm/units/qudt` to prevent users from modifying them. This is a temporary solution. In the future, QUDT unit GraphQL files will be moved to a separate repository and referenced/downloaded from there.
+{{% /notice %}}
 
 **Syntax:**
 ```bash
-s2dm units sync --output-dir <path> [--version <version>] [--dry-run]
+s2dm units sync [--version <version>] [--dry-run]
 ```
 
 **Examples:**
 ```bash
 # Sync latest version
-s2dm units sync --output-dir units
+s2dm units sync
 
 # Sync specific version
-s2dm units sync --version v3.1.5 --output-dir units
+s2dm units sync --version v3.1.5
 
 # Check what would be generated without creating files
-s2dm units sync --output-dir units --dry-run
-
-# Sync to custom directory
-s2dm units sync --version v3.1.5 --output-dir path/to/qudt/units/
+s2dm units sync --dry-run
 ```
 
 **Options:**
-- `--output-dir` (required): Directory where generated unit enums will be written
 - `--version` (optional): QUDT version string. Defaults to latest release if not specified
 - `--dry-run` (optional): Show how many enum files would be generated without creating them
 
 **Output:**
-- Creates `<QuantityKindUnitEnum>.graphql` files (e.g., `LengthUnitEnum.graphql`)
+- Creates `<QuantityKindUnitEnum>.graphql` files in `~/.s2dm/units/qudt` (e.g., `LengthUnitEnum.graphql`)
 - Generates `metadata.json` with version information
 - Reports number of enum files generated
 
 ### `s2dm units check-version`
 
-Compares the local synced QUDT version with the latest available version.
+Compares the local synced QUDT version with the latest available version. By default, checks the `~/.s2dm/units/qudt` directory.
 
 **Syntax:**
 ```bash
-s2dm units check-version --qudt-units-dir <path>
+s2dm units check-version
 ```
-
-**Example:**
-```bash
-s2dm units check-version --qudt-units-dir units/external_qudt
-```
-
-**Options:**
-- `--qudt-units-dir` (required, ~/.s2dm/units/qudt by default): Directory containing generated QUDT unit enums
 
 **Output:**
 - `✓ Units are up to date.` if current version matches latest
@@ -102,26 +94,31 @@ enum LengthUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Length",
 
 ## Directory Structure
 
-When using both QUDT and custom units, organize them as follows:
+QUDT units are stored in the `S2DM_HOME` directory:
 
 ```
-units/
-├── external_qudt/                    # QUDT units (generated)
-│   ├── metadata.json                 # Version metadata
-│   ├── LengthUnitEnum.graphql        # Length units
-│   ├── VelocityUnitEnum.graphql      # Velocity units
-│   └── ... (500+ more unit enums)
-└── custom/                           # Custom units (manual)
-    ├── MyDomainUnitEnum.graphql      # Custom domain units
-    └── SpecialUnitEnum.graphql       # Special use case units
+~/.s2dm/units/qudt/                   # QUDT units (generated, read-only)
+├── metadata.json                     # Version metadata
+├── LengthUnitEnum.graphql            # Length units
+├── VelocityUnitEnum.graphql          # Velocity units
+└── ... (500+ more unit enums)
+```
+
+If you need custom units specific to your domain, create them in your project directory:
+
+```
+units/custom/                         # Custom units (manual, in your project)
+├── MyDomainUnitEnum.graphql          # Custom domain units
+└── SpecialUnitEnum.graphql           # Special use case units
 ```
 
 ## Workflow Example
 
 1. **Initial Setup**: Sync units from QUDT
    ```bash
-   s2dm units sync --version v3.1.5 --output-dir units/external_qudt
+   s2dm units sync --version v3.1.5
    ```
+   This downloads unit enums to `~/.s2dm/units/qudt`.
 
 2. **Use Units in Schema Development**: Reference generated enums
    ```graphql
@@ -133,12 +130,12 @@ units/
 
 3. **Check for Updates**: Periodically check for new QUDT versions
    ```bash
-   s2dm units check-version --qudt-units-dir units/external_qudt
+   s2dm units check-version
    ```
 
 4. **Update When Needed**: Sync newer versions as they become available
    ```bash
-   s2dm units sync --version v3.2.0 --output-dir units/external_qudt
+   s2dm units sync --version v3.2.0
    ```
 
 ## Why URI-Based Symbols?
