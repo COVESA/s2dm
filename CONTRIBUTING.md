@@ -48,11 +48,18 @@ The rest of this document assumes you are in the virtual environment by either a
 
 ### Pre-Commit-Hooks
 
-Pre commit hooks can be setup with:
+Pre-commit hooks can be set up with:
 
 ```bash
 pre-commit install
+pre-commit install --hook-type commit-msg
 ```
+
+The first command installs hooks that run before commits (code formatting, linting, etc.).
+The second command installs the `commit-msg` hook that validates commit messages using gitlint.
+
+> [!NOTE]
+> Both hooks are required: the first validates your code, the second enforces conventional commit message standards as described in the [Commit Message Enforcement](#commit-message-enforcement) section.
 
 ### Tests
 
@@ -121,6 +128,16 @@ We use [**gitlint**](https://github.com/jorisroovers/gitlint) to enforce convent
   - Custom title length limits (5-100 characters)
   - Ignores GitHub Actions bot commits
 
+> [!TIP]
+> **Recovering failed commit messages**: If gitlint rejects your commit, Git saves your message in `.git/COMMIT_EDITMSG`. Recover it with:
+> ```bash
+> git commit --edit --file=.git/COMMIT_EDITMSG
+> ```
+> Or test your message before committing:
+> ```bash
+> echo "feat: my feature" | gitlint
+> ```
+
 #### Commit Message Format
 
 Follow this format for all commits:
@@ -130,8 +147,26 @@ Follow this format for all commits:
 
 [optional body]
 
+Signed-off-by: Your Name <your.email@example.com>
+
 [optional footer(s)]
 ```
+
+**Important:** All commits must include a `Signed-off-by` line (Developer Certificate of Origin).
+
+**Adding sign-off automatically:**
+
+```bash
+# Use -s flag when committing
+git commit -s -m "feat: your message"
+
+# Or configure git to always prompt for sign-off with an alias
+git config alias.cs 'commit -s'
+
+# Then use: git cs -m "feat: your message"
+```
+
+The `Signed-off-by` line certifies that you have the right to submit the code under the project's license.
 
 **Common types:**
 
@@ -153,15 +188,23 @@ Follow this format for all commits:
 **Examples:**
 
 ```txt
-# feature for exporters
+# Feature for exporters
 feat(exporters): add jsonschema exporter
 
-# fix in graphql processing
+This adds a new exporter that converts schemas to JSON Schema format.
+
+Signed-off-by: John Doe <john.doe@example.com>
+
+# Fix in graphql processing
 fix: resolve memory leak in graphql processing
 
-# feature including breaking change
+Signed-off-by: John Doe <john.doe@example.com>
+
+# Feature including breaking change
 feat!: migrate to new configuration format
 
-# breaking change in body
-BREAKING CHANGE: configuration file structure has changed
+The configuration file structure has been updated to YAML format.
+Old TOML configs are no longer supported.
+
+Signed-off-by: John Doe <john.doe@example.com>
 ```
