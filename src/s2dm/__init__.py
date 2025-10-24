@@ -1,16 +1,7 @@
-import logging
-
-from rich.logging import RichHandler
+from s2dm.logger import get_logger
 
 __author__ = """Daniel Alvarez-Coello"""
 __email__ = "8550265+jdacoello@users.noreply.github.com"
 __version__ = "0.6.3"
 
-logging.basicConfig(
-    level="INFO",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True)],
-)
-
-log = logging.getLogger("s2dm")
+log = get_logger("s2dm")

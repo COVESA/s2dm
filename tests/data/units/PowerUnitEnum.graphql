@@ -1,0 +1,200 @@
+# Generated from QUDT units catalog version v3.1.6
+enum PowerUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Power", versionTag: "v3.1.6") {
+  """Bar Liter per Second | UCUM: bar.L.s-1"""
+  BAR_L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BAR-L-PER-SEC", versionTag: "v3.1.6")
+
+  """Bar Cubic Meter per Second | UCUM: bar.m3.s-1"""
+  BAR_M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BAR-M3-PER-SEC", versionTag: "v3.1.6")
+
+  """British Thermal Unit (international Definition) per Hour | UCUM: [Btu_IT].h-1"""
+  BTU_IT_PER_HR @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-HR", versionTag: "v3.1.6")
+
+  """British Thermal Unit (international Definition) per Second | UCUM: [Btu_IT].s-1"""
+  BTU_IT_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-SEC", versionTag: "v3.1.6")
+
+  """Erg per Second | UCUM: erg.s-1"""
+  ERG_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/ERG-PER-SEC", versionTag: "v3.1.6")
+
+  """Exajoule per Second | UCUM: EJ.s-1"""
+  EXAJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/ExaJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Exawatt | UCUM: EW"""
+  EXAW @reference(uri: "http://qudt.org/vocab/unit/ExaW", versionTag: "v3.1.6")
+
+  """Foot Pound Force per Hour | UCUM: [ft_i].[lbf_av].h-1"""
+  FT_LB_F_PER_HR @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F-PER-HR", versionTag: "v3.1.6")
+
+  """Foot Pound Force per Minute | UCUM: [ft_i].[lbf_av].min-1"""
+  FT_LB_F_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F-PER-MIN", versionTag: "v3.1.6")
+
+  """Foot Pound Force per Second | UCUM: [ft_i].[lbf_av].s-1"""
+  FT_LB_F_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F-PER-SEC", versionTag: "v3.1.6")
+
+  """Gigajoule per Hour | UCUM: GJ.h-1"""
+  GIGAJ_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GigaJ-PER-HR", versionTag: "v3.1.6")
+
+  """Gigajoule per Second | UCUM: GJ.s-1"""
+  GIGAJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GigaJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Gigawatt | UCUM: GW"""
+  GIGAW @reference(uri: "http://qudt.org/vocab/unit/GigaW", versionTag: "v3.1.6")
+
+  """Hectopascal Liter per Second | UCUM: hPa.L.s-1"""
+  HECTOPA_L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/HectoPA-L-PER-SEC", versionTag: "v3.1.6")
+
+  """Hectopascal Cubic Meter per Second | UCUM: hPa.m3.s-1"""
+  HECTOPA_M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/HectoPA-M3-PER-SEC", versionTag: "v3.1.6")
+
+  """Horsepower | UCUM: [HP]"""
+  HP @reference(uri: "http://qudt.org/vocab/unit/HP", versionTag: "v3.1.6")
+
+  """Boiler Horsepower"""
+  HP_BOILER @reference(uri: "http://qudt.org/vocab/unit/HP_Boiler", versionTag: "v3.1.6")
+
+  """Horsepower (brake)"""
+  HP_BRAKE @reference(uri: "http://qudt.org/vocab/unit/HP_Brake", versionTag: "v3.1.6")
+
+  """Horsepower (electric)"""
+  HP_ELECTRIC @reference(uri: "http://qudt.org/vocab/unit/HP_Electric", versionTag: "v3.1.6")
+
+  """Horsepower (water)"""
+  HP_H2O @reference(uri: "http://qudt.org/vocab/unit/HP_H2O", versionTag: "v3.1.6")
+
+  """Horsepower (metric)"""
+  HP_METRIC @reference(uri: "http://qudt.org/vocab/unit/HP_Metric", versionTag: "v3.1.6")
+
+  """Joule per Day | UCUM: J.d-1"""
+  J_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/J-PER-DAY", versionTag: "v3.1.6")
+
+  """Joule per Hour | UCUM: J.h-1"""
+  J_PER_HR @reference(uri: "http://qudt.org/vocab/unit/J-PER-HR", versionTag: "v3.1.6")
+
+  """Joule per Minute | UCUM: J.min-1"""
+  J_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/J-PER-MIN", versionTag: "v3.1.6")
+
+  """Joule per Second | UCUM: J.s-1"""
+  J_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/J-PER-SEC", versionTag: "v3.1.6")
+
+  """Kilo British Thermal Unit (international Definition) per Hour | UCUM: k[Btu_IT].h-1"""
+  KILOBTU_IT_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloBTU_IT-PER-HR", versionTag: "v3.1.6")
+
+  """Kilocalorie per Minute | UCUM: kcal.min-1"""
+  KILOCAL_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-MIN", versionTag: "v3.1.6")
+
+  """Kilocalorie per Second | UCUM: kcal.s-1"""
+  KILOCAL_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloCAL-PER-SEC", versionTag: "v3.1.6")
+
+  """Kilo Gram Force Meter per Second | UCUM: kgf.m.s-1"""
+  KILOGM_F_M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F-M-PER-SEC", versionTag: "v3.1.6")
+
+  """Kilojoule per Day | UCUM: kJ.d-1"""
+  KILOJ_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-DAY", versionTag: "v3.1.6")
+
+  """Kilojoule per Hour | UCUM: kJ.h-1"""
+  KILOJ_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-HR", versionTag: "v3.1.6")
+
+  """Kilojoule per Minute | UCUM: kJ.min-1"""
+  KILOJ_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-MIN", versionTag: "v3.1.6")
+
+  """Kilojoule per Second | UCUM: kJ.s-1"""
+  KILOJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Kilowatt | UCUM: kW"""
+  KILOW @reference(uri: "http://qudt.org/vocab/unit/KiloW", versionTag: "v3.1.6")
+
+  """Mega British Thermal Unit (international Definition) per Hour | UCUM: M[Btu_IT].h-1"""
+  MEGABTU_IT_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MegaBTU_IT-PER-HR", versionTag: "v3.1.6")
+
+  """Megajoule per Hour | UCUM: MJ.h-1"""
+  MEGAJ_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-HR", versionTag: "v3.1.6")
+
+  """Megajoule per Second | UCUM: MJ.s-1"""
+  MEGAJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MegaJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Megapascal Liter per Second | UCUM: MPa.L.s-1"""
+  MEGAPA_L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MegaPA-L-PER-SEC", versionTag: "v3.1.6")
+
+  """Megapascal Cubic Meter per Second | UCUM: MPa.m3.s-1"""
+  MEGAPA_M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MegaPA-M3-PER-SEC", versionTag: "v3.1.6")
+
+  """Megawatt | UCUM: MW"""
+  MEGAW @reference(uri: "http://qudt.org/vocab/unit/MegaW", versionTag: "v3.1.6")
+
+  """Micro Joule per Second | UCUM: uJ.s-1"""
+  MICROJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Microwatt | UCUM: uW"""
+  MICROW @reference(uri: "http://qudt.org/vocab/unit/MicroW", versionTag: "v3.1.6")
+
+  """Millibar Liter per Second | UCUM: mbar.L.s-1"""
+  MILLIBAR_L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliBAR-L-PER-SEC", versionTag: "v3.1.6")
+
+  """Millibar Cubic Meter per Second | UCUM: mbar.m3.s-1"""
+  MILLIBAR_M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliBAR-M3-PER-SEC", versionTag: "v3.1.6")
+
+  """Millijoule per Second | UCUM: mJ.s-1"""
+  MILLIJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Milliwatt | UCUM: mW"""
+  MILLIW @reference(uri: "http://qudt.org/vocab/unit/MilliW", versionTag: "v3.1.6")
+
+  """Nanojoule per Second | UCUM: nJ.s-1"""
+  NANOJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/NanoJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Nanowatt | UCUM: nW"""
+  NANOW @reference(uri: "http://qudt.org/vocab/unit/NanoW", versionTag: "v3.1.6")
+
+  """Pascal Liter per Second | UCUM: Pa.L.s-1"""
+  PA_L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PA-L-PER-SEC", versionTag: "v3.1.6")
+
+  """Pascal Cubic Meter per Second | UCUM: Pa.m3.s-1"""
+  PA_M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PA-M3-PER-SEC", versionTag: "v3.1.6")
+
+  """Petajoule per Second | UCUM: PJ.s-1"""
+  PETAJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PetaJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Petawatt | UCUM: PW"""
+  PETAW @reference(uri: "http://qudt.org/vocab/unit/PetaW", versionTag: "v3.1.6")
+
+  """Pferdestaerke"""
+  PFERDESTAERKE @reference(uri: "http://qudt.org/vocab/unit/PFERDESTAERKE", versionTag: "v3.1.6")
+
+  """Picojoule per Second | UCUM: pJ.s-1"""
+  PICOJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PicoJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Picowatt | UCUM: pW"""
+  PICOW @reference(uri: "http://qudt.org/vocab/unit/PicoW", versionTag: "v3.1.6")
+
+  """Planck Power"""
+  PLANCKPOWER @reference(uri: "http://qudt.org/vocab/unit/PlanckPower", versionTag: "v3.1.6")
+
+  """Psi Cubic Inch per Second | UCUM: [psi].[in_i]3.s-1"""
+  PSI_IN3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PSI-IN3-PER-SEC", versionTag: "v3.1.6")
+
+  """Psi Liter per Second | UCUM: [psi].L.s-1"""
+  PSI_L_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PSI-L-PER-SEC", versionTag: "v3.1.6")
+
+  """Psi Cubic Meter per Second | UCUM: [psi].m3.s-1"""
+  PSI_M3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PSI-M3-PER-SEC", versionTag: "v3.1.6")
+
+  """Psi Cubic Yard per Second | UCUM: [psi].[yd_i]3.s-1"""
+  PSI_YD3_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PSI-YD3-PER-SEC", versionTag: "v3.1.6")
+
+  """Terajoule per Second | UCUM: TJ.s-1"""
+  TERAJ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/TeraJ-PER-SEC", versionTag: "v3.1.6")
+
+  """Terawatt | UCUM: TW"""
+  TERAW @reference(uri: "http://qudt.org/vocab/unit/TeraW", versionTag: "v3.1.6")
+
+  """Terawatt Hour per Year | UCUM: TW.h.a-1"""
+  TERAW_HR_PER_YR @reference(uri: "http://qudt.org/vocab/unit/TeraW-HR-PER-YR", versionTag: "v3.1.6")
+
+  """Therm Us per Hour | UCUM: 100000.[Btu_59].h-1"""
+  THM_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/THM_US-PER-HR", versionTag: "v3.1.6")
+
+  """Ton of Refrigeration"""
+  TON_FG @reference(uri: "http://qudt.org/vocab/unit/TON_FG", versionTag: "v3.1.6")
+
+  """Watt | UCUM: W"""
+  W @reference(uri: "http://qudt.org/vocab/unit/W", versionTag: "v3.1.6")
+}

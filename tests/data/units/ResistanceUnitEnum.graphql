@@ -1,0 +1,32 @@
+# Generated from QUDT units catalog version v3.1.6
+enum ResistanceUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Resistance", versionTag: "v3.1.6") {
+  """Gigaohm | UCUM: GOhm"""
+  GIGAOHM @reference(uri: "http://qudt.org/vocab/unit/GigaOHM", versionTag: "v3.1.6")
+
+  """Kiloohm | UCUM: kOhm"""
+  KILOOHM @reference(uri: "http://qudt.org/vocab/unit/KiloOHM", versionTag: "v3.1.6")
+
+  """Megaohm | UCUM: MOhm"""
+  MEGAOHM @reference(uri: "http://qudt.org/vocab/unit/MegaOHM", versionTag: "v3.1.6")
+
+  """Microohm | UCUM: uOhm"""
+  MICROOHM @reference(uri: "http://qudt.org/vocab/unit/MicroOHM", versionTag: "v3.1.6")
+
+  """Milliohm | UCUM: mOhm"""
+  MILLIOHM @reference(uri: "http://qudt.org/vocab/unit/MilliOHM", versionTag: "v3.1.6")
+
+  """Ohm | UCUM: Ohm"""
+  OHM @reference(uri: "http://qudt.org/vocab/unit/OHM", versionTag: "v3.1.6")
+
+  """Abohm | UCUM: nOhm"""
+  OHM_AB @reference(uri: "http://qudt.org/vocab/unit/OHM_Ab", versionTag: "v3.1.6")
+
+  """Statohm"""
+  OHM_STAT @reference(uri: "http://qudt.org/vocab/unit/OHM_Stat", versionTag: "v3.1.6")
+
+  """Planck Impedance"""
+  PLANCKIMPEDANCE @reference(uri: "http://qudt.org/vocab/unit/PlanckImpedance", versionTag: "v3.1.6")
+
+  """Teraohm | UCUM: TOhm"""
+  TERAOHM @reference(uri: "http://qudt.org/vocab/unit/TeraOHM", versionTag: "v3.1.6")
+}

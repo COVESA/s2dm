@@ -1,5 +1,11 @@
 type Query {
   vehicle: Vehicle
+  person: Person
+}
+
+type Person {
+  id: ID!
+  name: String
 }
 
 enum Vehicle_ADAS_ActiveAutonomyLevel_Enum {
@@ -47,7 +53,7 @@ type Vehicle_ADAS_ABS {
 """Signals form Obstacle Sensor System."""
 type Vehicle_ADAS_ObstacleDetection {
   id: ID!
-  distance(unit: Length_Unit_Enum = METER): Float
+  distance(unit: LengthUnitEnum = M): Float
   isEnabled: Boolean
   warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
 }

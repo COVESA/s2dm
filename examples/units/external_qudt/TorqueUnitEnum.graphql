@@ -1,0 +1,56 @@
+# Generated from QUDT units catalog version v3.1.6
+enum TorqueUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Torque", versionTag: "v3.1.6") {
+  """Centinewton Meter | UCUM: cN.m"""
+  CENTIN_M @reference(uri: "http://qudt.org/vocab/unit/CentiN-M", versionTag: "v3.1.6")
+
+  """Decinewton Meter | UCUM: dN.m"""
+  DECIN_M @reference(uri: "http://qudt.org/vocab/unit/DeciN-M", versionTag: "v3.1.6")
+
+  """Dyne Centimeter | UCUM: dyn.cm"""
+  DYN_CENTIM @reference(uri: "http://qudt.org/vocab/unit/DYN-CentiM", versionTag: "v3.1.6")
+
+  """Dyne Meter | UCUM: dyn.m"""
+  DYN_M @reference(uri: "http://qudt.org/vocab/unit/DYN-M", versionTag: "v3.1.6")
+
+  """Foot Pound Force | UCUM: [ft_i].[lbf_av]"""
+  FT_LB_F @reference(uri: "http://qudt.org/vocab/unit/FT-LB_F", versionTag: "v3.1.6")
+
+  """Inch Poundal | UCUM: [in_i].[lb_av].[ft_i].s-2"""
+  IN_PDL @reference(uri: "http://qudt.org/vocab/unit/IN-PDL", versionTag: "v3.1.6")
+
+  """Kilo Gram Force Meter | UCUM: kgf.m"""
+  KILOGM_F_M @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F-M", versionTag: "v3.1.6")
+
+  """Kilonewton Meter | UCUM: kN.m"""
+  KILON_M @reference(uri: "http://qudt.org/vocab/unit/KiloN-M", versionTag: "v3.1.6")
+
+  """Pound Force Foot | UCUM: [lbf_av].[ft_i]"""
+  LB_F_FT @reference(uri: "http://qudt.org/vocab/unit/LB_F-FT", versionTag: "v3.1.6")
+
+  """Pound Force Inch | UCUM: [lbf_av].[in_i]"""
+  LB_F_IN @reference(uri: "http://qudt.org/vocab/unit/LB_F-IN", versionTag: "v3.1.6")
+
+  """Meganewton Meter | UCUM: MN.m"""
+  MEGAN_M @reference(uri: "http://qudt.org/vocab/unit/MegaN-M", versionTag: "v3.1.6")
+
+  """Micronewton Meter | UCUM: uN.m"""
+  MICRON_M @reference(uri: "http://qudt.org/vocab/unit/MicroN-M", versionTag: "v3.1.6")
+
+  """Millinewton Meter | UCUM: mN.m"""
+  MILLIN_M @reference(uri: "http://qudt.org/vocab/unit/MilliN-M", versionTag: "v3.1.6")
+
+  """Newton Centimeter | UCUM: N.cm"""
+  N_CENTIM @reference(uri: "http://qudt.org/vocab/unit/N-CentiM", versionTag: "v3.1.6")
+
+  """Newton Meter | UCUM: N.m"""
+  N_M @reference(uri: "http://qudt.org/vocab/unit/N-M", versionTag: "v3.1.6")
+
+  """Imperial Ounce Force Inch | UCUM: [ozf_av].[in_i]"""
+  OZ_F_IN @reference(uri: "http://qudt.org/vocab/unit/OZ_F-IN", versionTag: "v3.1.6")
+
+  """Poundal Foot | UCUM: [lb_av].[ft_i].s-2.[ft_i]"""
+  PDL_FT @reference(uri: "http://qudt.org/vocab/unit/PDL-FT", versionTag: "v3.1.6")
+
+  """Poundal Inch | UCUM: [lb_av].[ft_i].s-2.[in_i]"""
+  PDL_IN @reference(uri: "http://qudt.org/vocab/unit/PDL-IN", versionTag: "v3.1.6")
+}

@@ -43,17 +43,17 @@ type Backrest {
   """
   Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported.
   """
-  lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8 @metadata(vssType: "actuator")
+  lumbarHeight(unit: LengthUnitEnum = MILLIM): UInt8 @metadata(vssType: "actuator")
 
   """
   Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
   """
-  lumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float @range(max: 100) @metadata(vssType: "actuator")
+  lumbarSupport(unit: DimensionlessRatioUnitEnum = PERCENT): Float @range(max: 100) @metadata(vssType: "actuator")
 
   """
   Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline.
   """
-  recline(unit: Angle_Unit_Enum = DEGREE): Float
+  recline(unit: AngleUnitEnum = DEG): Float
     @metadata(
       comment:"Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.",
       vssType: "actuator")
@@ -61,5 +61,5 @@ type Backrest {
   """
   Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
   """
-  sideBolsterSupport(unit: Relation_Unit_Enum = PERCENT): Float @range(max: 100) @metadata(vssType: "actuator")
+  sideBolsterSupport(unit: DimensionlessRatioUnitEnum = PERCENT): Float @range(max: 100) @metadata(vssType: "actuator")
 }

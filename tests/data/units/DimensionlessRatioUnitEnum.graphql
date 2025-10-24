@@ -1,0 +1,44 @@
+# Generated from QUDT units catalog version 3.1.5
+enum DimensionlessRatioUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DimensionlessRatio", versionTag: "3.1.5") {
+  """Fraction | UCUM: {fraction}"""
+  FRACTION @reference(uri: "http://qudt.org/vocab/unit/FRACTION", versionTag: "3.1.5")
+
+  """Grade"""
+  GR @reference(uri: "http://qudt.org/vocab/unit/GR", versionTag: "3.1.5")
+
+  """Number | UCUM: 1"""
+  NUM @reference(uri: "http://qudt.org/vocab/unit/NUM", versionTag: "3.1.5")
+
+  """One per One"""
+  ONE_PER_ONE @reference(uri: "http://qudt.org/vocab/unit/ONE-PER-ONE", versionTag: "3.1.5")
+
+  """Percent | UCUM: %"""
+  PERCENT @reference(uri: "http://qudt.org/vocab/unit/PERCENT", versionTag: "3.1.5")
+
+  """Relative Permittivity | UCUM: [eps_0]"""
+  PERMITTIVITY_REL @reference(uri: "http://qudt.org/vocab/unit/PERMITTIVITY_REL", versionTag: "3.1.5")
+
+  """Parts per Billion | UCUM: [ppb]"""
+  PPB @reference(uri: "http://qudt.org/vocab/unit/PPB", versionTag: "3.1.5")
+
+  """Parts per Million | UCUM: [ppm]"""
+  PPM @reference(uri: "http://qudt.org/vocab/unit/PPM", versionTag: "3.1.5")
+
+  """Part per Quadrillion | UCUM: [ppq]"""
+  PPQ @reference(uri: "http://qudt.org/vocab/unit/PPQ", versionTag: "3.1.5")
+
+  """Part per Trillion | UCUM: [ppt]"""
+  PPT @reference(uri: "http://qudt.org/vocab/unit/PPT", versionTag: "3.1.5")
+
+  """Parts per Thousand | UCUM: [ppth]"""
+  PPTH @reference(uri: "http://qudt.org/vocab/unit/PPTH", versionTag: "3.1.5")
+
+  """Parts per Ten Million"""
+  PPTM @reference(uri: "http://qudt.org/vocab/unit/PPTM", versionTag: "3.1.5")
+
+  """Practical Salinity Unit"""
+  PSU @reference(uri: "http://qudt.org/vocab/unit/PSU", versionTag: "3.1.5")
+
+  """Unitless"""
+  UNITLESS @reference(uri: "http://qudt.org/vocab/unit/UNITLESS", versionTag: "3.1.5")
+}

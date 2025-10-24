@@ -1,0 +1,146 @@
+# Generated from QUDT units catalog version v3.1.6
+enum VolumeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Volume", versionTag: "v3.1.6") {
+  """Acre Foot | UCUM: [acr_br].[ft_i]"""
+  AC_FT @reference(uri: "http://qudt.org/vocab/unit/AC-FT", versionTag: "v3.1.6")
+
+  """Acre Us Survey Foot | UCUM: [acr_br].[ft_us]"""
+  AC_FT_US @reference(uri: "http://qudt.org/vocab/unit/AC-FT_US", versionTag: "v3.1.6")
+
+  """Cubic Angstrom | UCUM: Ao3"""
+  ANGSTROM3 @reference(uri: "http://qudt.org/vocab/unit/ANGSTROM3", versionTag: "v3.1.6")
+
+  """Barrel | UCUM: [bbl_us]"""
+  BBL @reference(uri: "http://qudt.org/vocab/unit/BBL", versionTag: "v3.1.6")
+
+  """Barrel (UK Petroleum)"""
+  BBL_UK_PET @reference(uri: "http://qudt.org/vocab/unit/BBL_UK_PET", versionTag: "v3.1.6")
+
+  """Bushel (US Dry) | UCUM: [bu_us]"""
+  BU_US_DRY @reference(uri: "http://qudt.org/vocab/unit/BU_US_DRY", versionTag: "v3.1.6")
+
+  """Cubic Centimeter | UCUM: cm3"""
+  CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/CentiM3", versionTag: "v3.1.6")
+
+  """Decaliter | UCUM: daL"""
+  DECAL @reference(uri: "http://qudt.org/vocab/unit/DecaL", versionTag: "v3.1.6")
+
+  """Cubic Decameter | UCUM: dam3"""
+  DECAM3 @reference(uri: "http://qudt.org/vocab/unit/DecaM3", versionTag: "v3.1.6")
+
+  """Deciliter | UCUM: dL"""
+  DECIL @reference(uri: "http://qudt.org/vocab/unit/DeciL", versionTag: "v3.1.6")
+
+  """Cubic Decimeter | UCUM: dm3"""
+  DECIM3 @reference(uri: "http://qudt.org/vocab/unit/DeciM3", versionTag: "v3.1.6")
+
+  """Board Foot | UCUM: [bf_i]"""
+  FBM @reference(uri: "http://qudt.org/vocab/unit/FBM", versionTag: "v3.1.6")
+
+  """Femtoliter | UCUM: fL"""
+  FEMTOL @reference(uri: "http://qudt.org/vocab/unit/FemtoL", versionTag: "v3.1.6")
+
+  """Cubic Foot | UCUM: [ft_i]3"""
+  FT3 @reference(uri: "http://qudt.org/vocab/unit/FT3", versionTag: "v3.1.6")
+
+  """Gill (UK) | UCUM: [gil_br]"""
+  GI_UK @reference(uri: "http://qudt.org/vocab/unit/GI_UK", versionTag: "v3.1.6")
+
+  """Gill (US) | UCUM: [gil_us]"""
+  GI_US @reference(uri: "http://qudt.org/vocab/unit/GI_US", versionTag: "v3.1.6")
+
+  """Gross Tonnage | UCUM: t{gross}"""
+  GT @reference(uri: "http://qudt.org/vocab/unit/GT", versionTag: "v3.1.6")
+
+  """Hectoliter | UCUM: hL"""
+  HECTOL @reference(uri: "http://qudt.org/vocab/unit/HectoL", versionTag: "v3.1.6")
+
+  """Cubic Inch | UCUM: [in_i]3"""
+  IN3 @reference(uri: "http://qudt.org/vocab/unit/IN3", versionTag: "v3.1.6")
+
+  """Kilo Cubic Foot | UCUM: k[ft_i]3"""
+  KILOCUBICFT @reference(uri: "http://qudt.org/vocab/unit/KiloCubicFT", versionTag: "v3.1.6")
+
+  """Kiloliter | UCUM: kL"""
+  KILOL @reference(uri: "http://qudt.org/vocab/unit/KiloL", versionTag: "v3.1.6")
+
+  """Liter | UCUM: L"""
+  L @reference(uri: "http://qudt.org/vocab/unit/L", versionTag: "v3.1.6")
+
+  """Cubic Meter | UCUM: m3"""
+  M3 @reference(uri: "http://qudt.org/vocab/unit/M3", versionTag: "v3.1.6")
+
+  """Megaliter | UCUM: ML"""
+  MEGAL @reference(uri: "http://qudt.org/vocab/unit/MegaL", versionTag: "v3.1.6")
+
+  """Cubic International Mile | UCUM: [mi_i]3"""
+  MI3 @reference(uri: "http://qudt.org/vocab/unit/MI3", versionTag: "v3.1.6")
+
+  """Microliter | UCUM: uL"""
+  MICROL @reference(uri: "http://qudt.org/vocab/unit/MicroL", versionTag: "v3.1.6")
+
+  """Cubic Micrometer | UCUM: um3"""
+  MICROM3 @reference(uri: "http://qudt.org/vocab/unit/MicroM3", versionTag: "v3.1.6")
+
+  """Milliliter | UCUM: mL"""
+  MILLIL @reference(uri: "http://qudt.org/vocab/unit/MilliL", versionTag: "v3.1.6")
+
+  """Cubic Millimeter | UCUM: mm3"""
+  MILLIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliM3", versionTag: "v3.1.6")
+
+  """Cubic Mile (uk Statute)"""
+  MI_UK3 @reference(uri: "http://qudt.org/vocab/unit/MI_UK3", versionTag: "v3.1.6")
+
+  """Nanoliter | UCUM: nL"""
+  NANOL @reference(uri: "http://qudt.org/vocab/unit/NanoL", versionTag: "v3.1.6")
+
+  """Net Tonnage"""
+  NT @reference(uri: "http://qudt.org/vocab/unit/NT", versionTag: "v3.1.6")
+
+  """Fluid Ounce (UK) | UCUM: [foz_br]"""
+  OZ_VOL_UK @reference(uri: "http://qudt.org/vocab/unit/OZ_VOL_UK", versionTag: "v3.1.6")
+
+  """Picoliter | UCUM: pL"""
+  PICOL @reference(uri: "http://qudt.org/vocab/unit/PicoL", versionTag: "v3.1.6")
+
+  """Imperial Pint | UCUM: [pt_br]"""
+  PINT @reference(uri: "http://qudt.org/vocab/unit/PINT", versionTag: "v3.1.6")
+
+  """Pint (UK) | UCUM: [pt_br]"""
+  PINT_UK @reference(uri: "http://qudt.org/vocab/unit/PINT_UK", versionTag: "v3.1.6")
+
+  """Peck (UK) | UCUM: [pk_br]"""
+  PK_UK @reference(uri: "http://qudt.org/vocab/unit/PK_UK", versionTag: "v3.1.6")
+
+  """Planck Volume"""
+  PLANCKVOLUME @reference(uri: "http://qudt.org/vocab/unit/PlanckVolume", versionTag: "v3.1.6")
+
+  """Quart (UK) | UCUM: [qt_br]"""
+  QT_UK @reference(uri: "http://qudt.org/vocab/unit/QT_UK", versionTag: "v3.1.6")
+
+  """Us Liquid Quart | UCUM: [qt_us]"""
+  QT_US @reference(uri: "http://qudt.org/vocab/unit/QT_US", versionTag: "v3.1.6")
+
+  """Standard | UCUM: 1980.[bf_i]"""
+  STANDARD @reference(uri: "http://qudt.org/vocab/unit/STANDARD", versionTag: "v3.1.6")
+
+  """Stere | UCUM: st"""
+  STR @reference(uri: "http://qudt.org/vocab/unit/STR", versionTag: "v3.1.6")
+
+  """Tablespoon | UCUM: [tbs_us]"""
+  TBSP @reference(uri: "http://qudt.org/vocab/unit/TBSP", versionTag: "v3.1.6")
+
+  """Ton, Register"""
+  TON_REGISTER @reference(uri: "http://qudt.org/vocab/unit/TON_Register", versionTag: "v3.1.6")
+
+  """Ton (uk Shipping)"""
+  TON_SHIPPING_UK @reference(uri: "http://qudt.org/vocab/unit/TON_SHIPPING_UK", versionTag: "v3.1.6")
+
+  """Ton (us Shipping)"""
+  TON_SHIPPING_US @reference(uri: "http://qudt.org/vocab/unit/TON_SHIPPING_US", versionTag: "v3.1.6")
+
+  """Teaspoon | UCUM: [tsp_us]"""
+  TSP @reference(uri: "http://qudt.org/vocab/unit/TSP", versionTag: "v3.1.6")
+
+  """Cubic Yard | UCUM: [yd_i]3"""
+  YD3 @reference(uri: "http://qudt.org/vocab/unit/YD3", versionTag: "v3.1.6")
+}

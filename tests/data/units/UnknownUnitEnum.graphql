@@ -1,0 +1,1382 @@
+# Generated from QUDT units catalog version v3.1.6
+enum UnknownUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Unknown", versionTag: "v3.1.6") {
+  """Square Ampere Second | UCUM: A2.s"""
+  A2_SEC @reference(uri: "http://qudt.org/vocab/unit/A2-SEC", versionTag: "v3.1.6")
+
+  """American Wire Gage"""
+  AWG @reference(uri: "http://qudt.org/vocab/unit/AWG", versionTag: "v3.1.6")
+
+  """Ampere Hour per Degree Celsius | UCUM: A.h.Cel-1"""
+  A_HR_PER_DEG_C @reference(uri: "http://qudt.org/vocab/unit/A-HR-PER-DEG_C", versionTag: "v3.1.6")
+
+  """Ampere per Ampere Hour | UCUM: A.A-1.h-1"""
+  A_PER_A_HR @reference(uri: "http://qudt.org/vocab/unit/A-PER-A-HR", versionTag: "v3.1.6")
+
+  """Ampere per Pascal | UCUM: A.Pa-1"""
+  A_PER_PA @reference(uri: "http://qudt.org/vocab/unit/A-PER-PA", versionTag: "v3.1.6")
+
+  """Ampere Square Second | UCUM: A.s2"""
+  A_SEC2 @reference(uri: "http://qudt.org/vocab/unit/A-SEC2", versionTag: "v3.1.6")
+
+  """Barn per Electron Volt | UCUM: b.eV-1"""
+  BARN_PER_EV @reference(uri: "http://qudt.org/vocab/unit/BARN-PER-EV", versionTag: "v3.1.6")
+
+  """Barn per Steradian | UCUM: b.sr-1"""
+  BARN_PER_SR @reference(uri: "http://qudt.org/vocab/unit/BARN-PER-SR", versionTag: "v3.1.6")
+
+  """Barn per Steradian Electron Volt | UCUM: b.sr-1.eV-1"""
+  BARN_PER_SR_EV @reference(uri: "http://qudt.org/vocab/unit/BARN-PER-SR-EV", versionTag: "v3.1.6")
+
+  """Square Centimeter per Cubic Centimeter | UCUM: cm2.cm-3"""
+  CENTIM2_PER_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/CentiM2-PER-CentiM3", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Bar | UCUM: cm3.bar-1"""
+  CENTIM3_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-BAR", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Day Bar | UCUM: cm3.d-1.bar-1"""
+  CENTIM3_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Day Kelvin | UCUM: cm3.d-1.K-1"""
+  CENTIM3_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Hour Bar | UCUM: cm3.h-1.bar-1"""
+  CENTIM3_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Hour Kelvin | UCUM: cm3.h-1.K-1"""
+  CENTIM3_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-HR-K", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Minute Bar | UCUM: cm3.min-1.bar-1"""
+  CENTIM3_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Minute Kelvin | UCUM: cm3.min-1.K-1"""
+  CENTIM3_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Second Bar | UCUM: cm3.s-1.bar-1"""
+  CENTIM3_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Cubic Centimeter per Second Kelvin | UCUM: cm3.s-1.K-1"""
+  CENTIM3_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/CentiM3-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Centimeter per Bar | UCUM: cm.bar-1"""
+  CENTIM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-BAR", versionTag: "v3.1.6")
+
+  """Centimeter per Second Bar | UCUM: cm.s-1.bar-1"""
+  CENTIM_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Centimeter per Second Kelvin | UCUM: cm.s-1.K-1"""
+  CENTIM_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Centipoise per Kelvin | UCUM: cP.K-1"""
+  CENTIPOISE_PER_K @reference(uri: "http://qudt.org/vocab/unit/CentiPOISE-PER-K", versionTag: "v3.1.6")
+
+  """Coulomb Square Meter per Kilogram | UCUM: C.m2.kg-1"""
+  C_M2_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/C-M2-PER-KiloGM", versionTag: "v3.1.6")
+
+  """Decibel Milliwatt | UCUM: dB.mW"""
+  DECIB_MILLIW @reference(uri: "http://qudt.org/vocab/unit/DeciB-MilliW", versionTag: "v3.1.6")
+
+  """Decibel Milliwatt per Megahertz | UCUM: dB.mW.MHz-1"""
+  DECIB_MILLIW_PER_MEGAHZ @reference(uri: "http://qudt.org/vocab/unit/DeciB-MilliW-PER-MegaHZ", versionTag: "v3.1.6")
+
+  """Decibel Watt | UCUM: dB.W"""
+  DECIB_W @reference(uri: "http://qudt.org/vocab/unit/DeciB-W", versionTag: "v3.1.6")
+
+  """Square Degree Celsius per Second | UCUM: Cel2.s-1"""
+  DEG_C2_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/DEG_C2-PER-SEC", versionTag: "v3.1.6")
+
+  """Degree Celsius Kilogram per Square Meter | UCUM: Cel.kg.m-2"""
+  DEG_C_KILOGM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/DEG_C-KiloGM-PER-M2", versionTag: "v3.1.6")
+
+  """Degree Celsius per Bar | UCUM: Cel.bar-1"""
+  DEG_C_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/DEG_C-PER-BAR", versionTag: "v3.1.6")
+
+  """Degree Fahrenheit per Bar | UCUM: [degF].bar-1"""
+  DEG_F_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/DEG_F-PER-BAR", versionTag: "v3.1.6")
+
+  """Square Foot per British Thermal Unit (international Definition) Inch | UCUM: [ft_i]2.[Btu_IT]-1.[in_i]-1"""
+  FT2_PER_BTU_IT_IN @reference(uri: "http://qudt.org/vocab/unit/FT2-PER-BTU_IT-IN", versionTag: "v3.1.6")
+
+  """Cubic Foot per Psi | UCUM: [ft_i]3.[psi]-1"""
+  FT3_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/FT3-PER-PSI", versionTag: "v3.1.6")
+
+  """Foot Hour per Gallon (UK) | UCUM: [ft_i].h.[gal_br]-1"""
+  FT_HR_PER_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/FT-HR-PER-GAL_UK", versionTag: "v3.1.6")
+
+  """Foot Hour per Us Gallon | UCUM: [ft_i].h.[gal_us]-1"""
+  FT_HR_PER_GAL_US @reference(uri: "http://qudt.org/vocab/unit/FT-HR-PER-GAL_US", versionTag: "v3.1.6")
+
+  """Foot Hour per Cubic Inch | UCUM: [ft_i].h.[in_i]-3"""
+  FT_HR_PER_IN3 @reference(uri: "http://qudt.org/vocab/unit/FT-HR-PER-IN3", versionTag: "v3.1.6")
+
+  """Foot per Psi | UCUM: [ft_i].[psi]-1"""
+  FT_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/FT-PER-PSI", versionTag: "v3.1.6")
+
+  """Foot per Second Degree Fahrenheit | UCUM: [ft_i].s-1.[degF]-1"""
+  FT_PER_SEC_DEG_F @reference(uri: "http://qudt.org/vocab/unit/FT-PER-SEC-DEG_F", versionTag: "v3.1.6")
+
+  """Foot per Second Psi | UCUM: [ft_i].s-1.[psi]-1"""
+  FT_PER_SEC_PSI @reference(uri: "http://qudt.org/vocab/unit/FT-PER-SEC-PSI", versionTag: "v3.1.6")
+
+  """Foot Second per Gallon (UK) | UCUM: [ft_i].s.[gal_br]-1"""
+  FT_SEC_PER_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/FT-SEC-PER-GAL_UK", versionTag: "v3.1.6")
+
+  """Foot Second per Us Gallon | UCUM: [ft_i].s.[gal_us]-1"""
+  FT_SEC_PER_GAL_US @reference(uri: "http://qudt.org/vocab/unit/FT-SEC-PER-GAL_US", versionTag: "v3.1.6")
+
+  """Foot Second per Cubic Inch | UCUM: [ft_i].s.[in_i]-3"""
+  FT_SEC_PER_IN3 @reference(uri: "http://qudt.org/vocab/unit/FT-SEC-PER-IN3", versionTag: "v3.1.6")
+
+  """Gram Hour per Square Liter | UCUM: g.h.L-2"""
+  GM_HR_PER_L2 @reference(uri: "http://qudt.org/vocab/unit/GM-HR-PER-L2", versionTag: "v3.1.6")
+
+  """Gram Hour per Liter Cubic Centimeter | UCUM: g.h.L-1.cm-3"""
+  GM_HR_PER_L_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/GM-HR-PER-L-CentiM3", versionTag: "v3.1.6")
+
+  """Gram Hour per Liter Cubic Meter | UCUM: g.h.L-1.m-3"""
+  GM_HR_PER_L_M3 @reference(uri: "http://qudt.org/vocab/unit/GM-HR-PER-L-M3", versionTag: "v3.1.6")
+
+  """Gram Hour per Cubic Meter Cubic Centimeter | UCUM: g.h.m-3.cm-3"""
+  GM_HR_PER_M3_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/GM-HR-PER-M3-CentiM3", versionTag: "v3.1.6")
+
+  """Gram Hour per Cubic Meter Liter | UCUM: g.h.m-3.L-1"""
+  GM_HR_PER_M3_L @reference(uri: "http://qudt.org/vocab/unit/GM-HR-PER-M3-L", versionTag: "v3.1.6")
+
+  """Gram Hour per Sextic Meter | UCUM: g.h.m-6"""
+  GM_HR_PER_M6 @reference(uri: "http://qudt.org/vocab/unit/GM-HR-PER-M6", versionTag: "v3.1.6")
+
+  """Gram Minute per Square Liter | UCUM: g.min.L-2"""
+  GM_MIN_PER_L2 @reference(uri: "http://qudt.org/vocab/unit/GM-MIN-PER-L2", versionTag: "v3.1.6")
+
+  """Gram Minute per Liter Cubic Centimeter | UCUM: g.min.L-1.cm-3"""
+  GM_MIN_PER_L_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/GM-MIN-PER-L-CentiM3", versionTag: "v3.1.6")
+
+  """Gram Minute per Liter Cubic Meter | UCUM: g.min.L-1.m-3"""
+  GM_MIN_PER_L_M3 @reference(uri: "http://qudt.org/vocab/unit/GM-MIN-PER-L-M3", versionTag: "v3.1.6")
+
+  """Gram Minute per Cubic Meter Cubic Centimeter | UCUM: g.min.m-3.cm-3"""
+  GM_MIN_PER_M3_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/GM-MIN-PER-M3-CentiM3", versionTag: "v3.1.6")
+
+  """Gram Minute per Cubic Meter Liter | UCUM: g.min.m-3.L-1"""
+  GM_MIN_PER_M3_L @reference(uri: "http://qudt.org/vocab/unit/GM-MIN-PER-M3-L", versionTag: "v3.1.6")
+
+  """Gram Minute per Sextic Meter | UCUM: g.min.m-6"""
+  GM_MIN_PER_M6 @reference(uri: "http://qudt.org/vocab/unit/GM-MIN-PER-M6", versionTag: "v3.1.6")
+
+  """Gram per Bar | UCUM: g.bar-1"""
+  GM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-BAR", versionTag: "v3.1.6")
+
+  """Gram per Cubic Centimeter Kelvin | UCUM: g.cm-3.K-1"""
+  GM_PER_CENTIM3_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-CentiM3-K", versionTag: "v3.1.6")
+
+  """Gram per Day Bar | UCUM: g.d-1.bar-1"""
+  GM_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Gram per Day Kelvin | UCUM: g.d-1.K-1"""
+  GM_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Gram per Cubic Decimeter Kelvin | UCUM: g.dm-3.K-1"""
+  GM_PER_DECIM3_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-DeciM3-K", versionTag: "v3.1.6")
+
+  """Gram per Degree Celsius | UCUM: g.Cel-1"""
+  GM_PER_DEG_C @reference(uri: "http://qudt.org/vocab/unit/GM-PER-DEG_C", versionTag: "v3.1.6")
+
+  """Gram per Hour Bar | UCUM: g.h-1.bar-1"""
+  GM_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Gram per Hour Kelvin | UCUM: g.h-1.K-1"""
+  GM_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-HR-K", versionTag: "v3.1.6")
+
+  """Gram per Hertz | UCUM: g.Hz-1"""
+  GM_PER_HZ @reference(uri: "http://qudt.org/vocab/unit/GM-PER-HZ", versionTag: "v3.1.6")
+
+  """Gram per Kelvin | UCUM: g.K-1"""
+  GM_PER_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-K", versionTag: "v3.1.6")
+
+  """Gram per Liter Centipoise | UCUM: g.L-1.cP-1"""
+  GM_PER_L_CENTIPOISE @reference(uri: "http://qudt.org/vocab/unit/GM-PER-L-CentiPOISE", versionTag: "v3.1.6")
+
+  """Gram per Liter Kelvin | UCUM: g.L-1.K-1"""
+  GM_PER_L_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-L-K", versionTag: "v3.1.6")
+
+  """Gram per Liter Millipascal Second | UCUM: g.L-1.mPa-1.s-1"""
+  GM_PER_L_MILLIPA_SEC @reference(uri: "http://qudt.org/vocab/unit/GM-PER-L-MilliPA-SEC", versionTag: "v3.1.6")
+
+  """Gram per Liter Pascal Second | UCUM: g.L-1.Pa-1.s-1"""
+  GM_PER_L_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/GM-PER-L-PA-SEC", versionTag: "v3.1.6")
+
+  """Gram per Liter Poise | UCUM: g.L-1.P-1"""
+  GM_PER_L_POISE @reference(uri: "http://qudt.org/vocab/unit/GM-PER-L-POISE", versionTag: "v3.1.6")
+
+  """Gram per Cubic Meter Centipoise | UCUM: g.m-3.cP-1"""
+  GM_PER_M3_CENTIPOISE @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M3-CentiPOISE", versionTag: "v3.1.6")
+
+  """Gram per Cubic Meter Kelvin | UCUM: g.m-3.K-1"""
+  GM_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M3-K", versionTag: "v3.1.6")
+
+  """Gram per Cubic Meter Millipascal Second | UCUM: g.m-3.mPa-1.s-1"""
+  GM_PER_M3_MILLIPA_SEC @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M3-MilliPA-SEC", versionTag: "v3.1.6")
+
+  """Gram per Cubic Meter Pascal Second | UCUM: g.m-3.Pa-1.s-1"""
+  GM_PER_M3_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M3-PA-SEC", versionTag: "v3.1.6")
+
+  """Gram per Cubic Meter Poise | UCUM: g.m-3.P-1"""
+  GM_PER_M3_POISE @reference(uri: "http://qudt.org/vocab/unit/GM-PER-M3-POISE", versionTag: "v3.1.6")
+
+  """Gram per Milliliter Kelvin | UCUM: g.mL-1.K-1"""
+  GM_PER_MILLIL_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MilliL-K", versionTag: "v3.1.6")
+
+  """Gram per Minute Bar | UCUM: g.min-1.bar-1"""
+  GM_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Gram per Minute Kelvin | UCUM: g.min-1.K-1"""
+  GM_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Gram per Second Bar | UCUM: g.s-1.bar-1"""
+  GM_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Gram per Second Kelvin | UCUM: g.s-1.K-1"""
+  GM_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/GM-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Gram Second per Square Liter | UCUM: g.s.L-2"""
+  GM_SEC_PER_L2 @reference(uri: "http://qudt.org/vocab/unit/GM-SEC-PER-L2", versionTag: "v3.1.6")
+
+  """Gram Second per Liter Cubic Centimeter | UCUM: g.s.L-1.cm-3"""
+  GM_SEC_PER_L_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/GM-SEC-PER-L-CentiM3", versionTag: "v3.1.6")
+
+  """Gram Second per Liter Cubic Meter | UCUM: g.s.L-1.m-3"""
+  GM_SEC_PER_L_M3 @reference(uri: "http://qudt.org/vocab/unit/GM-SEC-PER-L-M3", versionTag: "v3.1.6")
+
+  """Gram Second per Cubic Meter Cubic Centimeter | UCUM: g.s.m-3.cm-3"""
+  GM_SEC_PER_M3_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/GM-SEC-PER-M3-CentiM3", versionTag: "v3.1.6")
+
+  """Gram Second per Cubic Meter Liter | UCUM: g.s.m-3.L-1"""
+  GM_SEC_PER_M3_L @reference(uri: "http://qudt.org/vocab/unit/GM-SEC-PER-M3-L", versionTag: "v3.1.6")
+
+  """Gram Second per Sextic Meter | UCUM: g.s.m-6"""
+  GM_SEC_PER_M6 @reference(uri: "http://qudt.org/vocab/unit/GM-SEC-PER-M6", versionTag: "v3.1.6")
+
+  """Hour per Square Foot | UCUM: h.[ft_i]-2"""
+  HR_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/HR-PER-FT2", versionTag: "v3.1.6")
+
+  """Inch per Psi | UCUM: [in_i].[psi]-1"""
+  IN_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/IN-PER-PSI", versionTag: "v3.1.6")
+
+  """Inch per Second Degree Fahrenheit | UCUM: [in_i].s-1.[degF]-1"""
+  IN_PER_SEC_DEG_F @reference(uri: "http://qudt.org/vocab/unit/IN-PER-SEC-DEG_F", versionTag: "v3.1.6")
+
+  """Inch per Second Psi | UCUM: [in_i].s-1.[psi]-1"""
+  IN_PER_SEC_PSI @reference(uri: "http://qudt.org/vocab/unit/IN-PER-SEC-PSI", versionTag: "v3.1.6")
+
+  """Square Kelvin | UCUM: K2"""
+  K2 @reference(uri: "http://qudt.org/vocab/unit/K2", versionTag: "v3.1.6")
+
+  """Square Kilogram per Square Second | UCUM: kg2.s-2"""
+  KILOGM2_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM2-PER-SEC2", versionTag: "v3.1.6")
+
+  """Kilogram per Bar | UCUM: kg.bar-1"""
+  KILOGM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-BAR", versionTag: "v3.1.6")
+
+  """Kilogram per Cubic Centimeter Kelvin | UCUM: kg.cm-3.K-1"""
+  KILOGM_PER_CENTIM3_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-CentiM3-K", versionTag: "v3.1.6")
+
+  """Kilogram per Day Bar | UCUM: kg.d-1.bar-1"""
+  KILOGM_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Kilogram per Day Kelvin | UCUM: kg.d-1.K-1"""
+  KILOGM_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Kilogram per Cubic Decimeter Kelvin | UCUM: kg.dm-3.K-1"""
+  KILOGM_PER_DECIM3_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-DeciM3-K", versionTag: "v3.1.6")
+
+  """Kilogram per Hour Bar | UCUM: kg.h-1.bar-1"""
+  KILOGM_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Kilogram per Hour Kelvin | UCUM: kg.h-1.K-1"""
+  KILOGM_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-HR-K", versionTag: "v3.1.6")
+
+  """Kilogram per Kelvin | UCUM: kg.K-1"""
+  KILOGM_PER_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-K", versionTag: "v3.1.6")
+
+  """Kilogram per Liter Kelvin | UCUM: kg.L-1.K-1"""
+  KILOGM_PER_L_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-L-K", versionTag: "v3.1.6")
+
+  """Kilogram per Cubic Meter Kelvin | UCUM: kg.m-3.K-1"""
+  KILOGM_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M3-K", versionTag: "v3.1.6")
+
+  """Kilogram per Cubic Meter Second | UCUM: kg.m-3.s-1"""
+  KILOGM_PER_M3_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-M3-SEC", versionTag: "v3.1.6")
+
+  """Kilogram per Minute Bar | UCUM: kg.min-1.bar-1"""
+  KILOGM_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Kilogram per Minute Kelvin | UCUM: kg.min-1.K-1"""
+  KILOGM_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Kilogram per Pascal | UCUM: kg.Pa-1"""
+  KILOGM_PER_PA @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-PA", versionTag: "v3.1.6")
+
+  """Kilogram per Second Bar | UCUM: kg.s-1.bar-1"""
+  KILOGM_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Kilogram per Second Kelvin | UCUM: kg.s-1.K-1"""
+  KILOGM_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Kilogram per Second Pascal | UCUM: kg.s-1.Pa-1"""
+  KILOGM_PER_SEC_PA @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC-PA", versionTag: "v3.1.6")
+
+  """Kilogram Square Second | UCUM: kg.s2"""
+  KILOGM_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-SEC2", versionTag: "v3.1.6")
+
+  """Kilomole per Cubic Meter Bar | UCUM: kmol.m-3.bar-1"""
+  KILOMOL_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-M3-BAR", versionTag: "v3.1.6")
+
+  """Kilomole per Cubic Meter Kelvin | UCUM: kmol.m-3.K-1"""
+  KILOMOL_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/KiloMOL-PER-M3-K", versionTag: "v3.1.6")
+
+  """Kilometer per Second Bar | UCUM: km.s-1.bar-1"""
+  KILOM_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloM-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Kiloohm per Bar | UCUM: kOhm.bar-1"""
+  KILOOHM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/KiloOHM-PER-BAR", versionTag: "v3.1.6")
+
+  """Kiloohm per Kelvin | UCUM: kOhm.K-1"""
+  KILOOHM_PER_K @reference(uri: "http://qudt.org/vocab/unit/KiloOHM-PER-K", versionTag: "v3.1.6")
+
+  """Kilo Volt Ampere Reactive per Kelvin | UCUM: kVA{reactive}.K-1"""
+  KILOVAR_PER_K @reference(uri: "http://qudt.org/vocab/unit/KiloVAR-PER-K", versionTag: "v3.1.6")
+
+  """Kelvin Square Meter per Kilogram Second | UCUM: K.m2.kg-1.s-1"""
+  K_M2_PER_KILOGM_SEC @reference(uri: "http://qudt.org/vocab/unit/K-M2-PER-KiloGM-SEC", versionTag: "v3.1.6")
+
+  """Kelvin Meter per Second | UCUM: K.m.s-1"""
+  K_M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/K-M-PER-SEC", versionTag: "v3.1.6")
+
+  """Kelvin Pascal per Second | UCUM: K.Pa.s-1"""
+  K_PA_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/K-PA-PER-SEC", versionTag: "v3.1.6")
+
+  """Kelvin per Bar | UCUM: K.bar-1"""
+  K_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/K-PER-BAR", versionTag: "v3.1.6")
+
+  """Kelvin per Pascal | UCUM: K.Pa-1"""
+  K_PER_PA @reference(uri: "http://qudt.org/vocab/unit/K-PER-PA", versionTag: "v3.1.6")
+
+  """Pound Mass Square Foot per Gallon (UK) Pound Force Second | UCUM: [lb_av].[ft_i]2.[gal_br]-1.[lbf_av]-1.s-1"""
+  LB_FT2_PER_GAL_UK_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-FT2-PER-GAL_UK-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Square Foot per Us Gallon Pound Force Second | UCUM: [lb_av].[ft_i]2.[gal_us]-1.[lbf_av]-1.s-1"""
+  LB_FT2_PER_GAL_US_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-FT2-PER-GAL_US-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Square Foot per Cubic Inch Pound Force Second | UCUM: [lb_av].[ft_i]2.[in_i]-3.[lbf_av]-1.s-1"""
+  LB_FT2_PER_IN3_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-FT2-PER-IN3-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Foot Gallon (UK) | UCUM: [lb_av].h.[ft_i]-3.[gal_br]-1"""
+  LB_HR_PER_FT3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-FT3-GAL_UK", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Foot Us Gallon | UCUM: [lb_av].h.[ft_i]-3.[gal_us]-1"""
+  LB_HR_PER_FT3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-FT3-GAL_US", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Foot Cubic Inch | UCUM: [lb_av].h.[ft_i]-3.[in_i]-3"""
+  LB_HR_PER_FT3_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-FT3-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Foot Cubic Yard | UCUM: [lb_av].h.[ft_i]-3.[yd_i]-3"""
+  LB_HR_PER_FT3_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-FT3-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Sextic Foot | UCUM: [lb_av].h.[ft_i]-6"""
+  LB_HR_PER_FT6 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-FT6", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Square Gallon (UK) | UCUM: [lb_av].h.[gal_br]-2"""
+  LB_HR_PER_GAL_UK2 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_UK2", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Gallon (UK) Cubic Foot | UCUM: [lb_av].h.[gal_br]-1.[ft_i]-3"""
+  LB_HR_PER_GAL_UK_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_UK-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Gallon (UK) Cubic Inch | UCUM: [lb_av].h.[gal_br]-1.[in_i]-3"""
+  LB_HR_PER_GAL_UK_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_UK-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Gallon (UK) Cubic Yard | UCUM: [lb_av].h.[gal_br]-1.[yd_i]-3"""
+  LB_HR_PER_GAL_UK_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_UK-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Square Us Gallon | UCUM: [lb_av].h.[gal_us]-2"""
+  LB_HR_PER_GAL_US2 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_US2", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Us Gallon Cubic Foot | UCUM: [lb_av].h.[gal_us]-1.[ft_i]-3"""
+  LB_HR_PER_GAL_US_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_US-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Us Gallon Cubic Inch | UCUM: [lb_av].h.[gal_us]-1.[in_i]-3"""
+  LB_HR_PER_GAL_US_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_US-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Us Gallon Cubic Yard | UCUM: [lb_av].h.[gal_us]-1.[yd_i]-3"""
+  LB_HR_PER_GAL_US_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-GAL_US-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Inch Cubic Foot | UCUM: [lb_av].h.[in_i]-3.[ft_i]-3"""
+  LB_HR_PER_IN3_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-IN3-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Inch Gallon (UK) | UCUM: [lb_av].h.[in_i]-3.[gal_br]-1"""
+  LB_HR_PER_IN3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-IN3-GAL_UK", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Inch Us Gallon | UCUM: [lb_av].h.[in_i]-3.[gal_us]-1"""
+  LB_HR_PER_IN3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-IN3-GAL_US", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Cubic Inch Cubic Yard | UCUM: [lb_av].h.[in_i]-3.[yd_i]-3"""
+  LB_HR_PER_IN3_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-IN3-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Hour per Sextic Inch | UCUM: [lb_av].h.[in_i]-6"""
+  LB_HR_PER_IN6 @reference(uri: "http://qudt.org/vocab/unit/LB-HR-PER-IN6", versionTag: "v3.1.6")
+
+  """Pound Mass Square Inch per Cubic Foot Pound Force Second | UCUM: [lb_av].[in_i]2.[ft_i]-3.[lbf_av]-1.s-1"""
+  LB_IN2_PER_FT3_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-IN2-PER-FT3-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Square Inch per Gallon (UK) Pound Force Second | UCUM: [lb_av].[in_i]2.[gal_br]-1.[lbf_av]-1.s-1"""
+  LB_IN2_PER_GAL_UK_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-IN2-PER-GAL_UK-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Square Inch per Us Gallon Pound Force Second | UCUM: [lb_av].[in_i]2.[gal_us]-1.[lbf_av]-1.s-1"""
+  LB_IN2_PER_GAL_US_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-IN2-PER-GAL_US-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Square Inch per Cubic Inch Pound Force Second | UCUM: [lb_av].[in_i]2.[in_i]-3.[lbf_av]-1.s-1"""
+  LB_IN2_PER_IN3_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-IN2-PER-IN3-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Foot Gallon (UK) | UCUM: [lb_av].min.[ft_i]-3.[gal_br]-1"""
+  LB_MIN_PER_FT3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-FT3-GAL_UK", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Foot Us Gallon | UCUM: [lb_av].min.[ft_i]-3.[gal_us]-1"""
+  LB_MIN_PER_FT3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-FT3-GAL_US", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Foot Cubic Inch | UCUM: [lb_av].min.[ft_i]-3.[in_i]-3"""
+  LB_MIN_PER_FT3_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-FT3-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Foot Cubic Yard | UCUM: [lb_av].min.[ft_i]-3.[yd_i]-3"""
+  LB_MIN_PER_FT3_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-FT3-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Sextic Foot | UCUM: [lb_av].min.[ft_i]-6"""
+  LB_MIN_PER_FT6 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-FT6", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Square Gallon (UK) | UCUM: [lb_av].min.[gal_br]-2"""
+  LB_MIN_PER_GAL_UK2 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_UK2", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Gallon (UK) Cubic Foot | UCUM: [lb_av].min.[gal_br]-1.[ft_i]-3"""
+  LB_MIN_PER_GAL_UK_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_UK-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Gallon (UK) Cubic Inch | UCUM: [lb_av].min.[gal_br]-1.[in_i]-3"""
+  LB_MIN_PER_GAL_UK_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_UK-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Gallon (UK) Cubic Yard | UCUM: [lb_av].min.[gal_br]-1.[yd_i]-3"""
+  LB_MIN_PER_GAL_UK_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_UK-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Square Us Gallon | UCUM: [lb_av].min.[gal_us]-2"""
+  LB_MIN_PER_GAL_US2 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_US2", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Us Gallon Cubic Foot | UCUM: [lb_av].min.[gal_us]-1.[ft_i]-3"""
+  LB_MIN_PER_GAL_US_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_US-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Us Gallon Cubic Inch | UCUM: [lb_av].min.[gal_us]-1.[in_i]-3"""
+  LB_MIN_PER_GAL_US_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_US-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Us Gallon Cubic Yard | UCUM: [lb_av].min.[gal_us]-1.[yd_i]-3"""
+  LB_MIN_PER_GAL_US_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-GAL_US-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Inch Cubic Foot | UCUM: [lb_av].min.[in_i]-3.[ft_i]-3"""
+  LB_MIN_PER_IN3_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-IN3-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Inch Gallon (UK) | UCUM: [lb_av].min.[in_i]-3.[gal_br]-1"""
+  LB_MIN_PER_IN3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-IN3-GAL_UK", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Inch Us Gallon | UCUM: [lb_av].min.[in_i]-3.[gal_us]-1"""
+  LB_MIN_PER_IN3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-IN3-GAL_US", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Cubic Inch Cubic Yard | UCUM: [lb_av].min.[in_i]-3.[yd_i]-3"""
+  LB_MIN_PER_IN3_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-IN3-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Minute per Sextic Inch | UCUM: [lb_av].min.[in_i]-6"""
+  LB_MIN_PER_IN6 @reference(uri: "http://qudt.org/vocab/unit/LB-MIN-PER-IN6", versionTag: "v3.1.6")
+
+  """Pound Mass per Degree Fahrenheit | UCUM: [lb_av].[degF]-1"""
+  LB_PER_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-PER-DEG_F", versionTag: "v3.1.6")
+
+  """Pound Mass per Cubic Foot Degree Fahrenheit | UCUM: [lb_av].[ft_i]-3.[degF]-1"""
+  LB_PER_FT3_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT3-DEG_F", versionTag: "v3.1.6")
+
+  """Pound Mass per Foot Pound Force Second | UCUM: [lb_av].[ft_i]-1.[lbf_av]-1.s-1"""
+  LB_PER_FT_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-PER-FT-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Pound Mass per Hour Degree Fahrenheit | UCUM: [lb_av].h-1.[degF]-1"""
+  LB_PER_HR_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-PER-HR-DEG_F", versionTag: "v3.1.6")
+
+  """Pound Mass per Cubic Inch Degree Fahrenheit | UCUM: [lb_av].[in_i]-3.[degF]-1"""
+  LB_PER_IN3_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-PER-IN3-DEG_F", versionTag: "v3.1.6")
+
+  """Pound Mass per Minute Degree Fahrenheit | UCUM: [lb_av].min-1.[degF]-1"""
+  LB_PER_MIN_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-PER-MIN-DEG_F", versionTag: "v3.1.6")
+
+  """Pound Mass per Psi | UCUM: [lb_av].[psi]-1"""
+  LB_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/LB-PER-PSI", versionTag: "v3.1.6")
+
+  """Pound Mass per Second Degree Fahrenheit | UCUM: [lb_av].s-1.[degF]-1"""
+  LB_PER_SEC_DEG_F @reference(uri: "http://qudt.org/vocab/unit/LB-PER-SEC-DEG_F", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Foot Gallon (UK) | UCUM: [lb_av].s.[ft_i]-3.[gal_br]-1"""
+  LB_SEC_PER_FT3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-FT3-GAL_UK", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Foot Us Gallon | UCUM: [lb_av].s.[ft_i]-3.[gal_us]-1"""
+  LB_SEC_PER_FT3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-FT3-GAL_US", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Foot Cubic Inch | UCUM: [lb_av].s.[ft_i]-3.[in_i]-3"""
+  LB_SEC_PER_FT3_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-FT3-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Foot Cubic Yard | UCUM: [lb_av].s.[ft_i]-3.[yd_i]-3"""
+  LB_SEC_PER_FT3_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-FT3-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Sextic Foot | UCUM: [lb_av].s.[ft_i]-6"""
+  LB_SEC_PER_FT6 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-FT6", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Square Gallon (UK) | UCUM: [lb_av].s.[gal_br]-2"""
+  LB_SEC_PER_GAL_UK2 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_UK2", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Gallon (UK) Cubic Foot | UCUM: [lb_av].s.[gal_br]-1.[ft_i]-3"""
+  LB_SEC_PER_GAL_UK_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_UK-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Gallon (UK) Cubic Inch | UCUM: [lb_av].s.[gal_br]-1.[in_i]-3"""
+  LB_SEC_PER_GAL_UK_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_UK-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Gallon (UK) Cubic Yard | UCUM: [lb_av].s.[gal_br]-1.[yd_i]-3"""
+  LB_SEC_PER_GAL_UK_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_UK-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Square Us Gallon | UCUM: [lb_av].s.[gal_us]-2"""
+  LB_SEC_PER_GAL_US2 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_US2", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Us Gallon Cubic Foot | UCUM: [lb_av].s.[gal_us]-1.[ft_i]-3"""
+  LB_SEC_PER_GAL_US_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_US-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Us Gallon Cubic Inch | UCUM: [lb_av].s.[gal_us]-1.[in_i]-3"""
+  LB_SEC_PER_GAL_US_IN3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_US-IN3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Us Gallon Cubic Yard | UCUM: [lb_av].s.[gal_us]-1.[yd_i]-3"""
+  LB_SEC_PER_GAL_US_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-GAL_US-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Inch Cubic Foot | UCUM: [lb_av].s.[in_i]-3.[ft_i]-3"""
+  LB_SEC_PER_IN3_FT3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-IN3-FT3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Inch Gallon (UK) | UCUM: [lb_av].s.[in_i]-3.[gal_br]-1"""
+  LB_SEC_PER_IN3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-IN3-GAL_UK", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Inch Us Gallon | UCUM: [lb_av].s.[in_i]-3.[gal_us]-1"""
+  LB_SEC_PER_IN3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-IN3-GAL_US", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Cubic Inch Cubic Yard | UCUM: [lb_av].s.[in_i]-3.[yd_i]-3"""
+  LB_SEC_PER_IN3_YD3 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-IN3-YD3", versionTag: "v3.1.6")
+
+  """Pound Mass Second per Sextic Inch | UCUM: [lb_av].s.[in_i]-6"""
+  LB_SEC_PER_IN6 @reference(uri: "http://qudt.org/vocab/unit/LB-SEC-PER-IN6", versionTag: "v3.1.6")
+
+  """Liter per Bar | UCUM: L.bar-1"""
+  L_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/L-PER-BAR", versionTag: "v3.1.6")
+
+  """Liter per Day Bar | UCUM: L.d-1.bar-1"""
+  L_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/L-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Liter per Day Kelvin | UCUM: L.d-1.K-1"""
+  L_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/L-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Liter per Hour Bar | UCUM: L.h-1.bar-1"""
+  L_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/L-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Liter per Hour Kelvin | UCUM: L.h-1.K-1"""
+  L_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/L-PER-HR-K", versionTag: "v3.1.6")
+
+  """Liter per Minute Bar | UCUM: L.min-1.bar-1"""
+  L_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/L-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Liter per Minute Kelvin | UCUM: L.min-1.K-1"""
+  L_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/L-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Liter per Second Bar | UCUM: L.s-1.bar-1"""
+  L_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/L-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Liter per Second Kelvin | UCUM: L.s-1.K-1"""
+  L_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/L-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Square Meter Square Hertz | UCUM: m2.Hz2"""
+  M2_HZ2 @reference(uri: "http://qudt.org/vocab/unit/M2-HZ2", versionTag: "v3.1.6")
+
+  """Square Meter Cubic Hertz | UCUM: m2.Hz3"""
+  M2_HZ3 @reference(uri: "http://qudt.org/vocab/unit/M2-HZ3", versionTag: "v3.1.6")
+
+  """Square Meter Quartic Hertz | UCUM: m2.Hz4"""
+  M2_HZ4 @reference(uri: "http://qudt.org/vocab/unit/M2-HZ4", versionTag: "v3.1.6")
+
+  """Square Meter per Hectare Year | UCUM: m2.har-1.a-1"""
+  M2_PER_HA_YR @reference(uri: "http://qudt.org/vocab/unit/M2-PER-HA-YR", versionTag: "v3.1.6")
+
+  """Square Meter per Hertz | UCUM: m2.Hz-1"""
+  M2_PER_HZ @reference(uri: "http://qudt.org/vocab/unit/M2-PER-HZ", versionTag: "v3.1.6")
+
+  """Square Meter per Square Hertz | UCUM: m2.Hz-2"""
+  M2_PER_HZ2 @reference(uri: "http://qudt.org/vocab/unit/M2-PER-HZ2", versionTag: "v3.1.6")
+
+  """Square Meter per Hertz Degree | UCUM: m2.Hz-1.deg-1"""
+  M2_PER_HZ_DEG @reference(uri: "http://qudt.org/vocab/unit/M2-PER-HZ-DEG", versionTag: "v3.1.6")
+
+  """Square Meter per Second Bar | UCUM: m2.s-1.bar-1"""
+  M2_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Square Meter per Second Kelvin | UCUM: m2.s-1.K-1"""
+  M2_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Square Meter per Second Pascal | UCUM: m2.s-1.Pa-1"""
+  M2_PER_SEC_PA @reference(uri: "http://qudt.org/vocab/unit/M2-PER-SEC-PA", versionTag: "v3.1.6")
+
+  """Square Meter Second per Radian | UCUM: m2.s.rad-1"""
+  M2_SEC_PER_RAD @reference(uri: "http://qudt.org/vocab/unit/M2-SEC-PER-RAD", versionTag: "v3.1.6")
+
+  """Cubic Meter per Bar | UCUM: m3.bar-1"""
+  M3_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-BAR", versionTag: "v3.1.6")
+
+  """Cubic Meter per Day Bar | UCUM: m3.d-1.bar-1"""
+  M3_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Cubic Meter per Day Kelvin | UCUM: m3.d-1.K-1"""
+  M3_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/M3-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Cubic Meter per Hour Bar | UCUM: m3.h-1.bar-1"""
+  M3_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Cubic Meter per Hour Kelvin | UCUM: m3.h-1.K-1"""
+  M3_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/M3-PER-HR-K", versionTag: "v3.1.6")
+
+  """Cubic Meter per Kilogram Square Second | UCUM: m3.kg-1.s-2"""
+  M3_PER_KILOGM_SEC2 @reference(uri: "http://qudt.org/vocab/unit/M3-PER-KiloGM-SEC2", versionTag: "v3.1.6")
+
+  """Cubic Meter per Minute Bar | UCUM: m3.min-1.bar-1"""
+  M3_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Cubic Meter per Minute Kelvin | UCUM: m3.min-1.K-1"""
+  M3_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/M3-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Cubic Meter per Pascal | UCUM: m3.Pa-1"""
+  M3_PER_PA @reference(uri: "http://qudt.org/vocab/unit/M3-PER-PA", versionTag: "v3.1.6")
+
+  """Cubic Meter per Second Bar | UCUM: m3.s-1.bar-1"""
+  M3_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/M3-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Cubic Meter per Second Kelvin | UCUM: m3.s-1.K-1"""
+  M3_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/M3-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Cubic Meter per Second Pascal | UCUM: m3.s-1.Pa-1"""
+  M3_PER_SEC_PA @reference(uri: "http://qudt.org/vocab/unit/M3-PER-SEC-PA", versionTag: "v3.1.6")
+
+  """Quartic Meter per Second | UCUM: m4.s-1"""
+  M4_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M4-PER-SEC", versionTag: "v3.1.6")
+
+  """Mega Us Dollar per Year"""
+  MEGACCY_USD_PER_YR @reference(uri: "http://qudt.org/vocab/unit/MegaCCY_USD-PER-YR", versionTag: "v3.1.6")
+
+  """Megahertz Kilometer | UCUM: MHz.km"""
+  MEGAHZ_KILOM @reference(uri: "http://qudt.org/vocab/unit/MegaHZ-KiloM", versionTag: "v3.1.6")
+
+  """Megaohm per Bar | UCUM: MOhm.bar-1"""
+  MEGAOHM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MegaOHM-PER-BAR", versionTag: "v3.1.6")
+
+  """Megaohm per Kelvin | UCUM: MOhm.K-1"""
+  MEGAOHM_PER_K @reference(uri: "http://qudt.org/vocab/unit/MegaOHM-PER-K", versionTag: "v3.1.6")
+
+  """Microgalileo per metre | UCUM: uGal.m-1"""
+  MICROGALILEO_PER_M @reference(uri: "http://qudt.org/vocab/unit/MicroGALILEO-PER-M", versionTag: "v3.1.6")
+
+  """Microgram per Liter Hour | UCUM: ug.L-1.h-1"""
+  MICROGM_PER_L_HR @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-L-HR", versionTag: "v3.1.6")
+
+  """Microgram per Cubic Meter Hour | UCUM: ug.m-3.h-1"""
+  MICROGM_PER_M3_HR @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-M3-HR", versionTag: "v3.1.6")
+
+  """Microgram per Cubic Meter Kelvin | UCUM: ug.m-3.K-1"""
+  MICROGM_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/MicroGM-PER-M3-K", versionTag: "v3.1.6")
+
+  """Micromole per Gram Hour | UCUM: umol.g-1.h-1"""
+  MICROMOL_PER_GM_HR @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-GM-HR", versionTag: "v3.1.6")
+
+  """Micromole per Gram Second | UCUM: umol.g-1.s-1"""
+  MICROMOL_PER_GM_SEC @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-GM-SEC", versionTag: "v3.1.6")
+
+  """Micromole per Square Meter | UCUM: umol.m-2"""
+  MICROMOL_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-M2", versionTag: "v3.1.6")
+
+  """Micromole per Square Meter Square Second | UCUM: umol.m-2.s-2"""
+  MICROMOL_PER_M2_SEC2 @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-M2-SEC2", versionTag: "v3.1.6")
+
+  """Micromole per Micromole Day | UCUM: umol.umol-1.d-1"""
+  MICROMOL_PER_MICROMOL_DAY @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-MicroMOL-DAY", versionTag: "v3.1.6")
+
+  """Micromole per Mole | UCUM: umol.mol-1"""
+  MICROMOL_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/MicroMOL-PER-MOL", versionTag: "v3.1.6")
+
+  """Micrometer per Milliliter | UCUM: um.mL-1"""
+  MICROM_PER_MILLIL @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-MilliL", versionTag: "v3.1.6")
+
+  """Micro Volt Ampere Reactive per Kelvin | UCUM: uVA{reactive}.K-1"""
+  MICROVAR_PER_K @reference(uri: "http://qudt.org/vocab/unit/MicroVAR-PER-K", versionTag: "v3.1.6")
+
+  """Milliampere Square Inch per Pound Force | UCUM: mA.[in_i]2.[lbf_av]-1"""
+  MILLIA_IN2_PER_LB_F @reference(uri: "http://qudt.org/vocab/unit/MilliA-IN2-PER-LB_F", versionTag: "v3.1.6")
+
+  """Milliampere per Bar | UCUM: mA.bar-1"""
+  MILLIA_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliA-PER-BAR", versionTag: "v3.1.6")
+
+  """Milliampere per Pound Force Square Inch | UCUM: mA.[lbf_av]-1.[in_i]-2"""
+  MILLIA_PER_LB_F_IN2 @reference(uri: "http://qudt.org/vocab/unit/MilliA-PER-LB_F-IN2", versionTag: "v3.1.6")
+
+  """Milliampere per Liter Minute | UCUM: mA.L-1.min-1"""
+  MILLIA_PER_L_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliA-PER-L-MIN", versionTag: "v3.1.6")
+
+  """Millibecquerel per Square Meter Day | UCUM: mBq.m-2.d-1"""
+  MILLIBQ_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliBQ-PER-M2-DAY", versionTag: "v3.1.6")
+
+  """Milligalileo per Month | UCUM: mGal.mo-1"""
+  MILLIGALILEO_PER_MO @reference(uri: "http://qudt.org/vocab/unit/MilliGALILEO-PER-MO", versionTag: "v3.1.6")
+
+  """Milligram Hour per Square Liter | UCUM: mg.h.L-2"""
+  MILLIGM_HR_PER_L2 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-HR-PER-L2", versionTag: "v3.1.6")
+
+  """Milligram Hour per Liter Cubic Centimeter | UCUM: mg.h.L-1.cm-3"""
+  MILLIGM_HR_PER_L_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-HR-PER-L-CentiM3", versionTag: "v3.1.6")
+
+  """Milligram Hour per Liter Cubic Meter | UCUM: mg.h.L-1.m-3"""
+  MILLIGM_HR_PER_L_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-HR-PER-L-M3", versionTag: "v3.1.6")
+
+  """Milligram Hour per Cubic Meter Cubic Centimeter | UCUM: mg.h.m-3.cm-3"""
+  MILLIGM_HR_PER_M3_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-HR-PER-M3-CentiM3", versionTag: "v3.1.6")
+
+  """Milligram Hour per Cubic Meter Liter | UCUM: mg.h.m-3.L-1"""
+  MILLIGM_HR_PER_M3_L @reference(uri: "http://qudt.org/vocab/unit/MilliGM-HR-PER-M3-L", versionTag: "v3.1.6")
+
+  """Milligram Hour per Sextic Meter | UCUM: mg.h.m-6"""
+  MILLIGM_HR_PER_M6 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-HR-PER-M6", versionTag: "v3.1.6")
+
+  """Milligram Minute per Square Liter | UCUM: mg.min.L-2"""
+  MILLIGM_MIN_PER_L2 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-MIN-PER-L2", versionTag: "v3.1.6")
+
+  """Milligram Minute per Liter Cubic Centimeter | UCUM: mg.min.L-1.cm-3"""
+  MILLIGM_MIN_PER_L_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-MIN-PER-L-CentiM3", versionTag: "v3.1.6")
+
+  """Milligram Minute per Liter Cubic Meter | UCUM: mg.min.L-1.m-3"""
+  MILLIGM_MIN_PER_L_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-MIN-PER-L-M3", versionTag: "v3.1.6")
+
+  """Milligram Minute per Cubic Meter Cubic Centimeter | UCUM: mg.min.m-3.cm-3"""
+  MILLIGM_MIN_PER_M3_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-MIN-PER-M3-CentiM3", versionTag: "v3.1.6")
+
+  """Milligram Minute per Cubic Meter Liter | UCUM: mg.min.m-3.L-1"""
+  MILLIGM_MIN_PER_M3_L @reference(uri: "http://qudt.org/vocab/unit/MilliGM-MIN-PER-M3-L", versionTag: "v3.1.6")
+
+  """Milligram Minute per Sextic Meter | UCUM: mg.min.m-6"""
+  MILLIGM_MIN_PER_M6 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-MIN-PER-M6", versionTag: "v3.1.6")
+
+  """Milligram per Bar | UCUM: mg.bar-1"""
+  MILLIGM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-BAR", versionTag: "v3.1.6")
+
+  """Milligram per Day Bar | UCUM: mg.d-1.bar-1"""
+  MILLIGM_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Milligram per Day Kelvin | UCUM: mg.d-1.K-1"""
+  MILLIGM_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Milligram per Hour Bar | UCUM: mg.h-1.bar-1"""
+  MILLIGM_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Milligram per Hour Kelvin | UCUM: mg.h-1.K-1"""
+  MILLIGM_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-HR-K", versionTag: "v3.1.6")
+
+  """Milligram per Kelvin | UCUM: mg.K-1"""
+  MILLIGM_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-K", versionTag: "v3.1.6")
+
+  """Milligram per Liter Centipoise | UCUM: mg.L-1.cP-1"""
+  MILLIGM_PER_L_CENTIPOISE @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-L-CentiPOISE", versionTag: "v3.1.6")
+
+  """Milligram per Liter Millipascal Second | UCUM: mg.L-1.mPa-1.s-1"""
+  MILLIGM_PER_L_MILLIPA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-L-MilliPA-SEC", versionTag: "v3.1.6")
+
+  """Milligram per Liter Pascal Second | UCUM: mg.L-1.Pa-1.s-1"""
+  MILLIGM_PER_L_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-L-PA-SEC", versionTag: "v3.1.6")
+
+  """Milligram per Liter Poise | UCUM: mg.L-1.P-1"""
+  MILLIGM_PER_L_POISE @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-L-POISE", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Centipoise | UCUM: mg.m-3.cP-1"""
+  MILLIGM_PER_M3_CENTIPOISE @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-CentiPOISE", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Day | UCUM: mg.m-3.d-1"""
+  MILLIGM_PER_M3_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-DAY", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Hour | UCUM: mg.m-3.h-1"""
+  MILLIGM_PER_M3_HR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-HR", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Kelvin | UCUM: mg.m-3.K-1"""
+  MILLIGM_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-K", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Millipascal Second | UCUM: mg.m-3.mPa-1.s-1"""
+  MILLIGM_PER_M3_MILLIPA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-MilliPA-SEC", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Pascal Second | UCUM: mg.m-3.Pa-1.s-1"""
+  MILLIGM_PER_M3_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-PA-SEC", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Poise | UCUM: mg.m-3.P-1"""
+  MILLIGM_PER_M3_POISE @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-POISE", versionTag: "v3.1.6")
+
+  """Milligram per Cubic Meter Second | UCUM: mg.m-3.s-1"""
+  MILLIGM_PER_M3_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-M3-SEC", versionTag: "v3.1.6")
+
+  """Milligram per Minute Bar | UCUM: mg.min-1.bar-1"""
+  MILLIGM_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Milligram per Minute Kelvin | UCUM: mg.min-1.K-1"""
+  MILLIGM_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Milligram per Second Bar | UCUM: mg.s-1.bar-1"""
+  MILLIGM_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Milligram per Second Kelvin | UCUM: mg.s-1.K-1"""
+  MILLIGM_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Milligram Second per Square Liter | UCUM: mg.s.L-2"""
+  MILLIGM_SEC_PER_L2 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-SEC-PER-L2", versionTag: "v3.1.6")
+
+  """Milligram Second per Liter Cubic Centimeter | UCUM: mg.s.L-1.cm-3"""
+  MILLIGM_SEC_PER_L_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-SEC-PER-L-CentiM3", versionTag: "v3.1.6")
+
+  """Milligram Second per Liter Cubic Meter | UCUM: mg.s.L-1.m-3"""
+  MILLIGM_SEC_PER_L_M3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-SEC-PER-L-M3", versionTag: "v3.1.6")
+
+  """Milligram Second per Cubic Meter Cubic Centimeter | UCUM: mg.s.m-3.cm-3"""
+  MILLIGM_SEC_PER_M3_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-SEC-PER-M3-CentiM3", versionTag: "v3.1.6")
+
+  """Milligram Second per Cubic Meter Liter | UCUM: mg.s.m-3.L-1"""
+  MILLIGM_SEC_PER_M3_L @reference(uri: "http://qudt.org/vocab/unit/MilliGM-SEC-PER-M3-L", versionTag: "v3.1.6")
+
+  """Milligram Second per Sextic Meter | UCUM: mg.s.m-6"""
+  MILLIGM_SEC_PER_M6 @reference(uri: "http://qudt.org/vocab/unit/MilliGM-SEC-PER-M6", versionTag: "v3.1.6")
+
+  """Millikelvin per Bar | UCUM: mK.bar-1"""
+  MILLIK_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliK-PER-BAR", versionTag: "v3.1.6")
+
+  """Milliliter per Bar | UCUM: mL.bar-1"""
+  MILLIL_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-BAR", versionTag: "v3.1.6")
+
+  """Milliliter per Day Bar | UCUM: mL.d-1.bar-1"""
+  MILLIL_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Milliliter per Day Kelvin | UCUM: mL.d-1.K-1"""
+  MILLIL_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Milliliter per Hour Bar | UCUM: mL.h-1.bar-1"""
+  MILLIL_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Milliliter per Hour Kelvin | UCUM: mL.h-1.K-1"""
+  MILLIL_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-HR-K", versionTag: "v3.1.6")
+
+  """Milliliter per Square Meter Day | UCUM: mL.m-2.d-1"""
+  MILLIL_PER_M2_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-M2-DAY", versionTag: "v3.1.6")
+
+  """Milliliter per Minute Bar | UCUM: mL.min-1.bar-1"""
+  MILLIL_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Milliliter per Minute Kelvin | UCUM: mL.min-1.K-1"""
+  MILLIL_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Milliliter per Second Bar | UCUM: mL.s-1.bar-1"""
+  MILLIL_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Milliliter per Second Kelvin | UCUM: mL.s-1.K-1"""
+  MILLIL_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/MilliL-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Millimole per Square Meter | UCUM: mmol.m-2"""
+  MILLIMOL_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-M2", versionTag: "v3.1.6")
+
+  """Millimole per Mole | UCUM: mmol.mol-1"""
+  MILLIMOL_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/MilliMOL-PER-MOL", versionTag: "v3.1.6")
+
+  """Millimeter per Bar | UCUM: mm.bar-1"""
+  MILLIM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-BAR", versionTag: "v3.1.6")
+
+  """Millimeter per Square Meter | UCUM: mm.m-2"""
+  MILLIM_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-M2", versionTag: "v3.1.6")
+
+  """Milliohm per Bar | UCUM: mOhm.bar-1"""
+  MILLIOHM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/MilliOHM-PER-BAR", versionTag: "v3.1.6")
+
+  """Milliohm per Kelvin | UCUM: mOhm.K-1"""
+  MILLIOHM_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliOHM-PER-K", versionTag: "v3.1.6")
+
+  """Millipascal Second per Kelvin | UCUM: mPa.s.K-1"""
+  MILLIPA_SEC_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliPA-SEC-PER-K", versionTag: "v3.1.6")
+
+  """Milli Volt Ampere Reactive per Kelvin | UCUM: mVA{reactive}.K-1"""
+  MILLIVAR_PER_K @reference(uri: "http://qudt.org/vocab/unit/MilliVAR-PER-K", versionTag: "v3.1.6")
+
+  """Millivolt per Volt | UCUM: mV.V-1"""
+  MILLIV_PER_V @reference(uri: "http://qudt.org/vocab/unit/MilliV-PER-V", versionTag: "v3.1.6")
+
+  """Milliwatt per Square Centimeter Micrometer Steradian | UCUM: mW.cm-2.um-1.sr-1"""
+  MILLIW_PER_CENTIM2_MICROM_SR @reference(uri: "http://qudt.org/vocab/unit/MilliW-PER-CentiM2-MicroM-SR", versionTag: "v3.1.6")
+
+  """Mole per Gram Hour | UCUM: mol.g-1.h-1"""
+  MOL_PER_GM_HR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-GM-HR", versionTag: "v3.1.6")
+
+  """Mole per Kilogram Kelvin | UCUM: mol.kg-1.K-1"""
+  MOL_PER_KILOGM_K @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-KiloGM-K", versionTag: "v3.1.6")
+
+  """Mole per Liter Bar | UCUM: mol.L-1.bar-1"""
+  MOL_PER_L_BAR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-L-BAR", versionTag: "v3.1.6")
+
+  """Mole per Liter Kelvin | UCUM: mol.L-1.K-1"""
+  MOL_PER_L_K @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-L-K", versionTag: "v3.1.6")
+
+  """Mole per Square Meter | UCUM: mol.m-2"""
+  MOL_PER_M2 @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M2", versionTag: "v3.1.6")
+
+  """Mole per Square Meter Second Meter Steradian | UCUM: mol.m-2.s-1.m-1.sr-1"""
+  MOL_PER_M2_SEC_M_SR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M2-SEC-M-SR", versionTag: "v3.1.6")
+
+  """Mole per Square Meter Second Steradian | UCUM: mol.m-2.s-1.sr-1"""
+  MOL_PER_M2_SEC_SR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M2-SEC-SR", versionTag: "v3.1.6")
+
+  """Mole per Cubic Meter Bar | UCUM: mol.m-3.bar-1"""
+  MOL_PER_M3_BAR @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M3-BAR", versionTag: "v3.1.6")
+
+  """Mole per Cubic Meter Kelvin | UCUM: mol.m-3.K-1"""
+  MOL_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M3-K", versionTag: "v3.1.6")
+
+  """Mole per Cubic Meter Pascal | UCUM: mol.m-3.Pa-1"""
+  MOL_PER_M3_PA @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-M3-PA", versionTag: "v3.1.6")
+
+  """Mole per Mole | UCUM: mol.mol-1"""
+  MOL_PER_MOL @reference(uri: "http://qudt.org/vocab/unit/MOL-PER-MOL", versionTag: "v3.1.6")
+
+  """Meter per Bar | UCUM: m.bar-1"""
+  M_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/M-PER-BAR", versionTag: "v3.1.6")
+
+  """Meter per Pascal | UCUM: m.Pa-1"""
+  M_PER_PA @reference(uri: "http://qudt.org/vocab/unit/M-PER-PA", versionTag: "v3.1.6")
+
+  """Meter per Second Bar | UCUM: m.s-1.bar-1"""
+  M_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Meter per Second Kelvin | UCUM: m.s-1.K-1"""
+  M_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Meter per Second Pascal | UCUM: m.s-1.Pa-1"""
+  M_PER_SEC_PA @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC-PA", versionTag: "v3.1.6")
+
+  """Meter Second | UCUM: m.s"""
+  M_SEC @reference(uri: "http://qudt.org/vocab/unit/M-SEC", versionTag: "v3.1.6")
+
+  """Meter Square Second | UCUM: m.s2"""
+  M_SEC2 @reference(uri: "http://qudt.org/vocab/unit/M-SEC2", versionTag: "v3.1.6")
+
+  """Nanomole per Gram Hour | UCUM: nmol.g-1.h-1"""
+  NANOMOL_PER_GM_HR @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-GM-HR", versionTag: "v3.1.6")
+
+  """Nanomole per Gram Second | UCUM: nmol.g-1.s-1"""
+  NANOMOL_PER_GM_SEC @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-GM-SEC", versionTag: "v3.1.6")
+
+  """Nanomole per Microgram Hour | UCUM: nmol.ug-1.h-1"""
+  NANOMOL_PER_MICROGM_HR @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-MicroGM-HR", versionTag: "v3.1.6")
+
+  """Nanomole per Micromole | UCUM: nmol.umol-1"""
+  NANOMOL_PER_MICROMOL @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-MicroMOL", versionTag: "v3.1.6")
+
+  """Nanomole per Micromole Day | UCUM: nmol.umol-1.d-1"""
+  NANOMOL_PER_MICROMOL_DAY @reference(uri: "http://qudt.org/vocab/unit/NanoMOL-PER-MicroMOL-DAY", versionTag: "v3.1.6")
+
+  """Neper per Second | UCUM: Np.s-1"""
+  NP_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/NP-PER-SEC", versionTag: "v3.1.6")
+
+  """Number per Centimeter Kiloyear | UCUM: {#}.cm-1.ka-1"""
+  NUM_PER_CENTIM_KILOYR @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-CentiM-KiloYR", versionTag: "v3.1.6")
+
+  """Number per Gram | UCUM: {#}.g-1"""
+  NUM_PER_GM @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-GM", versionTag: "v3.1.6")
+
+  """Number per Hectogram | UCUM: {#}.hg-1"""
+  NUM_PER_HECTOGM @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-HectoGM", versionTag: "v3.1.6")
+
+  """Number per Kilogram | UCUM: {#}.kg-1"""
+  NUM_PER_KILOGM @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-KiloGM", versionTag: "v3.1.6")
+
+  """Number per Milligram | UCUM: {#}.mg-1"""
+  NUM_PER_MILLIGM @reference(uri: "http://qudt.org/vocab/unit/NUM-PER-MilliGM", versionTag: "v3.1.6")
+
+  """Newton Square Meter per Square Kilogram | UCUM: N.m2.kg-2"""
+  N_M2_PER_KILOGM2 @reference(uri: "http://qudt.org/vocab/unit/N-M2-PER-KiloGM2", versionTag: "v3.1.6")
+
+  """Newton Metre Watt to the Power Minus 0.5"""
+  N_M_PER_W0DOT5 @reference(uri: "http://qudt.org/vocab/unit/N-M-PER-W0dot5", versionTag: "v3.1.6")
+
+  """Ohm per Bar | UCUM: Ohm.bar-1"""
+  OHM_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/OHM-PER-BAR", versionTag: "v3.1.6")
+
+  """Ohm per Kelvin | UCUM: Ohm.K-1"""
+  OHM_PER_K @reference(uri: "http://qudt.org/vocab/unit/OHM-PER-K", versionTag: "v3.1.6")
+
+  """Ounce Mass Square Foot per Cubic Inch Pound Force Second | UCUM: [oz_av].[ft_i]2.[in_i]-3.[lbf_av]-1.s-1"""
+  OZ_FT2_PER_IN3_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/OZ-FT2-PER-IN3-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Ounce Mass Foot Hour per Cubic Inch Pound Mass | UCUM: [oz_av].[ft_i].h.[in_i]-3.[lb_av]-1"""
+  OZ_FT_HR_PER_IN3_LB @reference(uri: "http://qudt.org/vocab/unit/OZ-FT-HR-PER-IN3-LB", versionTag: "v3.1.6")
+
+  """Ounce Mass Foot Second per Cubic Inch Pound Mass | UCUM: [oz_av].[ft_i].s.[in_i]-3.[lb_av]-1"""
+  OZ_FT_SEC_PER_IN3_LB @reference(uri: "http://qudt.org/vocab/unit/OZ-FT-SEC-PER-IN3-LB", versionTag: "v3.1.6")
+
+  """Ounce Mass Hour per Cubic Inch Cubic Foot | UCUM: [oz_av].h.[in_i]-3.[ft_i]-3"""
+  OZ_HR_PER_IN3_FT3 @reference(uri: "http://qudt.org/vocab/unit/OZ-HR-PER-IN3-FT3", versionTag: "v3.1.6")
+
+  """Ounce Mass Hour per Cubic Inch Gallon (UK) | UCUM: [oz_av].h.[in_i]-3.[gal_br]-1"""
+  OZ_HR_PER_IN3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/OZ-HR-PER-IN3-GAL_UK", versionTag: "v3.1.6")
+
+  """Ounce Mass Hour per Cubic Inch Us Gallon | UCUM: [oz_av].h.[in_i]-3.[gal_us]-1"""
+  OZ_HR_PER_IN3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/OZ-HR-PER-IN3-GAL_US", versionTag: "v3.1.6")
+
+  """Ounce Mass Hour per Cubic Inch Cubic Yard | UCUM: [oz_av].h.[in_i]-3.[yd_i]-3"""
+  OZ_HR_PER_IN3_YD3 @reference(uri: "http://qudt.org/vocab/unit/OZ-HR-PER-IN3-YD3", versionTag: "v3.1.6")
+
+  """Ounce Mass Hour per Sextic Inch | UCUM: [oz_av].h.[in_i]-6"""
+  OZ_HR_PER_IN6 @reference(uri: "http://qudt.org/vocab/unit/OZ-HR-PER-IN6", versionTag: "v3.1.6")
+
+  """Ounce Mass Square Inch per Cubic Inch Pound Force Second | UCUM: [oz_av].[in_i]2.[in_i]-3.[lbf_av]-1.s-1"""
+  OZ_IN2_PER_IN3_LB_F_SEC @reference(uri: "http://qudt.org/vocab/unit/OZ-IN2-PER-IN3-LB_F-SEC", versionTag: "v3.1.6")
+
+  """Ounce Mass Minute per Cubic Inch Cubic Foot | UCUM: [oz_av].min.[in_i]-3.[ft_i]-3"""
+  OZ_MIN_PER_IN3_FT3 @reference(uri: "http://qudt.org/vocab/unit/OZ-MIN-PER-IN3-FT3", versionTag: "v3.1.6")
+
+  """Ounce Mass Minute per Cubic Inch Gallon (UK) | UCUM: [oz_av].min.[in_i]-3.[gal_br]-1"""
+  OZ_MIN_PER_IN3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/OZ-MIN-PER-IN3-GAL_UK", versionTag: "v3.1.6")
+
+  """Ounce Mass Minute per Cubic Inch Us Gallon | UCUM: [oz_av].min.[in_i]-3.[gal_us]-1"""
+  OZ_MIN_PER_IN3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/OZ-MIN-PER-IN3-GAL_US", versionTag: "v3.1.6")
+
+  """Ounce Mass Minute per Cubic Inch Cubic Yard | UCUM: [oz_av].min.[in_i]-3.[yd_i]-3"""
+  OZ_MIN_PER_IN3_YD3 @reference(uri: "http://qudt.org/vocab/unit/OZ-MIN-PER-IN3-YD3", versionTag: "v3.1.6")
+
+  """Ounce Mass Minute per Sextic Inch | UCUM: [oz_av].min.[in_i]-6"""
+  OZ_MIN_PER_IN6 @reference(uri: "http://qudt.org/vocab/unit/OZ-MIN-PER-IN6", versionTag: "v3.1.6")
+
+  """Ounce Mass Second per Cubic Inch Cubic Foot | UCUM: [oz_av].s.[in_i]-3.[ft_i]-3"""
+  OZ_SEC_PER_IN3_FT3 @reference(uri: "http://qudt.org/vocab/unit/OZ-SEC-PER-IN3-FT3", versionTag: "v3.1.6")
+
+  """Ounce Mass Second per Cubic Inch Gallon (UK) | UCUM: [oz_av].s.[in_i]-3.[gal_br]-1"""
+  OZ_SEC_PER_IN3_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/OZ-SEC-PER-IN3-GAL_UK", versionTag: "v3.1.6")
+
+  """Ounce Mass Second per Cubic Inch Us Gallon | UCUM: [oz_av].s.[in_i]-3.[gal_us]-1"""
+  OZ_SEC_PER_IN3_GAL_US @reference(uri: "http://qudt.org/vocab/unit/OZ-SEC-PER-IN3-GAL_US", versionTag: "v3.1.6")
+
+  """Ounce Mass Second per Cubic Inch Cubic Yard | UCUM: [oz_av].s.[in_i]-3.[yd_i]-3"""
+  OZ_SEC_PER_IN3_YD3 @reference(uri: "http://qudt.org/vocab/unit/OZ-SEC-PER-IN3-YD3", versionTag: "v3.1.6")
+
+  """Ounce Mass Second per Sextic Inch | UCUM: [oz_av].s.[in_i]-6"""
+  OZ_SEC_PER_IN6 @reference(uri: "http://qudt.org/vocab/unit/OZ-SEC-PER-IN6", versionTag: "v3.1.6")
+
+  """Square Pascal per Square Second | UCUM: Pa2.s-2"""
+  PA2_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/PA2-PER-SEC2", versionTag: "v3.1.6")
+
+  """Pascal Meter | UCUM: Pa.m"""
+  PA_M @reference(uri: "http://qudt.org/vocab/unit/PA-M", versionTag: "v3.1.6")
+
+  """Pascal Meter per Second | UCUM: Pa.m.s-1"""
+  PA_M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PA-M-PER-SEC", versionTag: "v3.1.6")
+
+  """Pascal Meter per Square Second | UCUM: Pa.m.s-2"""
+  PA_M_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/PA-M-PER-SEC2", versionTag: "v3.1.6")
+
+  """Pascal Second per Kelvin | UCUM: Pa.s.K-1"""
+  PA_SEC_PER_K @reference(uri: "http://qudt.org/vocab/unit/PA-SEC-PER-K", versionTag: "v3.1.6")
+
+  """Percent Foot Hour per Pound Mass | UCUM: %.[ft_i].h.[lb_av]-1"""
+  PERCENT_FT_HR_PER_LB @reference(uri: "http://qudt.org/vocab/unit/PERCENT-FT-HR-PER-LB", versionTag: "v3.1.6")
+
+  """Percent Foot Second per Pound Mass | UCUM: %.[ft_i].s.[lb_av]-1"""
+  PERCENT_FT_SEC_PER_LB @reference(uri: "http://qudt.org/vocab/unit/PERCENT-FT-SEC-PER-LB", versionTag: "v3.1.6")
+
+  """Percent Hour per Cubic Centimeter | UCUM: %.h.cm-3"""
+  PERCENT_HR_PER_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-CentiM3", versionTag: "v3.1.6")
+
+  """Percent Hour per Cubic Foot | UCUM: %.h.[ft_i]-3"""
+  PERCENT_HR_PER_FT3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-FT3", versionTag: "v3.1.6")
+
+  """Percent Hour per Gallon (UK) | UCUM: %.h.[gal_br]-1"""
+  PERCENT_HR_PER_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-GAL_UK", versionTag: "v3.1.6")
+
+  """Percent Hour per Us Gallon | UCUM: %.h.[gal_us]-1"""
+  PERCENT_HR_PER_GAL_US @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-GAL_US", versionTag: "v3.1.6")
+
+  """Percent Hour per Cubic Inch | UCUM: %.h.[in_i]-3"""
+  PERCENT_HR_PER_IN3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-IN3", versionTag: "v3.1.6")
+
+  """Percent Hour per Liter | UCUM: %.h.L-1"""
+  PERCENT_HR_PER_L @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-L", versionTag: "v3.1.6")
+
+  """Percent Hour per Cubic Meter | UCUM: %.h.m-3"""
+  PERCENT_HR_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-M3", versionTag: "v3.1.6")
+
+  """Percent Hour per Cubic Yard | UCUM: %.h.[yd_i]-3"""
+  PERCENT_HR_PER_YD3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-HR-PER-YD3", versionTag: "v3.1.6")
+
+  """Percent Minute per Cubic Centimeter | UCUM: %.min.cm-3"""
+  PERCENT_MIN_PER_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-CentiM3", versionTag: "v3.1.6")
+
+  """Percent Minute per Cubic Foot | UCUM: %.min.[ft_i]-3"""
+  PERCENT_MIN_PER_FT3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-FT3", versionTag: "v3.1.6")
+
+  """Percent Minute per Gallon (UK) | UCUM: %.min.[gal_br]-1"""
+  PERCENT_MIN_PER_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-GAL_UK", versionTag: "v3.1.6")
+
+  """Percent Minute per Us Gallon | UCUM: %.min.[gal_us]-1"""
+  PERCENT_MIN_PER_GAL_US @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-GAL_US", versionTag: "v3.1.6")
+
+  """Percent Minute per Cubic Inch | UCUM: %.min.[in_i]-3"""
+  PERCENT_MIN_PER_IN3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-IN3", versionTag: "v3.1.6")
+
+  """Percent Minute per Liter | UCUM: %.min.L-1"""
+  PERCENT_MIN_PER_L @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-L", versionTag: "v3.1.6")
+
+  """Percent Minute per Cubic Meter | UCUM: %.min.m-3"""
+  PERCENT_MIN_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-M3", versionTag: "v3.1.6")
+
+  """Percent Minute per Cubic Yard | UCUM: %.min.[yd_i]-3"""
+  PERCENT_MIN_PER_YD3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-MIN-PER-YD3", versionTag: "v3.1.6")
+
+  """Percent per Centipoise | UCUM: %.cP-1"""
+  PERCENT_PER_CENTIPOISE @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-CentiPOISE", versionTag: "v3.1.6")
+
+  """Percent per Degree | UCUM: %.deg-1"""
+  PERCENT_PER_DEG @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-DEG", versionTag: "v3.1.6")
+
+  """Percent per Hundred"""
+  PERCENT_PER_HUNDRED @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-HUNDRED", versionTag: "v3.1.6")
+
+  """Percent per Hundred Thousand"""
+  PERCENT_PER_HUNDRED_THOUSAND @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-HUNDRED-THOUSAND", versionTag: "v3.1.6")
+
+  """Percent per Millipascal Second | UCUM: %.mPa-1.s-1"""
+  PERCENT_PER_MILLIPA_SEC @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-MilliPA-SEC", versionTag: "v3.1.6")
+
+  """Percent per Ohm | UCUM: %.Ohm-1"""
+  PERCENT_PER_OHM @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-OHM", versionTag: "v3.1.6")
+
+  """Percent per Pascal Second | UCUM: %.Pa-1.s-1"""
+  PERCENT_PER_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-PA-SEC", versionTag: "v3.1.6")
+
+  """Percent per Percent | UCUM: %.%-1"""
+  PERCENT_PER_PERCENT @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-PERCENT", versionTag: "v3.1.6")
+
+  """Percent per Poise | UCUM: %.P-1"""
+  PERCENT_PER_POISE @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-POISE", versionTag: "v3.1.6")
+
+  """Percent per Ten Thousand"""
+  PERCENT_PER_TEN_THOUSAND @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-TEN-THOUSAND", versionTag: "v3.1.6")
+
+  """Percent per Thousand"""
+  PERCENT_PER_THOUSAND @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-THOUSAND", versionTag: "v3.1.6")
+
+  """Percent per Volt | UCUM: %.V-1"""
+  PERCENT_PER_V @reference(uri: "http://qudt.org/vocab/unit/PERCENT-PER-V", versionTag: "v3.1.6")
+
+  """Percent Second per Cubic Centimeter | UCUM: %.s.cm-3"""
+  PERCENT_SEC_PER_CENTIM3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-CentiM3", versionTag: "v3.1.6")
+
+  """Percent Second per Cubic Foot | UCUM: %.s.[ft_i]-3"""
+  PERCENT_SEC_PER_FT3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-FT3", versionTag: "v3.1.6")
+
+  """Percent Second per Gallon (UK) | UCUM: %.s.[gal_br]-1"""
+  PERCENT_SEC_PER_GAL_UK @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-GAL_UK", versionTag: "v3.1.6")
+
+  """Percent Second per Us Gallon | UCUM: %.s.[gal_us]-1"""
+  PERCENT_SEC_PER_GAL_US @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-GAL_US", versionTag: "v3.1.6")
+
+  """Percent Second per Cubic Inch | UCUM: %.s.[in_i]-3"""
+  PERCENT_SEC_PER_IN3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-IN3", versionTag: "v3.1.6")
+
+  """Percent Second per Liter | UCUM: %.s.L-1"""
+  PERCENT_SEC_PER_L @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-L", versionTag: "v3.1.6")
+
+  """Percent Second per Cubic Meter | UCUM: %.s.m-3"""
+  PERCENT_SEC_PER_M3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-M3", versionTag: "v3.1.6")
+
+  """Percent Second per Cubic Yard | UCUM: %.s.[yd_i]-3"""
+  PERCENT_SEC_PER_YD3 @reference(uri: "http://qudt.org/vocab/unit/PERCENT-SEC-PER-YD3", versionTag: "v3.1.6")
+
+  """Reciprocal Kilogram Second | UCUM: kg-1.s-1"""
+  PER_KILOGM_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-KiloGM-SEC", versionTag: "v3.1.6")
+
+  """Reciprocal Micromole Liter | UCUM: umol-1.L-1"""
+  PER_MICROMOL_L @reference(uri: "http://qudt.org/vocab/unit/PER-MicroMOL-L", versionTag: "v3.1.6")
+
+  """Reciprocal Meter Nanometer Steradian | UCUM: m-1.nm-1.sr-1"""
+  PER_M_NANOM_SR @reference(uri: "http://qudt.org/vocab/unit/PER-M-NanoM-SR", versionTag: "v3.1.6")
+
+  """Reciprocal Meter Second | UCUM: m-1.s-1"""
+  PER_M_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-M-SEC", versionTag: "v3.1.6")
+
+  """Reciprocal Meter Steradian | UCUM: m-1.sr-1"""
+  PER_M_SR @reference(uri: "http://qudt.org/vocab/unit/PER-M-SR", versionTag: "v3.1.6")
+
+  """Reciprocal Pascal Second | UCUM: Pa-1.s-1"""
+  PER_PA_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-PA-SEC", versionTag: "v3.1.6")
+
+  """Reciprocal Percent | UCUM: %-1"""
+  PER_PERCENT @reference(uri: "http://qudt.org/vocab/unit/PER-PERCENT", versionTag: "v3.1.6")
+
+  """Reciprocal Radian | UCUM: rad-1"""
+  PER_RAD @reference(uri: "http://qudt.org/vocab/unit/PER-RAD", versionTag: "v3.1.6")
+
+  """Reciprocal Second Steradian Square Meter | UCUM: s-1.sr-1.m-2"""
+  PER_SEC_SR_M2 @reference(uri: "http://qudt.org/vocab/unit/PER-SEC-SR-M2", versionTag: "v3.1.6")
+
+  """Reciprocal Steradian | UCUM: sr-1"""
+  PER_SR @reference(uri: "http://qudt.org/vocab/unit/PER-SR", versionTag: "v3.1.6")
+
+  """Picoampere per Hectopascal | UCUM: pA.hPa-1"""
+  PICOA_PER_HECTOPA @reference(uri: "http://qudt.org/vocab/unit/PicoA-PER-HectoPA", versionTag: "v3.1.6")
+
+  """Picoampere per Micromole Liter | UCUM: pA.umol-1.L-1"""
+  PICOA_PER_MICROMOL_L @reference(uri: "http://qudt.org/vocab/unit/PicoA-PER-MicroMOL-L", versionTag: "v3.1.6")
+
+  """Picomole per Meter Watt Second | UCUM: pmol.m-1.W-1.s-1"""
+  PICOMOL_PER_M_W_SEC @reference(uri: "http://qudt.org/vocab/unit/PicoMOL-PER-M-W-SEC", versionTag: "v3.1.6")
+
+  """Picowatt per Square Centimeter Liter | UCUM: pW.cm-2.L-1"""
+  PICOW_PER_CENTIM2_L @reference(uri: "http://qudt.org/vocab/unit/PicoW-PER-CentiM2-L", versionTag: "v3.1.6")
+
+  """Poise per Kelvin | UCUM: P.K-1"""
+  POISE_PER_K @reference(uri: "http://qudt.org/vocab/unit/POISE-PER-K", versionTag: "v3.1.6")
+
+  """Parts per Trillion by Volume | UCUM: [pptr]{vol}"""
+  PPT_VOL @reference(uri: "http://qudt.org/vocab/unit/PPT_VOL", versionTag: "v3.1.6")
+
+  """Second per Square Foot | UCUM: s.[ft_i]-2"""
+  SEC_PER_FT2 @reference(uri: "http://qudt.org/vocab/unit/SEC-PER-FT2", versionTag: "v3.1.6")
+
+  """Second per Meter | UCUM: s.m-1"""
+  SEC_PER_M @reference(uri: "http://qudt.org/vocab/unit/SEC-PER-M", versionTag: "v3.1.6")
+
+  """Sone"""
+  SON @reference(uri: "http://qudt.org/vocab/unit/SON", versionTag: "v3.1.6")
+
+  """Spin Quantum Number"""
+  SPIN_QUANTUM_NUMBER @reference(uri: "http://qudt.org/vocab/unit/SPIN_QUANTUM_NUMBER", versionTag: "v3.1.6")
+
+  """Stokes per Bar | UCUM: St.bar-1"""
+  ST_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/ST-PER-BAR", versionTag: "v3.1.6")
+
+  """Stokes per Kelvin | UCUM: St.K-1"""
+  ST_PER_K @reference(uri: "http://qudt.org/vocab/unit/ST-PER-K", versionTag: "v3.1.6")
+
+  """Stokes per Pascal | UCUM: St.Pa-1"""
+  ST_PER_PA @reference(uri: "http://qudt.org/vocab/unit/ST-PER-PA", versionTag: "v3.1.6")
+
+  """Tonne per Bar | UCUM: t.bar-1"""
+  TONNE_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-BAR", versionTag: "v3.1.6")
+
+  """Tonne per Day Bar | UCUM: t.d-1.bar-1"""
+  TONNE_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Tonne per Day Kelvin | UCUM: t.d-1.K-1"""
+  TONNE_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Tonne per Hour Bar | UCUM: t.h-1.bar-1"""
+  TONNE_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Tonne per Hour Kelvin | UCUM: t.h-1.K-1"""
+  TONNE_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-HR-K", versionTag: "v3.1.6")
+
+  """Tonne per Kelvin | UCUM: t.K-1"""
+  TONNE_PER_K @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-K", versionTag: "v3.1.6")
+
+  """Tonne per Cubic Meter Kelvin | UCUM: t.m-3.K-1"""
+  TONNE_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-M3-K", versionTag: "v3.1.6")
+
+  """Tonne per Minute Bar | UCUM: t.min-1.bar-1"""
+  TONNE_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Tonne per Minute Kelvin | UCUM: t.min-1.K-1"""
+  TONNE_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Tonne per Second Bar | UCUM: t.s-1.bar-1"""
+  TONNE_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Tonne per Second Kelvin | UCUM: t.s-1.K-1"""
+  TONNE_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Metric Ton per Bar | UCUM: t.bar-1"""
+  TON_METRIC_PER_BAR @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-BAR", versionTag: "v3.1.6")
+
+  """Metric Ton per Day Bar | UCUM: t.d-1.bar-1"""
+  TON_METRIC_PER_DAY_BAR @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-DAY-BAR", versionTag: "v3.1.6")
+
+  """Metric Ton per Day Kelvin | UCUM: t.d-1.K-1"""
+  TON_METRIC_PER_DAY_K @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-DAY-K", versionTag: "v3.1.6")
+
+  """Metric Ton per Hour Bar | UCUM: t.h-1.bar-1"""
+  TON_METRIC_PER_HR_BAR @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-HR-BAR", versionTag: "v3.1.6")
+
+  """Metric Ton per Hour Kelvin | UCUM: t.h-1.K-1"""
+  TON_METRIC_PER_HR_K @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-HR-K", versionTag: "v3.1.6")
+
+  """Metric Ton per Kelvin | UCUM: t.K-1"""
+  TON_METRIC_PER_K @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-K", versionTag: "v3.1.6")
+
+  """Metric Ton per Cubic Meter Kelvin | UCUM: t.m-3.K-1"""
+  TON_METRIC_PER_M3_K @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-M3-K", versionTag: "v3.1.6")
+
+  """Metric Ton per Minute Bar | UCUM: t.min-1.bar-1"""
+  TON_METRIC_PER_MIN_BAR @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-MIN-BAR", versionTag: "v3.1.6")
+
+  """Metric Ton per Minute Kelvin | UCUM: t.min-1.K-1"""
+  TON_METRIC_PER_MIN_K @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-MIN-K", versionTag: "v3.1.6")
+
+  """Metric Ton per Second Bar | UCUM: t.s-1.bar-1"""
+  TON_METRIC_PER_SEC_BAR @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-SEC-BAR", versionTag: "v3.1.6")
+
+  """Metric Ton per Second Kelvin | UCUM: t.s-1.K-1"""
+  TON_METRIC_PER_SEC_K @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-SEC-K", versionTag: "v3.1.6")
+
+  """Short Ton per Degree Fahrenheit | UCUM: [ston_av].[degF]-1"""
+  TON_SHORT_PER_DEG_F @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT-PER-DEG_F", versionTag: "v3.1.6")
+
+  """Short Ton per Hour Degree Fahrenheit | UCUM: [ston_av].h-1.[degF]-1"""
+  TON_SHORT_PER_HR_DEG_F @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT-PER-HR-DEG_F", versionTag: "v3.1.6")
+
+  """Short Ton per Hour Psi | UCUM: [ston_av].h-1.[psi]-1"""
+  TON_SHORT_PER_HR_PSI @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT-PER-HR-PSI", versionTag: "v3.1.6")
+
+  """Short Ton per Psi | UCUM: [ston_av].[psi]-1"""
+  TON_SHORT_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT-PER-PSI", versionTag: "v3.1.6")
+
+  """Unknown"""
+  UNKNOWN @reference(uri: "http://qudt.org/vocab/unit/UNKNOWN", versionTag: "v3.1.6")
+
+  """Volt Ampere Reactive per Kelvin | UCUM: VA{reactive}.K-1"""
+  VAR_PER_K @reference(uri: "http://qudt.org/vocab/unit/VAR-PER-K", versionTag: "v3.1.6")
+
+  """Volt per Liter Minute | UCUM: V.L-1.min-1"""
+  V_PER_L_MIN @reference(uri: "http://qudt.org/vocab/unit/V-PER-L-MIN", versionTag: "v3.1.6")
+
+  """Volt per Volt | UCUM: V.V-1"""
+  V_PER_V @reference(uri: "http://qudt.org/vocab/unit/V-PER-V", versionTag: "v3.1.6")
+
+  """Watt Hour per Liter | UCUM: W.h.L-1"""
+  W_HR_PER_L @reference(uri: "http://qudt.org/vocab/unit/W-HR-PER-L", versionTag: "v3.1.6")
+
+  """Watt Meter per Square Meter Steradian | UCUM: W.m.m-2.sr-1"""
+  W_M_PER_M2_SR @reference(uri: "http://qudt.org/vocab/unit/W-M-PER-M2-SR", versionTag: "v3.1.6")
+
+  """Watt per Square Meter Meter | UCUM: W.m-2.m-1"""
+  W_PER_M2_M @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2-M", versionTag: "v3.1.6")
+
+  """Watt per Square Meter Meter Steradian | UCUM: W.m-2.m-1.sr-1"""
+  W_PER_M2_M_SR @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2-M-SR", versionTag: "v3.1.6")
+
+  """Watt per Square Meter Nanometer | UCUM: W.m-2.nm-1"""
+  W_PER_M2_NANOM @reference(uri: "http://qudt.org/vocab/unit/W-PER-M2-NanoM", versionTag: "v3.1.6")
+
+  """Cubic Yard per Psi | UCUM: [yd_i]3.[psi]-1"""
+  YD3_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/YD3-PER-PSI", versionTag: "v3.1.6")
+
+  """Yard per Psi | UCUM: [yd_i].[psi]-1"""
+  YD_PER_PSI @reference(uri: "http://qudt.org/vocab/unit/YD-PER-PSI", versionTag: "v3.1.6")
+}

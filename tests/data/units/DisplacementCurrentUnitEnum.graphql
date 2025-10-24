@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version v3.1.6
+enum DisplacementCurrentUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/DisplacementCurrent", versionTag: "v3.1.6") {
+  """Ampere | UCUM: A"""
+  A @reference(uri: "http://qudt.org/vocab/unit/A", versionTag: "v3.1.6")
+
+  """Attoampere | UCUM: aA"""
+  ATTOA @reference(uri: "http://qudt.org/vocab/unit/AttoA", versionTag: "v3.1.6")
+
+  """Femtoampere | UCUM: fA"""
+  FEMTOA @reference(uri: "http://qudt.org/vocab/unit/FemtoA", versionTag: "v3.1.6")
+
+  """Gigaampere | UCUM: GA"""
+  GIGAA @reference(uri: "http://qudt.org/vocab/unit/GigaA", versionTag: "v3.1.6")
+
+  """Petaampere | UCUM: PA"""
+  PETAA @reference(uri: "http://qudt.org/vocab/unit/PetaA", versionTag: "v3.1.6")
+
+  """Teraampere | UCUM: TA"""
+  TERAA @reference(uri: "http://qudt.org/vocab/unit/TeraA", versionTag: "v3.1.6")
+}

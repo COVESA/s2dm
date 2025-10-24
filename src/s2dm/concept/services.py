@@ -13,12 +13,7 @@ from s2dm.concept.models import (
     SpecHistoryModel,
     SpecHistoryNode,
 )
-
-# Constants for GraphQL type names that should be excluded from processing
-EXCLUDED_TYPE_NAMES = ("Query", "Mutation")
-
-# Field names that should be excluded from concept extraction
-EXCLUDED_FIELD_NAMES = ("id",)
+from s2dm.exporters.utils.graphql_type import is_id_type, is_introspection_or_root_type
 
 
 def load_json_file(file_path: Path) -> dict[str, Any]:
@@ -281,7 +276,7 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
     """
     concepts = Concepts()
     for named_type in named_types:
-        if named_type.name in EXCLUDED_TYPE_NAMES:
+        if is_introspection_or_root_type(named_type.name):
             continue
 
         if isinstance(named_type, GraphQLEnumType):
@@ -292,7 +287,7 @@ def iter_all_concepts(named_types: list[GraphQLNamedType]) -> Concepts:
             log.debug(f"Processing object: {named_type.name}")
             # Get the ID of all fields in the object
             for field_name, field in named_type.fields.items():
-                if field_name.lower() in EXCLUDED_FIELD_NAMES:
+                if is_id_type(field_name):
                     continue
 
                 field_fqn = f"{named_type.name}.{field_name}"

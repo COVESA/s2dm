@@ -10,7 +10,7 @@ Vehicle.Cabin.Seat:
   description: The model of a vehicle's Seat.
   instances:
   - [ROW1, ROW2]
-  - [DRIVERSIDE, PASSENGERSIDE]
+  - [DRIVER_SIDE, PASSENGER_SIDE]
   type: branch
 
 Vehicle.Cabin.Seat.Airbag:
@@ -199,7 +199,7 @@ Vehicle.Cabin.Seat.isBackwardSwitchEngaged:
 Vehicle.Cabin.Seat.isBelted:
   datatype: boolean
   description: Is the belt engaged.
-  type: actuator
+  type: sensor
 
 Vehicle.Cabin.Seat.isCoolerSwitchEngaged:
   comment: Affects the property (SingleSeat.Heating)
@@ -263,6 +263,7 @@ Vehicle.Cabin.Seat.isWarmerSwitchEngaged:
 Vehicle.Cabin.Seat.massage:
   datatype: uint8
   description: Seat massage level. 0 = off. 100 = max massage.
+  max: 100
   type: actuator
   unit: percent
 

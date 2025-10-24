@@ -1,0 +1,131 @@
+# Generated from QUDT units catalog version v3.1.6
+enum MassFlowRateUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/MassFlowRate", versionTag: "v3.1.6") {
+  """Dyne Second per Centimeter | UCUM: dyn.s.cm-1"""
+  DYN_SEC_PER_CENTIM @reference(uri: "http://qudt.org/vocab/unit/DYN-SEC-PER-CentiM", versionTag: "v3.1.6")
+
+  """Gram per Day | UCUM: g.d-1"""
+  GM_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/GM-PER-DAY", versionTag: "v3.1.6")
+
+  """Gram per Hour | UCUM: g.h-1"""
+  GM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/GM-PER-HR", versionTag: "v3.1.6")
+
+  """Gram per Minute | UCUM: g.min-1"""
+  GM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/GM-PER-MIN", versionTag: "v3.1.6")
+
+  """Gram per Second | UCUM: g.s-1"""
+  GM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/GM-PER-SEC", versionTag: "v3.1.6")
+
+  """Kilogram per Day | UCUM: kg.d-1"""
+  KILOGM_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-DAY", versionTag: "v3.1.6")
+
+  """Kilogram per Hour | UCUM: kg.h-1"""
+  KILOGM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-HR", versionTag: "v3.1.6")
+
+  """Kilogram per Minute | UCUM: kg.min-1"""
+  KILOGM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-MIN", versionTag: "v3.1.6")
+
+  """Kilogram per Second | UCUM: kg.s-1"""
+  KILOGM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-SEC", versionTag: "v3.1.6")
+
+  """Kilogram per Year | UCUM: kg.a-1"""
+  KILOGM_PER_YR @reference(uri: "http://qudt.org/vocab/unit/KiloGM-PER-YR", versionTag: "v3.1.6")
+
+  """Kilo Pound Mass per Hour | UCUM: k[lb_av].h-1"""
+  KILOLB_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KiloLB-PER-HR", versionTag: "v3.1.6")
+
+  """Kilotonne per Year | UCUM: kt.a-1"""
+  KILOTONNE_PER_YR @reference(uri: "http://qudt.org/vocab/unit/KiloTONNE-PER-YR", versionTag: "v3.1.6")
+
+  """Pound Mass per Day | UCUM: [lb_av].d-1"""
+  LB_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/LB-PER-DAY", versionTag: "v3.1.6")
+
+  """Pound Mass per Hour | UCUM: [lb_av].h-1"""
+  LB_PER_HR @reference(uri: "http://qudt.org/vocab/unit/LB-PER-HR", versionTag: "v3.1.6")
+
+  """Pound Mass per Minute | UCUM: [lb_av].min-1"""
+  LB_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/LB-PER-MIN", versionTag: "v3.1.6")
+
+  """Pound Mass per Second | UCUM: [lb_av].s-1"""
+  LB_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/LB-PER-SEC", versionTag: "v3.1.6")
+
+  """Megatonne per Year | UCUM: Mt.a-1"""
+  MEGATONNE_PER_YR @reference(uri: "http://qudt.org/vocab/unit/MegaTONNE-PER-YR", versionTag: "v3.1.6")
+
+  """Milligram per Day | UCUM: mg.d-1"""
+  MILLIGM_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-DAY", versionTag: "v3.1.6")
+
+  """Milligram per Hour | UCUM: mg.h-1"""
+  MILLIGM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-HR", versionTag: "v3.1.6")
+
+  """Milligram per Minute | UCUM: mg.min-1"""
+  MILLIGM_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-MIN", versionTag: "v3.1.6")
+
+  """Milligram per Second | UCUM: mg.s-1"""
+  MILLIGM_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliGM-PER-SEC", versionTag: "v3.1.6")
+
+  """Ounce Mass per Day | UCUM: [oz_av].d-1"""
+  OZ_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-DAY", versionTag: "v3.1.6")
+
+  """Ounce Mass per Hour | UCUM: [oz_av].h-1"""
+  OZ_PER_HR @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-HR", versionTag: "v3.1.6")
+
+  """Ounce Mass per Minute | UCUM: [oz_av].min-1"""
+  OZ_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-MIN", versionTag: "v3.1.6")
+
+  """Ounce Mass per Second | UCUM: [oz_av].s-1"""
+  OZ_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/OZ-PER-SEC", versionTag: "v3.1.6")
+
+  """Slug per Day"""
+  SLUG_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-DAY", versionTag: "v3.1.6")
+
+  """Slug per Hour"""
+  SLUG_PER_HR @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-HR", versionTag: "v3.1.6")
+
+  """Slug per Minute"""
+  SLUG_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-MIN", versionTag: "v3.1.6")
+
+  """Slug per Second"""
+  SLUG_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/SLUG-PER-SEC", versionTag: "v3.1.6")
+
+  """Tonne per Day | UCUM: t.d-1"""
+  TONNE_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-DAY", versionTag: "v3.1.6")
+
+  """Tonne per Hour | UCUM: t.h-1"""
+  TONNE_PER_HR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-HR", versionTag: "v3.1.6")
+
+  """Tonne per Minute | UCUM: t.min-1"""
+  TONNE_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-MIN", versionTag: "v3.1.6")
+
+  """Tonne per Month | UCUM: t.mo-1"""
+  TONNE_PER_MO @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-MO", versionTag: "v3.1.6")
+
+  """Tonne per Second | UCUM: t.s-1"""
+  TONNE_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-SEC", versionTag: "v3.1.6")
+
+  """Tonne per Year | UCUM: t.a-1"""
+  TONNE_PER_YR @reference(uri: "http://qudt.org/vocab/unit/TONNE-PER-YR", versionTag: "v3.1.6")
+
+  """Metric Ton per Day | UCUM: t.d-1"""
+  TON_METRIC_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-DAY", versionTag: "v3.1.6")
+
+  """Metric Ton per Hour | UCUM: t.h-1"""
+  TON_METRIC_PER_HR @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-HR", versionTag: "v3.1.6")
+
+  """Metric Ton per Minute | UCUM: t.min-1"""
+  TON_METRIC_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-MIN", versionTag: "v3.1.6")
+
+  """Metric Ton per Second | UCUM: t.s-1"""
+  TON_METRIC_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/TON_Metric-PER-SEC", versionTag: "v3.1.6")
+
+  """Short Ton per Hour | UCUM: [ston_av].h-1"""
+  TON_SHORT_PER_HR @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT-PER-HR", versionTag: "v3.1.6")
+
+  """Ton (UK) per Day | UCUM: [lton_av].d-1"""
+  TON_UK_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/TON_UK-PER-DAY", versionTag: "v3.1.6")
+
+  """Ton (US) per Day | UCUM: [ston_av].d-1"""
+  TON_US_PER_DAY @reference(uri: "http://qudt.org/vocab/unit/TON_US-PER-DAY", versionTag: "v3.1.6")
+
+  """Ton (US) per Hour | UCUM: [ston_av].h-1"""
+  TON_US_PER_HR @reference(uri: "http://qudt.org/vocab/unit/TON_US-PER-HR", versionTag: "v3.1.6")
+}
