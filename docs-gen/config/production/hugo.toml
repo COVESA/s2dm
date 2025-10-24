@@ -1,14 +1,10 @@
 # Overrides for production environment
-baseURL = "/s2dm/"
+# baseURL will be set by GitHub Actions
 relativeURLs = false
-canonifyURLs = false
+canonifyURLs = true
 disableLiveReload = true
 enableRobotsTXT = true
 
-# Ensure consistent URL generation
+# Ensure consistent URL generation for GitHub Pages subpath
 uglyURLs = false
 removePathAccents = false
-
-# Asset processing
-[params]
-  cdn_url = "https://giaccomole.github.io/s2dm"

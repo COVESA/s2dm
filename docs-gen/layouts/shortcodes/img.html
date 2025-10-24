@@ -1,0 +1,21 @@
+{{- $src := .Get "src" -}}
+{{- $alt := .Get "alt" | default "" -}}
+{{- $class := .Get "class" | default "img-fluid w-100" -}}
+{{- $style := .Get "style" | default "max-width: 100%; height: auto;" -}}
+
+{{- if not $src -}}
+  {{- errorf "img shortcode: 'src' parameter is required" -}}
+{{- end -}}
+
+{{- /* Handle both absolute and relative paths */ -}}
+{{- $imagePath := $src -}}
+{{- if not (hasPrefix $src "http") -}}
+  {{- /* Add leading slash if not present */ -}}
+  {{- if not (hasPrefix $src "/") -}}
+    {{- $imagePath = printf "/%s" $src -}}
+  {{- end -}}
+{{- end -}}
+
+<div class="w-100 my-4">
+  <img src="{{ $imagePath }}" alt="{{ $alt }}" class="{{ $class }}" style="{{ $style | safeCSS }}">
+</div>

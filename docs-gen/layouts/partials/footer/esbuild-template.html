@@ -73,12 +73,13 @@
 {{- else -}}
   {{- $params = $paramsDefault -}}
 {{- end -}}
+{{- $resource = $resource | resources.ExecuteAsTemplate $src . -}}
 
 {{- /* standard production configuration for es build */ -}}
 {{- $jsConfig := (dict "target" "es2015" "minify" "true" "params" $params) }}
-{{- $js := $resource -}}
 
 {{- /* is .babelEs6 is set to true - use babel to lower to es6 */ -}}
+{{- $js := $resource -}}
 {{- if $babel -}}
   {{- $babelConfig := (dict "noComments" true "minified" true "config" "config/babel.module.config.js") -}}
   {{- $js = $js | js.Build $jsConfig | babel $babelConfig | fingerprint -}}
