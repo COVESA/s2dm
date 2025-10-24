@@ -17,7 +17,12 @@ from s2dm.exporters.utils.directive import get_argument_content, has_given_direc
 from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.exporters.utils.field import Cardinality, FieldCase, get_cardinality, get_field_case_extended, print_field_sdl
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
-from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, has_valid_instance_tag_field
+from s2dm.exporters.utils.instance_tag import (
+    expand_instance_tag,
+    get_instance_tag_object,
+    has_valid_instance_tag_field,
+    is_instance_tag_field,
+)
 
 SUPPORTED_FIELD_CASES = {
     FieldCase.DEFAULT,
@@ -196,7 +201,7 @@ def process_field(
             Skipping field '{field_name}'."""
         )
         return None
-    elif field_name == "instanceTag":
+    elif is_instance_tag_field(field_name):
         log.debug(
             f"Skipping field '{field_name}'. It is a reserved field and its likely already "
             + "processed as expanded instances.",

@@ -22,6 +22,7 @@ from s2dm.exporters.utils.instance_tag import (
     get_all_expanded_instance_tags,
     get_instance_tag_dict,
     get_instance_tag_object,
+    is_instance_tag_field,
 )
 from s2dm.exporters.utils.naming import apply_naming_to_instance_values
 from s2dm.exporters.utils.schema import load_schema_with_naming
@@ -342,7 +343,7 @@ def process_field(
                 field_dict["type"] = vss_type
 
         return {concat_field_name: field_dict}
-    elif isinstance(output_type, GraphQLObjectType) and field_name != "instanceTag":
+    elif isinstance(output_type, GraphQLObjectType) and not is_instance_tag_field(field_name):
         # Collect nested structures
         # nested_types.append(f"{object_type.name}.{output_type}({field_name})")
         nested_types.append((object_type.name, output_type.name))

@@ -1,0 +1,52 @@
+syntax = "{{ syntax }}";
+
+{% if package %}
+package {{ package }};
+
+{% endif %}
+{% for enum in enums %}
+{% if enum.description %}
+// {{ enum.description }}
+{% endif %}
+enum {{ enum.name }} {
+  {{ enum.name | upper }}_UNSPECIFIED = 0;
+{% for value in enum.enum_values %}
+  {{ value.name }} = {{ value.number }};{% if value.description %}  // {{ value.description }}{% endif %}
+
+{% endfor %}
+}
+
+{% endfor %}
+{% for message in messages %}
+{% if message.description %}
+// {{ message.description }}
+{% endif %}
+message {{ message.name }} {
+{% for field in message.fields %}
+  {{ field.type }} {{ field.name }} = {{ field.number }};{% if field.description %}  // {{ field.description }}{% endif %}
+
+{% endfor %}
+}
+
+{% endfor %}
+{% if flatten_mode %}
+message Message {
+{% for field in flattened_fields %}
+  {{ field.type }} {{ field.name }} = {{ field.number }};{% if field.description %}  // {{ field.description }}{% endif %}
+
+{% endfor %}
+}
+{% endif %}
+{% for union in unions %}
+{% if union.description %}
+// {{ union.description }}
+{% endif %}
+message {{ union.name }} {
+  oneof {{ union.name }} {
+{% for member in union.members %}
+    {{ member.type }} {{ member.name }} = {{ member.number }};
+{% endfor %}
+  }
+}
+
+{% endfor %}

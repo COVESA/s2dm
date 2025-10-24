@@ -25,7 +25,12 @@ from s2dm import log
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 from s2dm.exporters.utils.extraction import get_all_named_types
 from s2dm.exporters.utils.field import get_cardinality
-from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, is_valid_instance_tag_field
+from s2dm.exporters.utils.instance_tag import (
+    expand_instance_tag,
+    get_instance_tag_object,
+    is_instance_tag_field,
+    is_valid_instance_tag_field,
+)
 from s2dm.exporters.utils.schema_loader import get_referenced_types
 
 GRAPHQL_SCALAR_TO_JSON_SCHEMA = {
@@ -187,8 +192,7 @@ class JsonSchemaTransformer:
         required_fields = []
         for field_name, field in object_type.fields.items():
             if is_valid_instance_tag_field(field, self.graphql_schema):
-                if field_name == "instanceTag":
-                    # Skip instanceTag field as it is handled separately
+                if is_instance_tag_field(field_name):
                     continue
                 else:
                     # Fields with an instanceTag object type should not be allowed since object
