@@ -77,6 +77,94 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     assert "Vehicle_ADAS_ObstacleDetection:" in content
 
 
+def test_export_jsonschema(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "jsonschema.yaml"
+    result = runner.invoke(
+        cli, ["export", "jsonschema", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)]
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert '"Vehicle"' in content
+    assert '"Vehicle_ADAS_ObstacleDetection"' in content
+
+
+def test_export_protobuf(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "schema.proto"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "protobuf",
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-o",
+            str(out),
+            "-r",
+            "Vehicle",
+            "-p",
+            "package.name",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert 'syntax = "proto3";' in content
+    assert "package package.name;" in content
+
+    assert "message Vehicle" in content
+    assert "message Vehicle_ADAS" in content
+    assert "message Vehicle_ADAS_ObstacleDetection" in content
+
+    assert "enum Vehicle_ADAS_ObstacleDetection_WarningType_Enum" in content
+
+    assert "float averageSpeed = 2;" in content
+    assert "bool isFolded = 2;" in content
+
+
+def test_export_protobuf_flattened_naming(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "schema.proto"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "protobuf",
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-o",
+            str(out),
+            "-r",
+            "Vehicle",
+            "-f",
+            "-p",
+            "package.name",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert 'syntax = "proto3";' in content
+    assert "package package.name;" in content
+
+    assert "message Message" in content
+
+    assert "enum Vehicle_ADAS_ObstacleDetection_WarningType_Enum" in content
+
+    assert "float Vehicle_averageSpeed = 2;" in content
+    assert "repeated Vehicle_Body_Mirrors Vehicle_body_mirrors_s = 11;" in content
+    assert "bool isFolded = 2;" in content
+
+
 def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "skos_skeleton.ttl"
     result = runner.invoke(
@@ -575,6 +663,44 @@ union Person = User | Admin
 
     assert 'scalar DateTime @reference(source: "test.graphql")' in composed_content
     assert 'union Person @reference(source: "test.graphql")' in composed_content
+
+
+def test_compose_with_invalid_selection_query(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_invalid_query.graphql"
+    result = runner.invoke(
+        cli,
+        ["compose", "-s", str(TSD.SAMPLE2_1), "-s", str(TSD.SAMPLE2_2), "-q", str(TSD.INVALID_QUERY), "-o", str(out)],
+    )
+    assert result.exit_code == 1
+
+
+def test_compose_with_valid_selection_query_prunes_schema(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "composed_pruned.graphql"
+    result = runner.invoke(
+        cli, ["compose", "-s", str(TSD.SAMPLE2_1), "-s", str(TSD.SAMPLE2_2), "-q", str(TSD.VALID_QUERY), "-o", str(out)]
+    )
+    assert result.exit_code == 0
+
+    composed_content = out.read_text()
+
+    assert "type Vehicle" in composed_content
+    assert "type Vehicle_ADAS" in composed_content
+    assert "type Vehicle_ADAS_ABS" in composed_content
+    assert "enum Vehicle_LowVoltageSystemState_Enum" in composed_content
+    assert "enum VelocityUnitEnum" in composed_content
+
+    assert "type Person" not in composed_content
+    assert "type Vehicle_Body" not in composed_content
+    assert "type Vehicle_Occupant" not in composed_content
+    assert "enum Vehicle_ADAS_ActiveAutonomyLevel_Enum" not in composed_content
+
+    assert "directive @reference" in composed_content
+
+    assert "directive @range" not in composed_content
+    assert "directive @cardinality" not in composed_content
+    assert "directive @noDuplicates" not in composed_content
+    assert "directive @instanceTag" not in composed_content
+    assert "directive @metadata" not in composed_content
 
 
 # ToDo(DA): needs refactoring after final decision how stats will work

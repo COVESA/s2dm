@@ -37,6 +37,9 @@ class TestSchemaData:
     SAMPLE2_2 = TESTS_DATA_DIR / "schema2-2.graphql"
     SAMPLE3 = TESTS_DATA_DIR / "schema3.graphql"
 
+    VALID_QUERY = TESTS_DATA_DIR / "valid_query.graphql"
+    INVALID_QUERY = TESTS_DATA_DIR / "invalid_query.graphql"
+
     # Version bump test schemas
     BASE_SCHEMA = TESTS_DATA_DIR / "base.graphql"
     NO_CHANGE_SCHEMA = TESTS_DATA_DIR / "no-change.graphql"

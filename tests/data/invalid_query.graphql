@@ -1,0 +1,9 @@
+query Selection {
+  vehicle {
+    id
+    nonExistentField
+    adas {
+      invalidField
+    }
+  }
+}
