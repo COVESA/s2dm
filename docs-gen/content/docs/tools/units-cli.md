@@ -23,9 +23,7 @@ The S2DM Units CLI provides integration with the [QUDT (Quantities, Units, Dimen
 
 Synchronizes unit definitions from the QUDT repository and generates GraphQL enum files in the `S2DM_HOME` directory (`~/.s2dm/units/qudt`).
 
-{{% notice note %}}
 Unit files are downloaded to `~/.s2dm/units/qudt` to prevent users from modifying them. This is a temporary solution. In the future, QUDT unit GraphQL files will be moved to a separate repository and referenced/downloaded from there.
-{{% /notice %}}
 
 **Syntax:**
 ```bash
