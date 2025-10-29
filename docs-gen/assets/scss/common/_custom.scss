@@ -1,55 +1,46 @@
 // Put your custom SCSS code here
 
-/* Custom CSS fixes for sidebar layout */
+/* DEBUG: Visualize sidebar boundaries */
 .docs-sidebar {
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
+  background-color: rgba(255, 0, 0, 0.05) !important;
+  outline: 2px solid red !important;
 }
 
-.docs-sidebar .section-nav {
-  width: 100% !important;
-  padding-left: 0 !important;
+.docs-links {
+  background-color: rgba(0, 255, 0, 0.05) !important;
+  outline: 2px solid green !important;
 }
 
-.docs-sidebar .list-unstyled {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
+.section-nav {
+  background-color: rgba(0, 0, 255, 0.05) !important;
+  outline: 2px solid blue !important;
 }
 
-.docs-sidebar .list-unstyled li {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
+.section-nav ul {
+  background-color: rgba(255, 255, 0, 0.05) !important;
+  outline: 2px solid yellow !important;
 }
 
-.docs-sidebar .list-unstyled li a {
-  display: block;
-  padding: 0.375rem 0.75rem;
-  text-decoration: none;
-  border-radius: 0.25rem;
+/* Fix sidebar width consistency across page types */
+@include media-breakpoint-up(xl) {
+  .docs-sidebar {
+    /* Override theme's flex: 0 1 320px which allows shrinking */
+    /* Use Bootstrap's col-xl-3 width (25%) consistently */
+    flex: 0 0 25% !important;
+    max-width: 25% !important;
+  }
 }
 
-/* Nested navigation styling */
-.docs-sidebar .list-nested {
-  margin-top: 0.5rem !important;
-  margin-bottom: 1rem !important;
-  padding-left: 1rem !important;
+/* Fix vertical alignment - normalize content padding across page types */
+.content {
+  padding-top: 1rem !important;
 }
 
-.docs-sidebar .list-nested li a {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-.docs-sidebar .list-nested li.active a {
-  background-color: #e9ecef;
-  color: #495057;
-  font-weight: 600;
-}
-
-.docs-sidebar .list-nested li a:hover {
-  background-color: #f8f9fa;
-  color: #495057;
+/* Keep the same bottom padding for both */
+.list.section .content,
+.single.section .content {
+  padding-top: 1rem !important;
+  padding-bottom: 3rem !important;
 }
 
 .list.section.showcase {
