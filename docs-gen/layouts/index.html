@@ -1,134 +1,129 @@
 {{ define "main" }}
-<!-- Lucide Icons - Only for Index Page -->
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<style>
+  <!-- Lucide Icons - Only for Index Page -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
   .lucide-icon {
     display: block;
     margin: 0 auto;
   }
-</style>
+  </style>
 
-<section class="section container-fluid mt-n3 pb-3">
-  <div class="row justify-content-center">
-    <div class="col-lg-12 text-center">
-      <h1>{{ .Title }}</h1>
-    </div>
-    <div class="col-lg-9 col-xl-8 text-center">
-      <p class="lead">{{ .Params.lead | safeHTML }}</p>
-      <a class="btn btn-primary btn-cta rounded-1 btn-lg my-3" href="/docs" role="button">Get Started</a>
-    </div>
-  </div>
-</section>
-
-<!-- Key Features Section -->
-<section class="section section-sm border-bottom border-light">
-  <div class="container">
-    <div class="row justify-content-center text-center">
-      <div class="col-lg-8">
-        <h2 class="h3 mb-4">Why S2DM?</h2>
-      </div>
-    </div>
+  <section class="section container-fluid mt-n3 pb-3">
     <div class="row justify-content-center">
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="text-center">
-          <i data-lucide="target" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
-          <h3 class="h5">Simple</h3>
-          <p class="text-muted">Any Subject Matter Expert can contribute to controlled vocabularies with minimal data
-            modeling expertise.</p>
+      <div class="col-lg-12 text-center">
+        <h1>{{ .Title }}</h1>
+      </div>
+      <div class="col-lg-9 col-xl-8 text-center">
+        <p class="lead">{{ .Params.lead | safeHTML }}</p>
+        <a class="btn btn-primary btn-cta rounded-1 btn-lg my-3" href="{{ "docs" | relURL }}" role="button">Get Started</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Features Section -->
+  <section class="section section-sm border-bottom border-light">
+    <div class="container">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-8">
+          <h2 class="h3 mb-4">Why S2DM?</h2>
         </div>
       </div>
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="text-center">
-          <i data-lucide="network" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
-          <h3 class="h5">Semantic</h3>
-          <p class="text-muted">Specifies meaningful data structures, cross-domain relationships, and arbitrary
-            classification schemes.</p>
+      <div class="row justify-content-center">
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="text-center">
+            <i data-lucide="target" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
+            <h3 class="h5">Simple</h3>
+            <p class="text-muted">Any Subject Matter Expert can contribute to controlled vocabularies with minimal data modeling expertise.</p>
+          </div>
         </div>
-      </div>
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="text-center">
-          <i data-lucide="link" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
-          <h3 class="h5">Interoperable</h3>
-          <p class="text-muted">Built on GraphQL SDL and SKOS standards for maximum compatibility and reusability.</p>
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="text-center">
+            <i data-lucide="network" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
+            <h3 class="h5">Semantic</h3>
+            <p class="text-muted">Specifies meaningful data structures, cross-domain relationships, and arbitrary classification schemes.</p>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="text-center">
+            <i data-lucide="link" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
+            <h3 class="h5">Interoperable</h3>
+            <p class="text-muted">Built on GraphQL SDL and SKOS standards for maximum compatibility and reusability.</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Content Section -->
-<section class="section section-sm">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-11 col-xl-10">
-        {{ .Content }}
+  <!-- Content Section -->
+  <section class="section section-sm">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-11 col-xl-10">
+          {{ .Content }}
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Initialize Lucide Icons -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    lucide.createIcons();
-  });
-</script>
+  <!-- Initialize Lucide Icons -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      lucide.createIcons();
+    });
+  </script>
 {{ end }}
 
 {{ define "sidebar-prefooter" }}
-{{ if site.Params.doks.backgroundDots -}}
-<div class="d-flex justify-content-start">
-  <div class="bg-dots"></div>
-</div>
-{{ end -}}
+  {{ if site.Params.doks.backgroundDots -}}
+    <div class="d-flex justify-content-start">
+      <div class="bg-dots"></div>
+    </div>
+  {{ end -}}
 
-<section class="section section-md section-features border-bottom border-dark">
-  <div class="container py-4">
-    <div class="row justify-content-center text-center gap-4 px-4">
-      <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
-        <h2 class="h4">S2DM Approach</h2>
-        <p>Get a basic understanding of the S2DM approach for modeling data across multiple domains with minimal
-          expertise required.</p>
-        <a href="/docs/approach-overview/" class="btn btn-outline-primary btn-sm mt-2">Learn More</a>
-      </div>
-      <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
-        <h2 class="h4">Data Modeling Guideline</h2>
-        <p>Follow our comprehensive guideline to model your domain using S2DM principles and best practices.</p>
-        <a href="/docs/data-modeling-guideline/" class="btn btn-outline-primary btn-sm mt-2">View Guide</a>
-      </div>
-      <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
-        <h2 class="h4">S2DM Tools</h2>
-        <p>Maintain your domain model with the support of our provided S2DM tools and automation utilities.</p>
-        <a href="/docs/tools/" class="btn btn-outline-primary btn-sm mt-2">Explore Tools</a>
+  <section class="section section-md section-features border-bottom border-dark">
+    <div class="container py-4">
+      <div class="row justify-content-center text-center gap-4 px-4">
+        <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
+          <h2 class="h4">S2DM Approach</h2>
+          <p>Get a basic understanding of the S2DM approach for modeling data across multiple domains with minimal expertise required.</p>
+          <a href="{{ "docs/approach-overview" | relURL }}" class="btn btn-outline-primary btn-sm mt-2">Learn More</a>
+        </div>
+        <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
+          <h2 class="h4">Data Modeling Guideline</h2>
+          <p>Follow our comprehensive guideline to model your domain using S2DM principles and best practices.</p>
+          <a href="{{ "docs/data-modeling-guideline" | relURL }}" class="btn btn-outline-primary btn-sm mt-2">View Guide</a>
+        </div>
+        <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
+          <h2 class="h4">S2DM Tools</h2>
+          <p>Maintain your domain model with the support of our provided S2DM tools and automation utilities.</p>
+          <a href="{{ "docs/tools" | relURL }}" class="btn btn-outline-primary btn-sm mt-2">Explore Tools</a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 {{ end }}
 
 {{ define "sidebar-footer" }}
-{{ if site.Params.doks.sectionFooter -}}
-<section class="section section-md container-fluid bg-light">
-  <div class="row justify-content-center text-center">
-    <div class="col-lg-7">
-      <h2 class="mt-2 h5">Start modeling your data semantically today!</h2>
-      <p class="text-muted">S2DM enables Subject Matter Experts to contribute to controlled vocabularies with minimal
-        data modeling expertise.</p>
-      <a class="btn btn-outline-primary btn-lg rounded-1 px-4 my-2" href="/docs/approach-overview/" role="button">Get
-        Started</a>
-    </div>
-  </div>
-</section>
-{{ end -}}
+  {{ if site.Params.doks.sectionFooter -}}
+    <section class="section section-md container-fluid bg-light">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7">
+          <h2 class="mt-2 h5">Start modeling your data semantically today!</h2>
+          <p class="text-muted">S2DM enables Subject Matter Experts to contribute to controlled vocabularies with minimal data modeling expertise.</p>
+          <a class="btn btn-outline-primary btn-lg rounded-1 px-4 my-2" href="{{ "docs/approach-overview" | relURL }}" role="button">Get Started</a>
+        </div>
+      </div>
+    </section>
+  {{ end -}}
 
-<!-- COVESA Logo Section -->
-<section class="section section-sm py-4">
-  <div class="container">
-    <div class="row justify-content-center text-center">
-      <div class="col-auto">
-        <img src="/s2dm/images/COVESA-Logo-Small.png" alt="COVESA Logo" class="img-fluid" style="max-height: 60px;">
+  <!-- COVESA Logo Section -->
+  <section class="section section-sm py-4">
+    <div class="container">
+      <div class="row justify-content-center text-center">
+        <div class="col-auto">
+                    <img src="{{ "images/COVESA-Logo-Small.png" | relURL }}" alt="COVESA Logo" class="img-fluid" style="max-height: 60px;">
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 {{ end }}

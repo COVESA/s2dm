@@ -4,47 +4,24 @@ weight: 10
 chapter: false
 ---
 
-![fig:s2dm_pre_defined_elements](/s2dm/images/s2dm_pre_def_elements.png)
+{{< img src="images/s2dm_pre_def_elements.png" alt="S2DM Pre-defined Elements" >}}
 
 ### Units
-Units are represented as GraphQL enum values with semantic references to standardized unit definitions. For example:
+Units are represented as enum values. For example:
 ```graphql
-enum VelocityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Velocity", versionTag: "3.1.5") {
-  """Kilometer per Hour | UCUM: km/h"""
-  KM_PER_HR @reference(uri: "http://qudt.org/vocab/unit/KM-PER-HR", versionTag: "3.1.5")
-
-  """Meter per Second | UCUM: m/s"""
-  M_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC", versionTag: "3.1.5")
+enum VelocityUnitEnum {
+  KILOMETER_PER_HOUR
+  METERS_PER_SECOND
 }
 ```
+The name of the enum itself refers to the quantity kind (e.g., `Velocity`).
+A set of commonly used units is provided in the file [`unit_enums.graphql`](https://github.com/COVESA/s2dm/blob/main/src/s2dm/spec/unit_enums.graphql).
 
 {{< callout context="note" >}}
 It is planned to adopt and reuse an existing standard data model for units. See [issue #43](https://github.com/COVESA/s2dm/issues/43) for details.
 Currently, the units file is inspired by the [COVESA VSS Units file](https://github.com/COVESA/vehicle_signal_specification/blob/main/spec/units.md).
 The tentative model for future use is [QUDT units](http://www.qudt.org/doc/DOC_VOCAB-UNITS-ALL.html).
 {{< /callout >}}
-S2DM provides two approaches for unit definitions:
-
-#### External Units (QUDT Integration)
-S2DM integrates with the [QUDT (Quantities, Units, Dimensions and Types)](https://qudt.org/) reference model to provide standardized, up-to-date unit definitions. These units are automatically synchronized from the authoritative QUDT repository using the S2DM CLI tool.
-
-#### Custom Units
-For domain-specific or non-standard units, you can define custom unit enums following the same structure as QUDT units.
-
-#### Directory Structure
-When using both external and custom units, organize them as follows:
-```
-path/to/units/
-├── external_qudt/          # QUDT units (generated via CLI)
-│   ├── LengthUnitEnum.graphql
-│   ├── VelocityUnitEnum.graphql
-│   └── metadata.json
-└── custom/                 # Custom domain-specific units
-    └── MyCustomUnitEnum.graphql
-```
-
-> [!TIP]
-> See the [Units CLI documentation](../tools/units-cli) for detailed instructions on synchronizing QUDT units and managing unit definitions.
 
 
 ### Custom scalars
