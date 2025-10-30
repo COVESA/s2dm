@@ -7,18 +7,18 @@ from typing import Any
 import rich_click as click
 import yaml
 from graphql import build_schema, parse
-from graphql import validate as graphql_validate
 from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
-from s2dm.exporters.utils.schema import search_schema
+from s2dm.exporters.utils.schema import load_schema_with_naming, search_schema
 from s2dm.exporters.utils.schema_loader import (
     create_tempfile_to_composed_schema,
     load_schema,
@@ -74,6 +74,23 @@ schema_option = click.option(
     help="The GraphQL schema file or directory containing schema files. Can be specified multiple times.",
 )
 
+
+selection_query_option = click.option(
+    "--selection-query",
+    "-q",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="GraphQL query file to filter the passed schema",
+)
+
+
+root_type_option = click.option(
+    "--root-type",
+    "-r",
+    type=str,
+    help="Root type name for filtering/scoping the schema",
+)
+
+
 output_option = click.option(
     "--output",
     "-o",
@@ -88,6 +105,15 @@ optional_output_option = click.option(
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     required=False,
     help="Output file",
+)
+
+
+expanded_instances_option = click.option(
+    "--expanded-instances",
+    "-e",
+    is_flag=True,
+    default=False,
+    help="Expand instance tags into nested structure instead of arrays/repeated fields",
 )
 
 
@@ -357,18 +383,8 @@ def validate() -> None:
 
 @click.command()
 @schema_option
-@click.option(
-    "--root-type",
-    "-r",
-    type=str,
-    help="Root type name for filtering the schema",
-)
-@click.option(
-    "--selection-query",
-    "-q",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="GraphQL query file to filter the composed schema",
-)
+@selection_query_option
+@root_type_option
 @output_option
 def compose(schemas: list[Path], root_type: str | None, selection_query: Path | None, output: Path) -> None:
     """Compose GraphQL schema files into a single output file."""
@@ -381,24 +397,8 @@ def compose(schemas: list[Path], root_type: str | None, selection_query: Path | 
         graphql_schema = build_schema(composed_schema_str)
 
         if selection_query:
-            log.debug("Validating selection query against composed schema...")
-
             query_document = parse(selection_query.read_text())
-            errors = graphql_validate(graphql_schema, query_document)
-
-            if errors:
-                log.error("Selection query validation failed:")
-                for error in errors:
-                    log.error(f" - {error.message}")
-                sys.exit(1)
-
-            log.debug("Selection query validated successfully")
-
-            log.debug("Filtering schema based on selection query...")
-
             graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
-
-            log.debug("Filtered schema based on query selections")
 
         composed_schema_str = print_schema_with_directives_preserved(graphql_schema)
 
@@ -426,6 +426,7 @@ def compose(schemas: list[Path], root_type: str | None, selection_query: Path | 
 # ----------
 @export.command
 @schema_option
+@selection_query_option
 @output_option
 @click.option(
     "--serialization-format",
@@ -471,6 +472,7 @@ def compose(schemas: list[Path], root_type: str | None, selection_query: Path | 
 def shacl(
     ctx: click.Context,
     schemas: list[Path],
+    selection_query: Path | None,
     output: Path,
     serialization_format: str,
     shapes_namespace: str,
@@ -480,8 +482,15 @@ def shacl(
 ) -> None:
     """Generate SHACL shapes from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
+
+    graphql_schema = load_schema_with_naming(schemas, naming_config)
+
+    if selection_query:
+        query_document = parse(selection_query.read_text())
+        graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
+
     result = translate_to_shacl(
-        schemas,
+        graphql_schema,
         shapes_namespace,
         shapes_namespace_prefix,
         model_namespace,
@@ -496,12 +505,19 @@ def shacl(
 # ----------
 @export.command
 @schema_option
+@selection_query_option
 @output_option
 @click.pass_context
-def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
+def vspec(ctx: click.Context, schemas: list[Path], selection_query: Path | None, output: Path) -> None:
     """Generate VSPEC from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
-    result = translate_to_vspec(schemas, naming_config)
+    graphql_schema = load_schema_with_naming(schemas, naming_config)
+
+    if selection_query:
+        query_document = parse(selection_query.read_text())
+        graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
+
+    result = translate_to_vspec(graphql_schema, naming_config)
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(result)
 
@@ -510,13 +526,9 @@ def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
 # ----------
 @export.command
 @schema_option
+@selection_query_option
 @output_option
-@click.option(
-    "--root-type",
-    "-r",
-    type=str,
-    help="Root type name for the JSON schema",
-)
+@root_type_option
 @click.option(
     "--strict",
     "-S",
@@ -524,20 +536,72 @@ def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
     default=False,
     help="Enforce strict field nullability translation from GraphQL to JSON Schema",
 )
-@click.option(
-    "--expanded-instances",
-    "-e",
-    is_flag=True,
-    default=False,
-    help="Expand instance tags into nested structure instead of arrays",
-)
+@expanded_instances_option
 @click.pass_context
 def jsonschema(
-    ctx: click.Context, schemas: list[Path], output: Path, root_type: str | None, strict: bool, expanded_instances: bool
+    ctx: click.Context,
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    strict: bool,
+    expanded_instances: bool,
 ) -> None:
     """Generate JSON Schema from a given GraphQL schema."""
     naming_config = ctx.obj.get("naming_config")
-    result = translate_to_jsonschema(schemas, root_type, strict, expanded_instances, naming_config)
+    graphql_schema = load_schema_with_naming(schemas, naming_config)
+
+    if selection_query:
+        query_document = parse(selection_query.read_text())
+        graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
+
+    result = translate_to_jsonschema(graphql_schema, root_type, strict, expanded_instances, naming_config)
+    _ = output.write_text(result)
+
+
+# Export -> protobuf
+# ----------
+@export.command
+@schema_option
+@selection_query_option
+@output_option
+@root_type_option
+@click.option(
+    "--flatten-naming",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Flatten nested field names. Requires --root-type to be set.",
+)
+@click.option(
+    "--package-name",
+    "-p",
+    type=str,
+    help="Protobuf package name",
+)
+@expanded_instances_option
+@click.pass_context
+def protobuf(
+    ctx: click.Context,
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    flatten_naming: bool,
+    package_name: str | None,
+    expanded_instances: bool,
+) -> None:
+    """Generate Protocol Buffers (.proto) file from GraphQL schema."""
+    naming_config = ctx.obj.get("naming_config")
+    graphql_schema = load_schema_with_naming(schemas, naming_config)
+
+    if selection_query:
+        query_document = parse(selection_query.read_text())
+        graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
+
+    result = translate_to_protobuf(
+        graphql_schema, root_type, flatten_naming, package_name, naming_config, expanded_instances
+    )
     _ = output.write_text(result)
 
 

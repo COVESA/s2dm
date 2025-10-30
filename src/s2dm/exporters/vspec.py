@@ -22,6 +22,7 @@ from s2dm.exporters.utils.instance_tag import (
     get_all_expanded_instance_tags,
     get_instance_tag_dict,
     get_instance_tag_object,
+    is_instance_tag_field,
 )
 from s2dm.exporters.utils.naming import apply_naming_to_instance_values
 from s2dm.exporters.utils.schema import load_schema_with_naming
@@ -191,9 +192,8 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def translate_to_vspec(schema_paths: list[Path], naming_config: dict[str, Any] | None = None) -> str:
+def translate_to_vspec(schema: GraphQLSchema, naming_config: dict[str, Any] | None = None) -> str:
     """Translate a GraphQL schema to YAML."""
-    schema = load_schema_with_naming(schema_paths, naming_config)
 
     all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")
@@ -343,7 +343,7 @@ def process_field(
                 field_dict["type"] = vss_type
 
         return {concat_field_name: field_dict}
-    elif isinstance(output_type, GraphQLObjectType) and field_name != "instanceTag":
+    elif isinstance(output_type, GraphQLObjectType) and not is_instance_tag_field(field_name):
         # Collect nested structures
         # nested_types.append(f"{object_type.name}.{output_type}({field_name})")
         nested_types.append((object_type.name, output_type.name))
@@ -411,7 +411,9 @@ def main(
     schemas: list[Path],
     output: Path,
 ) -> None:
-    result = translate_to_vspec(schemas)
+    # TODO: deprecate
+    graphql_schema = load_schema_with_naming(schemas, None)
+    result = translate_to_vspec(graphql_schema)
     log.info(f"Result:\n{result}")
     with open(output, "w", encoding="utf-8") as output_file:
         log.info(f"Writing data to '{output}'")

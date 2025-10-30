@@ -77,6 +77,92 @@ def test_export_vspec(runner: CliRunner, tmp_outputs: Path) -> None:
     assert "Vehicle_ADAS_ObstacleDetection:" in content
 
 
+def test_export_jsonschema(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "jsonschema.yaml"
+    result = runner.invoke(
+        cli, ["export", "jsonschema", "-s", str(TSD.SAMPLE1_1), "-s", str(TSD.SAMPLE1_2), "-o", str(out)]
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert '"Vehicle"' in content
+    assert '"Vehicle_ADAS_ObstacleDetection"' in content
+
+
+def test_export_protobuf(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "schema.proto"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "protobuf",
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-o",
+            str(out),
+            "-r",
+            "Vehicle",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert "package" not in content
+
+    assert "message Vehicle" in content
+    assert "message Vehicle_ADAS" in content
+    assert "message Vehicle_ADAS_ObstacleDetection" in content
+
+    assert "message Vehicle_ADAS_ObstacleDetection_WarningType_Enum" in content
+    assert "enum Enum" in content
+
+    assert "float averageSpeed = 2;" in content
+    assert "bool isFolded = 2;" in content
+
+
+def test_export_protobuf_flattened_naming(runner: CliRunner, tmp_outputs: Path) -> None:
+    out = tmp_outputs / "schema.proto"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "protobuf",
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-o",
+            str(out),
+            "-r",
+            "Vehicle",
+            "-f",
+            "-p",
+            "package.name",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+    with open(out, encoding="utf-8") as f:
+        content = f.read()
+
+    assert "package package.name;" in content
+
+    assert "message Message" in content
+
+    assert "message Vehicle_ADAS_ObstacleDetection_WarningType_Enum" in content
+    assert "enum Enum" in content
+
+    assert "float Vehicle_averageSpeed = 2;" in content
+    assert "repeated Vehicle_Body_Mirrors Vehicle_body_mirrors_s = 11;" in content
+    assert "bool isFolded = 2;" in content
+
+
 def test_generate_skos_skeleton(runner: CliRunner, tmp_outputs: Path) -> None:
     out = tmp_outputs / "skos_skeleton.ttl"
     result = runner.invoke(
