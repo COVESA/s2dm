@@ -82,6 +82,11 @@ jobs:
         fi
         echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
 
+    - name: Sync units
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      run: |
+        s2dm units sync
+
     - name: Compose GraphQL schema
       if: steps.version-check.outputs.CONTINUE == 'true'
       run: |
@@ -98,7 +103,7 @@ jobs:
         CONCEPT_NAMESPACE: ${{ vars.CONCEPT_NAMESPACE || '' }}
         CONCEPT_PREFIX: ${{ vars.CONCEPT_PREFIX || '' }}
       run: |
-        CMD="s2dm registry init -s ./current/spec -u ./current/units.yaml -o ./.artifacts/registry/registry.json"
+        CMD="s2dm registry init -s ./current/spec -o ./.artifacts/registry/registry.json"
         [ -n "$CONCEPT_NAMESPACE" ] && CMD="$CMD --concept-namespace '$CONCEPT_NAMESPACE'"
         [ -n "$CONCEPT_PREFIX" ] && CMD="$CMD --concept-prefix '$CONCEPT_PREFIX'"
         eval "$CMD"
@@ -109,7 +114,7 @@ jobs:
         CONCEPT_NAMESPACE: ${{ vars.CONCEPT_NAMESPACE || '' }}
         CONCEPT_PREFIX: ${{ vars.CONCEPT_PREFIX || '' }}
       run: |
-        CMD="s2dm registry update -s ./current/spec -sh ./.previous-release/registry/registry.json -u ./current/units.yaml -o ./.artifacts/registry/registry.json"
+        CMD="s2dm registry update -s ./current/spec -sh ./.previous-release/registry/registry.json -o ./.artifacts/registry/registry.json"
         [ -n "$CONCEPT_NAMESPACE" ] && CMD="$CMD --concept-namespace '$CONCEPT_NAMESPACE'"
         [ -n "$CONCEPT_PREFIX" ] && CMD="$CMD --concept-prefix '$CONCEPT_PREFIX'"
         eval "$CMD"
