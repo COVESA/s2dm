@@ -1,24 +1,23 @@
 # S2DM Migration Workflow Setup Guide
 
-This guide explains how to set up the automated S2DM migration workflow in your repository. The workflow automatically generates artifacts (GraphQL schemas, JSON schemas, registry files, and SKOS RDF) when changes are made to your specification files.
+This guide explains how to set up the automated S2DM publishing workflow in your repository. The workflow uses the `s2dm-publish` action to automatically generate artifacts when changes are made to your specification files.
 
 ## Prerequisites
 
 - A clean repository with a `spec/` directory containing schema files written in `GraphQL SDL` and following the data modeling ruleset of the `S2DM` approach.
-- A `units.yaml` file at the repository root
 - GitHub Actions enabled in your repository. For more information, follow this [guide](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository).
 
-> !NOTE If the repository is empty, or if the user is starting from scratch without any schema files, then the tools will create an empty `spec/` directory.
+> Note: If the repository is empty, or if the user is starting from scratch without any schema files, then the tool will create an empty `spec/` directory.
 
 ## Setup Steps
 
 ### 1. Copy Files from S2DM Repository
 
-The migration workflow comprises two files: `migrate.yml` and `.bumpversion.toml`.
+The publishing workflow comprises two files: `migrate.yml` and `.bumpversion.toml`.
 
-The `migrate.yml` defines a GitHub Actions workflow that is responsible for exporting new releases based on changes to the GraphQL specification of the domain data model repository. The workflow is explained [here](#how-the-workflow-works). The `.bumpversion.toml` is utilized to track the versions of the created releases. Users of the automation should copy both files into the domain data model repository. This can be achieved through one of the following methods:
+The `migrate.yml` defines a GitHub Actions workflow that uses the `s2dm-publish` action to export new releases based on changes to the GraphQL specification of the domain data model repository. The workflow is explained [here](#how-the-workflow-works). The `.bumpversion.toml` is utilized to track the versions of the created releases. Users of the automation should copy both files into the domain data model repository. This can be achieved through one of the following methods:
 
-#### Option A: Using the setup script (recommended)
+#### Option A: Using the setup script **(recommended)**
 
 Run the automated setup script that handles everything for you:
 
@@ -72,13 +71,12 @@ your-repo/
 ├── .bumpversion.toml            # Copied from COVESA/s2dm
 ├── spec/                        # Your specification files (GraphQL)
 │   └── ...
-├── units.yaml                   # Units file
 └── README.md
 ```
 
 ### 2. Configure Repository Variables
 
-The workflow supports optional configuration for the `s2dm` commands through GitHub repository variables.
+The workflow supports optional configuration for the `s2dm-publish` action through GitHub repository variables.
 
 Go to your repository → Settings → Secrets and variables → Actions → Variables tab, and add:
 
@@ -103,106 +101,66 @@ Go to your repository → Settings → Secrets and variables → Actions → Var
 
 > Note: All variables are optional. If not set, the commands will use their default values.
 
+### 3. Configure Deploy Key for Protected Branches (Optional)
+
+If your `main` branch has protection rules that prevent the default `GITHUB_TOKEN` from pushing commits and tags, you need to configure a deploy key with write access.
+
+#### Creating a Deploy Key
+
+1. **Generate an SSH key pair** (available on Linux, macOS, and Windows 10+):
+
+   ```bash
+   ssh-keygen -t ed25519 -C "s2dm-publish-action" -f ~/.ssh/s2dm_deploy_key -N ""
+   ```
+
+   - `-t ed25519`: Use ED25519 algorithm
+   - `-C "s2dm-publish-action"`: Add a comment to identify the key
+   - `-f ~/.ssh/s2dm_deploy_key`: Output file path
+   - `-N ""`: Empty passphrase (required for automated workflows)
+
+   This creates two files:
+   - `~/.ssh/s2dm_deploy_key` (private key)
+   - `~/.ssh/s2dm_deploy_key.pub` (public key)
+
+2. **Add the public key as a deploy key:**
+
+   - Go to your repository → Settings → Deploy keys → Add deploy key
+   - Title: `S2DM Publish Action`
+   - Key: Paste the content of `~/.ssh/s2dm_deploy_key.pub`
+   - **Enable "Allow write access"**
+   - Click "Add key"
+
+3. **Add the private key as a repository secret:**
+
+   - Go to your repository → Settings → Secrets and variables → Actions → Secrets tab
+   - Click "New repository secret"
+   - Name: `DEPLOY_KEY`
+   - Value: Paste the content of `~/.ssh/s2dm_deploy_key`
+   - Click "Add secret"
+
+4. **Configure branch protection to allow deploy key:**
+
+   Choose one of the following based on your setup:
+
+   **Option A: Using Rulesets** (recommended)
+   - Go to Settings → Rules → Rulesets
+   - Edit the ruleset that applies to your `main` branch (or create one)
+   - Under "Bypass list", click "Add bypass"
+   - Select "Deploy keys" from the list
+   - Save the ruleset
+   - See [GitHub Rulesets documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets)
+
+   **Option B: Using Classic Branch Protection Rules**
+   - Go to Settings → Branches → Branch protection rules for `main`
+   - Ensure "Do not allow bypassing the above settings" is **unchecked** to allow deploy keys (which have admin-level permissions) to push
+   - See [Branch Protection Rules documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule)
+
 ## How the Workflow Works
 
-The migration workflow is triggered on pushes to the `main` branch when files in the `spec/` directory are modified.
-
-### Critical Workflow Steps
-
-#### 1. Version Bump Detection
-
-```yaml
-- name: Check spec version bump
-```
-
-- Compares current spec with the previous release
-- Determines if changes require a `major`, `minor`, `patch`, or no version bump
-- Skips the entire workflow if no version bump is needed
-
-#### 2. Schema Composition
-
-```yaml
-- name: Compose GraphQL schema
-```
-
-- Composes a valid GraphQL SDL schema from:
-  - All the specification files of your domain model located inside the `<your-repo>/spec/` directory.
-  - All the used items from the [pre-defined elements in the `S2DM`](https://github.com/COVESA/s2dm/tree/main/src/s2dm/spec) repo.
-- Output: `.artifacts/graphql/schema.graphql`
-
-#### 3. JSON Schema Generation
-
-```yaml
-- name: Export JSON schema
-```
-
-- Exports a JSON schema from a GraphQL SDL schema
-- Output: `.artifacts/jsonschema/schema.json`
-
-#### 4. Registry Management
-
-```yaml
-- name: Initialize registry  # (first release only)
-- name: Update registry      # (subsequent releases)
-```
-
-- **Initialize**: Creates the first registry with concept URIs and spec history
-- **Update**: Updates existing registry with new concepts and tracks changes
-- Output: `.artifacts/registry/history`
-
-#### 5. SHACL Generation
-
-```yaml
-- name: Export SHACL
-```
-
-- Exports SHACL (Shapes Constraint Language) validation shapes from a GraphQL schema
-- Output: `.artifacts/shacl/schema.shacl.ttl` (Turtle RDF format)
-
-#### 6. SKOS RDF Generation
-
-```yaml
-- name: Generate SKOS RDF
-```
-
-- Parses the reference specification (in GraphQL SDL) and generates a set of RDF triples that use the `SKOS` vocabulary, which enables the arbitrary extension of a vocabulary in a decoupled manner.
-- Output: `.artifacts/skos/schema.ttl` (Turtle RDF format)
-
-#### 7. VSpec Generation
-
-```yaml
-- name: Export vspec
-```
-
-- Exports the GraphQL schema in the Vehicle Signal Specification (`.vspec`) format.
-- Output: `.artifacts/vspec/schema.vspec`
-
-#### 8. Release Creation
-
-```yaml
-- name: Bump version and push tags
-- name: Create release
-```
-
-- Automatically bumps version using `bump-my-version`
-- Creates and pushes version tags (e.g., `v1.2.3`)
-- Creates a GitHub release with all generated artifacts
-
-## Workflow Triggers
-
-The workflow runs when:
+The workflow uses the `s2dm-publish` action which handles all the artifact generation and publishing steps. It runs when:
 
 - Code is pushed to the `main` branch
 - Files in the `spec/` directory are modified
-- The spec version check determines a version bump is needed
+- The spec version check determines a version bump is needed _(handled by the `s2dm-publish` action)_
 
-## Generated Artifacts
-
-Each successful run produces:
-
-- **GraphQL Schema**: `schema.graphql` - Combined GraphQL schema
-- **JSON Schema**: `schema.json` - JSON Schema representation
-- **Registry**: `history` - Concept registry with version history
-- **SHACL Shapes**: `schema.ttl` - Validation shapes in Turtle format
-- **SKOS RDF**: `schema.ttl` - Semantic vocabulary in Turtle format
-- **VSpec**: `schema.vspec` - Vehicle Signal Specification format
+For detailed information about the action's workflow steps, inputs, outputs, and how it works, see the [`s2dm-publish` action documentation](https://github.com/COVESA/s2dm/blob/main/actions/s2dm-publish/README.md)

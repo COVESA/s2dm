@@ -14,167 +14,25 @@ jobs:
       contents: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        path: current
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: current
+          ssh-key: ${{ secrets.DEPLOY_KEY || '' }}
 
-    - name: Checkout COVESA S2DM repository
-      uses: actions/checkout@v4
-      with:
-        repository: COVESA/s2dm
-        path: s2dm
-
-    - name: Install Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v4
-      with:
-        version: "latest"
-
-    - name: Install S2DM dependencies
-      working-directory: s2dm
-      run: |
-        uv sync --frozen
-
-    - name: Activate venv
-      working-directory: s2dm
-      run: |
-        echo "${{ github.workspace }}/s2dm/.venv/bin" >> $GITHUB_PATH
-
-    - name: Verify S2DM installation
-      run: |
-        s2dm --help
-
-    - name: Download latest release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        mkdir -p .previous-release
-        gh release download --pattern "*" --dir .previous-release || echo "No previous release found"
-
-    - name: Prepare artifacts
-      run: |
-        mkdir -p .artifacts/graphql
-        mkdir -p .artifacts/jsonschema
-        mkdir -p .artifacts/registry
-        mkdir -p .artifacts/shacl
-        mkdir -p .artifacts/skos
-        mkdir -p .artifacts/vspec
-
-    - name: Check spec version bump
-      id: version-check
-      run: |
-        VERSION_BUMP=major
-        if [ -d "./.previous-release" ] && [ "$(ls -A ./.previous-release)" ]; then
-          echo "Previous release found"
-          VERSION_BUMP=$(s2dm check version-bump -s ./current/spec -p ./.previous-release/graphql/schema.graphql --output-type | tail -n 1)
-          if [[ "$VERSION_BUMP" != "none" ]]; then
-            echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
-          fi
-        else
-          echo "No previous release found"
-          echo "IS_INITIAL_RELEASE=true" >> "$GITHUB_OUTPUT"
-          echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
-        fi
-        echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
-
-    - name: Compose GraphQL schema
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      run: |
-        s2dm compose -s ./current/spec -o ./.artifacts/graphql/schema.graphql
-
-    - name: Generate JSON schema
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      run: |
-        s2dm export jsonschema -S -s ./current/spec -o ./.artifacts/jsonschema/schema.json
-
-    - name: Initialize registry
-      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
-      env:
-        CONCEPT_NAMESPACE: ${{ vars.CONCEPT_NAMESPACE || '' }}
-        CONCEPT_PREFIX: ${{ vars.CONCEPT_PREFIX || '' }}
-      run: |
-        CMD="s2dm registry init -s ./current/spec -u ./current/units.yaml -o ./.artifacts/registry/registry.json"
-        [ -n "$CONCEPT_NAMESPACE" ] && CMD="$CMD --concept-namespace '$CONCEPT_NAMESPACE'"
-        [ -n "$CONCEPT_PREFIX" ] && CMD="$CMD --concept-prefix '$CONCEPT_PREFIX'"
-        eval "$CMD"
-
-    - name: Update registry
-      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
-      env:
-        CONCEPT_NAMESPACE: ${{ vars.CONCEPT_NAMESPACE || '' }}
-        CONCEPT_PREFIX: ${{ vars.CONCEPT_PREFIX || '' }}
-      run: |
-        CMD="s2dm registry update -s ./current/spec -sh ./.previous-release/registry/registry.json -u ./current/units.yaml -o ./.artifacts/registry/registry.json"
-        [ -n "$CONCEPT_NAMESPACE" ] && CMD="$CMD --concept-namespace '$CONCEPT_NAMESPACE'"
-        [ -n "$CONCEPT_PREFIX" ] && CMD="$CMD --concept-prefix '$CONCEPT_PREFIX'"
-        eval "$CMD"
-
-    - name: Generate SHACL
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      env:
-        SHACL_SERIALIZATION_FORMAT: ${{ vars.SHACL_SERIALIZATION_FORMAT || '' }}
-        SHACL_SHAPES_NAMESPACE: ${{ vars.SHACL_SHAPES_NAMESPACE || '' }}
-        SHACL_SHAPES_PREFIX: ${{ vars.SHACL_SHAPES_PREFIX || '' }}
-        SHACL_MODEL_NAMESPACE: ${{ vars.SHACL_MODEL_NAMESPACE || '' }}
-        SHACL_MODEL_PREFIX: ${{ vars.SHACL_MODEL_PREFIX || '' }}
-      run: |
-        CMD="s2dm export shacl -s ./current/spec -o ./.artifacts/shacl/schema.ttl"
-        [ -n "$SHACL_SERIALIZATION_FORMAT" ] && CMD="$CMD --serialization-format '$SHACL_SERIALIZATION_FORMAT'"
-        [ -n "$SHACL_SHAPES_NAMESPACE" ] && CMD="$CMD --shapes-namespace '$SHACL_SHAPES_NAMESPACE'"
-        [ -n "$SHACL_SHAPES_PREFIX" ] && CMD="$CMD --shapes-namespace-prefix '$SHACL_SHAPES_PREFIX'"
-        [ -n "$SHACL_MODEL_NAMESPACE" ] && CMD="$CMD --model-namespace '$SHACL_MODEL_NAMESPACE'"
-        [ -n "$SHACL_MODEL_PREFIX" ] && CMD="$CMD --model-namespace-prefix '$SHACL_MODEL_PREFIX'"
-        eval "$CMD"
-
-    - name: Generate SKOS RDF
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      env:
-        SKOS_NAMESPACE: ${{ vars.SKOS_NAMESPACE || '' }}
-        SKOS_PREFIX: ${{ vars.SKOS_PREFIX || '' }}
-        SKOS_LANGUAGE: ${{ vars.SKOS_LANGUAGE || '' }}
-      run: |
-        CMD="s2dm generate skos-skeleton -s ./current/spec -o ./.artifacts/skos/schema.ttl"
-        [ -n "$SKOS_NAMESPACE" ] && CMD="$CMD --namespace '$SKOS_NAMESPACE'"
-        [ -n "$SKOS_PREFIX" ] && CMD="$CMD --prefix '$SKOS_PREFIX'"
-        [ -n "$SKOS_LANGUAGE" ] && CMD="$CMD --language '$SKOS_LANGUAGE'"
-        eval "$CMD"
-
-    - name: Generate VSpec
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      run: |
-        s2dm export vspec -s ./current/spec -o ./.artifacts/vspec/schema.vspec
-
-    - name: Bump version and push tags
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      working-directory: current
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        bump-my-version bump ${{ steps.version-check.outputs.VERSION_BUMP }} --config-file ./.bumpversion.toml
-        git push origin ${{ github.ref_name }} --tags
-
-    - name: Get latest tag
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      id: get-latest-tag
-      working-directory: current
-      run: |
-        LATEST_TAG=$(git describe --tags --abbrev=0)
-        echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
-
-    - name: Create release
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      working-directory: current
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        LATEST_TAG: ${{ steps.get-latest-tag.outputs.LATEST_TAG }}
-      run: |
-        tar -czf ../release.tar.gz -C ../.artifacts .
-        gh release create "${LATEST_TAG}" \
-          --title "Release ${LATEST_TAG}" \
-          --notes "This release contains the artifacts from the automated migration workflow." \
-          ../release.tar.gz
+      - name: Run s2dm-publish Action
+        uses: COVESA/s2dm/actions/s2dm-publish@main
+        with:
+          repository-path: ./current
+          spec-path: ./current/spec
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          concept-namespace: ${{ vars.CONCEPT_NAMESPACE || '' }}
+          concept-prefix: ${{ vars.CONCEPT_PREFIX || '' }}
+          shacl-serialization-format: ${{ vars.SHACL_SERIALIZATION_FORMAT || '' }}
+          shacl-shapes-namespace: ${{ vars.SHACL_SHAPES_NAMESPACE || '' }}
+          shacl-shapes-prefix: ${{ vars.SHACL_SHAPES_PREFIX || '' }}
+          shacl-model-namespace: ${{ vars.SHACL_MODEL_NAMESPACE || '' }}
+          shacl-model-prefix: ${{ vars.SHACL_MODEL_PREFIX || '' }}
+          skos-namespace: ${{ vars.SKOS_NAMESPACE || '' }}
+          skos-prefix: ${{ vars.SKOS_PREFIX || '' }}
+          skos-language: ${{ vars.SKOS_LANGUAGE || '' }}
