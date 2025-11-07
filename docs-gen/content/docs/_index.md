@@ -1,7 +1,7 @@
 ---
 title: Documentation
 description: Complete documentation for the Simplified Semantic Data Modeling (S2DM) approach
-weight: 30
+weight: 1
 ---
 
 # S2DM Documentation
