@@ -63,10 +63,19 @@ jobs:
           TZ: America/Los_Angeles
         run: |
           cd docs-gen
+          BASE_URL="${{ steps.pages.outputs.base_url }}"
+          echo "GitHub Pages base URL: $BASE_URL"
+          
+          # Fallback logic for correct base URL
+          if [[ "$BASE_URL" != *"/s2dm"* ]] && [[ "${{ github.repository }}" == *"/s2dm" ]]; then
+            BASE_URL="https://${{ github.repository_owner }}.github.io/s2dm"
+            echo "Using fallback base URL: $BASE_URL"
+          fi
+          
           npx exec-bin node_modules/.bin/hugo/hugo \
             --minify \
             --cleanDestinationDir \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+            --baseURL "$BASE_URL/"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
