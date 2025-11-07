@@ -1,5 +1,6 @@
 # Overrides for production environment
-# baseURL will be set by GitHub Actions
+# baseURL will be set by GitHub Actions, but fallback to hardcoded value
+baseURL = "https://giaccomole.github.io/s2dm"
 relativeURLs = false
 canonifyURLs = true
 disableLiveReload = true

@@ -15,7 +15,7 @@
           {{ if $section }}
             <li>
               <strong><a href="{{ $section.RelPermalink }}">{{ $section.Title }}</a></strong>
-              {{ with $section.RegularPages }}
+              {{ with $section.RegularPages.ByWeight }}
                 <ul class="list-unstyled list-nested">
                   {{ range . }}
                     <li{{ if eq $.RelPermalink .RelPermalink }} class="active"{{ end }}>
@@ -34,7 +34,7 @@
   {{ else }}
     {{- /* Original logic for other sections */ -}}
     {{ $section := (.Site.GetPage "section" .Section) }}
-    {{ with $section.RegularPages }}
+    {{ with $section.RegularPages.ByWeight }}
       <nav class="section-nav docs-links">
         <ul class="list-unstyled">
           {{ range . }}

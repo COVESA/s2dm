@@ -11,6 +11,11 @@ enableEmoji = true
 enableGitInfo = false
 enableRobotsTXT = true
 languageCode = "en-us"
+
+[page]
+  nextPrevSortOrder = "asc"
+  nextPrevInSectionSortOrder = "asc"
+
 [pagination]
   pagerSize = 10
 rssLimit = 10
