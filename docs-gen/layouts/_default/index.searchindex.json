@@ -22,7 +22,7 @@
   {
     "id": {{ $index }},
     "title": {{ $page.Title | jsonify }},
-    "permalink": {{ $page.RelPermalink | jsonify }},
+    "permalink": {{ $page.Permalink | jsonify }},
     "summary": {{ if $indexSummary }}{{ $page.Summary | plainify | jsonify }}{{ else }}{{ $page.Summary | plainify | jsonify }}{{ end }},
     "content": {{ if $indexSummary }}{{ $page.Summary | plainify | jsonify }}{{ else }}{{ $page.Content | plainify | jsonify }}{{ end }},
     "date": {{ $page.Date.Format "2006-01-02" | jsonify }},
