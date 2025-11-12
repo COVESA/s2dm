@@ -9,6 +9,10 @@ from s2dm.exporters.utils.extraction import get_all_object_types, get_all_object
 from s2dm.exporters.utils.naming import apply_naming_to_instance_values
 
 
+def is_instance_tag_field(field_name: str) -> bool:
+    return field_name == "instanceTag"
+
+
 def get_all_expanded_instance_tags(
     schema: GraphQLSchema,
     naming_config: dict[str, Any] | None = None,

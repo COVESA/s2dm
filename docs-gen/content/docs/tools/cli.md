@@ -4,7 +4,583 @@ weight: 1
 chapter: false
 ---
 
+## Compose Command
+
+The `compose` command merges multiple GraphQL schema files into a single unified schema file. It automatically adds `@reference` directives to track which file each type was obtained from.
+
+### Basic Usage
+
+```bash
+s2dm compose -s <schema1> -s <schema2> -o <output_file>
+```
+
+### Options
+
+- `-s, --schema PATH`: GraphQL schema file or directory (required, can be specified multiple times)
+- `-r, --root-type TEXT`: Root type name for filtering the schema (optional)
+- `-q, --selection-query PATH`: GraphQL query file for filtering schema based on selected fields (optional)
+- `-o, --output FILE`: Output file path (required)
+
+### Examples
+
+#### Compose Multiple Schema Files
+
+Merge multiple GraphQL schema files into a single output:
+
+```bash
+s2dm compose -s schema1.graphql -s schema2.graphql -o composed.graphql
+```
+
+#### Compose from Directories
+
+Merge all `.graphql` files from multiple directories:
+
+```bash
+s2dm compose -s ./schemas/vehicle -s ./schemas/person -o composed.graphql
+```
+
+#### Filter by Root Type
+
+Compose only types reachable from a specific root type:
+
+```bash
+s2dm compose -s schema1.graphql -s schema2.graphql -o composed.graphql -r Vehicle
+```
+
+This will include only the `Vehicle` type and all types transitively referenced by it, filtering out unreferenced types like `Person` if they're not connected to `Vehicle`.
+
+#### Filter by Selection Query
+
+Compose only types and fields selected in a GraphQL query:
+
+```bash
+s2dm compose -s schema1.graphql -s schema2.graphql -q query.graphql -o composed.graphql
+```
+
+Given a query file `query.graphql`:
+
+```graphql
+query Selection {
+  vehicle(instance: "id") {
+    averageSpeed
+    adas {
+      abs {
+        isEngaged
+      }
+    }
+  }
+}
+```
+
+The composed schema will include:
+
+- Only the selected types: `vehicle`, `adas`, `abs`
+- Only the selected fields within each type
+- Types referenced by field arguments (e.g., enums used in field arguments)
+- Only directive definitions that are actually used in the filtered schema
+
+**Note:** The query must be valid against the composed schema. Root fields in the query (e.g., `vehicle`) must exist in the `Query` type of the schema.
+
+### Reference Directives
+
+The compose command automatically adds `@reference(source: String!)` directives to all types to track their source:
+
+```graphql
+type Vehicle @reference(source: "schema1.graphql") {
+  id: ID!
+  name: String
+}
+
+type Person @reference(source: "schema2.graphql") {
+  id: ID!
+  name: String
+}
+```
+
+Types from the S2DM specification (common types, scalars, directives) are marked with:
+
+```graphql
+type InCabinArea2x2 @instanceTag @reference(source: "S2DM Spec") {
+  row: TwoRowsInCabinEnum
+  column: TwoColumnsInCabinEnum
+}
+```
+
+**Note:** If a type already has a `@reference` directive in the source schema, it will be preserved and not overwritten.
+
 ## Export Commands
+
+### Protocol Buffers (Protobuf)
+
+This exporter translates the given GraphQL schema to [Protocol Buffers](https://protobuf.dev/) (`.proto`) format.
+
+#### Key Features
+
+- **Complete GraphQL Type Support**: Handles all GraphQL types including scalars, objects, enums, unions, interfaces, and lists
+- **Selection Query (Required)**: Use the `--selection-query` flag to specify which types and fields to export via a GraphQL query
+- **Root Type Filtering**: Use the `--root-type` flag to export only a specific type and its dependencies
+- **Flatten Naming Mode**: Use the `--flatten-naming` flag to flatten nested structures into a single message with prefixed field names
+- **Expanded Instance Tags**: Use the `--expanded-instances` flag to transform instance tag arrays into nested message structures
+- **Field Nullability**: Properly handles nullable vs non-nullable fields from GraphQL schema
+- **Directive Support**: Converts S2DM directives like `@cardinality`, `@range`, and `@noDuplicates` to protovalidate constraints
+- **Package Name Support**: Use the `--package-name` flag to specify a protobuf package namespace
+
+#### Example Transformation
+
+Consider the following GraphQL schema:
+
+```graphql
+type Cabin {
+  doors: [Door]
+  temperature: Float
+}
+
+type Door {
+  isLocked: Boolean
+  instanceTag: DoorPosition
+}
+
+type DoorPosition @instanceTag {
+  row: RowEnum
+  side: SideEnum
+}
+
+enum RowEnum {
+  ROW1
+  ROW2
+}
+
+enum SideEnum {
+  DRIVERSIDE
+  PASSENGERSIDE
+}
+```
+
+The Protobuf exporter produces:
+
+```protobuf
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "buf/validate/validate.proto";
+
+extend google.protobuf.MessageOptions {
+  string source = 50001;
+}
+
+message RowEnum {
+  option (source) = "RowEnum";
+
+  enum Enum {
+    ROWENUM_UNSPECIFIED = 0;
+    ROW1 = 1;
+    ROW2 = 2;
+  }
+}
+
+message SideEnum {
+  option (source) = "SideEnum";
+
+  enum Enum {
+    SIDEENUM_UNSPECIFIED = 0;
+    DRIVERSIDE = 1;
+    PASSENGERSIDE = 2;
+  }
+}
+
+message DoorPosition {
+  option (source) = "DoorPosition";
+
+  RowEnum.Enum row = 1;
+  SideEnum.Enum side = 2;
+}
+
+message Cabin {
+  option (source) = "Cabin";
+
+  repeated Door doors = 1;
+  float temperature = 2;
+}
+
+message Door {
+  option (source) = "Door";
+
+  bool isLocked = 1;
+  DoorPosition instanceTag = 2;
+}
+```
+
+#### Selection Query (Required)
+
+The protobuf exporter requires a selection query to determine which types and fields to export:
+
+```bash
+s2dm export protobuf --schema schema.graphql --selection-query query.graphql --output cabin.proto
+```
+
+Given a query file `query.graphql` that matches the schema above:
+
+```graphql
+query Selection {
+  cabin {
+    doors {
+      isLocked
+      instanceTag {
+        row
+        side
+      }
+    }
+    temperature
+  }
+}
+```
+
+The exporter will include only the selected types and fields from the schema.
+
+#### Root Type Filtering
+
+Use the `--root-type` flag in combination with the selection query to further filter the export:
+
+```bash
+s2dm export protobuf --schema schema.graphql --selection-query query.graphql --output cabin.proto --root-type Cabin
+```
+
+This will include only the `Cabin` type and all types transitively referenced by it from the selection query.
+
+#### Flatten Naming Mode
+
+Use the `--flatten-naming` flag to flatten nested object structures into a single message with prefixed field names. This mode works with the selection query to flatten all root-level types selected in the query:
+
+```bash
+s2dm export protobuf --schema schema.graphql --selection-query query.graphql --output vehicle.proto --flatten-naming
+```
+
+You can optionally combine it with `--root-type` to flatten only a specific root type:
+
+```bash
+s2dm export protobuf --schema schema.graphql --selection-query query.graphql --output vehicle.proto --root-type Vehicle --flatten-naming
+```
+
+**Example transformation:**
+
+Given a GraphQL schema:
+
+```graphql
+type Vehicle {
+  adas: ADAS
+}
+
+type ADAS {
+  abs: ABS
+}
+
+type ABS {
+  isEngaged: Boolean
+}
+```
+
+Flatten mode produces:
+
+```protobuf
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "buf/validate/validate.proto";
+
+extend google.protobuf.MessageOptions {
+  string source = 50001;
+}
+
+message Message {
+  bool Vehicle_adas_abs_isEngaged = 1;
+}
+
+```
+
+#### Expanded Instance Tags
+
+The `--expanded-instances` flag transforms instance tag objects into nested message structures instead of repeated fields. This provides compile-time type safety for accessing specific instances.
+
+```bash
+s2dm export protobuf --schema schema.graphql --selection-query query.graphql --output cabin.proto --expanded-instances
+```
+
+**Default behavior (without flag):**
+
+Given a GraphQL schema with instance tags:
+
+```graphql
+type Cabin {
+  doors: [Door]
+}
+
+type Door {
+  isLocked: Boolean
+  instanceTag: DoorPosition
+}
+
+type DoorPosition @instanceTag {
+  row: RowEnum
+  side: SideEnum
+}
+
+enum RowEnum {
+  ROW1
+  ROW2
+}
+
+enum SideEnum {
+  DRIVERSIDE
+  PASSENGERSIDE
+}
+```
+
+Default output uses repeated fields and includes the instanceTag field:
+
+```protobuf
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "buf/validate/validate.proto";
+
+extend google.protobuf.MessageOptions {
+  string source = 50001;
+}
+
+message RowEnum {
+  option (source) = "RowEnum";
+
+  enum Enum {
+    ROWENUM_UNSPECIFIED = 0;
+    ROW1 = 1;
+    ROW2 = 2;
+  }
+}
+
+message SideEnum {
+  option (source) = "SideEnum";
+
+  enum Enum {
+    SIDEENUM_UNSPECIFIED = 0;
+    DRIVERSIDE = 1;
+    PASSENGERSIDE = 2;
+  }
+}
+
+message Door {
+  option (source) = "Door";
+
+  bool isLocked = 1;
+  DoorPosition instanceTag = 2;
+}
+
+
+message Cabin {
+  option (source) = "Cabin";
+
+  repeated Door doors = 1;
+}
+
+
+message DoorPosition {
+  option (source) = "DoorPosition";
+
+  RowEnum.Enum row = 1;
+  SideEnum.Enum side = 2;
+}
+```
+
+**With `--expanded-instances` flag:**
+
+The same schema produces nested messages representing the cartesian product of instance tag values:
+
+```protobuf
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "buf/validate/validate.proto";
+
+extend google.protobuf.MessageOptions {
+  string source = 50001;
+}
+
+message Door {
+  option (source) = "Door";
+
+  bool isLocked = 1;
+}
+
+
+message Cabin {
+  option (source) = "Cabin";
+
+  message Cabin_Door {
+    message Cabin_Door_ROW1 {
+      Door DRIVERSIDE = 1;
+      Door PASSENGERSIDE = 2;
+    }
+
+    message Cabin_Door_ROW2 {
+      Door DRIVERSIDE = 1;
+      Door PASSENGERSIDE = 2;
+    }
+
+    Cabin_Door_ROW1 ROW1 = 1;
+    Cabin_Door_ROW2 ROW2 = 2;
+  }
+
+  Cabin_Door Door = 1;
+}
+```
+
+**Key differences:**
+
+- Instance tag enums (`RowEnum`, `SideEnum`) are excluded from the output when using expanded instances
+- Types with `@instanceTag` directive (`DoorPosition`) are excluded from the output
+- The `instanceTag` field is excluded from the Door message
+- Nested messages are created inside the parent message
+- Field names use the GraphQL type name (`Door` not `doors`)
+
+#### Directive Support
+
+S2DM directives are converted to [protovalidate](https://github.com/bufbuild/protovalidate) constraints:
+
+- `@range(min: 0, max: 100)` → `[(buf.validate.field).int32 = {gte: 0, lte: 100}]`
+- `@noDuplicates` → `[(buf.validate.field).repeated = {unique: true}]`
+- `@cardinality(min: 1, max: 5)` → `[(buf.validate.field).repeated = {min_items: 1, max_items: 5}]`
+
+Example:
+
+```graphql
+type Vehicle {
+  speed: Int @range(min: 0, max: 300)
+  tags: [String] @noDuplicates @cardinality(min: 1, max: 10)
+}
+```
+
+Produces:
+
+```protobuf
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "buf/validate/validate.proto";
+
+extend google.protobuf.MessageOptions {
+  string source = 50001;
+}
+
+message Vehicle {
+  option (source) = "Vehicle";
+
+  int32 speed = 1 [(buf.validate.field).int32 = {gte: 0, lte: 300}];
+  repeated string tags = 2 [(buf.validate.field).repeated = {unique: true, min_items: 1, max_items: 10}];
+}
+```
+
+#### Type Mappings
+
+GraphQL types are mapped to protobuf types as follows:
+
+| GraphQL Type | Protobuf Type |
+|--------------|---------------|
+| `String`     | `string`      |
+| `Int`        | `int32`       |
+| `Float`      | `float`       |
+| `Boolean`    | `bool`        |
+| `ID`         | `string`      |
+| `Int8`       | `int32`       |
+| `UInt8`      | `uint32`      |
+| `Int16`      | `int32`       |
+| `UInt16`     | `uint32`      |
+| `UInt32`     | `uint32`      |
+| `Int64`      | `int64`       |
+| `UInt64`     | `uint64`      |
+
+**List types** are converted to `repeated` fields:
+
+- `[String]` → `repeated string`
+- `[Int]` → `repeated int32`
+
+**Enums** are converted to protobuf enums wrapped in a message:
+
+- Each GraphQL enum becomes a protobuf message with the same name
+- Inside the message, an `Enum` nested enum is created
+- An `UNSPECIFIED` value is added at position 0
+- References use the `.Enum` suffix (e.g., `LockStatus.Enum`)
+
+**Field Nullability:**
+
+GraphQL field nullability is preserved in protobuf using the `optional` keyword and protovalidate constraints:
+
+- **Nullable fields** (e.g., `name: String`) → `optional` proto3 fields
+- **Non-nullable fields** (e.g., `id: ID!`) → fields with `[(buf.validate.field).required = true]`
+
+Example:
+
+```graphql
+type User {
+  id: ID!              # Non-nullable
+  name: String         # Nullable
+}
+```
+
+Produces:
+
+```protobuf
+message User {
+  option (source) = "User";
+
+  string id = 1 [(buf.validate.field).required = true];
+  optional string name = 2;
+}
+```
+
+You can call the help for usage reference:
+
+```bash
+s2dm export protobuf --help
+```
+
+#### Field Number Stability
+
+**Important Limitation**: Field numbers in generated protobuf files are **not stable** across schema regenerations when the GraphQL schema changes.
+
+**How Field Numbers Are Assigned:**
+
+Field numbers are assigned sequentially (starting from 1) based on:
+
+1. The iteration order of fields in the GraphQL schema
+2. Which types/fields are included (affected by `--root-type` filtering)
+3. The flattening logic (when using `--flatten-naming`)
+
+**Impact on Schema Evolution:**
+
+Any change to the GraphQL schema can cause field number reassignments:
+
+```graphql
+# Version 1
+type Door {
+  isLocked: Boolean    # becomes field number 1
+  position: Int        # becomes field number 2
+}
+
+# Version 2 - Adding a new field
+type Door {
+  id: ID               # becomes field number 1
+  isLocked: Boolean    # becomes field number 2 (was 1!)
+  position: Int        # becomes field number 3 (was 2!)
+}
+```
+
+**When Field Number Stability Matters:**
+
+Field number changes break compatibility if you have:
+
+- **Persistent protobuf data**: Data stored in databases, files, or caches will deserialize incorrectly after regeneration
+- **Rolling deployments**: Services using different schema versions cannot communicate during deployment
+- **Message queues**: Messages enqueued before regeneration will fail to deserialize correctly
+- **Archived data**: Historical protobuf-encoded logs or backups become unreadable
 
 ### Naming Configuration
 

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.utils.schema import load_schema_with_naming
 
 
 class TestExpandedInstances:
@@ -17,7 +18,8 @@ class TestExpandedInstances:
 
     def test_default_behavior_creates_arrays(self, test_schema_path: list[Path]) -> None:
         """Test that the default behavior creates arrays for instance tagged objects."""
-        result = translate_to_jsonschema(test_schema_path, root_type="Cabin")
+        graphql_schema = load_schema_with_naming(test_schema_path, None)
+        result = translate_to_jsonschema(graphql_schema, root_type="Cabin")
         schema = json.loads(result)
 
         # Check that doors is an array
@@ -32,7 +34,8 @@ class TestExpandedInstances:
 
     def test_expanded_instances_creates_nested_objects(self, test_schema_path: list[Path]) -> None:
         """Test that expanded_instances=True creates nested object structures."""
-        result = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=True)
+        graphql_schema = load_schema_with_naming(test_schema_path, None)
+        result = translate_to_jsonschema(graphql_schema, root_type="Cabin", expanded_instances=True)
         schema = json.loads(result)
 
         # Check that Doors becomes Door (singular) and is a nested object structure
@@ -56,7 +59,8 @@ class TestExpandedInstances:
 
     def test_expanded_instances_for_seats(self, test_schema_path: list[Path]) -> None:
         """Test expanded instances for seats with 3-level nesting."""
-        result = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=True)
+        graphql_schema = load_schema_with_naming(test_schema_path, None)
+        result = translate_to_jsonschema(graphql_schema, root_type="Cabin", expanded_instances=True)
         schema = json.loads(result)
 
         # Check that Seats becomes Seat (singular) and is a nested object structure
@@ -120,7 +124,8 @@ class TestExpandedInstances:
             temp_path = Path(f.name)
 
         try:
-            result = translate_to_jsonschema([temp_path], root_type="TestObject", expanded_instances=True)
+            graphql_schema = load_schema_with_naming([temp_path], None)
+            result = translate_to_jsonschema(graphql_schema, root_type="TestObject", expanded_instances=True)
             schema = json.loads(result)
 
             # Instance-tagged doors should be expanded and use singular name
@@ -138,7 +143,8 @@ class TestExpandedInstances:
 
     def test_expanded_instances_with_strict_mode(self, test_schema_path: list[Path]) -> None:
         """Test that expanded instances work correctly with strict mode."""
-        result = translate_to_jsonschema(test_schema_path, root_type="Cabin", strict=True, expanded_instances=True)
+        graphql_schema = load_schema_with_naming(test_schema_path, None)
+        result = translate_to_jsonschema(graphql_schema, root_type="Cabin", strict=True, expanded_instances=True)
         schema = json.loads(result)
 
         # Should still create expanded structure with singular naming
@@ -152,8 +158,9 @@ class TestExpandedInstances:
 
     def test_singular_naming_for_expanded_instances(self, test_schema_path: list[Path]) -> None:
         """Test that expanded instances use singular type names instead of field names."""
-        result_normal = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=False)
-        result_expanded = translate_to_jsonschema(test_schema_path, root_type="Cabin", expanded_instances=True)
+        graphql_schema = load_schema_with_naming(test_schema_path, None)
+        result_normal = translate_to_jsonschema(graphql_schema, root_type="Cabin", expanded_instances=False)
+        result_expanded = translate_to_jsonschema(graphql_schema, root_type="Cabin", expanded_instances=True)
 
         schema_normal = json.loads(result_normal)
         schema_expanded = json.loads(result_expanded)
@@ -175,7 +182,8 @@ class TestExpandedInstances:
         # Create a nested schema path
         nested_schema_path = Path(__file__).parent / "test_nested_schema.graphql"
 
-        result = translate_to_jsonschema([nested_schema_path], root_type="Chassis", expanded_instances=True)
+        graphql_schema = load_schema_with_naming([nested_schema_path], None)
+        result = translate_to_jsonschema(graphql_schema, root_type="Chassis", expanded_instances=True)
         schema = json.loads(result)
 
         # Check that Chassis -> Axle uses proper expansion with $ref

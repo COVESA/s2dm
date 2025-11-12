@@ -30,10 +30,10 @@ repos:
         entry: bash -c 'uv run mypy --install-types --non-interactive "$@"' --
         language: system
         types: [python]
-        files: ^src/
+        files: ^(src|tests)/
         require_serial: true
         pass_filenames: false
-        args: [src/s2dm]
+        args: [src/, tests/]
   - repo: https://github.com/jorisroovers/gitlint
     rev: v0.19.1
     hooks:

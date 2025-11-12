@@ -15,7 +15,7 @@ type DoorPosition @instanceTag {
 
 type Door {
   isLocked: Boolean
-  position: Int
+  position: Int @range(min: 0, max: 100)
   instanceTag: DoorPosition
 }
 
@@ -23,6 +23,7 @@ type Vehicle {
   doors: [Door] @noDuplicates
   model: String
   year: Int
+  features: [String] @noDuplicates @cardinality(min: 1, max: 10)
 }
 
 enum SeatRowEnum {
@@ -44,12 +45,12 @@ type SeatPosition @instanceTag {
 
 type Seat {
   isOccupied: Boolean
-  height: Int
+  height: Int @range(min: 0, max: 100)
   instanceTag: SeatPosition
 }
 
 type Cabin {
   seats: [Seat] @noDuplicates
   doors: [Door] @noDuplicates
-  temperature: Float
+  temperature: Float @range(min: -100, max: 100)
 }
