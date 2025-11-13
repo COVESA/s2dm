@@ -1,31 +1,32 @@
 import json
 import logging
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import rich_click as click
-import yaml
 from graphql import build_schema, parse
-from graphql import validate as graphql_validate
 from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
-from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types
+from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
+from s2dm.exporters.utils.naming import load_naming_config
 from s2dm.exporters.utils.schema import search_schema
 from s2dm.exporters.utils.schema_loader import (
     create_tempfile_to_composed_schema,
+    load_and_process_schema,
     load_schema,
     load_schema_as_str,
-    load_schema_as_str_filtered,
     print_schema_with_directives_preserved,
-    prune_schema_using_query_selection,
+    process_schema,
     resolve_graphql_files,
 )
 from s2dm.exporters.vspec import translate_to_vspec
@@ -74,6 +75,25 @@ schema_option = click.option(
     help="The GraphQL schema file or directory containing schema files. Can be specified multiple times.",
 )
 
+
+def selection_query_option(required: bool = False) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    return click.option(
+        "--selection-query",
+        "-q",
+        type=click.Path(exists=True, dir_okay=False, path_type=Path),
+        required=required,
+        help="GraphQL query file to filter the passed schema",
+    )
+
+
+root_type_option = click.option(
+    "--root-type",
+    "-r",
+    type=str,
+    help="Root type name for filtering/scoping the schema",
+)
+
+
 output_option = click.option(
     "--output",
     "-o",
@@ -88,6 +108,22 @@ optional_output_option = click.option(
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     required=False,
     help="Output file",
+)
+
+
+expanded_instances_option = click.option(
+    "--expanded-instances",
+    "-e",
+    is_flag=True,
+    default=False,
+    help="Expand instance tags into nested structure instead of arrays/repeated fields",
+)
+
+
+naming_config_option = click.option(
+    "--naming-config",
+    type=click.Path(exists=True, path_type=Path),
+    help="YAML file containing naming configuration",
 )
 
 
@@ -109,93 +145,6 @@ def pretty_print_dict_json(result: dict[str, Any]) -> dict[str, Any]:
         return obj
 
     return {k: multiline_str_representer(v) for k, v in result.items()}
-
-
-def validate_naming_config(config: dict[str, Any]) -> None:
-    VALID_CASES = {
-        "camelCase",
-        "PascalCase",
-        "snake_case",
-        "kebab-case",
-        "MACROCASE",
-        "COBOL-CASE",
-        "flatcase",
-        "TitleCase",
-    }
-
-    VALID_ELEMENT_TYPES = {"type", "field", "argument", "enumValue", "instanceTag"}
-    VALID_CONTEXTS = {
-        "type": {"object", "interface", "input", "scalar", "union", "enum"},
-        "field": {"object", "interface", "input"},
-        "argument": {"field"},
-    }
-
-    valid_cases = ", ".join(sorted(VALID_CASES))
-
-    for element_type, value in config.items():
-        if element_type not in VALID_ELEMENT_TYPES:
-            raise click.ClickException(
-                f"Invalid element type '{element_type}'. Valid types: {', '.join(sorted(VALID_ELEMENT_TYPES))}"
-            )
-
-        if element_type in ("enumValue", "instanceTag"):
-            if isinstance(value, dict):
-                raise click.ClickException(f"Element type '{element_type}' cannot have contexts")
-            if not isinstance(value, str) or value not in VALID_CASES:
-                raise click.ClickException(
-                    f"Invalid case type for '{element_type}': '{value}'. Valid cases: {valid_cases}"
-                )
-        elif isinstance(value, str):
-            if value not in VALID_CASES:
-                raise click.ClickException(
-                    f"Invalid case type for '{element_type}': '{value}'. Valid cases: {valid_cases}"
-                )
-        elif isinstance(value, dict):
-            if element_type not in VALID_CONTEXTS:
-                raise click.ClickException(f"Element type '{element_type}' cannot have contexts")
-
-            for context, case_type in value.items():
-                if context not in VALID_CONTEXTS[element_type]:
-                    valid_contexts = ", ".join(sorted(VALID_CONTEXTS[element_type]))
-                    raise click.ClickException(
-                        f"Invalid context '{context}' for '{element_type}'. Valid contexts: {valid_contexts}"
-                    )
-
-                if not isinstance(case_type, str) or case_type not in VALID_CASES:
-                    raise click.ClickException(
-                        f"Invalid case type for '{element_type}.{context}': '{case_type}'. Valid cases: {valid_cases}"
-                    )
-        else:
-            raise click.ClickException(
-                f"Invalid value type for '{element_type}'. Expected string or dict, got {type(value).__name__}"
-            )
-
-    if "enumValue" in config and "instanceTag" not in config:
-        raise click.ClickException("If 'enumValue' is present, 'instanceTag' must also be present")
-
-
-def load_naming_config(config_path: Path | None) -> dict[str, Any] | None:
-    if config_path is None:
-        log.info("No naming config provided")
-        return None
-
-    try:
-        config_file_handle = config_path.open("r", encoding="utf-8")
-    except OSError as e:
-        raise click.ClickException(f"Failed to open naming config file {config_path}: {e}") from e
-
-    with config_file_handle:
-        log.info(f"Loaded naming config: {config_path}")
-
-        try:
-            result = yaml.safe_load(config_file_handle)
-        except yaml.YAMLError as e:
-            raise click.ClickException(f"Failed to load naming config from {config_path}: {e}") from e
-
-        config = result if isinstance(result, dict) else {}
-        if config:
-            validate_naming_config(config)
-        return config
 
 
 @click.group(context_settings={"auto_envvar_prefix": "s2dm"})
@@ -237,17 +186,9 @@ def diff() -> None:
 
 
 @click.group()
-@click.option(
-    "--naming-config",
-    "-n",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="YAML file containing naming configuration",
-)
-@click.pass_context
-def export(ctx: click.Context, naming_config: Path | None) -> None:
+def export() -> None:
     """Export commands."""
-    ctx.ensure_object(dict)
-    ctx.obj["naming_config"] = load_naming_config(naming_config)
+    pass
 
 
 @click.group()
@@ -357,49 +298,37 @@ def validate() -> None:
 
 @click.command()
 @schema_option
-@click.option(
-    "--root-type",
-    "-r",
-    type=str,
-    help="Root type name for filtering the schema",
-)
-@click.option(
-    "--selection-query",
-    "-q",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="GraphQL query file to filter the composed schema",
-)
+@selection_query_option()
+@root_type_option
+@naming_config_option
 @output_option
-def compose(schemas: list[Path], root_type: str | None, selection_query: Path | None, output: Path) -> None:
+@expanded_instances_option
+def compose(
+    schemas: list[Path],
+    root_type: str | None,
+    selection_query: Path | None,
+    naming_config: Path | None,
+    output: Path,
+    expanded_instances: bool,
+) -> None:
     """Compose GraphQL schema files into a single output file."""
     try:
-        if root_type:
-            composed_schema_str = load_schema_as_str_filtered(schemas, root_type, add_references=True)
-        else:
-            composed_schema_str = load_schema_as_str(schemas, add_references=True)
-
+        composed_schema_str = load_schema_as_str(schemas, add_references=True)
         graphql_schema = build_schema(composed_schema_str)
 
+        query_document = None
         if selection_query:
-            log.debug("Validating selection query against composed schema...")
-
             query_document = parse(selection_query.read_text())
-            errors = graphql_validate(graphql_schema, query_document)
 
-            if errors:
-                log.error("Selection query validation failed:")
-                for error in errors:
-                    log.error(f" - {error.message}")
-                sys.exit(1)
+        naming_config_dict = load_naming_config(naming_config)
 
-            log.debug("Selection query validated successfully")
-
-            log.debug("Filtering schema based on selection query...")
-
-            graphql_schema = prune_schema_using_query_selection(graphql_schema, query_document)
-
-            log.debug("Filtered schema based on query selections")
-
+        graphql_schema = process_schema(
+            schema=graphql_schema,
+            naming_config=naming_config_dict,
+            query_document=query_document,
+            root_type=root_type,
+            expanded_instances=expanded_instances,
+        )
         composed_schema_str = print_schema_with_directives_preserved(graphql_schema)
 
         output.write_text(composed_schema_str)
@@ -426,7 +355,10 @@ def compose(schemas: list[Path], root_type: str | None, selection_query: Path | 
 # ----------
 @export.command
 @schema_option
+@selection_query_option()
 @output_option
+@root_type_option
+@naming_config_option
 @click.option(
     "--serialization-format",
     "-f",
@@ -467,26 +399,36 @@ def compose(schemas: list[Path], root_type: str | None, selection_query: Path | 
     help="The prefix for the data model",
     show_default=True,
 )
-@click.pass_context
+@expanded_instances_option
 def shacl(
-    ctx: click.Context,
     schemas: list[Path],
+    selection_query: Path | None,
     output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
     serialization_format: str,
     shapes_namespace: str,
     shapes_namespace_prefix: str,
     model_namespace: str,
     model_namespace_prefix: str,
+    expanded_instances: bool,
 ) -> None:
     """Generate SHACL shapes from a given GraphQL schema."""
-    naming_config = ctx.obj.get("naming_config")
+    graphql_schema, naming_config_dict, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=False,
+    )
+
     result = translate_to_shacl(
-        schemas,
+        graphql_schema,
         shapes_namespace,
         shapes_namespace_prefix,
         model_namespace,
         model_namespace_prefix,
-        naming_config,
+        naming_config_dict,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = result.serialize(destination=output, format=serialization_format)
@@ -496,12 +438,29 @@ def shacl(
 # ----------
 @export.command
 @schema_option
+@selection_query_option()
 @output_option
-@click.pass_context
-def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+def vspec(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+) -> None:
     """Generate VSPEC from a given GraphQL schema."""
-    naming_config = ctx.obj.get("naming_config")
-    result = translate_to_vspec(schemas, naming_config)
+    graphql_schema, naming_config_dict, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=False,
+    )
+
+    result = translate_to_vspec(graphql_schema, naming_config_dict)
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(result)
 
@@ -510,13 +469,10 @@ def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
 # ----------
 @export.command
 @schema_option
+@selection_query_option()
 @output_option
-@click.option(
-    "--root-type",
-    "-r",
-    type=str,
-    help="Root type name for the JSON schema",
-)
+@root_type_option
+@naming_config_option
 @click.option(
     "--strict",
     "-S",
@@ -524,20 +480,75 @@ def vspec(ctx: click.Context, schemas: list[Path], output: Path) -> None:
     default=False,
     help="Enforce strict field nullability translation from GraphQL to JSON Schema",
 )
-@click.option(
-    "--expanded-instances",
-    "-e",
-    is_flag=True,
-    default=False,
-    help="Expand instance tags into nested structure instead of arrays",
-)
-@click.pass_context
+@expanded_instances_option
 def jsonschema(
-    ctx: click.Context, schemas: list[Path], output: Path, root_type: str | None, strict: bool, expanded_instances: bool
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    strict: bool,
+    expanded_instances: bool,
 ) -> None:
     """Generate JSON Schema from a given GraphQL schema."""
-    naming_config = ctx.obj.get("naming_config")
-    result = translate_to_jsonschema(schemas, root_type, strict, expanded_instances, naming_config)
+    graphql_schema, _, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+
+    result = translate_to_jsonschema(graphql_schema, root_type, strict)
+    _ = output.write_text(result)
+
+
+# Export -> protobuf
+# ----------
+@export.command
+@schema_option
+@selection_query_option(required=True)
+@output_option
+@root_type_option
+@naming_config_option
+@click.option(
+    "--flatten-naming",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Flatten nested field names.",
+)
+@click.option(
+    "--package-name",
+    "-p",
+    type=str,
+    help="Protobuf package name",
+)
+@expanded_instances_option
+def protobuf(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    flatten_naming: bool,
+    package_name: str | None,
+    expanded_instances: bool,
+) -> None:
+    """Generate Protocol Buffers (.proto) file from GraphQL schema."""
+    graphql_schema, naming_config_dict, query_document = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+
+    flatten_root_types = None
+    if flatten_naming:
+        flatten_root_types = get_root_level_types_from_query(graphql_schema, query_document)
+
+    result = translate_to_protobuf(graphql_schema, package_name, flatten_root_types)
     _ = output.write_text(result)
 
 

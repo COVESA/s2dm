@@ -25,8 +25,10 @@ from graphql import (
     is_non_null_type,
     is_object_type,
     is_union_type,
+    parse,
     print_schema,
 )
+from graphql import validate as graphql_validate
 from graphql.language.ast import SelectionSetNode
 
 from s2dm import log
@@ -37,6 +39,8 @@ from s2dm.exporters.utils.directive import (
     has_given_directive,
 )
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
+from s2dm.exporters.utils.instance_tag import expand_instances_in_schema
+from s2dm.exporters.utils.naming import apply_naming_to_schema, load_naming_config
 
 SPEC_DIR_PATH = Path(__file__).parent.parent.parent / "spec"
 SPEC_FILES = [
@@ -91,7 +95,6 @@ def build_schema_str_with_optional_source_map(
             for type_name in type_names:
                 source_map[type_name] = graphql_file.name
 
-    # Read spec files
     spec_contents = []
     for spec_file in SPEC_FILES:
         content = spec_file.read_text()
@@ -128,6 +131,14 @@ def load_schema(graphql_schema_paths: Path | list[Path]) -> GraphQLSchema:
 
     schema_str = build_schema_str(graphql_schema_paths)
     return build_schema_with_query(schema_str)
+
+
+def load_schema_with_naming(schema_paths: list[Path], naming_config: dict[str, Any] | None = None) -> GraphQLSchema:
+    """Load schema and apply naming conversion."""
+    schema = load_schema(schema_paths)
+    if naming_config:
+        apply_naming_to_schema(schema, naming_config)
+    return schema
 
 
 def filter_schema(graphql_schema: GraphQLSchema, root_type: str) -> GraphQLSchema:
@@ -237,26 +248,6 @@ def load_schema_as_str(graphql_schema_paths: list[Path], add_references: bool = 
     return print_schema_with_directives_preserved(schema, source_map)
 
 
-def load_schema_as_str_filtered(graphql_schema_paths: list[Path], root_type: str, add_references: bool = False) -> str:
-    """Load and build GraphQL schema filtered by root type, return as str.
-
-    Args:
-        graphql_schema_paths: List of paths to the GraphQL schema files or directories
-        root_type: Root type name to filter the schema
-        add_references: Whether to add @reference directives to types
-
-    Returns:
-        Filtered GraphQL schema as string
-
-    Raises:
-        ValueError: If root type is not found in schema
-    """
-    schema_str, source_map = build_schema_str_with_optional_source_map(graphql_schema_paths, add_references)
-    schema = build_schema_with_query(schema_str)
-    filtered_schema = filter_schema(schema, root_type)
-    return print_schema_with_directives_preserved(filtered_schema, source_map)
-
-
 def create_tempfile_to_composed_schema(graphql_schema_paths: list[Path]) -> Path:
     """Load, build, and create temp file for schema to feed to e.g. GraphQL inspector."""
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".graphql", delete=False) as temp_file:
@@ -296,13 +287,16 @@ def ensure_query(schema: GraphQLSchema) -> GraphQLSchema:
     return schema
 
 
-def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[GraphQLType]:
+def get_referenced_types(
+    graphql_schema: GraphQLSchema, root_type: str, include_instance_tag_fields: bool = False
+) -> set[GraphQLType]:
     """
     Find all GraphQL types referenced from the root type through graph traversal.
 
     Args:
         graphql_schema: The GraphQL schema
         root_type: The root type to start traversal from
+        include_instance_tag_fields: Whether to traverse fields of @instanceTag types to find their dependencies
 
     Returns:
         Set[GraphQLType]: Set of referenced GraphQL type objects
@@ -325,8 +319,10 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
 
         referenced.add(type_def)
 
-        if is_object_type(type_def) and not has_given_directive(cast(GraphQLObjectType, type_def), "instanceTag"):
-            visit_object_type(cast(GraphQLObjectType, type_def))
+        if is_object_type(type_def):
+            object_type = cast(GraphQLObjectType, type_def)
+            if not has_given_directive(object_type, "instanceTag") or include_instance_tag_fields:
+                visit_object_type(object_type)
         elif is_interface_type(type_def):
             visit_interface_type(cast(GraphQLInterfaceType, type_def))
         elif is_union_type(type_def):
@@ -371,19 +367,40 @@ def get_referenced_types(graphql_schema: GraphQLSchema, root_type: str) -> set[G
     return referenced
 
 
-def prune_schema_using_query_selection(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema:
+def validate_schema(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema | None:
+    log.debug("Validating schema against the provided document")
+
+    errors = graphql_validate(schema, document)
+    if errors:
+        log.error("Schema validation failed:")
+        for error in errors:
+            log.error(f" - {error}")
+        return None
+
+    log.debug("Schema validation succeeded")
+
+    return schema
+
+
+def prune_schema_using_query_selection(
+    schema: GraphQLSchema, document: DocumentNode, include_instance_tag_fields: bool = False
+) -> GraphQLSchema:
     """
     Filter schema by pruning unselected fields and types based on query selections.
 
     Args:
         schema: The original GraphQL schema
         document: Parsed query document
+        include_instance_tag_fields: Whether to preserve instanceTag fields
 
     Returns:
         The modified schema with only the selected fields and types
     """
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
+
+    if validate_schema(schema, document) is None:
+        raise ValueError("Schema validation failed")
 
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
@@ -403,6 +420,13 @@ def prune_schema_using_query_selection(schema: GraphQLSchema, document: Document
             fields_to_keep[type_name] = set()
 
         obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+
+        if include_instance_tag_fields and "instanceTag" in obj_type.fields:
+            fields_to_keep[type_name].add("instanceTag")
+            instance_tag_field = obj_type.fields["instanceTag"]
+            instance_tag_type = get_named_type(instance_tag_field.type)
+            if instance_tag_type:
+                types_to_keep.add(instance_tag_type.name)
 
         for selection in selection_set.selections:
             if hasattr(selection, "name"):
@@ -438,6 +462,8 @@ def prune_schema_using_query_selection(schema: GraphQLSchema, document: Document
 
     if not query_operations:
         raise ValueError("No query operation found in selection document")
+
+    log.debug("Composing filtered schema based on query selections")
 
     query_operation = query_operations[0]
     if hasattr(query_operation, "selection_set"):
@@ -479,6 +505,72 @@ def prune_schema_using_query_selection(schema: GraphQLSchema, document: Document
 
     schema.directives = tuple(directive for directive in schema.directives if directive.name in directives_used)
 
-    log.info(f"Composed filtered schema with {len(fields_to_keep)} object types")
+    log.debug(f"Composed filtered schema with {len(fields_to_keep)} object types")
 
     return schema
+
+
+def process_schema(
+    schema: GraphQLSchema,
+    naming_config: dict[str, Any] | None = None,
+    query_document: DocumentNode | None = None,
+    root_type: str | None = None,
+    expanded_instances: bool = False,
+) -> GraphQLSchema:
+    """Apply transformations to a GraphQL schema.
+
+    Args:
+        schema: The GraphQL schema to process
+        naming_config: Optional naming configuration dict
+        query_document: Optional parsed GraphQL query document for filtering
+        root_type: Optional root type name to filter the schema
+        expanded_instances: Whether to expand instance tags into nested structures
+
+    Returns:
+        Processed GraphQL schema
+    """
+    if query_document:
+        schema = prune_schema_using_query_selection(schema, query_document, expanded_instances)
+
+    if root_type:
+        schema = filter_schema(schema, root_type)
+
+    if expanded_instances:
+        schema = expand_instances_in_schema(schema)
+
+    if naming_config:
+        apply_naming_to_schema(schema, naming_config)
+
+    return schema
+
+
+def load_and_process_schema(
+    schema_paths: list[Path],
+    naming_config_path: Path | None = None,
+    selection_query_path: Path | None = None,
+    root_type: str | None = None,
+    expanded_instances: bool = False,
+) -> tuple[GraphQLSchema, dict[str, Any] | None, DocumentNode | None]:
+    """Load schema with naming config and apply filtering based on selection query and root type.
+
+    Args:
+        schema_paths: List of paths to GraphQL schema files or directories
+        naming_config_path: Optional path to naming configuration YAML file
+        selection_query_path: Optional path to GraphQL query file for filtering
+        root_type: Optional root type name to filter the schema
+        expanded_instances: Whether to include instance tag fields when filtering by root type
+
+    Returns:
+        Tuple of (filtered GraphQL schema, naming config dict, selection query document)
+    """
+    schema = load_schema(schema_paths)
+
+    query_document = None
+    if selection_query_path:
+        query_document = parse(selection_query_path.read_text())
+
+    naming_config = load_naming_config(naming_config_path)
+
+    schema = process_schema(schema, naming_config, query_document, root_type, expanded_instances)
+
+    return schema, naming_config, query_document

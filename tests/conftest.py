@@ -39,6 +39,7 @@ class TestSchemaData:
 
     VALID_QUERY = TESTS_DATA_DIR / "valid_query.graphql"
     INVALID_QUERY = TESTS_DATA_DIR / "invalid_query.graphql"
+    SCHEMA1_QUERY = TESTS_DATA_DIR / "schema1_query.graphql"
 
     # Version bump test schemas
     BASE_SCHEMA = TESTS_DATA_DIR / "base.graphql"

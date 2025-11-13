@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
+from graphql import parse
 from graphql.type import GraphQLObjectType
 
 from s2dm.exporters.utils import directive as directive_utils
@@ -47,6 +48,58 @@ def test_ensure_query(schema_path: list[Path]) -> None:
     ensured = schema_loader_utils.ensure_query(schema)
     assert hasattr(ensured, "query_type")
     assert ensured.query_type is not None
+
+
+def test_filter_schema(schema_path: list[Path]) -> None:
+    schema = schema_loader_utils.load_schema(schema_path)
+    initial_type_count = len(schema.type_map)
+
+    root_type = "Vehicle"
+    filtered_schema = schema_loader_utils.filter_schema(schema, root_type)
+    filtered_type_count = len(filtered_schema.type_map)
+
+    assert filtered_type_count < initial_type_count
+    assert root_type in filtered_schema.type_map
+    assert filtered_schema.type_map[root_type] == schema.type_map[root_type]
+
+    assert "Cabin" not in filtered_schema.type_map
+    assert "Seat" not in filtered_schema.type_map
+
+
+def test_prune_schema_using_query_selection(schema_path: list[Path]) -> None:
+    schema = schema_loader_utils.load_schema(schema_path)
+    initial_type_count = len(schema.type_map)
+
+    query_str = """
+    query {
+        vehicle {
+            isAutoPowerOptimize
+            adas { abs { isEngaged } }
+        }
+    }
+    """
+    selection_query = parse(query_str)
+    pruned_schema = schema_loader_utils.prune_schema_using_query_selection(schema, selection_query)
+    pruned_type_count = len(pruned_schema.type_map)
+
+    assert pruned_type_count < initial_type_count
+    assert "Vehicle" in pruned_schema.type_map
+    assert "Vehicle_ADAS" in pruned_schema.type_map
+    assert "Vehicle_ADAS_ABS" in pruned_schema.type_map
+
+    vehicle_type = cast(GraphQLObjectType, pruned_schema.type_map["Vehicle"])
+    assert "isAutoPowerOptimize" in vehicle_type.fields
+    assert "adas" in vehicle_type.fields
+    assert "averageSpeed" not in vehicle_type.fields
+    assert "body" not in vehicle_type.fields
+
+    adas_type = cast(GraphQLObjectType, pruned_schema.type_map["Vehicle_ADAS"])
+    assert "abs" in adas_type.fields
+    assert "activeAutonomyLevel" not in adas_type.fields
+
+    abs_type = cast(GraphQLObjectType, pruned_schema.type_map["Vehicle_ADAS_ABS"])
+    assert "isEngaged" in abs_type.fields
+    assert "isError" not in abs_type.fields
 
 
 # #########################################################
@@ -112,6 +165,50 @@ def test_get_instance_tag_object_and_dict(schema_path: list[Path]) -> None:
             tag_dict = instance_tag_utils.get_instance_tag_dict(tag_obj)
             assert isinstance(tag_dict, dict)
         break
+
+
+def test_expand_instances_in_schema() -> None:
+    schema = schema_loader_utils.load_schema([Path("tests/test_expanded_instances/test_schema.graphql")])
+    initial_type_count = len(schema.type_map)
+
+    expanded_schema = instance_tag_utils.expand_instances_in_schema(schema)
+    expanded_type_count = len(expanded_schema.type_map)
+
+    assert expanded_type_count > initial_type_count
+
+    assert "Door_Row" in expanded_schema.type_map
+    assert "Door_Side" in expanded_schema.type_map
+    assert "Seat_Row" in expanded_schema.type_map
+    assert "Seat_Position" in expanded_schema.type_map
+
+    door_row_type = cast(GraphQLObjectType, expanded_schema.type_map["Door_Row"])
+    assert "ROW1" in door_row_type.fields
+    assert "ROW2" in door_row_type.fields
+
+    door_side_type = cast(GraphQLObjectType, expanded_schema.type_map["Door_Side"])
+    assert "DRIVERSIDE" in door_side_type.fields
+    assert "PASSENGERSIDE" in door_side_type.fields
+
+    seat_row_type = cast(GraphQLObjectType, expanded_schema.type_map["Seat_Row"])
+    assert "ROW1" in seat_row_type.fields
+    assert "ROW2" in seat_row_type.fields
+    assert "ROW3" in seat_row_type.fields
+
+    seat_position_type = cast(GraphQLObjectType, expanded_schema.type_map["Seat_Position"])
+    assert "LEFT" in seat_position_type.fields
+    assert "CENTER" in seat_position_type.fields
+    assert "RIGHT" in seat_position_type.fields
+
+    cabin_type = cast(GraphQLObjectType, expanded_schema.type_map["Cabin"])
+    assert "Door" in cabin_type.fields
+    assert "doors" not in cabin_type.fields
+    assert "Seat" in cabin_type.fields
+    assert "seats" not in cabin_type.fields
+
+    door_type = cast(GraphQLObjectType, expanded_schema.type_map["Door"])
+    assert "instanceTag" not in door_type.fields
+    seat_type = cast(GraphQLObjectType, expanded_schema.type_map["Seat"])
+    assert "instanceTag" not in seat_type.fields
 
 
 # #########################################################

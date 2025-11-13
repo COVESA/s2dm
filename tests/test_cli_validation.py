@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import rich_click as click
 
-from s2dm.cli import load_naming_config, validate_naming_config
+from s2dm.exporters.utils.naming import load_naming_config, validate_naming_config
 
 
 class TestValidateNamingConfig:
