@@ -1,12 +1,26 @@
 // Put your custom SCSS code here
 
 /* Fix sidebar width consistency across page types */
+@include media-breakpoint-up(lg) {
+  .row .docs-sidebar,
+  .docs-sidebar.col-lg-3,
+  .docs-sidebar.col-xl-3 {
+    /* Override Bootstrap's col-lg-3 (18.75%) and ensure consistent width */
+    flex: 0 0 18.75% !important;
+    max-width: 18.75% !important;
+    min-width: 18.75% !important;
+  }
+}
+
 @include media-breakpoint-up(xl) {
-  .docs-sidebar {
+  .row .docs-sidebar,
+  .docs-sidebar.col-lg-3,
+  .docs-sidebar.col-xl-3 {
     /* Override theme's flex: 0 1 320px which allows shrinking */
-    /* Use Bootstrap's col-xl-3 width (25%) consistently */
-    flex: 0 0 25% !important;
-    max-width: 25% !important;
+    /* Use Bootstrap's col-xl-3 width (18.75%) consistently */
+    flex: 0 0 18.75% !important;
+    max-width: 18.75% !important;
+    min-width: 18.75% !important;
   }
 }
 
@@ -126,68 +140,6 @@
 }
 
 /*! purgecss end ignore */
-
-// Add to Doks
-
-/*
-.callout-content {
-  min-width: 0;
-}
-
-.callout pre {
-  margin: 1rem 0;
-}
-
-.container-fw {
-  max-width: auto;
-}
-
-.docs-sidebar {
-  min-width: 18.75rem;
-  max-width: 18.75rem;
-  width: 18.75rem;
-}
-
-.docs-toc {
-  min-width: 13.75rem;
-}
-
-@include media-breakpoint-up(lg) {
-  .container-fw {
-    max-width: 675px;
-  }
-}
-
-@include media-breakpoint-up(xl) {
-  .container-fw {
-    max-width: 875px;
-
-    .docs-content {
-      width: 575px;
-    }
-
-    .docs-toc {
-      margin-left: 3rem;
-    }
-  }
-}
-
-@include media-breakpoint-up(xxl) {
-  .container-fw {
-    max-width: 1075px;
-
-    .docs-content {
-      width: 675px;
-    }
-  }
-}
-
-figcaption {
-  font-size: 1rem;
-  margin-top: 0.5rem;
-  font-style: italic;
-}
-*/
 
 .navbar-brand svg {
     width: 60px;
