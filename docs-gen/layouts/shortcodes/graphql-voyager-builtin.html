@@ -138,8 +138,8 @@ div[class*="menu-content"],
 
   // Load and render the schema
   function loadSchema() {
-    // For Hugo, we need to construct the path to the assets
-    const fullSchemaPath = schemaPath.startsWith('/') ? schemaPath : '/' + schemaPath;
+    // Use Hugo's absURL to construct the full path with proper base URL
+    const fullSchemaPath = '{{ absURL $schema }}';
 
     fetch(fullSchemaPath)
       .then(response => {
