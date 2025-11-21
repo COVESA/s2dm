@@ -1,11 +1,2 @@
 # Overrides for production environment
-# baseURL will be set by GitHub Actions, but fallback to hardcoded value
-baseURL = "https://giaccomole.github.io/s2dm"
-relativeURLs = false
-canonifyURLs = true
-disableLiveReload = true
-enableRobotsTXT = true
-
-# Ensure consistent URL generation for GitHub Pages subpath
-uglyURLs = false
-removePathAccents = false
+baseurl = "/"
