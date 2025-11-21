@@ -1,2 +1,2 @@
 # Overrides for production environment
-baseurl = "/"
+# baseurl will be set by GitHub Actions via --baseURL parameter
