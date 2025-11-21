@@ -14,19 +14,19 @@ scalar JSON
 type SpecificationRegistry {
   """Unique identifier for the registry"""
   id: ID!
-  
+
   """Name of the specification"""
   name: String!
-  
+
   """Description of what this specification covers"""
   description: String
-  
+
   """Current active version"""
   currentVersion: SpecificationVersion!
-  
+
   """All versions in chronological order"""
   versions: [SpecificationVersion!]!
-  
+
   """Registry metadata"""
   metadata: RegistryMetadata
 }
@@ -35,37 +35,37 @@ type SpecificationRegistry {
 type SpecificationVersion {
   """Unique identifier for this version"""
   id: ID!
-  
+
   """Semantic version number (e.g., 1.2.3)"""
   version: String!
-  
+
   """Human-readable version name"""
   versionName: String
-  
+
   """The GraphQL schema for this version"""
   schema: String!
-  
+
   """Commit hash or revision identifier"""
   revision: String
-  
+
   """Creation timestamp"""
   createdAt: DateTime!
-  
+
   """Author information"""
   author: String
-  
+
   """Release notes"""
   releaseNotes: String
-  
+
   """Tags associated with this version"""
   tags: [String!]
-  
+
   """Is this a pre-release version?"""
   isPrerelease: Boolean!
-  
+
   """Is this version deprecated?"""
   isDeprecated: Boolean!
-  
+
   """Version metadata"""
   metadata: JSON
 }
@@ -74,34 +74,34 @@ type SpecificationVersion {
 type Change {
   """Unique identifier for the change"""
   id: ID!
-  
+
   """Type of change"""
   type: ChangeType!
-  
+
   """Severity/impact level"""
   severity: ChangeSeverity!
-  
+
   """Human-readable description"""
   description: String!
-  
+
   """Detailed explanation"""
   details: String
-  
+
   """Path to the changed element"""
   path: String!
-  
+
   """Old value (for modifications)"""
   oldValue: String
-  
+
   """New value (for modifications)"""
   newValue: String
-  
+
   """Affected components or consumers"""
   affectedComponents: [String!]
-  
+
   """Migration guidance"""
   migrationGuide: String
-  
+
   """Timestamp when change was detected"""
   detectedAt: DateTime!
 }
@@ -136,28 +136,28 @@ enum ChangeSeverity {
 type VersionComparison {
   """Source version"""
   fromVersion: SpecificationVersion!
-  
+
   """Target version"""
   toVersion: SpecificationVersion!
-  
+
   """All detected changes"""
   changes: [Change!]!
-  
+
   """Breaking changes only"""
   breakingChanges: [Change!]!
-  
+
   """Dangerous changes only"""
   dangerousChanges: [Change!]!
-  
+
   """Non-breaking changes only"""
   nonBreakingChanges: [Change!]!
-  
+
   """Overall compatibility assessment"""
   compatibility: CompatibilityLevel!
-  
+
   """Migration complexity score (1-10)"""
   migrationComplexity: Int!
-  
+
   """Comparison timestamp"""
   comparedAt: DateTime!
 }
@@ -173,22 +173,22 @@ enum CompatibilityLevel {
 type RegistryMetadata {
   """Registry creation date"""
   createdAt: DateTime!
-  
+
   """Last update timestamp"""
   updatedAt: DateTime!
-  
+
   """Registry maintainers"""
   maintainers: [String!]
-  
+
   """Associated repository URL"""
   repositoryUrl: String
-  
+
   """Documentation URL"""
   documentationUrl: String
-  
+
   """License information"""
   license: String
-  
+
   """Additional metadata"""
   customMetadata: JSON
 }
@@ -197,13 +197,13 @@ type RegistryMetadata {
 type VersionHistoryEntry {
   """The version"""
   version: SpecificationVersion!
-  
+
   """Changes introduced in this version"""
   changes: [Change!]!
-  
+
   """Previous version (if any)"""
   previousVersion: SpecificationVersion
-  
+
   """Time between versions"""
   timeSincePrevious: String
 }
@@ -212,16 +212,16 @@ type VersionHistoryEntry {
 type CompatibilityInfo {
   """Source version"""
   fromVersion: String!
-  
+
   """Target version"""
   toVersion: String!
-  
+
   """Compatibility level"""
   compatibility: CompatibilityLevel!
-  
+
   """Number of breaking changes"""
   breakingChangeCount: Int!
-  
+
   """Migration available?"""
   hasMigrationGuide: Boolean!
 }
@@ -229,46 +229,46 @@ type CompatibilityInfo {
 type Query {
   """Get all registries"""
   registries: [SpecificationRegistry!]!
-  
+
   """Get registry by ID"""
   registry(id: ID!): SpecificationRegistry
-  
+
   """Get registry by name"""
   registryByName(name: String!): SpecificationRegistry
-  
+
   """Get all versions for a registry"""
   versions(registryId: ID!): [SpecificationVersion!]!
-  
+
   """Get specific version"""
   version(id: ID!): SpecificationVersion
-  
+
   """Get version by semantic version string"""
   versionByNumber(registryId: ID!, version: String!): SpecificationVersion
-  
+
   """Get current version for a registry"""
   currentVersion(registryId: ID!): SpecificationVersion!
-  
+
   """Compare two versions"""
   compareVersions(fromVersionId: ID!, toVersionId: ID!): VersionComparison!
-  
+
   """Get changes between versions"""
   changesBetween(fromVersionId: ID!, toVersionId: ID!): [Change!]!
-  
+
   """Get breaking changes between versions"""
   breakingChangesBetween(fromVersionId: ID!, toVersionId: ID!): [Change!]!
-  
+
   """Get version history timeline"""
   versionHistory(registryId: ID!): [VersionHistoryEntry!]!
-  
+
   """Get compatibility matrix"""
   compatibilityMatrix(registryId: ID!): [[CompatibilityInfo!]!]!
-  
+
   """Search changes by type"""
   changesByType(registryId: ID!, changeType: ChangeType!): [Change!]!
-  
+
   """Get deprecated versions"""
   deprecatedVersions(registryId: ID!): [SpecificationVersion!]!
-  
+
   """Validate schema compatibility"""
   validateCompatibility(baseVersionId: ID!, candidateSchema: String!): VersionComparison!
 }
@@ -281,7 +281,7 @@ type Mutation {
     initialSchema: String!
     initialVersion: String = "1.0.0"
   ): SpecificationRegistry!
-  
+
   """Add a new version to registry"""
   addVersion(
     registryId: ID!
@@ -290,16 +290,16 @@ type Mutation {
     releaseNotes: String
     author: String
   ): SpecificationVersion!
-  
+
   """Set current version"""
   setCurrentVersion(registryId: ID!, versionId: ID!): Boolean!
-  
+
   """Deprecate a version"""
   deprecateVersion(versionId: ID!, reason: String): Boolean!
-  
+
   """Add tags to version"""
   addVersionTags(versionId: ID!, tags: [String!]!): Boolean!
-  
+
   """Update registry metadata"""
   updateRegistryMetadata(
     registryId: ID!

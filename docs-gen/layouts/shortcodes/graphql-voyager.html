@@ -27,12 +27,12 @@
       setTimeout(initVoyager{{ $id }}, 100);
       return;
     }
-  
+
   async function initVoyager{{ $id }}() {
     try {
       // Fetch and combine all GraphQL files from the specified path
       const schemaText = await fetchGraphQLSchema('{{ $path }}');
-      
+
       // Initialize Voyager
       GraphQLVoyager.init(document.getElementById('{{ $id }}'), {
         introspection: provider => provider(schemaText),
@@ -46,11 +46,11 @@
       });
     } catch (error) {
       console.error('Error initializing GraphQL Voyager:', error);
-      document.getElementById('{{ $id }}').innerHTML = 
+      document.getElementById('{{ $id }}').innerHTML =
         '<div style="padding: 20px; color: red; text-align: center;">Error loading GraphQL schema: ' + error.message + '</div>';
     }
   }
-  
+
   async function fetchGraphQLSchema(basePath) {
     // List of known GraphQL files in the modular seat spec
     const files = [
@@ -68,7 +68,7 @@
       'Seat/SeatSeating.graphql',
       'CustomExtensions/ExtendedSeat.graphql'
     ];
-    
+
     let combinedSchema = '';
     const fetchPromises = files.map(async (file) => {
       try {
@@ -87,16 +87,15 @@
         return '';
       }
     });
-    
+
     const results = await Promise.all(fetchPromises);
     combinedSchema = results.filter(content => content.trim()).join('\n\n');
-    
+
     if (!combinedSchema.trim()) {
       throw new Error('No GraphQL schema content could be loaded');
     }
-    
+
     return combinedSchema;
   }
 })();
 </script>
-

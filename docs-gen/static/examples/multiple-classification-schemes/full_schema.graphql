@@ -11,31 +11,31 @@ directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJE
 type ConceptScheme {
   """Unique identifier for the concept scheme"""
   id: ID!
-  
+
   """Preferred label for the concept scheme"""
   prefLabel: String!
-  
+
   """Alternative labels"""
   altLabels: [String!]
-  
+
   """Definition or description of the concept scheme"""
   definition: String
-  
+
   """Language code (e.g., 'en', 'de', 'fr')"""
   language: String!
-  
+
   """Top-level concepts in this scheme"""
   topConcepts: [Concept!]
-  
+
   """All concepts in this scheme"""
   concepts: [Concept!]
-  
+
   """Creation date"""
   created: String
-  
+
   """Last modified date"""
   modified: String
-  
+
   """Creator or publisher"""
   creator: String
 }
@@ -44,43 +44,43 @@ type ConceptScheme {
 type Concept {
   """Unique identifier for the concept"""
   id: ID!
-  
+
   """The concept scheme this concept belongs to"""
   inScheme: ConceptScheme!
-  
+
   """Preferred label"""
   prefLabel: String!
-  
+
   """Alternative labels"""
   altLabels: [String!]
-  
+
   """Hidden labels (for search but not display)"""
   hiddenLabels: [String!]
-  
+
   """Definition or scope note"""
   definition: String
-  
+
   """Example usage"""
   example: String
-  
+
   """Broader concepts (parents)"""
   broader: [Concept!]
-  
+
   """Narrower concepts (children)"""
   narrower: [Concept!]
-  
+
   """Related concepts"""
   related: [Concept!]
-  
+
   """Exact matches from other schemes"""
   exactMatch: [Concept!]
-  
+
   """Close matches from other schemes"""
   closeMatch: [Concept!]
-  
+
   """Notation or code"""
   notation: String
-  
+
   """Language code"""
   language: String!
 }
@@ -89,19 +89,19 @@ type Concept {
 type Collection {
   """Unique identifier for the collection"""
   id: ID!
-  
+
   """Preferred label for the collection"""
   prefLabel: String!
-  
+
   """Alternative labels"""
   altLabels: [String!]
-  
+
   """Definition"""
   definition: String
-  
+
   """Concepts that are members of this collection"""
   members: [Concept!]
-  
+
   """Language code"""
   language: String!
 }
@@ -110,10 +110,10 @@ type Collection {
 type Label {
   """The text value of the label"""
   value: String!
-  
+
   """Language code (ISO 639-1)"""
   language: String!
-  
+
   """Type of label (preferred, alternative, hidden)"""
   type: LabelType!
 }
@@ -128,10 +128,10 @@ enum LabelType {
 type VehicleClassification {
   """Automotive concept scheme"""
   vehicleTypes: ConceptScheme!
-  
+
   """Engine type classification"""
   engineTypes: ConceptScheme!
-  
+
   """Fuel type classification"""
   fuelTypes: ConceptScheme!
 }
@@ -140,13 +140,13 @@ type VehicleClassification {
 type ConceptMapping {
   """Source concept"""
   sourceConcept: Concept!
-  
+
   """Target concept"""
   targetConcept: Concept!
-  
+
   """Type of mapping relationship"""
   mappingType: MappingType!
-  
+
   """Confidence score (0.0 to 1.0)"""
   confidence: Float
 }
@@ -162,34 +162,34 @@ enum MappingType {
 type Query {
   """Get all concept schemes"""
   conceptSchemes: [ConceptScheme!]!
-  
+
   """Get concept scheme by ID"""
   conceptScheme(id: ID!): ConceptScheme
-  
+
   """Get concept by ID"""
   concept(id: ID!): Concept
-  
+
   """Search concepts by label"""
   searchConcepts(query: String!, language: String = "en"): [Concept!]!
-  
+
   """Get concepts by scheme"""
   conceptsByScheme(schemeId: ID!): [Concept!]!
-  
+
   """Get top concepts for a scheme"""
   topConcepts(schemeId: ID!): [Concept!]!
-  
+
   """Get broader concepts"""
   broaderConcepts(conceptId: ID!): [Concept!]!
-  
+
   """Get narrower concepts"""
   narrowerConcepts(conceptId: ID!): [Concept!]!
-  
+
   """Get related concepts"""
   relatedConcepts(conceptId: ID!): [Concept!]!
-  
+
   """Find concept mappings"""
   conceptMappings(sourceSchemeId: ID!, targetSchemeId: ID!): [ConceptMapping!]!
-  
+
   """Get vehicle classification system"""
   vehicleClassification: VehicleClassification!
 }
@@ -201,7 +201,7 @@ type Mutation {
     definition: String
     language: String = "en"
   ): ConceptScheme!
-  
+
   """Create a new concept"""
   createConcept(
     schemeId: ID!
@@ -209,10 +209,10 @@ type Mutation {
     definition: String
     language: String = "en"
   ): Concept!
-  
+
   """Add broader concept relationship"""
   addBroaderConcept(conceptId: ID!, broaderId: ID!): Boolean!
-  
+
   """Add concept mapping"""
   addConceptMapping(
     sourceConceptId: ID!

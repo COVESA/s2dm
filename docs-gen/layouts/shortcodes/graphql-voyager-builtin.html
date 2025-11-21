@@ -142,7 +142,7 @@ div[class*="menu-content"],
     const baseURL = '{{ .Site.BaseURL }}';
     const schemaPath = '{{ $schema }}';
     const fullSchemaPath = baseURL.endsWith('/') ? baseURL + schemaPath.replace(/^\//, '') : baseURL + '/' + schemaPath.replace(/^\//, '');
-    
+
     console.log('Base URL:', baseURL);
     console.log('Schema path:', schemaPath);
     console.log('Full schema path:', fullSchemaPath);
