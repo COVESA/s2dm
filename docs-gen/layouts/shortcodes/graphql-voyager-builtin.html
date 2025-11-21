@@ -139,7 +139,13 @@ div[class*="menu-content"],
   // Load and render the schema
   function loadSchema() {
     // Use Hugo's absURL to construct the full path with proper base URL
-    const fullSchemaPath = '{{ absURL $schema }}';
+    const baseURL = '{{ .Site.BaseURL }}';
+    const schemaPath = '{{ $schema }}';
+    const fullSchemaPath = baseURL.endsWith('/') ? baseURL + schemaPath.replace(/^\//, '') : baseURL + '/' + schemaPath.replace(/^\//, '');
+    
+    console.log('Base URL:', baseURL);
+    console.log('Schema path:', schemaPath);
+    console.log('Full schema path:', fullSchemaPath);
 
     fetch(fullSchemaPath)
       .then(response => {
