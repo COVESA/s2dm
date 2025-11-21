@@ -14,7 +14,7 @@ It does not intend to re-invent or replace long-standing standards, such as thos
 Therefore, it does not incorporate advanced reasoning capabilities or comprehensive ontologies typically associated with traditional semantic data modeling.
 {{< /callout >}}
 
-{{< img src="images/s2dm_role.png" alt="S2DM Role Overview" >}}
+{{< img src="s2dm/images/s2dm_role.png" alt="S2DM Role Overview" >}}
 
 The figure above ilustrates the role of the `S2DM` approach.
 One can distinghish three areas:
