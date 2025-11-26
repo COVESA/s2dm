@@ -1,10 +1,2 @@
 # Overrides for production environment
-# baseURL will be set by GitHub Actions
-relativeURLs = false
-canonifyURLs = true
-disableLiveReload = true
-enableRobotsTXT = true
-
-# Ensure consistent URL generation for GitHub Pages subpath
-uglyURLs = false
-removePathAccents = false
+# baseurl will be set by GitHub Actions via --baseURL parameter

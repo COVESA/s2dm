@@ -1,6 +1,6 @@
 ---
 title: Command Line Interface (CLI)
-weight: 1
+weight: 100
 chapter: false
 ---
 

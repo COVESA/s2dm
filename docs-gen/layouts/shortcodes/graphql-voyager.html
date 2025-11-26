@@ -1,0 +1,101 @@
+{{- $path := .Get "path" -}}
+{{- $height := .Get "height" | default "600px" -}}
+{{- $width := .Get "width" | default "100%" -}}
+
+{{- if not $path -}}
+  {{- errorf "graphql-voyager shortcode: 'path' parameter is required" -}}
+{{- end -}}
+
+{{- /* Generate a unique ID for this voyager instance */ -}}
+{{- $id := printf "voyager-%d" (now.UnixNano) -}}
+
+<!-- GraphQL Voyager CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.31/dist/voyager.css">
+
+<div id="{{ $id }}" style="width: {{ $width }}; height: {{ $height }}; border: 1px solid #ccc; margin: 20px 0;"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/graphql@16.8.1/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.31/dist/voyager.min.js"></script>
+
+<script>
+(function() {
+  // Wait for all dependencies to load
+  function initVoyager{{ $id }}() {
+    if (!window.GraphQLVoyager || !window.React || !window.ReactDOM) {
+      setTimeout(initVoyager{{ $id }}, 100);
+      return;
+    }
+
+  async function initVoyager{{ $id }}() {
+    try {
+      // Fetch and combine all GraphQL files from the specified path
+      const schemaText = await fetchGraphQLSchema('{{ $path }}');
+
+      // Initialize Voyager
+      GraphQLVoyager.init(document.getElementById('{{ $id }}'), {
+        introspection: provider => provider(schemaText),
+        displayOptions: {
+          skipRelay: false,
+          skipDeprecated: false,
+          showLeafFields: true,
+          sortByAlphabet: false,
+          hideRoot: false
+        }
+      });
+    } catch (error) {
+      console.error('Error initializing GraphQL Voyager:', error);
+      document.getElementById('{{ $id }}').innerHTML =
+        '<div style="padding: 20px; color: red; text-align: center;">Error loading GraphQL schema: ' + error.message + '</div>';
+    }
+  }
+
+  async function fetchGraphQLSchema(basePath) {
+    // List of known GraphQL files in the modular seat spec
+    const files = [
+      'custom_scalars.graphql',
+      'unit_enums.graphql',
+      'common_types.graphql',
+      'Vehicle.graphql',
+      'VehicleIdentification.graphql',
+      'Cabin.graphql',
+      'Queries.graphql',
+      'Seat/Seat.graphql',
+      'Seat/SeatAirbag.graphql',
+      'Seat/SeatBackrest.graphql',
+      'Seat/SeatHeadrest.graphql',
+      'Seat/SeatSeating.graphql',
+      'CustomExtensions/ExtendedSeat.graphql'
+    ];
+
+    let combinedSchema = '';
+    const fetchPromises = files.map(async (file) => {
+      try {
+        // Construct the full path to the GraphQL file
+        const fullPath = `${basePath}/${file}`;
+        const response = await fetch(fullPath);
+        if (response.ok) {
+          const content = await response.text();
+          return content;
+        } else {
+          console.warn(`Could not fetch ${fullPath}: ${response.status}`);
+          return '';
+        }
+      } catch (error) {
+        console.warn(`Error fetching ${file}:`, error);
+        return '';
+      }
+    });
+
+    const results = await Promise.all(fetchPromises);
+    combinedSchema = results.filter(content => content.trim()).join('\n\n');
+
+    if (!combinedSchema.trim()) {
+      throw new Error('No GraphQL schema content could be loaded');
+    }
+
+    return combinedSchema;
+  }
+})();
+</script>

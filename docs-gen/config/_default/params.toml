@@ -1,11 +1,15 @@
 # Hugo
 title = "S2DM"
-description = "S2DM - Signal to Data Model documentation"
-images = ["preview.png"]
+description = "Simplified Semantic Data Modelling"
+images = ["cover.png"]
 
 # mainSections
-mainSections = ["approach-overview", "data-modeling-guideline", "tools", "examples"]
-# Doks (@hyas/doks-core)
+mainSections = ["docs"]
+
+[social]
+  twitter = "getdoks"
+
+# Doks (@thulite/doks-core)
 [doks]
   # Color mode
   colorMode = "light" # auto (default), light or dark
@@ -13,7 +17,7 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
 
   # Navbar
   navbarSticky = true # true (default) or false
-  containerBreakpoint = "fluid" # "", "sm", "md", "lg" (default), "xl", "xxl", or "fluid"
+  containerBreakpoint = "lg" # "", "sm", "md", "lg" (default), "xl", "xxl", or "fluid"
 
   ## Button
   navBarButton = false # false (default) or true
@@ -40,9 +44,9 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
   bootstrapJavascript = false # false (default) or true
 
   # Nav
-  sectionNav = ["docs", "examples"] # ["docs"] (default) or list of sections (e.g. ["docs", "guides"])
+  sectionNav = ["docs","examples"] # ["docs"] (default) or list of sections (e.g. ["docs", "guides"])
   toTopButton = false # false (default) or true
-  breadcrumbTrail = true # false (default) or true
+  breadcrumbTrail = false # false (default) or true
   headlineHash = true # true (default) or false
   scrollSpy = true # true (default) or false
 
@@ -69,19 +73,21 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
   # Repository
   editPage = false # false (default) or true
   lastMod = false # false (default) or true
-  repoHost = "" # GitHub (default), Gitea, GitLab, Bitbucket, or BitbucketServer
-  docsRepo = ""
-  docsRepoBranch = "" # main (default), master, or <branch name>
+  repoHost = "GitHub" # GitHub (default), Gitea, GitLab, Bitbucket, or BitbucketServer
+  docsRepo = "https://github.com/h-enk/doks"
+  docsRepoBranch = "main" # main (default), master, or <branch name>
   docsRepoSubPath = "" # "" (none, default) or <sub path>
+
+  krokiURL = "https://kroki.io" # "https://kroki.io" (default) or custom URL like http://localhost:8000.
 
   # SCSS colors
   # backGround = "yellowgreen"
   ## Dark theme
   # textDark = "#dee2e6" # "#dee2e6" (default), "#dee2e6" (orignal), or custom color
-  # accentDark = "#5d2f86" # "#5d2f86" (default), "#5d2f86" (original), or custom color
-  ## Light theme
-  # textLight = "#1d2d35" # "#1d2d35" (default), "#1d2d35" (orignal), or custom color
-  # accentLight = "#8ed6fb" # "#8ed6fb" (default), "#8ed6fb" (orignal), or custom color
+  # accentDark = "#3333FF" # "#5d2f86" (default), "#5d2f86" (original), or custom color
+  # Light theme
+  textLight = "#1d2d35" # "#1d2d35" (default), "#1d2d35" (orignal), or custom color
+  accentLight = "#3333FF" # "#8ed6fb" (default), "#8ed6fb" (orignal), or custom color
 
   [doks.menu]
     [doks.menu.section]
@@ -96,9 +102,9 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
   errorLevel = 'ignore' # ignore (default), warning, or error (fails the build)
   highlightBroken = false # true or false (default)
 
-# Images (@hyas/images)
-[hyas_images]
-  [hyas_images.defaults]
+# Images (@thulite/images)
+[thulite_images]
+  [thulite_images.defaults]
     decoding = "async" # sync, async, or auto (default)
     fetchpriority = "auto" # high, low, or auto (default)
     loading = "lazy" # eager or lazy (default)
@@ -107,11 +113,11 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
     process = "" # "fill 1600x900" or "fill 2100x900" for example
     lqip = "16x webp q20" # "16x webp q20" or "21x webp q20" for example
 
-# Inline SVG (@hyas/inline-svg)
+# Inline SVG (@thulite/inline-svg)
 [inline_svg]
   iconSetDir = "tabler-icons" # "tabler-icons" (default)
 
-# SEO (@hyas/seo)
+# SEO (@thulite/seo)
 [seo]
   [seo.title]
     separator = " | "
@@ -119,16 +125,16 @@ mainSections = ["approach-overview", "data-modeling-guideline", "tools", "exampl
   [seo.favicons]
     sizes = []
     icon = "favicon.png" # favicon.png (default)
-    svgIcon = "favicon.png" # favicon.svg (default)
+    svgIcon = "favicon.svg" # favicon.svg (default)
     maskIcon = "mask-icon.svg" # mask-icon.svg (default)
     maskIconColor = "white" # white (default)
   [seo.schemas]
     type = "Organization" # Organization (default) or Person
-    logo = "s2dmgreen.png" # Logo of Organization — favicon-512x512.png (default)
-    name = "COVESA" # Name of Organization or Person
-    sameAs = ["https://github.com/covesa/s2dm"] # E.g. ["https://github.com/gethyas/hyas", "https://fosstodon.org/@hyas"]
-    images = ["preview.png"] # ["cover.png"] (default)
-    article = ["docs"] # Article sections
+    logo = "favicon-512x512.png" # Logo of Organization — favicon-512x512.png (default)
+    name = "Thulite" # Name of Organization or Person
+    sameAs = [] # E.g. ["https://github.com/thuliteio/thulite", "https://fosstodon.org/@thulite"]
+    images = ["cover.png"] # ["cover.png"] (default)
+    article = [] # Article sections
     newsArticle = [] # NewsArticle sections
-    blogPosting = [] # BlogPosting sections
+    blogPosting = ["blog"] # BlogPosting sections
     product = [] # Product sections

@@ -1,27 +1,21 @@
 title = "S2DM"
-baseURL= ""
-relativeURLs= false
-canonifyURLs= true
-publishDir = "../docs"
+baseurl = ""
 disableAliases = true
 disableHugoGeneratorInject = true
-timeout = 120
-disableKinds = []
+# disableKinds = ["taxonomy", "term"]
 enableEmoji = true
 enableGitInfo = false
 enableRobotsTXT = true
-languageCode = "en-us"
-[pagination]
-  pagerSize = 10
+languageCode = "en-US"
 rssLimit = 10
 summarylength = 20 # 70 (default)
 
 # Multilingual
 defaultContentLanguage = "en"
-disableLanguages = []
+disableLanguages = ["de", "nl"]
 defaultContentLanguageInSubdir = false
 
-copyRight = "Copyright (c) COVESA"
+copyRight = "Copyright (c) 2020-2024 Thulite"
 
 [build.buildStats]
   enable = true
@@ -56,9 +50,9 @@ copyRight = "Copyright (c) COVESA"
     maxAge = -1 # "30m"
 
 [taxonomies]
-  # contributor = "contributors"
-  # category = "categories"
-  # tag = "tags"
+  contributor = "contributors"
+  category = "categories"
+  tag = "tags"
 
 [permalinks]
   blog = "/blog/:slug/"
@@ -68,9 +62,8 @@ copyRight = "Copyright (c) COVESA"
 [minify.tdewolff.html]
   keepWhitespace = false
 
-[markup.goldmark.renderer]
-  unsafe = true
-
+[pagination]
+  pagerSize = 10
 
 [related]
   threshold = 80
@@ -92,15 +85,3 @@ copyRight = "Copyright (c) COVESA"
   hint = "photo"
   quality = 85
   resampleFilter = "Lanczos"
-
-[params]
-  # Change default color scheme with a variant one. Can be "red", "blue", "green".
-  themeVariant = "green"
-  disableInlineCopyToClipBoard = true
-  disableLandingPageButton = true
-
-[[menu.shortcuts]]
-name = "<i class='fab fa-github'></i> Github repo"
-identifier = "ds"
-url = "https://github.com/covesa/s2dm"
-weight = 10

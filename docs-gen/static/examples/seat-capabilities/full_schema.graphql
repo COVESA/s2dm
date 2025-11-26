@@ -1,0 +1,185 @@
+# Combined Seat Capabilities Schema
+# Base seat types from seat-to-vspec
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+directive @noDuplicates on FIELD_DEFINITION
+
+directive @instanceTag on OBJECT
+
+directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT
+
+enum TwoRowsInCabinEnum {
+  ROW1
+  ROW2
+}
+
+enum ThreeRowsInCabinEnum {
+  ROW1
+  ROW2
+  ROW3
+}
+
+enum TwoColumnsInCabinEnum {
+  DRIVERSIDE
+  PASSENGERSIDE
+}
+
+enum ThreeColumnsInCabinEnum {
+  DRIVERSIDE
+  MIDDLE
+  PASSENGERSIDE
+}
+
+type InCabinArea2x2 {
+  row: TwoRowsInCabinEnum
+  column: TwoColumnsInCabinEnum
+}
+
+input InCabinArea2x2Input {
+  row: TwoRowsInCabinEnum
+  column: TwoColumnsInCabinEnum
+}
+
+scalar Int8 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#byte")
+scalar UInt8 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedByte")
+scalar Int16 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#short")
+scalar UInt16 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedShort")
+scalar UInt32 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedInt")
+scalar Int64 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#long")
+scalar UInt64 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedLong")
+scalar Float
+
+"""All in-cabin components, including doors."""
+type Cabin {
+  seats: [Seat]
+
+  """The position of the driver seat in row 1."""
+  driverPosition: DriverPositionEnum
+}
+
+enum DriverPositionEnum {
+  LEFT
+  MIDDLE
+  RIGHT
+}
+
+type Seat {
+  Heating or Cooling requested for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported.
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  isOccupied: Boolean
+
+  massageLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported.
+  position(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive
+degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward.
+  tilt(unit: Angle_Unit_Enum = DEGREE): Float
+  airbag: Airbag
+  backrest: Backrest
+  headrest: Headrest
+  seating: Seating
+  instanceTag: InCabinArea2x2
+}
+
+type Airbag {
+  Airbag deployment status. True = Airbag deployed. False = Airbag not deployed.
+  isDeployed: Boolean
+}
+
+type Backrest {
+  Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported.
+  lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  lumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline.
+Positive degrees for backward recline.
+  recline(unit: Angle_Unit_Enum = DEGREE): Float
+
+  Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  sideBolsterSupport(unit: Relation_Unit_Enum = PERCENT): Float
+}
+
+type Headrest {
+  Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.
+  angle(unit: Angle_Unit_Enum = DEGREE): Float
+
+  Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt8
+}
+
+type Seating {
+  Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).
+  length(unit: Length_Unit_Enum = MILLIMETER): UInt16
+}
+
+type Vehicle {
+  id: VehicleIdentification!
+  cabin: Cabin
+}
+
+type VehicleIdentification {
+  17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
+  vin: String!
+}
+
+# Unit enums
+enum Angle_Unit_Enum {
+  DEGREE
+}
+
+enum Length_Unit_Enum {
+  CENTIMETER
+  INCH
+  KILOMETER
+  METER
+  MILLIMETER
+}
+
+enum Relation_Unit_Enum {
+  DECIBEL
+  DECIBEL_MILLIWATT
+  NANO_METER_PER_KILOMETER
+  PERCENT
+  RATIO
+}
+
+# Seat Capabilities Queries and Mutations
+type Query {
+  vehicle(vin: String!): Vehicle
+
+  seat(instanceTag: InCabinArea2x2Input!): Seat
+
+  getSeat(instanceTag: InCabinArea2x2Input!): Seat
+
+  getSeatPosition(instanceTag: InCabinArea2x2Input!): UInt16
+
+  getSeatHeight(instanceTag: InCabinArea2x2Input!): UInt16
+
+  getSeatTilt(instanceTag: InCabinArea2x2Input!): Float
+
+  getSeatMassageLevel(instanceTag: InCabinArea2x2Input!): UInt8
+
+  isSeatOccupied(instanceTag: InCabinArea2x2Input!): Boolean
+}
+
+type Mutation {
+  setSeatPosition(instanceTag: InCabinArea2x2Input!, value: UInt16!): Boolean
+
+  setSeatHeight(instanceTag: InCabinArea2x2Input!, value: UInt16!): Boolean
+
+  setSeatTilt(instanceTag: InCabinArea2x2Input!, value: Float!): Boolean
+
+  setSeatMassageLevel(instanceTag: InCabinArea2x2Input!, value: UInt8!): Boolean
+
+  setSeatHeatingCooling(instanceTag: InCabinArea2x2Input!, value: Int8!): Boolean
+}

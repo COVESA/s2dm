@@ -1,10 +1,2 @@
-# Development environment overrides
-baseURL = ""
-relativeURLs = true
-canonifyURLs = false
-disableLiveReload = false
-
-# Development-specific settings
-[params]
-  # Disable CDN for local development
-  cdn_url = ""
+# Overrides for local development
+baseurl = "http://localhost/"
