@@ -45,7 +45,7 @@ GRAPHQL_SCALAR_TO_XSD = {"Int": "integer", "Float": "float", "String": "string",
 
 
 def get_xsd_datatype(scalar: GraphQLScalarType) -> URIRef:
-    return XSD[GRAPHQL_SCALAR_TO_XSD[scalar.name]]
+    return XSD[GRAPHQL_SCALAR_TO_XSD.get(scalar.name, "string")]
 
 
 def add_comment_to_property_node(field: GraphQLField, property_node: BNode, graph: Graph) -> None:
