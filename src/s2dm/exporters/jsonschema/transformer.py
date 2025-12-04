@@ -276,6 +276,8 @@ class JsonSchemaTransformer:
         Returns:
             JSON Schema type definition, or tuple of (definition, singular_name) for expanded instances
         """
+        definition: dict[str, Any] = {}
+
         # Handle NonNull wrapper. e.g. `Type!`
         if is_non_null_type(field_type):
             return self.get_field_type_definition(cast(GraphQLNonNull[Any], field_type).of_type, nullable=False)
@@ -332,8 +334,9 @@ class JsonSchemaTransformer:
         # Handle scalar types
         if is_scalar_type(field_type):
             scalar_type = cast(GraphQLScalarType, field_type)
-            json_type = GRAPHQL_SCALAR_TO_JSON_SCHEMA.get(scalar_type.name, "string")
-            definition = {"type": json_type}
+            json_type = GRAPHQL_SCALAR_TO_JSON_SCHEMA.get(scalar_type.name)
+            if json_type:
+                definition = {"type": json_type}
 
             if nullable and self.strict:
                 definition = {"type": [json_type, "null"]}
