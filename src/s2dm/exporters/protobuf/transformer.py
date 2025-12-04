@@ -29,10 +29,8 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from s2dm import log
 from s2dm.exporters.protobuf.models import ProtoEnum, ProtoEnumValue, ProtoField, ProtoMessage, ProtoSchema, ProtoUnion
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
-from s2dm.exporters.utils.extraction import get_all_named_types, get_root_level_types_from_query
+from s2dm.exporters.utils.extraction import get_all_named_types
 from s2dm.exporters.utils.field import get_cardinality
-from s2dm.exporters.utils.instance_tag import expand_instance_tag, get_instance_tag_object, is_instance_tag_field
-from s2dm.exporters.utils.naming import convert_name, get_target_case_for_element
 from s2dm.exporters.utils.schema_loader import get_referenced_types
 
 GRAPHQL_SCALAR_TO_PROTOBUF = {
@@ -83,21 +81,16 @@ class ProtobufTransformer:
         self,
         graphql_schema: GraphQLSchema,
         selection_query: DocumentNode,
-        root_type: str | None = None,
-        flatten_naming: bool = False,
         package_name: str | None = None,
-        naming_config: dict[str, Any] | None = None,
-        expanded_instances: bool = False,
+        flatten_root_types: list[str] | None = None,
     ):
         if selection_query is None:
             raise ValueError("selection_query is required")
 
         self.graphql_schema = graphql_schema
-        self.root_type = root_type
-        self.flatten_naming = flatten_naming
         self.package_name = package_name
-        self.naming_config = naming_config
-        self.expanded_instances = expanded_instances
+        self.flatten_root_types = flatten_root_types or []
+        self.flatten_naming = len(self.flatten_root_types) > 0
         self.selection_query = selection_query
 
         self.env = Environment(
@@ -116,13 +109,7 @@ class ProtobufTransformer:
         """
         log.info("Starting GraphQL to Protobuf transformation")
 
-        if self.root_type:
-            referenced_types = get_referenced_types(self.graphql_schema, self.root_type, not self.expanded_instances)
-            user_defined_types: list[GraphQLNamedType] = [
-                referenced_type for referenced_type in referenced_types if isinstance(referenced_type, GraphQLNamedType)
-            ]
-        else:
-            user_defined_types = get_all_named_types(self.graphql_schema)
+        user_defined_types = get_all_named_types(self.graphql_schema)
 
         log.debug(f"Found {len(user_defined_types)} user-defined types to transform")
 
@@ -134,9 +121,7 @@ class ProtobufTransformer:
             if is_enum_type(type_def):
                 enum_types.append(cast(GraphQLEnumType, type_def))
             elif is_object_type(type_def):
-                object_type = cast(GraphQLObjectType, type_def)
-                if not (has_given_directive(object_type, "instanceTag") and self.expanded_instances):
-                    message_types.append(object_type)
+                message_types.append(cast(GraphQLObjectType, type_def))
             elif is_interface_type(type_def):
                 message_types.append(cast(GraphQLInterfaceType, type_def))
             elif is_union_type(type_def):
@@ -288,35 +273,13 @@ class ProtobufTransformer:
     ) -> tuple[list[ProtoField], list[ProtoMessage]]:
         """Build Pydantic models for fields in a message."""
         fields = []
-        nested_messages = []
+        nested_messages: list[ProtoMessage] = []
         field_number = 1
 
         for field_name, field in message_type.fields.items():
-            if is_instance_tag_field(field_name) and self.expanded_instances:
-                continue
-
-            field_type = field.type
-            unwrapped_type = get_named_type(field_type)
-
-            proto_field_name = field_name
-            proto_field_type = None
-            expanded_message_name = None
-
-            if is_object_type(unwrapped_type):
-                object_type = cast(GraphQLObjectType, unwrapped_type)
-                expanded_instances = self._get_expanded_instances(object_type)
-                if expanded_instances:
-                    proto_field_name, proto_field_type, nested_message = self._handle_expanded_instance_field(
-                        object_type, message_type, expanded_instances
-                    )
-                    nested_messages.append(nested_message)
-                    expanded_message_name = proto_field_type
-
-            if proto_field_type is None:
-                proto_field_type = self._get_field_proto_type(field.type)
-                proto_field_name = self._escape_field_name(field_name)
-
-            field_options = None if expanded_message_name else self.process_field_options(field, proto_field_type)
+            proto_field_type = self._get_field_proto_type(field.type)
+            field_options = self.process_field_options(field, proto_field_type)
+            proto_field_name = self._escape_field_name(field_name)
 
             fields.append(
                 ProtoField(
@@ -363,18 +326,8 @@ class ProtobufTransformer:
         """
         type_cache = {type_def.name: type_def for type_def in message_types}
 
-        if self.root_type:
-            root_object = type_cache.get(self.root_type)
-            if not root_object:
-                log.warning(f"Root type '{self.root_type}' not found, creating empty message")
-                return [], set(), set()
-
-            fields, referenced_types, _ = self._flatten_fields(root_object, root_object.name, message_types, 1)
-            return fields, referenced_types, {self.root_type}
-
-        root_level_type_names = get_root_level_types_from_query(self.graphql_schema, self.selection_query)
-        if not root_level_type_names:
-            log.warning("No root-level types found in selection query, creating empty message")
+        if not self.flatten_root_types:
+            log.warning("No root-level types provided for flatten mode, creating empty message")
             return [], set(), set()
 
         all_fields: list[ProtoField] = []
@@ -382,7 +335,7 @@ class ProtobufTransformer:
         flattened_root_types: set[str] = set()
         field_counter = 1
 
-        for type_name in root_level_type_names:
+        for type_name in self.flatten_root_types:
             root_object = type_cache.get(type_name)
             if not root_object:
                 log.warning(f"Root-level type '{type_name}' not found in message types")
@@ -441,26 +394,8 @@ class ProtobufTransformer:
         referenced_types: set[str] = set()
 
         for field_name, field in object_type.fields.items():
-            if is_instance_tag_field(field_name) and self.expanded_instances:
-                continue
-
             field_type = field.type
             unwrapped_type = get_named_type(field_type)
-
-            if is_object_type(unwrapped_type):
-                object_type_cast = cast(GraphQLObjectType, unwrapped_type)
-                expanded_instances = self._get_expanded_instances(object_type_cast)
-                if expanded_instances:
-                    nested_type = type_cache.get(object_type_cast.name)
-                    if nested_type:
-                        for expanded_instance in expanded_instances:
-                            expanded_prefix = f"{prefix}_{field_name}_{expanded_instance.replace('.', '_')}"
-                            nested_fields, nested_referenced, field_counter = self._flatten_fields(
-                                nested_type, expanded_prefix, all_types, field_counter, type_cache
-                            )
-                            fields.extend(nested_fields)
-                            referenced_types.update(nested_referenced)
-                    continue
 
             inner = field_type.of_type if is_non_null_type(field_type) else field_type
             is_list = is_list_type(inner)
@@ -597,64 +532,3 @@ class ProtobufTransformer:
         """Get the protovalidate scalar type from protobuf type."""
         validation_type = proto_type.replace("repeated ", "").replace("optional ", "")
         return validation_type if validation_type in PROTOBUF_DATA_TYPES else None
-
-    def _handle_expanded_instance_field(
-        self,
-        object_type: GraphQLObjectType,
-        message_type: GraphQLObjectType | GraphQLInterfaceType,
-        expanded_instances: list[str],
-    ) -> tuple[str, str, ProtoMessage]:
-        """Handle expanded instance fields, returning field name, type, and nested message."""
-        prefixed_message_name = f"{message_type.name}_{object_type.name}"
-        nested_message = self._build_nested_message_structure(
-            prefixed_message_name, expanded_instances, object_type.name
-        )
-
-        field_name_to_use = object_type.name
-        if self.naming_config:
-            target_case = get_target_case_for_element("field", "object", self.naming_config)
-            if target_case:
-                field_name_to_use = convert_name(object_type.name, target_case)
-
-        return (self._escape_field_name(field_name_to_use), nested_message.name, nested_message)
-
-    def _build_nested_message_structure(
-        self,
-        message_name: str,
-        instance_paths: list[str],
-        target_type: str,
-    ) -> ProtoMessage:
-        """Create nested message structure for expanded instance tags."""
-        message = ProtoMessage(name=message_name, fields=[], nested_messages=[], source=None)
-        child_paths_by_level: dict[str, list[str]] = {}
-        field_counter = 1
-
-        for instance_path in instance_paths:
-            instance_path_parts = instance_path.split(".")
-            if len(instance_path_parts) > 1:
-                root_level_name = instance_path_parts[0]
-                remaining_path = ".".join(instance_path_parts[1:])
-                child_paths_by_level.setdefault(root_level_name, []).append(remaining_path)
-            else:
-                message.fields.append(ProtoField(name=instance_path_parts[0], type=target_type, number=field_counter))
-                field_counter += 1
-
-        for root_level_name, child_paths in child_paths_by_level.items():
-            child_message_name = f"{message_name}_{root_level_name}"
-            child_message = self._build_nested_message_structure(child_message_name, child_paths, target_type)
-            message.nested_messages.append(child_message)
-            message.fields.append(ProtoField(name=root_level_name, type=child_message.name, number=field_counter))
-            field_counter += 1
-
-        return message
-
-    def _get_expanded_instances(self, object_type: GraphQLObjectType) -> list[str] | None:
-        """Get expanded instances if the type has a valid instance tag."""
-        if not self.expanded_instances:
-            return None
-
-        instance_tag_object = get_instance_tag_object(object_type, self.graphql_schema)
-        if not instance_tag_object:
-            return None
-
-        return expand_instance_tag(instance_tag_object, self.naming_config)

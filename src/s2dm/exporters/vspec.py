@@ -10,22 +10,17 @@ from graphql import (
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLSchema,
+    Undefined,
     get_named_type,
 )
 
 from s2dm import log
+from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
-from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
+from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.exporters.utils.field import FieldCase
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
-from s2dm.exporters.utils.instance_tag import (
-    get_all_expanded_instance_tags,
-    get_instance_tag_dict,
-    get_instance_tag_object,
-    is_instance_tag_field,
-)
-from s2dm.exporters.utils.naming import apply_naming_to_instance_values
-from s2dm.exporters.utils.schema import load_schema_with_naming
+from s2dm.exporters.utils.schema_loader import load_schema_with_naming, process_schema
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
     # Using the QUDT unit names
@@ -33,6 +28,7 @@ UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the 
     "MILLIM": "mm",
     "CENTIM": "cm",
     "M": "m",
+    "METER": "m",
     "KILOM": "km",
     "IN": "inch",
     # VelocityUnitEnum
@@ -132,8 +128,6 @@ SUPPORTED_FIELD_CASES = {
     FieldCase.NON_NULL_LIST_NON_NULL,
 }
 
-INSTANCE_TAGS = None
-
 SCALAR_DATATYPE_MAP = {
     # Built-in scalar types
     "Int": "int32",
@@ -192,34 +186,37 @@ class CustomDumper(yaml.Dumper):
 CustomDumper.add_representer(list, CustomDumper.represent_list)
 
 
-def translate_to_vspec(schema: GraphQLSchema, naming_config: dict[str, Any] | None = None) -> str:
+def translate_to_vspec(annotated_schema: AnnotatedSchema) -> str:
     """Translate a GraphQL schema to YAML."""
+    schema = annotated_schema.schema
 
     all_object_types = get_all_object_types(schema)
     log.debug(f"Object types: {all_object_types}")
-    instance_tag_objects = get_all_objects_with_directive(all_object_types, "instanceTag")
-    # Remove instance tag objects from object_types
-    object_types = [obj for obj in all_object_types if obj not in instance_tag_objects]
-    log.debug(f"Instance Tag Objects: {instance_tag_objects}")
-    global INSTANCE_TAGS
-    INSTANCE_TAGS = get_all_expanded_instance_tags(schema)
     nested_types: list[tuple[str, str]] = []  # List to collect nested structures to reconstruct the path
     yaml_dict = {}
-    for object_type in object_types:
+    for object_type in all_object_types:
         if is_introspection_or_root_type(object_type.name):
             log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
 
+        type_metadata = annotated_schema.type_metadata.get(object_type.name)
+        if type_metadata and type_metadata.is_intermediate_type:
+            log.debug(f"Skipping intermediate type '{object_type.name}'.")
+            continue
+
         # Add a VSS branch structure for the object type
         if object_type.name not in yaml_dict:
-            yaml_dict.update(process_object_type(object_type, schema, naming_config))
+            log.debug(f"Processing object type '{object_type.name}'.")
+            obj_dict: dict[str, Any] = {"type": "branch"}
+            if object_type.description:
+                obj_dict["description"] = object_type.description
+            yaml_dict[object_type.name] = obj_dict
         else:
-            # TODO: Check if the processed object type is already in the yaml_dict
             log.debug(f"Object type '{object_type.name}' already exists in the YAML dictionary. Skipping.")
         # Process the fields of the object type
         for field_name, field in object_type.fields.items():
             # Add a VSS leaf structure for the field
-            field_result = process_field(field_name, field, object_type, schema, nested_types, naming_config)
+            field_result = process_field(field_name, field, object_type, schema, nested_types, annotated_schema)
             if field_result is not None:
                 yaml_dict.update(field_result)
             else:
@@ -244,43 +241,16 @@ def translate_to_vspec(schema: GraphQLSchema, naming_config: dict[str, Any] | No
     return yaml.dump(yaml_dict, default_flow_style=False, Dumper=CustomDumper, sort_keys=True)
 
 
-def process_object_type(
-    object_type: GraphQLObjectType, schema: GraphQLSchema, naming_config: dict[str, Any] | None = None
-) -> dict[str, dict[str, Any]]:
-    """Process a GraphQL object type and generate the corresponding YAML."""
-    log.info(f"Processing object type '{object_type.name}'.")
-
-    obj_dict: dict[str, Any] = {
-        "type": "branch",
-    }
-    if object_type.description:
-        obj_dict["description"] = object_type.description
-
-    instance_tag_object = get_instance_tag_object(object_type, schema)
-    if instance_tag_object:
-        log.debug(f"Object type '{object_type.name}' has instance tag '{instance_tag_object}'.")
-        instance_dict = get_instance_tag_dict(instance_tag_object)
-        converted_instances = []
-        for values in instance_dict.values():
-            converted_values = apply_naming_to_instance_values(values, naming_config)
-            converted_instances.append(converted_values)
-        obj_dict["instances"] = converted_instances
-    else:
-        log.debug(f"Object type '{object_type.name}' does not have an instance tag.")
-
-    return {object_type.name: obj_dict}
-
-
 def process_field(
     field_name: str,
     field: GraphQLField,
     object_type: GraphQLObjectType,
     schema: GraphQLSchema,
     nested_types: list[tuple[str, str]],
-    naming_config: dict[str, Any] | None = None,
+    annotated_schema: AnnotatedSchema,
 ) -> dict[str, dict[str, Any]]:
     """Process a GraphQL field and generate the corresponding YAML."""
-    log.info(f"Processing field '{field_name}'.")
+    log.debug(f"Processing field '{field_name}'.")
     concat_field_name = f"{object_type.name}.{field_name}"
 
     output_type = get_named_type(field.type)
@@ -315,7 +285,7 @@ def process_field(
         # TODO: Map the unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
         if "unit" in field.args:
             unit_arg = field.args["unit"].default_value
-            if unit_arg is not None:
+            if unit_arg is not None and unit_arg is not Undefined and unit_arg in UNITS_DICT:
                 field_dict["unit"] = UNITS_DICT[unit_arg]
 
         if has_given_directive(field, "metadata"):
@@ -339,17 +309,36 @@ def process_field(
                 field_dict["type"] = vss_type
 
         return {concat_field_name: field_dict}
-    elif isinstance(output_type, GraphQLObjectType) and not is_instance_tag_field(field_name):
-        # Collect nested structures
-        # nested_types.append(f"{object_type.name}.{output_type}({field_name})")
-        nested_types.append((object_type.name, output_type.name))
-        log.debug(f"Nested structure found: {object_type.name}.{output_type}(for field {field_name})")
-        named_type = get_named_type(field.type)
-        if isinstance(named_type, GraphQLObjectType):
-            return process_object_type(named_type, schema, naming_config)  # Nested object type, process it recursively
-        else:
-            log.debug(f"Skipping nested type '{named_type}' as it is not a GraphQLObjectType.")
+    elif isinstance(output_type, GraphQLObjectType):
+        # Get field_metadata to access resolved_type and instances
+        field_meta = annotated_schema.field_metadata.get((object_type.name, field_name))
+        if not field_meta:
+            log.debug(f"No field_metadata found for '{object_type.name}.{field_name}'.")
             return {}
+
+        # Use resolved_type (skips intermediate types automatically)
+        resolved_type_name = field_meta.resolved_type
+        resolved_type_obj = schema.type_map.get(resolved_type_name)
+
+        if not isinstance(resolved_type_obj, GraphQLObjectType):
+            log.debug(f"Resolved type '{resolved_type_name}' is not a GraphQLObjectType.")
+            return {}
+
+        # Record nested relationship using resolved type
+        nested_types.append((object_type.name, resolved_type_name))
+        log.debug(f"Nested structure found: {object_type.name}.{resolved_type_name} (for field {field_name})")
+
+        # Get instances from field_metadata
+        instances = field_meta.instances if field_meta.instances else None
+
+        # Create branch dict inline
+        obj_dict: dict[str, Any] = {"type": "branch"}
+        if resolved_type_obj.description:
+            obj_dict["description"] = resolved_type_obj.description
+        if instances:
+            obj_dict["instances"] = instances
+
+        return {resolved_type_name: obj_dict}
     elif isinstance(output_type, GraphQLEnumType):
         field_dict = {
             "description": field.description if field.description else "",
@@ -409,7 +398,8 @@ def main(
 ) -> None:
     # TODO: deprecate
     graphql_schema = load_schema_with_naming(schemas, None)
-    result = translate_to_vspec(graphql_schema)
+    annotated_schema = process_schema(graphql_schema, {}, None, None, None, False)
+    result = translate_to_vspec(annotated_schema)
     log.info(f"Result:\n{result}")
     with open(output, "w", encoding="utf-8") as output_file:
         log.info(f"Writing data to '{output}'")

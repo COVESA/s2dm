@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import cast
 
 from graphql import (
     GraphQLEnumType,
@@ -13,16 +13,11 @@ from rdflib import RDF, RDFS, SH, XSD, BNode, Graph, Literal, Namespace, Node, U
 from rdflib.collection import Collection
 
 from s2dm import log
-from s2dm.exporters.utils.directive import get_argument_content, has_given_directive
+from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
+from s2dm.exporters.utils.directive import get_argument_content
 from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.exporters.utils.field import Cardinality, FieldCase, get_cardinality, get_field_case_extended, print_field_sdl
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
-from s2dm.exporters.utils.instance_tag import (
-    expand_instance_tag,
-    get_instance_tag_object,
-    has_valid_instance_tag_field,
-    is_instance_tag_field,
-)
 
 SUPPORTED_FIELD_CASES = {
     FieldCase.DEFAULT,
@@ -56,14 +51,14 @@ def add_comment_to_property_node(field: GraphQLField, property_node: BNode, grap
 
 
 def translate_to_shacl(
-    schema: GraphQLSchema,
+    annotated_schema: AnnotatedSchema,
     shapes_namespace: str,
     shapes_namespace_prefix: str,
     model_namespace: str,
     model_namespace_prefix: str,
-    naming_config: dict[str, Any] | None = None,
 ) -> Graph:
     """Translate a GraphQL schema to SHACL."""
+    schema = annotated_schema.schema
     namespaces = Namespaces(
         Namespace(shapes_namespace),
         Namespace(shapes_namespace_prefix),
@@ -81,10 +76,13 @@ def translate_to_shacl(
         if is_introspection_or_root_type(object_type.name):
             log.debug(f"Skipping internal object type '{object_type.name}'.")
             continue
-        if has_given_directive(object_type, "instanceTag"):
-            log.debug(f"Skipping object type '{object_type.name}' with directive 'instanceTag'.")
+
+        type_metadata = annotated_schema.type_metadata.get(object_type.name)
+        if type_metadata and type_metadata.is_intermediate_type:
+            log.debug(f"Skipping intermediate type '{object_type.name}'.")
             continue
-        process_object_type(namespaces, object_type, graph, schema, naming_config)
+
+        process_object_type(namespaces, object_type, graph, schema, annotated_schema)
 
     return graph
 
@@ -94,10 +92,10 @@ def process_object_type(
     object_type: GraphQLObjectType,
     graph: Graph,
     schema: GraphQLSchema,
-    naming_config: dict[str, Any] | None = None,
+    annotated_schema: AnnotatedSchema,
 ) -> None:
     """Process a GraphQL object type and generate the corresponding SHACL triples."""
-    log.info(f"Processing object type '{object_type.name}'.")
+    log.debug(f"Processing object type '{object_type.name}'.")
     shape_node = namespaces.shapes[object_type.name]
     _ = graph.add((shape_node, RDF.type, SH.NodeShape))
     _ = graph.add((shape_node, SH.name, Literal(object_type.name)))
@@ -106,7 +104,7 @@ def process_object_type(
         _ = graph.add((shape_node, SH.description, Literal(object_type.description)))
 
     for field_name, field in object_type.fields.items():
-        process_field(namespaces, field_name, field, shape_node, graph, schema, naming_config)
+        process_field(namespaces, object_type, field_name, field, shape_node, graph, schema, annotated_schema)
 
 
 def create_property_shape_with_literal(
@@ -158,8 +156,9 @@ def create_property_shape_with_iri(
     shape_node: URIRef,
     graph: Graph,
     value_cardinality: Cardinality | None = None,
+    target_type: GraphQLObjectType | None = None,
 ) -> None:
-    unwrapped_output_type = get_named_type(field.type)  # GraphQL type without modifiers [] or !
+    unwrapped_output_type = target_type if target_type else get_named_type(field.type)
 
     property_node = BNode()
     property_path = namespaces.model["has" + unwrapped_output_type.name]
@@ -183,15 +182,16 @@ def create_property_shape_with_iri(
 
 def process_field(
     namespaces: Namespaces,
+    parent_type: GraphQLObjectType,
     field_name: str,
     field: GraphQLField,
     shape_node: URIRef,
     graph: Graph,
     schema: GraphQLSchema,
-    naming_config: dict[str, Any] | None = None,
+    annotated_schema: AnnotatedSchema,
 ) -> None:
     """Process a field of a GraphQL object type and generate the corresponding SHACL triples."""
-    log.info(f"Processing field... '{print_field_sdl(field)}'")
+    log.debug(f"Processing field... '{print_field_sdl(field)}'")
     field_case = get_field_case_extended(field)
     log.debug(f"Field case: {field_case}")
     if field_case not in SUPPORTED_FIELD_CASES:
@@ -201,92 +201,112 @@ def process_field(
             Skipping field '{field_name}'."""
         )
         return None
-    elif is_instance_tag_field(field_name):
-        log.debug(
-            f"Skipping field '{field_name}'. It is a reserved field and its likely already "
-            + "processed as expanded instances.",
-        )
+
+    field_metadata = annotated_schema.field_metadata.get((parent_type.name, field_name))
+    if field_metadata and field_metadata.is_expanded:
+        if not field_metadata.original_field:
+            log.warning(f"Expanded field '{field_name}' has no original_field")
+            return None
+
+        original_field_case = get_field_case_extended(field_metadata.original_field)
+        if original_field_case in (FieldCase.LIST, FieldCase.LIST_NON_NULL):
+            log.debug(
+                f"Skipping expanded field '{field_name}' with original case '{original_field_case.name}'. "
+                f"SHACL exporter does not support LIST fields."
+            )
+            return None
+
+        log.debug(f"Field '{field_name}' is expanded with {len(field_metadata.resolved_names)} instances")
+        resolved_type_obj = schema.type_map.get(field_metadata.resolved_type)
+        if not isinstance(resolved_type_obj, GraphQLObjectType):
+            log.warning(f"Resolved type '{field_metadata.resolved_type}' is not a GraphQLObjectType")
+            return None
+
+        spec_cardinality = get_cardinality(field_metadata.original_field)
+        value_cardinality = spec_cardinality if spec_cardinality else original_field_case.value.value_cardinality
+
+        for resolved_name in field_metadata.resolved_names:
+            create_property_shape_with_iri(
+                namespaces=namespaces,
+                field_name=resolved_name,
+                field=field,
+                shape_node=shape_node,
+                graph=graph,
+                value_cardinality=value_cardinality,
+                target_type=resolved_type_obj,
+            )
         return None
-    else:
-        spec_cardinality = get_cardinality(field)
-        value_cardinality = spec_cardinality if spec_cardinality else field_case.value.value_cardinality
-        unwrapped_field_type = get_named_type(field.type)  # GraphQL type without modifiers [] or !
-        log.debug(f"Unwrapped field type: {unwrapped_field_type}")
 
-        if field_case == FieldCase.DEFAULT or field_case == FieldCase.NON_NULL:
-            # Output type has no List type modifier.
-            if isinstance(unwrapped_field_type, GraphQLScalarType):
-                create_property_shape_with_literal(
-                    namespaces=namespaces,
-                    field_name=field_name,
-                    field=field,
-                    shape_node=shape_node,
-                    graph=graph,
-                    value_cardinality=value_cardinality,
-                )
-            elif isinstance(unwrapped_field_type, GraphQLEnumType):
-                create_property_shape_with_literal(
-                    namespaces,
-                    field_name,
-                    field,
-                    shape_node,
-                    graph,
-                    value_cardinality,
-                    enum_values=list(unwrapped_field_type.values.keys()),
-                )
-            elif isinstance(unwrapped_field_type, GraphQLObjectType):
-                create_property_shape_with_iri(
-                    namespaces=namespaces,
-                    field_name=field_name,
-                    field=field,
-                    shape_node=shape_node,
-                    graph=graph,
-                    value_cardinality=value_cardinality,
-                )
+    unwrapped_field_type = get_named_type(field.type)
 
-        elif field_case == FieldCase.SET or field_case == FieldCase.SET_NON_NULL:
-            # Output type has a List type modifier and a @noDuplicates directive.
-            if isinstance(unwrapped_field_type, GraphQLScalarType):
-                create_property_shape_with_literal(
-                    namespaces=namespaces,
-                    field_name=field_name,
-                    field=field,
-                    shape_node=shape_node,
-                    graph=graph,
-                    value_cardinality=value_cardinality,
-                )
-            elif isinstance(unwrapped_field_type, GraphQLEnumType):
-                create_property_shape_with_literal(
-                    namespaces,
-                    field_name,
-                    field,
-                    shape_node,
-                    graph,
-                    value_cardinality,
-                    enum_values=list(unwrapped_field_type.values.keys()),
-                )
-            elif isinstance(unwrapped_field_type, GraphQLObjectType):
-                if has_valid_instance_tag_field(object_type=unwrapped_field_type, schema=schema):
-                    instance_tag_object = get_instance_tag_object(unwrapped_field_type, schema)
-                    if instance_tag_object is not None:
-                        expanded_tags = expand_instance_tag(instance_tag_object, naming_config)
-                        for tag in expanded_tags:
-                            create_property_shape_with_iri(
-                                namespaces=namespaces,
-                                field_name=f"{unwrapped_field_type.name}.{tag}",
-                                field=field,
-                                shape_node=shape_node,
-                                graph=graph,
-                                value_cardinality=value_cardinality,
-                            )
-                else:
-                    create_property_shape_with_iri(
-                        namespaces=namespaces,
-                        field_name=field_name,
-                        field=field,
-                        shape_node=shape_node,
-                        graph=graph,
-                        value_cardinality=value_cardinality,
-                    )
-            else:
-                raise ValueError(f"Unsupported case for field '{field_name}'.")
+    if isinstance(unwrapped_field_type, GraphQLObjectType):
+        target_type_metadata = annotated_schema.type_metadata.get(unwrapped_field_type.name)
+        if target_type_metadata and target_type_metadata.is_intermediate_type:
+            log.debug(f"Skipping field '{field_name}' that points to intermediate type '{unwrapped_field_type.name}'")
+            return None
+
+    spec_cardinality = get_cardinality(field)
+    value_cardinality = spec_cardinality if spec_cardinality else field_case.value.value_cardinality
+    log.debug(f"Unwrapped field type: {unwrapped_field_type}")
+
+    if field_case == FieldCase.DEFAULT or field_case == FieldCase.NON_NULL:
+        if isinstance(unwrapped_field_type, GraphQLScalarType):
+            create_property_shape_with_literal(
+                namespaces=namespaces,
+                field_name=field_name,
+                field=field,
+                shape_node=shape_node,
+                graph=graph,
+                value_cardinality=value_cardinality,
+            )
+        elif isinstance(unwrapped_field_type, GraphQLEnumType):
+            create_property_shape_with_literal(
+                namespaces,
+                field_name,
+                field,
+                shape_node,
+                graph,
+                value_cardinality,
+                enum_values=list(unwrapped_field_type.values.keys()),
+            )
+        elif isinstance(unwrapped_field_type, GraphQLObjectType):
+            create_property_shape_with_iri(
+                namespaces=namespaces,
+                field_name=field_name,
+                field=field,
+                shape_node=shape_node,
+                graph=graph,
+                value_cardinality=value_cardinality,
+            )
+
+    elif field_case == FieldCase.SET or field_case == FieldCase.SET_NON_NULL:
+        if isinstance(unwrapped_field_type, GraphQLScalarType):
+            create_property_shape_with_literal(
+                namespaces=namespaces,
+                field_name=field_name,
+                field=field,
+                shape_node=shape_node,
+                graph=graph,
+                value_cardinality=value_cardinality,
+            )
+        elif isinstance(unwrapped_field_type, GraphQLEnumType):
+            create_property_shape_with_literal(
+                namespaces,
+                field_name,
+                field,
+                shape_node,
+                graph,
+                value_cardinality,
+                enum_values=list(unwrapped_field_type.values.keys()),
+            )
+        elif isinstance(unwrapped_field_type, GraphQLObjectType):
+            create_property_shape_with_iri(
+                namespaces=namespaces,
+                field_name=field_name,
+                field=field,
+                shape_node=shape_node,
+                graph=graph,
+                value_cardinality=value_cardinality,
+            )
+        else:
+            raise ValueError(f"Unsupported case for field '{field_name}'.")

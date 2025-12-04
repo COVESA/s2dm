@@ -1,5 +1,7 @@
+from pathlib import Path
 from typing import Any
 
+import yaml
 from caseconverter import camelcase, cobolcase, flatcase, kebabcase, macrocase, pascalcase, snakecase, titlecase
 from graphql import (
     GraphQLEnumType,
@@ -12,6 +14,7 @@ from graphql import (
     get_named_type,
 )
 
+from s2dm import log
 from s2dm.exporters.utils.graphql_type import is_graphql_system_type
 
 CASE_CONVERTERS = {
@@ -212,3 +215,88 @@ def apply_naming_to_instance_values(instance_values: list[str], naming_config: d
         return instance_values
 
     return [convert_name(value, target_case) for value in instance_values]
+
+
+def validate_naming_config(config: dict[str, Any]) -> None:
+    """Validate naming configuration structure and values."""
+    VALID_CASES = {
+        "camelCase",
+        "PascalCase",
+        "snake_case",
+        "kebab-case",
+        "MACROCASE",
+        "COBOL-CASE",
+        "flatcase",
+        "TitleCase",
+    }
+
+    VALID_ELEMENT_TYPES = {"type", "field", "argument", "enumValue", "instanceTag"}
+    VALID_CONTEXTS = {
+        "type": {"object", "interface", "input", "scalar", "union", "enum"},
+        "field": {"object", "interface", "input"},
+        "argument": {"field"},
+    }
+
+    valid_cases = ", ".join(sorted(VALID_CASES))
+
+    for element_type, value in config.items():
+        if element_type not in VALID_ELEMENT_TYPES:
+            raise ValueError(
+                f"Invalid element type '{element_type}'. Valid types: {', '.join(sorted(VALID_ELEMENT_TYPES))}"
+            )
+
+        if element_type in ("enumValue", "instanceTag"):
+            if isinstance(value, dict):
+                raise ValueError(f"Element type '{element_type}' cannot have contexts")
+            if not isinstance(value, str) or value not in VALID_CASES:
+                raise ValueError(f"Invalid case type for '{element_type}': '{value}'. Valid cases: {valid_cases}")
+        elif isinstance(value, str):
+            if value not in VALID_CASES:
+                raise ValueError(f"Invalid case type for '{element_type}': '{value}'. Valid cases: {valid_cases}")
+        elif isinstance(value, dict):
+            if element_type not in VALID_CONTEXTS:
+                raise ValueError(f"Element type '{element_type}' cannot have contexts")
+
+            for context, case_type in value.items():
+                if context not in VALID_CONTEXTS[element_type]:
+                    valid_contexts = ", ".join(sorted(VALID_CONTEXTS[element_type]))
+                    raise ValueError(
+                        f"Invalid context '{context}' for '{element_type}'. Valid contexts: {valid_contexts}"
+                    )
+
+                if not isinstance(case_type, str) or case_type not in VALID_CASES:
+                    raise ValueError(
+                        f"Invalid case type for '{element_type}.{context}': '{case_type}'. Valid cases: {valid_cases}"
+                    )
+        else:
+            raise ValueError(
+                f"Invalid value type for '{element_type}'. Expected string or dict, got {type(value).__name__}"
+            )
+
+    if "enumValue" in config and "instanceTag" not in config:
+        raise ValueError("If 'enumValue' is present, 'instanceTag' must also be present")
+
+
+def load_naming_config(config_path: Path | None) -> dict[str, Any] | None:
+    """Load naming configuration from a YAML file."""
+    if config_path is None:
+        log.info("No naming config provided")
+        return None
+
+    try:
+        config_file_handle = config_path.open("r", encoding="utf-8")
+    except OSError as e:
+        raise OSError(f"Failed to open naming config file {config_path}: {e}") from e
+
+    with config_file_handle:
+        log.info(f"Loaded naming config: {config_path}")
+
+        try:
+            result = yaml.safe_load(config_file_handle)
+        except yaml.YAMLError as e:
+            raise ValueError(f"Failed to load naming config from {config_path}: {e}") from e
+
+        config = result if isinstance(result, dict) else {}
+        if config:
+            validate_naming_config(config)
+        return config

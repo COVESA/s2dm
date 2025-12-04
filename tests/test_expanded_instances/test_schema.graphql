@@ -54,3 +54,8 @@ type Cabin {
   doors: [Door] @noDuplicates
   temperature: Float @range(min: -100, max: 100)
 }
+
+type Query {
+  vehicle: Vehicle
+  cabin: Cabin
+}

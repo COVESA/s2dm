@@ -2,9 +2,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
-import rich_click as click
 
-from s2dm.cli import load_naming_config, validate_naming_config
+from s2dm.exporters.utils.naming import load_naming_config, validate_naming_config
 
 
 class TestValidateNamingConfig:
@@ -19,27 +18,27 @@ class TestValidateNamingConfig:
 
     def test_invalid_element_type(self) -> None:
         config = {"invalid_element": "PascalCase"}
-        with pytest.raises(click.ClickException, match="Invalid element type 'invalid_element'"):
+        with pytest.raises(ValueError, match="Invalid element type 'invalid_element'"):
             validate_naming_config(config)
 
     def test_invalid_case_type(self) -> None:
         config = {"type": "InvalidCase"}
-        with pytest.raises(click.ClickException, match="Invalid case type for 'type': 'InvalidCase'"):
+        with pytest.raises(ValueError, match="Invalid case type for 'type': 'InvalidCase'"):
             validate_naming_config(config)
 
     def test_invalid_context(self) -> None:
         config = {"type": {"invalid_context": "PascalCase"}}
-        with pytest.raises(click.ClickException, match="Invalid context 'invalid_context' for 'type'"):
+        with pytest.raises(ValueError, match="Invalid context 'invalid_context' for 'type'"):
             validate_naming_config(config)
 
     def test_invalid_value_type(self) -> None:
         config = {"type": 123}
-        with pytest.raises(click.ClickException, match="Invalid value type for 'type'. Expected string or dict"):
+        with pytest.raises(ValueError, match="Invalid value type for 'type'. Expected string or dict"):
             validate_naming_config(config)
 
     def test_enum_value_without_instance_tag(self) -> None:
         config = {"enumValue": "PascalCase"}
-        with pytest.raises(click.ClickException, match="If 'enumValue' is present, 'instanceTag' must also be present"):
+        with pytest.raises(ValueError, match="If 'enumValue' is present, 'instanceTag' must also be present"):
             validate_naming_config(config)
 
     def test_instance_tag_without_enum_value_is_valid(self) -> None:
@@ -48,7 +47,7 @@ class TestValidateNamingConfig:
 
     def test_contextless_element_with_context(self) -> None:
         config = {"enumValue": {"some_context": "PascalCase"}}
-        with pytest.raises(click.ClickException, match="Element type 'enumValue' cannot have contexts"):
+        with pytest.raises(ValueError, match="Element type 'enumValue' cannot have contexts"):
             validate_naming_config(config)
 
     def test_all_valid_case_types(self) -> None:
@@ -98,7 +97,7 @@ invalid_element: PascalCase
             f.write(config_content)
             f.flush()
 
-            with pytest.raises(click.ClickException, match="Invalid element type 'invalid_element'"):
+            with pytest.raises(ValueError, match="Invalid element type 'invalid_element'"):
                 load_naming_config(Path(f.name))
 
         Path(f.name).unlink()
