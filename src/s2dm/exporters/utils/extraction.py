@@ -82,3 +82,25 @@ def get_root_level_types_from_query(schema: GraphQLSchema, selection_query: Docu
                 root_type_names.append(field_type.name)
 
     return root_type_names
+
+
+def get_query_operation_name(selection_query: DocumentNode, default_name: str) -> str:
+    """
+    Extract the operation name from a selection query document.
+
+    Args:
+        selection_query: The GraphQL selection query document
+        default_name: Default name to use if no operation name is found
+
+    Returns:
+        str: The operation name from the query, or default_name if not found
+    """
+    for definition in selection_query.definitions:
+        if not isinstance(definition, OperationDefinitionNode) or definition.operation != OperationType.QUERY:
+            continue
+
+        if definition.name:
+            return definition.name.value
+        return default_name
+
+    return default_name

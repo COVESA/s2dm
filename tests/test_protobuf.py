@@ -38,8 +38,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { scalarType { stringField intField floatField boolField idField } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert 'syntax = "proto3";' in result
@@ -84,12 +84,12 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse(
             "query Selection { "
             "customScalarType { int8Field uint8Field int16Field uint16Field uint32Field int64Field uint64Field } "
             "}"
         )
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -125,8 +125,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { door { lockStatus } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -167,8 +167,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { features requiredFeatures model vin } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -201,8 +201,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { speed { average current } model } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -244,7 +244,7 @@ class TestProtobufExporter:
         """
         schema = build_schema(schema_str)
         selection_query = parse("query Selection { vehicle { speed { average } model } }")
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -281,8 +281,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { speed { average { value timestamp } current } model } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(
             annotated_schema, flatten_root_types=["Vehicle"], selection_query=selection_query
         )
@@ -332,8 +332,11 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
-        selection_query = parse("query Selection { vehicle { id features { name enabled } } }")
+        selection_query = parse(
+            "query Selection { vehicle { id features { name enabled } "
+            "vehicleType { ... on Car { brand } ... on Truck { capacity } } } }"
+        )
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(
             annotated_schema, flatten_root_types=["Vehicle"], selection_query=selection_query
         )
@@ -396,8 +399,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { model } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, package_name="package.name", selection_query=selection_query)
 
         assert "package package.name;" in result
@@ -416,8 +419,8 @@ class TestProtobufExporter:
         }
         '''
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { vin } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -443,17 +446,13 @@ class TestProtobufExporter:
 
         union Vehicle = Car | Truck
 
-        type TestType {
-            vehicle: Vehicle
-        }
-
         type Query {
-            testType: TestType
+            vehicle: Vehicle
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
-        selection_query = parse("query Selection { testType { vehicle } }")
+        selection_query = parse("query Selection { vehicle { ... on Car { brand } ... on Truck { capacity } } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -481,13 +480,13 @@ class TestProtobufExporter:
         ), "Vehicle message with source option and oneof containing Car = 1 and Truck = 2"
 
         assert re.search(
-            r"message TestType \{.*?"
-            r'option \(message_source\) = "TestType".*?;.*?'
+            r"message Selection \{.*?"
+            r'option \(message_source\) = "query: Selection".*?;.*?'
             r"Vehicle vehicle = 1.*?;.*?"
             r"\}",
             result,
             re.DOTALL,
-        ), "TestType message with source option and Vehicle field"
+        ), "Selection message with source option and Vehicle field"
 
     def test_interface_type(self) -> None:
         """Test that interface types are converted to messages."""
@@ -506,15 +505,9 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { electricVehicle { vin batteryCapacity } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
-
-        assert re.search(
-            r"message Vehicle \{.*?" r'option \(message_source\) = "Vehicle".*?;.*?' r"string vin = 1.*?;.*?" r"\}",
-            result,
-            re.DOTALL,
-        ), "Vehicle interface message with source option and string vin = 1"
 
         assert re.search(
             r"message ElectricVehicle \{.*?"
@@ -526,11 +519,16 @@ class TestProtobufExporter:
             re.DOTALL,
         ), "ElectricVehicle message with source option and fields: string vin = 1, int32 batteryCapacity = 2"
 
+        assert "message Vehicle" not in result
+
     def test_include_instance_tag_types_without_expansion(self, test_schema_path: list[Path]) -> None:
         """Test that types with @instanceTag directive are included when expansion is disabled."""
         graphql_schema = load_schema_with_naming(test_schema_path, None)
-        annotated_schema = process_schema(graphql_schema, {}, None, None, None, False)
-        selection_query = parse("query Selection { cabin { seats { isOccupied } doors { isLocked } temperature } }")
+        selection_query = parse(
+            "query Selection { cabin { seats { isOccupied height instanceTag { row position } } "
+            "doors { isLocked position instanceTag { row side } } temperature } }"
+        )
+        annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -654,8 +652,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { message enum service } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -689,8 +687,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { speed engineTemp sensors features wheels } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -726,8 +724,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { vehicle { speed tags vin } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -746,8 +744,8 @@ class TestProtobufExporter:
     def test_flatten_naming_without_expansion(self, test_schema_path: list[Path]) -> None:
         """Test that flatten mode WITHOUT -e flag keeps arrays as repeated."""
         graphql_schema = load_schema_with_naming(test_schema_path, None)
-        annotated_schema = process_schema(graphql_schema, {}, None, None, None, False)
         selection_query = parse("query Selection { cabin { seats { isOccupied } doors { isLocked } temperature } }")
+        annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query, flatten_root_types=["Cabin"])
 
         assert re.search(
@@ -767,8 +765,10 @@ class TestProtobufExporter:
     def test_flatten_naming_includes_referenced_types_transitively(self, test_schema_path: list[Path]) -> None:
         """Test that flatten mode includes types referenced by non-flattened types and their dependencies."""
         graphql_schema = load_schema_with_naming(test_schema_path, None)
-        annotated_schema = process_schema(graphql_schema, {}, None, None, None, False)
-        selection_query = parse("query Selection { vehicle { doors { isLocked } model year features } }")
+        selection_query = parse(
+            "query Selection { vehicle { doors { isLocked position instanceTag { row side } } model year features } }"
+        )
+        annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(
             annotated_schema, selection_query=selection_query, flatten_root_types=["Vehicle"]
         )
@@ -859,8 +859,8 @@ class TestProtobufExporter:
         }
         """
         schema = build_schema(schema_str)
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
         selection_query = parse("query Selection { transmission { currentGear rpm } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -940,7 +940,7 @@ class TestProtobufExporter:
         graphql_schema = prune_schema_using_query_selection(graphql_schema, selection_query)
 
         flatten_root_types = get_root_level_types_from_query(graphql_schema, selection_query)
-        annotated_schema = process_schema(graphql_schema, {}, None, None, None, False)
+        annotated_schema = process_schema(schema=graphql_schema, source_map={})
         result = translate_to_protobuf(
             annotated_schema, selection_query=selection_query, flatten_root_types=flatten_root_types
         )
@@ -988,7 +988,7 @@ class TestProtobufExporter:
         """
         schema = build_schema(schema_str)
         selection_query = parse("query Selection { vehicle { temperatures speeds } }")
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
 
         assert re.search(
@@ -1045,7 +1045,7 @@ class TestProtobufExporter:
         graphql_schema = prune_schema_using_query_selection(graphql_schema, selection_query)
 
         root_types = get_root_level_types_from_query(graphql_schema, selection_query)
-        annotated_schema = process_schema(graphql_schema, {}, None, None, None, False)
+        annotated_schema = process_schema(schema=graphql_schema, source_map={})
         result = translate_to_protobuf(annotated_schema, selection_query=selection_query, flatten_root_types=root_types)
 
         assert re.search(
@@ -1089,7 +1089,7 @@ class TestProtobufExporter:
         schema = build_schema(schema_str)
         selection_query = parse("query Selection { vehicle { model year } }")
 
-        annotated_schema = process_schema(schema, {}, None, None, None, False)
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
         result_non_flatten = translate_to_protobuf(annotated_schema, selection_query=selection_query)
         flatten_root_types = get_root_level_types_from_query(schema, selection_query)
         result_flatten = translate_to_protobuf(

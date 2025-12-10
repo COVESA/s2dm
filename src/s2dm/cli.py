@@ -11,6 +11,7 @@ from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
+from s2dm.exporters.avro import translate_to_avro
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.protobuf import translate_to_protobuf
@@ -545,6 +546,44 @@ def jsonschema(
     assert_correct_schema(annotated_schema.schema)
 
     result = translate_to_jsonschema(annotated_schema, root_type, strict)
+    _ = output.write_text(result)
+
+
+# Export -> avro
+# ----------
+@export.command
+@schema_option
+@selection_query_option(required=True)
+@output_option
+@root_type_option
+@naming_config_option
+@click.option(
+    "--namespace",
+    "-ns",
+    type=str,
+    required=True,
+    help="Avro namespace for types (required, e.g., com.example)",
+)
+@expanded_instances_option
+def avro(
+    schemas: list[Path],
+    selection_query: Path,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    namespace: str,
+    expanded_instances: bool,
+) -> None:
+    """Generate Apache Avro schema from a given GraphQL schema."""
+    annotated_schema, _, query_document = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+
+    result = translate_to_avro(annotated_schema, namespace, cast(DocumentNode, query_document))
     _ = output.write_text(result)
 
 

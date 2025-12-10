@@ -10,11 +10,8 @@ from graphql import (
     GraphQLNonNull,
     GraphQLObjectType,
     GraphQLScalarType,
-    GraphQLSchema,
     GraphQLType,
     GraphQLUnionType,
-    OperationDefinitionNode,
-    OperationType,
     get_named_type,
     is_enum_type,
     is_interface_type,
@@ -28,8 +25,9 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 
 from s2dm import log
 from s2dm.exporters.protobuf.models import ProtoEnum, ProtoEnumValue, ProtoField, ProtoMessage, ProtoSchema, ProtoUnion
+from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
-from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.extraction import get_all_named_types, get_query_operation_name
 from s2dm.exporters.utils.field import get_cardinality
 from s2dm.exporters.utils.schema_loader import get_referenced_types
 
@@ -79,7 +77,7 @@ class ProtobufTransformer:
 
     def __init__(
         self,
-        graphql_schema: GraphQLSchema,
+        annotated_schema: AnnotatedSchema,
         selection_query: DocumentNode,
         package_name: str | None = None,
         flatten_root_types: list[str] | None = None,
@@ -87,7 +85,8 @@ class ProtobufTransformer:
         if selection_query is None:
             raise ValueError("selection_query is required")
 
-        self.graphql_schema = graphql_schema
+        self.annotated_schema = annotated_schema
+        self.graphql_schema = annotated_schema.schema
         self.package_name = package_name
         self.flatten_root_types = flatten_root_types or []
         self.flatten_naming = len(self.flatten_root_types) > 0
@@ -156,7 +155,7 @@ class ProtobufTransformer:
         proto_schema.messages = self._build_messages(message_types)
 
         if self.flatten_naming:
-            root_message_name = self._get_query_operation_name()
+            root_message_name = get_query_operation_name(self.selection_query, "Message")
             root_message_source = f"query: {root_message_name}"
             root_message = ProtoMessage(
                 name=root_message_name,
@@ -190,20 +189,6 @@ class ProtobufTransformer:
         return any(enum.source for enum in proto_schema.enums) or any(
             message.source for message in proto_schema.messages
         )
-
-    def _get_query_operation_name(self) -> str:
-        """Extract the operation name from the selection query, defaulting to appropriate fallback."""
-        default_name = "Message" if self.flatten_naming else "Query"
-
-        for definition in self.selection_query.definitions:
-            if not isinstance(definition, OperationDefinitionNode) or definition.operation != OperationType.QUERY:
-                continue
-
-            if definition.name:
-                return definition.name.value
-            return default_name
-
-        return default_name
 
     def _build_template_vars(self, proto_schema: ProtoSchema) -> dict[str, Any]:
         """Build all template variables from proto schema."""
@@ -254,7 +239,7 @@ class ProtobufTransformer:
             source = message_type.name
 
             if message_type.name == "Query":
-                message_name = self._get_query_operation_name()
+                message_name = get_query_operation_name(self.selection_query, "Query")
                 source = f"query: {message_name}"
 
             messages.append(

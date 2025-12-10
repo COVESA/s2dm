@@ -147,6 +147,15 @@ wheels = [
 ]
 
 [[package]]
+name = "avro"
+version = "1.12.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/00/af1eec633637e12d0945a97f05a429eed83ac45865af60cb453db4689d95/avro-1.12.1.tar.gz", hash = "sha256:c5b8dd2dd4c10816f0dc127cc29cfd43b5e405cf7e6840e89460a024bf3d098d", size = 91115, upload-time = "2025-10-15T21:05:33.859Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/2b/3d5f41d5b46246216fa62d1a0a6813c74ba8b0ef990644b6bd3cde82d042/avro-1.12.1-py2.py3-none-any.whl", hash = "sha256:970475dd6457924533966fe761be607c759d5a48390cc8fbed472f7c9a8868f2", size = 124250, upload-time = "2025-10-15T21:05:32.815Z" },
+]
+
+[[package]]
 name = "babel"
 version = "2.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2196,6 +2205,7 @@ name = "s2dm"
 source = { editable = "." }
 dependencies = [
     { name = "ariadne" },
+    { name = "avro" },
     { name = "case-converter" },
     { name = "click" },
     { name = "graphql-core" },
@@ -2230,6 +2240,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ariadne", specifier = ">=0.24.0" },
+    { name = "avro", specifier = ">=1.12.0" },
     { name = "case-converter", specifier = ">=1.2.0" },
     { name = "click", specifier = ">=8.1.7" },
     { name = "graphql-core", specifier = ">=3.2.6" },

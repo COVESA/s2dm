@@ -34,7 +34,14 @@ from graphql import (
     validate_schema,
 )
 from graphql import validate as graphql_validate
-from graphql.language.ast import DirectiveNode, EnumValueNode, SelectionSetNode
+from graphql.language.ast import (
+    DirectiveNode,
+    EnumValueNode,
+    FieldNode,
+    InlineFragmentNode,
+    OperationDefinitionNode,
+    SelectionSetNode,
+)
 
 from s2dm import log
 from s2dm.exporters.utils.annotated_schema import (
@@ -622,59 +629,74 @@ def prune_schema_using_query_selection(
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
 
+    def traverse_input_type_dependencies(input_type_name: str) -> None:
+        """Recursively traverse input object field dependencies to collect all referenced types."""
+        if input_type_name in types_to_keep:
+            return
+
+        types_to_keep.add(input_type_name)
+
+        type_def = schema.type_map.get(input_type_name)
+        if not type_def or not is_input_object_type(type_def):
+            return
+
+        input_obj_type = cast(GraphQLInputObjectType, type_def)
+        for field in input_obj_type.fields.values():
+            field_type = get_named_type(field.type)
+            traverse_input_type_dependencies(field_type.name)
+
     def collect_selections(type_name: str, selection_set: SelectionSetNode) -> None:
         """Recursively collect field names and type names to keep."""
-        type_obj = schema.type_map.get(type_name)
-        if not type_obj:
+        graphql_type = schema.type_map.get(type_name)
+        if not graphql_type:
             return
 
         types_to_keep.add(type_name)
 
-        if not (is_object_type(type_obj) or is_interface_type(type_obj)):
+        if not (is_object_type(graphql_type) or is_interface_type(graphql_type)):
+            for selection in selection_set.selections:
+                if isinstance(selection, InlineFragmentNode) and selection.selection_set is not None:
+                    fragment_type_name = selection.type_condition.name.value
+                    collect_selections(fragment_type_name, selection.selection_set)
             return
 
         if type_name not in fields_to_keep:
             fields_to_keep[type_name] = set()
 
-        obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+        composite_type = cast(GraphQLObjectType | GraphQLInterfaceType, graphql_type)
 
-        if include_instance_tag_fields and "instanceTag" in obj_type.fields:
+        if include_instance_tag_fields and "instanceTag" in composite_type.fields:
             fields_to_keep[type_name].add("instanceTag")
-            instance_tag_field = obj_type.fields["instanceTag"]
+            instance_tag_field = composite_type.fields["instanceTag"]
             instance_tag_type = get_named_type(instance_tag_field.type)
-            if instance_tag_type:
-                types_to_keep.add(instance_tag_type.name)
+            types_to_keep.add(instance_tag_type.name)
 
         for selection in selection_set.selections:
-            if hasattr(selection, "name"):
+            if isinstance(selection, InlineFragmentNode) and selection.selection_set is not None:
+                fragment_type_name = selection.type_condition.name.value
+                collect_selections(fragment_type_name, selection.selection_set)
+            elif isinstance(selection, FieldNode):
                 field_name = selection.name.value
                 fields_to_keep[type_name].add(field_name)
 
-                if field_name in obj_type.fields:
-                    field = obj_type.fields[field_name]
-                    field_type = get_named_type(field.type)
+                if field_name not in composite_type.fields:
+                    continue
 
-                    if field_type and hasattr(field_type, "name"):
-                        types_to_keep.add(field_type.name)
+                field = composite_type.fields[field_name]
+                field_type = get_named_type(field.type)
+                types_to_keep.add(field_type.name)
 
-                    if hasattr(field, "args"):
-                        for _, arg in field.args.items():
-                            arg_type = get_named_type(arg.type)
-                            if arg_type and hasattr(arg_type, "name"):
-                                types_to_keep.add(arg_type.name)
+                for argument in field.args.values():
+                    argument_type = get_named_type(argument.type)
+                    traverse_input_type_dependencies(argument_type.name)
 
-                    if (
-                        hasattr(selection, "selection_set")
-                        and selection.selection_set
-                        and field_type
-                        and hasattr(field_type, "name")
-                    ):
-                        collect_selections(field_type.name, selection.selection_set)
+                if selection.selection_set is not None:
+                    collect_selections(field_type.name, selection.selection_set)
 
     query_operations = [
         definition
         for definition in document.definitions
-        if hasattr(definition, "operation") and definition.operation.value == "query"
+        if isinstance(definition, OperationDefinitionNode) and definition.operation.value == "query"
     ]
 
     if not query_operations:
@@ -683,16 +705,19 @@ def prune_schema_using_query_selection(
     log.debug("Composing filtered schema based on query selections")
 
     query_operation = query_operations[0]
-    if hasattr(query_operation, "selection_set"):
-        collect_selections(schema.query_type.name, query_operation.selection_set)
+    collect_selections(schema.query_type.name, query_operation.selection_set)
 
     for type_name, fields_to_keep_set in fields_to_keep.items():
         type_obj = schema.type_map.get(type_name)
-        if type_obj and (is_object_type(type_obj) or is_interface_type(type_obj)):
-            obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
-            fields_to_delete = [fname for fname in obj_type.fields if fname not in fields_to_keep_set]
-            for fname in fields_to_delete:
-                del obj_type.fields[fname]
+        if not type_obj:
+            continue
+        if not (is_object_type(type_obj) or is_interface_type(type_obj)):
+            continue
+
+        obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+        fields_to_delete = [fname for fname in obj_type.fields if fname not in fields_to_keep_set]
+        for fname in fields_to_delete:
+            del obj_type.fields[fname]
 
     types_to_delete = [
         type_name
@@ -702,24 +727,31 @@ def prune_schema_using_query_selection(
     for type_name in types_to_delete:
         del schema.type_map[type_name]
 
-    directives_used: set[str] = set()
+    def collect_used_directives() -> set[str]:
+        """Collect all directive names used in types and fields to keep."""
+        directives_used: set[str] = set()
 
-    for type_name in types_to_keep:
-        type_obj = schema.type_map.get(type_name)
-        if not type_obj:
-            continue
+        for type_name in types_to_keep:
+            type_obj = schema.type_map.get(type_name)
+            if not type_obj:
+                continue
 
-        if hasattr(type_obj, "ast_node") and type_obj.ast_node and hasattr(type_obj.ast_node, "directives"):
-            for directive in type_obj.ast_node.directives:
-                directives_used.add(directive.name.value)
+            if type_obj.ast_node:
+                for directive in type_obj.ast_node.directives:
+                    directives_used.add(directive.name.value)
 
-        if is_object_type(type_obj) or is_interface_type(type_obj):
+            if not (is_object_type(type_obj) or is_interface_type(type_obj)):
+                continue
+
             obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
             for field in obj_type.fields.values():
-                if hasattr(field, "ast_node") and field.ast_node and hasattr(field.ast_node, "directives"):
+                if field.ast_node:
                     for directive in field.ast_node.directives:
                         directives_used.add(directive.name.value)
 
+        return directives_used
+
+    directives_used = collect_used_directives()
     schema.directives = tuple(directive for directive in schema.directives if directive.name in directives_used)
 
     log.debug(f"Composed filtered schema with {len(fields_to_keep)} object types")
