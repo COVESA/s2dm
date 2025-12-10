@@ -31,28 +31,31 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.129.0
+      HUGO_VERSION: 0.147.9
     steps:
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
           && sudo dpkg -i ${{ runner.temp }}/hugo.deb
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'docs-gen/package-lock.json'
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
       - name: Install dependencies
+        working-directory: ./docs-gen
         run: npm ci
       - name: Build production website
+        working-directory: ./docs-gen
         env:
           # For maximum backward compatibility with Hugo modules
           HUGO_ENVIRONMENT: production
@@ -60,13 +63,14 @@ jobs:
           TZ: America/Los_Angeles
         run: |
           hugo \
+            --environment production \
             --minify \
             --cleanDestinationDir \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+            --baseURL "https://giaccomole.github.io/s2dm/"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./docs-gen/public
 
   # Deployment job
   deploy:
