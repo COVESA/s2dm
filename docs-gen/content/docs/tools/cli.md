@@ -1097,11 +1097,222 @@ Field number changes break compatibility if you have:
 - **Message queues**: Messages enqueued before regeneration will fail to deserialize correctly
 - **Archived data**: Historical protobuf-encoded logs or backups become unreadable
 
+### Apache Avro
+
+This exporter translates the given GraphQL schema to [Apache Avro](https://avro.apache.org/) schema format.
+
+#### Key Features
+
+- **Complete GraphQL Type Support**: Handles all GraphQL types including scalars, objects, enums, unions, interfaces, and lists
+- **Selection Query (Required)**: Use the `--selection-query` flag to specify which types and fields to export via a GraphQL query
+- **Type Optimization**: Automatically optimizes integer types based on `@range` directive constraints
+- **Namespace Support**: Use the `--namespace` flag to specify an Avro namespace for type references
+- **Expanded Instance Tags**: Use the `--expanded-instances` flag to transform instance tag arrays into nested record structures
+
+#### Example Transformation
+
+Consider the following GraphQL schema and selection query:
+
+GraphQL Schema:
+
+```graphql
+type Vehicle {
+  id: ID!
+  speed: Int
+  doors: [Door]
+}
+
+type Door {
+  isLocked: Boolean
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+type Query {
+  vehicle: Vehicle
+}
+```
+
+Selection Query:
+
+```graphql
+query VehicleData {
+  vehicle {
+    id
+    speed
+    doors {
+      isLocked
+    }
+  }
+}
+```
+
+The Avro exporter produces:
+
+```bash
+s2dm export avro --schema schema.graphql --selection-query query.graphql --namespace com.example --output vehicle.avsc
+```
+
+```json
+{
+  "type": "record",
+  "name": "VehicleData",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "vehicle",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "Vehicle",
+          "namespace": "com.example",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "speed",
+              "type": ["null", "int"]
+            },
+            {
+              "name": "doors",
+              "type": [
+                "null",
+                {
+                  "type": "array",
+                  "items": [
+                    "null",
+                    {
+                      "type": "record",
+                      "name": "Door",
+                      "namespace": "com.example",
+                      "fields": [
+                        {
+                          "name": "isLocked",
+                          "type": ["null", "boolean"]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Selection Query (Required)
+
+The Avro exporter requires a selection query to determine which types and fields to export:
+
+```bash
+s2dm export avro --schema schema.graphql --selection-query query.graphql --namespace com.example --output schema.avsc
+```
+
+See the [Selection Query Filtering](#selection-query-filtering) section for details on how selection queries work.
+
+#### Type Mappings
+
+GraphQL types are mapped to Avro types as follows:
+
+| GraphQL Type | Avro Type |
+|--------------|-----------|
+| `String` | `string` |
+| `Int` | `int` |
+| `Float` | `double` |
+| `Boolean` | `boolean` |
+| `ID` | `string` |
+| `Int8` | `int` |
+| `UInt8` | `int` |
+| `Int16` | `int` |
+| `UInt16` | `int` |
+| `UInt32` | `long` |
+| `Int64` | `long` |
+| `UInt64` | `long` |
+
+**List types** are converted to Avro arrays:
+
+- `[String]` → `{"type": "array", "items": ["null", "string"]}`
+- `[String!]!` → `{"type": "array", "items": "string"}`
+
+**Enums** are converted to Avro enums:
+
+```json
+{
+  "type": "enum",
+  "name": "Status",
+  "namespace": "com.example",
+  "symbols": ["ACTIVE", "INACTIVE"]
+}
+```
+
+**Field Nullability:**
+
+GraphQL field nullability is preserved in Avro using union types with `null`:
+
+- **Nullable fields** (e.g., `name: String`) → `["null", "string"]`
+- **Non-nullable fields** (e.g., `id: ID!`) → `"string"`
+
+#### Range Directive Optimization
+
+The `@range` directive automatically optimizes integer type selection between `int` (32-bit) and `long` (64-bit):
+
+```graphql
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+type Sensor {
+  temperature: Int64 @range(min: -40, max: 150)
+  mileage: Int @range(min: 0, max: 5000000000)
+}
+```
+
+Produces:
+
+```json
+{
+  "type": "record",
+  "name": "Sensor",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "temperature",
+      "type": ["null", "int"]
+    },
+    {
+      "name": "mileage",
+      "type": ["null", "long"]
+    }
+  ]
+}
+```
+
+**Optimization rules:**
+
+- If all specified range bounds fit in 32-bit signed range (-2³¹ to 2³¹-1), use `int`
+- If any bound exceeds 32-bit range, use `long`
+- Works with partial ranges: `@range(min: 0)` or `@range(max: 100)`
+- Without `@range`, uses default type mapping
+
+You can call the help for usage reference:
+
+```bash
+s2dm export avro --help
+```
+
 ## Common Features
 
 ### Selection Query Filtering
 
-All export commands (except for protobuf where it's required) and the compose command support the `--selection-query` flag to filter the schema based on a GraphQL query.
+All export commands and the compose command support the `--selection-query` flag to filter the schema based on a GraphQL query. For Protobuf and Avro exporters, the selection query is required.
 
 #### Usage
 
