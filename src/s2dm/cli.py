@@ -582,6 +582,7 @@ def avro(
         root_type=root_type,
         expanded_instances=expanded_instances,
     )
+    assert_correct_schema(annotated_schema.schema)
 
     result = translate_to_avro(annotated_schema, namespace, cast(DocumentNode, query_document))
     _ = output.write_text(result)
