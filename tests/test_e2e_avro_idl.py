@@ -1,4 +1,4 @@
-"""End-to-end integration tests for Avro IDL export with expanded instances."""
+"""End-to-end integration tests for Avro protocol export with expanded instances."""
 
 import json
 import re
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from s2dm.exporters.avro.idl import translate_to_avro_idl
+from s2dm.exporters.avro.protocol import translate_to_avro_protocol
 from s2dm.exporters.utils.schema_loader import load_and_process_schema
 
 
@@ -25,7 +25,7 @@ class TestAvroIDLE2EExpandedInstances:
             root_type=None,
             expanded_instances=False,
         )
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
         assert len(result) == 2
         assert "Cabin" in result
@@ -103,7 +103,7 @@ class TestAvroIDLE2EExpandedInstances:
             root_type=None,
             expanded_instances=True,
         )
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
         cabin_idl = result["Cabin"]
 
@@ -158,7 +158,7 @@ class TestAvroIDLE2EExpandedInstances:
             root_type=None,
             expanded_instances=True,
         )
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
         cabin_idl = result["Cabin"]
 
@@ -193,7 +193,7 @@ class TestAvroIDLE2EExpandedInstances:
             root_type=None,
             expanded_instances=True,
         )
-        result = translate_to_avro_idl(annotated_schema, "com.example", strict=True)
+        result = translate_to_avro_protocol(annotated_schema, "com.example", strict=True)
 
         cabin_idl = result["Cabin"]
 

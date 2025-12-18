@@ -1102,7 +1102,7 @@ Field number changes break compatibility if you have:
 The Avro exporter group provides two commands for exporting GraphQL schemas to [Apache Avro](https://avro.apache.org/) formats:
 
 - **`s2dm export avro schema`**: Exports to Avro schema format (`.avsc`) using a selection query
-- **`s2dm export avro idl`**: Exports to Avro IDL format (`.avdl`) for types marked with the `@vspec(element: STRUCT)` directive
+- **`s2dm export avro protocol`**: Exports to Avro protocol format (`.avdl`) for types marked with the `@vspec(element: STRUCT)` directive
 
 #### Common Features
 
@@ -1228,14 +1228,14 @@ s2dm export avro schema --schema schema.graphql --selection-query query.graphql 
 }
 ```
 
-#### Avro IDL (`s2dm export avro idl`)
+#### Avro protocol (`s2dm export avro protocol`)
 
-This exporter generates Avro IDL protocol files (`.avdl`) for types marked with the `@vspec(element: STRUCT)` directive. Each type generates a separate protocol file containing the type and its dependencies.
+This exporter generates Avro protocol protocol files (`.avdl`) for types marked with the `@vspec(element: STRUCT)` directive. Each type generates a separate protocol file containing the type and its dependencies.
 
 ##### Usage
 
 ```bash
-s2dm export avro idl --schema schema.graphql --namespace com.example --output ./output-directory
+s2dm export avro protocol --schema schema.graphql --namespace com.example --output ./output-directory
 ```
 
 The command creates one `.avdl` file per struct type in the output directory.
@@ -1272,7 +1272,7 @@ type Query {
 }
 ```
 
-The IDL exporter generates `Vehicle.avdl`:
+The protocol exporter generates `Vehicle.avdl`:
 
 ```avro
 @namespace("com.example")
@@ -1290,7 +1290,7 @@ protocol Vehicle {
 Use the `--strict` flag to enforce strict type translation:
 
 ```bash
-s2dm export avro idl --schema schema.graphql --namespace com.example --output ./output-dir --strict
+s2dm export avro protocol --schema schema.graphql --namespace com.example --output ./output-dir --strict
 ```
 
 **Default behavior (without `--strict`):**
@@ -1386,7 +1386,7 @@ protocol Person {
 ##### Help
 
 ```bash
-s2dm export avro idl --help
+s2dm export avro protocol --help
 ```
 
 #### Type Mappings
@@ -1419,7 +1419,7 @@ GraphQL scalar types are mapped to Avro types (same for both exporters):
 - `[String]!` → `{"type": "array", "items": ["null", "string"]}`
 - `[String!]!` → `{"type": "array", "items": "string"}`
 
-**Avro IDL (`.avdl`):**
+**Avro protocol (`.avdl`):**
 
 Non-strict mode (default):
 
@@ -1443,7 +1443,7 @@ Strict mode:
 }
 ```
 
-**Avro IDL (`.avdl`):**
+**Avro protocol (`.avdl`):**
 
 Non-strict mode (default):
 
@@ -1465,7 +1465,7 @@ enum Status {
 - **Nullable fields** (`name: String`) → `["null", "string"]`
 - **Non-nullable fields** (`id: ID!`) → `"string"`
 
-**Avro IDL (`.avdl`):**
+**Avro protocol (`.avdl`):**
 
 Non-strict mode (default):
 
@@ -1514,7 +1514,7 @@ type Sensor @vspec(element: STRUCT) {
 }
 ```
 
-**Avro IDL (`.avdl`) produces:**
+**Avro protocol (`.avdl`) produces:**
 
 ```avro
 @namespace("com.example")
@@ -1537,7 +1537,7 @@ You can call the help for usage reference:
 
 ```bash
 s2dm export avro schema --help
-s2dm export avro idl --help
+s2dm export avro protocol --help
 ```
 
 ## Common Features

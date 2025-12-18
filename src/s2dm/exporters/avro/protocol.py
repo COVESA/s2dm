@@ -9,13 +9,13 @@ from s2dm.exporters.utils.directive import get_argument_content
 from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
 from s2dm.exporters.utils.schema_loader import get_referenced_types
 
-from .idl_transformer import AvroIDLTransformer
+from .protocol_transformer import AvroProtocolTransformer
 
 VSPEC_DIRECTIVE = "vspec"
 STRUCT_ELEMENT = "STRUCT"
 
 
-def _get_namespace_from_metadata(object_type: GraphQLObjectType, global_namespace: str) -> str:
+def get_namespace_from_metadata(object_type: GraphQLObjectType, global_namespace: str) -> str:
     """Extract namespace from @vspec metadata key-value pairs, fallback to global."""
     metadata = get_argument_content(object_type, VSPEC_DIRECTIVE, "metadata")
 
@@ -43,7 +43,7 @@ def _get_namespace_from_metadata(object_type: GraphQLObjectType, global_namespac
     return global_namespace
 
 
-def generate_idl_for_struct_types(
+def _generate_protocol_for_struct_types(
     annotated_schema: AnnotatedSchema,
     namespace: str,
     strict: bool = False,
@@ -70,36 +70,38 @@ def generate_idl_for_struct_types(
 
     log.info(f"Found {len(struct_types)} types with @{VSPEC_DIRECTIVE}(element: {STRUCT_ELEMENT}) directive")
 
-    idl_protocols: dict[str, str] = {}
+    protocols: dict[str, str] = {}
 
     for struct_type in struct_types:
         type_name = struct_type.name
         log.info(f"Generating IDL protocol for {type_name}")
 
-        type_namespace = _get_namespace_from_metadata(struct_type, namespace)
+        type_namespace = get_namespace_from_metadata(struct_type, namespace)
 
         referenced_types = get_referenced_types(schema, type_name, include_instance_tag_fields=False)
         referenced_named_types: set[GraphQLNamedType] = {
             cast(GraphQLNamedType, graphql_type) for graphql_type in referenced_types if is_named_type(graphql_type)
         }
 
-        transformer = AvroIDLTransformer(annotated_schema, type_namespace, type_name, referenced_named_types, strict)
-        idl_content = transformer.transform()
+        transformer = AvroProtocolTransformer(
+            annotated_schema, type_namespace, type_name, referenced_named_types, strict
+        )
+        content = transformer.transform()
 
-        idl_protocols[type_name] = idl_content
+        protocols[type_name] = content
 
-    log.info(f"Successfully generated {len(idl_protocols)} IDL protocols")
+    log.info(f"Successfully generated {len(protocols)} IDL protocols")
 
-    return idl_protocols
+    return protocols
 
 
-def translate_to_avro_idl(
+def translate_to_avro_protocol(
     annotated_schema: AnnotatedSchema,
     namespace: str,
     strict: bool = False,
 ) -> dict[str, str]:
     """
-    Translate a GraphQL schema to Avro IDL format for types with @vspec(element: STRUCT) directive.
+    Translate a GraphQL schema to Avro IDL protocol format for types with @vspec(element: STRUCT) directive.
 
     Args:
         annotated_schema: The annotated GraphQL schema object
@@ -109,4 +111,4 @@ def translate_to_avro_idl(
     Returns:
         dict[str, str]: Mapping of type names to their IDL protocol definitions
     """
-    return generate_idl_for_struct_types(annotated_schema, namespace, strict)
+    return _generate_protocol_for_struct_types(annotated_schema, namespace, strict)

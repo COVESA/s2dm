@@ -1,10 +1,10 @@
-"""Tests for the Avro IDL exporter."""
+"""Tests for the Avro protocol exporter."""
 
 import re
 
 from graphql import build_schema
 
-from s2dm.exporters.avro.idl import translate_to_avro_idl
+from s2dm.exporters.avro.protocol import translate_to_avro_protocol
 from s2dm.exporters.utils.schema_loader import process_schema
 
 
@@ -37,13 +37,13 @@ class TestBasicIDLGeneration:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
         assert len(result) == 1
         assert "Vehicle" in result
         assert "Person" not in result
 
-        idl = result["Vehicle"]
+        protocol = result["Vehicle"]
         assert re.search(
             r'@namespace\("com\.example"\).*?'
             r"protocol\s+Vehicle\s*\{.*?"
@@ -54,7 +54,7 @@ class TestBasicIDLGeneration:
             r"int\?\s+year;.*?"
             r"\}.*?"
             r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         )
 
@@ -87,10 +87,10 @@ class TestEnumInIDL:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Vehicle"]
-        assert "enum Status" not in idl, "Non-strict mode: enums should not be generated"
+        protocol = result["Vehicle"]
+        assert "enum Status" not in protocol, "Non-strict mode: enums should not be generated"
         assert re.search(
             r"protocol\s+Vehicle\s*\{.*?"
             r"record\s+Vehicle\s*\{.*?"
@@ -98,7 +98,7 @@ class TestEnumInIDL:
             r"string\?\s+status;.*?"
             r"\}.*?"
             r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Non-strict mode: all fields should be optional, status should be string"
 
@@ -130,18 +130,18 @@ class TestNestedTypesInIDL:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Person"]
-        assert re.search(r"protocol\s+Person\s*\{", idl), "Should have Person protocol"
+        protocol = result["Person"]
+        assert re.search(r"protocol\s+Person\s*\{", protocol), "Should have Person protocol"
         assert re.search(
             r"record\s+Person\s*\{.*?" r"string\?\s+name;.*?" r"Address\?\s+address;.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Person record should have name and address fields"
         assert re.search(
             r"record\s+Address\s*\{.*?" r"string\?\s+street;.*?" r"string\?\s+city;.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Address record should be inside protocol with street and city fields"
 
@@ -168,10 +168,10 @@ class TestArrayTypesInIDL:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Vehicle"]
-        assert re.search(r"array<string>\?\s+features;", idl)
+        protocol = result["Vehicle"]
+        assert re.search(r"array<string>\?\s+features;", protocol)
 
 
 class TestScalarTypes:
@@ -200,11 +200,11 @@ class TestScalarTypes:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Sensor"]
-        assert re.search(r"long\?\s+reading;", idl)
-        assert re.search(r"long\?\s+counter;", idl)
+        protocol = result["Sensor"]
+        assert re.search(r"long\?\s+reading;", protocol)
+        assert re.search(r"long\?\s+counter;", protocol)
 
 
 class TestRangeDirectiveInIDL:
@@ -231,10 +231,10 @@ class TestRangeDirectiveInIDL:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Vehicle"]
-        assert re.search(r"int\?\s+speed;", idl)
+        protocol = result["Vehicle"]
+        assert re.search(r"int\?\s+speed;", protocol)
 
     def test_range_requires_long(self) -> None:
         """Test that @range uses long when range exceeds 32-bit."""
@@ -257,10 +257,10 @@ class TestRangeDirectiveInIDL:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Vehicle"]
-        assert re.search(r"long\?\s+mileage;", idl)
+        protocol = result["Vehicle"]
+        assert re.search(r"long\?\s+mileage;", protocol)
 
 
 class TestUnionTypesInIDL:
@@ -297,28 +297,28 @@ class TestUnionTypesInIDL:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example")
+        result = translate_to_avro_protocol(annotated_schema, "com.example")
 
-        idl = result["Fleet"]
-        assert re.search(r"protocol\s+Fleet\s*\{", idl), "Should have Fleet protocol"
+        protocol = result["Fleet"]
+        assert re.search(r"protocol\s+Fleet\s*\{", protocol), "Should have Fleet protocol"
         assert re.search(
             r"record\s+Fleet\s*\{.*?" r"string\?\s+id;.*?" r"Vehicle\?\s+vehicle;.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Fleet record should have id and vehicle fields"
         assert re.search(
             r"record\s+Vehicle\s*\{.*?" r"union\s*\{.*?Car.*?Truck.*?\}\s+value;.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Vehicle record should have union field with Car and Truck"
         assert re.search(
             r"record\s+Car\s*\{.*?" r"string\?\s+id;.*?" r"int\?\s+doors;.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Car record should be inside protocol"
         assert re.search(
             r"record\s+Truck\s*\{.*?" r"string\?\s+id;.*?" r"double\?\s+payload;.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Truck record should be inside protocol"
 
@@ -352,12 +352,12 @@ class TestStrictMode:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example", strict=True)
+        result = translate_to_avro_protocol(annotated_schema, "com.example", strict=True)
 
-        idl = result["Vehicle"]
+        protocol = result["Vehicle"]
         assert re.search(
             r"protocol\s+Vehicle\s*\{.*?" r"enum\s+Status\s*\{.*?ACTIVE.*?INACTIVE.*?\}.*?" r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Strict mode: Status enum inside protocol"
 
@@ -370,7 +370,7 @@ class TestStrictMode:
             r"Status\?\s+status;.*?"
             r"\}.*?"
             r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Strict mode: Vehicle record inside protocol with correct fields and nullability"
 
@@ -402,10 +402,10 @@ class TestStrictMode:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.example", strict=False)
+        result = translate_to_avro_protocol(annotated_schema, "com.example", strict=False)
 
-        idl = result["Vehicle"]
-        assert "enum Status" not in idl, "Non-strict mode: enums should not be generated"
+        protocol = result["Vehicle"]
+        assert "enum Status" not in protocol, "Non-strict mode: enums should not be generated"
         assert re.search(
             r"protocol\s+Vehicle\s*\{.*?"
             r"record\s+Vehicle\s*\{.*?"
@@ -415,7 +415,7 @@ class TestStrictMode:
             r"string\?\s+status;.*?"
             r"\}.*?"
             r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Non-strict mode: all fields should be optional, status should be string"
 
@@ -447,9 +447,9 @@ class TestNamespaceHandling:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.default")
+        result = translate_to_avro_protocol(annotated_schema, "com.default")
 
-        idl = result["Vehicle"]
+        protocol = result["Vehicle"]
         assert re.search(
             r'@namespace\("com\.vehicle"\)\s*'
             r"protocol\s+Vehicle\s*\{.*?"
@@ -458,7 +458,7 @@ class TestNamespaceHandling:
             r"string\?\s+make;.*?"
             r"\}.*?"
             r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Should use namespace from @vspec metadata in correct protocol structure"
 
@@ -483,9 +483,9 @@ class TestNamespaceHandling:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.default")
+        result = translate_to_avro_protocol(annotated_schema, "com.default")
 
-        idl = result["Vehicle"]
+        protocol = result["Vehicle"]
         assert re.search(
             r'@namespace\("com\.default"\)\s*'
             r"protocol\s+Vehicle\s*\{.*?"
@@ -494,7 +494,7 @@ class TestNamespaceHandling:
             r"string\?\s+make;.*?"
             r"\}.*?"
             r"\}",
-            idl,
+            protocol,
             re.DOTALL,
         ), "Should use global namespace when no namespace argument in correct protocol structure"
 
@@ -529,10 +529,10 @@ class TestNamespaceHandling:
         graphql_schema = build_schema(schema_str)
         annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
 
-        result = translate_to_avro_idl(annotated_schema, "com.default")
+        result = translate_to_avro_protocol(annotated_schema, "com.default")
 
-        vehicle_idl = result["Vehicle"]
-        person_idl = result["Person"]
+        vehicle_protocol = result["Vehicle"]
+        person_protocol = result["Person"]
 
         assert re.search(
             r'@namespace\("com\.vehicle"\)\s*'
@@ -542,7 +542,7 @@ class TestNamespaceHandling:
             r"string\?\s+make;.*?"
             r"\}.*?"
             r"\}",
-            vehicle_idl,
+            vehicle_protocol,
             re.DOTALL,
         ), "Vehicle should use custom namespace in correct protocol structure"
 
@@ -553,6 +553,6 @@ class TestNamespaceHandling:
             r"string\?\s+name;.*?"
             r"\}.*?"
             r"\}",
-            person_idl,
+            person_protocol,
             re.DOTALL,
         ), "Person should use global namespace in correct protocol structure"

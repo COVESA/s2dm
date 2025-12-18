@@ -25,9 +25,9 @@ from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from .common import get_avro_scalar_type
 
 
-class AvroIDLTransformer:
+class AvroProtocolTransformer:
     """
-    Transformer class to convert GraphQL schema to Avro IDL format.
+    Transformer class to convert GraphQL schema to Avro protocol format.
     """
 
     def __init__(
@@ -111,13 +111,13 @@ class AvroIDLTransformer:
         if is_required:
             field_type = cast(GraphQLNonNull[GraphQLNullableType], field_type).of_type
 
-        avro_type = self._get_avro_idl_type(field_type, field)
+        avro_type = self._get_avro_type(field_type, field)
 
         if self.strict and is_required:
             return avro_type
         return f"{avro_type}?"
 
-    def _get_avro_idl_type(self, field_type: GraphQLType, field: GraphQLField | None = None) -> str:
+    def _get_avro_type(self, field_type: GraphQLType, field: GraphQLField | None = None) -> str:
         """Get Avro IDL type for a GraphQL field type."""
         if is_list_type(field_type):
             list_type = cast(GraphQLList[GraphQLType], field_type)
@@ -126,7 +126,7 @@ class AvroIDLTransformer:
             if is_non_null_type(element_type):
                 element_type = cast(GraphQLNonNull[GraphQLNullableType], element_type).of_type
 
-            element_type_str = self._get_avro_idl_type(element_type)
+            element_type_str = self._get_avro_type(element_type)
             return f"array<{element_type_str}>"
 
         if is_scalar_type(field_type):
@@ -141,5 +141,5 @@ class AvroIDLTransformer:
             named_type = cast(GraphQLNamedType, field_type)
             return named_type.name
 
-        log.warning(f"Unsupported GraphQL type '{field_type}' for Avro IDL conversion, using string")
+        log.warning(f"Unsupported GraphQL type '{field_type}' for Avro IDL protocol conversion, using string")
         return "string"
