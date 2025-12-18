@@ -16,7 +16,6 @@ from hypothesis.strategies import composite
 
 from s2dm.exporters.utils.extraction import get_all_named_types
 from s2dm.exporters.utils.schema_loader import ensure_query
-from s2dm.idgen.models import IDGenerationSpec
 from s2dm.units.sync import UnitRow, _uri_to_enum_symbol
 
 SCALAR_TYPES = ["String", "Int", "Float", "Boolean"]
@@ -137,17 +136,6 @@ class MockFieldData:
         if self.is_enum_field:
             return f"{self.name}: {self.enum_name}"
         return f"{self.name}(unit: {self.unit_enum_name} = {self.unit_default_value}): {self.data_type}"
-
-    def expected_id_spec(self) -> IDGenerationSpec:
-        sorted_allowed = sorted(self.allowed.copy())
-        return IDGenerationSpec(
-            name=f"{self.parent_name}.{self.name}",
-            data_type=self.data_type.lower(),
-            unit=self.unit_default_value,
-            allowed=str(sorted_allowed or ""),
-            minimum=self.minimum,
-            maximum=self.maximum,
-        )
 
 
 @composite
@@ -292,3 +280,23 @@ def create_test_unit_row(
         symbol=symbol,
         ucum_code=ucum or unit_segment.lower(),
     )
+
+
+# Fixtures for ID Exporter tests
+@pytest.fixture
+def temp_output_paths(tmp_path: Path) -> dict[str, Path]:
+    """Provide standard output paths for ID exporter tests."""
+    return {
+        "ids": tmp_path / "ids.json",
+        "previous_ids": tmp_path / "previous_ids.json",
+    }
+
+
+@pytest.fixture
+def schema_builder() -> Callable[[str], GraphQLSchema]:
+    """Helper to build schemas consistently."""
+
+    def _build(schema_str: str) -> GraphQLSchema:
+        return ensure_query(build_schema(schema_str))
+
+    return _build

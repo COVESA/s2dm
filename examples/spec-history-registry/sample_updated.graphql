@@ -42,7 +42,7 @@ type Vehicle_ADAS {
   obstacleDetection_s: [Vehicle_ADAS_ObstacleDetection]
 }
 
-"""Antilock Braking System signals."""
+"""Antilock Breaking System (ABS) signals."""
 type Vehicle_ADAS_ABS {
   isEngaged: Boolean
   isError: Boolean
@@ -52,7 +52,7 @@ type Vehicle_ADAS_ABS {
 """Signals form Obstacle Sensor System."""
 type Vehicle_ADAS_ObstacleDetection {
   id: ID!
-  distance(unit: LengthUnitEnum = M): Int
+  distance(unit: LengthUnitEnum = CENTIM): Int @range(min: 0, max: 10000)
   isEnabled: Boolean
   warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
 }

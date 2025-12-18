@@ -128,6 +128,35 @@ class S2DMLogger(logging.Logger):
         else:
             self.print(f"{prefix} {text}")
 
+    def format_error_with_stderr(self, base_error_msg: str, stderr: str | None) -> str:
+        """Format and log error message with stderr preview if available.
+
+        Logs full stderr at debug level, formats the error message with a truncated
+        stderr preview, logs it at error level, and returns it for use in exceptions.
+        Useful for formatting subprocess errors where stderr contains diagnostic information.
+
+        Args:
+            base_error_msg: Base error message
+            stderr: stderr output from subprocess (optional)
+
+        Returns:
+            Formatted error message with stderr preview appended if available
+        """
+        if not stderr:
+            error_msg = base_error_msg
+        else:
+            # Log full stderr at debug level, include summary in error
+            self.debug(f"Full stderr output: {stderr}")
+            # Truncate only if very long (for readability in error message)
+            if len(stderr) <= 500:
+                stderr_preview = stderr
+            else:
+                stderr_preview = f"{stderr[:500]}... (truncated, see debug log for full output)"
+            error_msg = f"{base_error_msg}\n{stderr_preview}"
+
+        self.error(error_msg)
+        return error_msg
+
 
 def get_logger(name: str = "s2dm") -> S2DMLogger:
     """
