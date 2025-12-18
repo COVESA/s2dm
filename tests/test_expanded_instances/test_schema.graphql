@@ -1,3 +1,5 @@
+directive @vspec(element: VspecElement!) on OBJECT
+
 enum RowEnum {
   ROW1
   ROW2
@@ -19,7 +21,11 @@ type Door {
   instanceTag: DoorPosition
 }
 
-type Vehicle {
+enum VspecElement {
+  STRUCT
+}
+
+type Vehicle @vspec(element: STRUCT) {
   doors: [Door] @noDuplicates
   model: String
   year: Int
@@ -49,7 +55,7 @@ type Seat {
   instanceTag: SeatPosition
 }
 
-type Cabin {
+type Cabin @vspec(element: STRUCT) {
   seats: [Seat] @noDuplicates
   doors: [Door] @noDuplicates
   temperature: Float @range(min: -100, max: 100)

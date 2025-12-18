@@ -11,7 +11,7 @@ from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
-from s2dm.exporters.avro import translate_to_avro
+from s2dm.exporters.avro import translate_to_avro, translate_to_avro_idl
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.protobuf import translate_to_protobuf
@@ -141,6 +141,24 @@ expanded_instances_option = click.option(
     is_flag=True,
     default=False,
     help="Expand instance tags into nested structure instead of arrays/repeated fields",
+)
+
+
+strict_option = click.option(
+    "--strict",
+    "-S",
+    is_flag=True,
+    default=False,
+    help="Enforce strict type translation from GraphQL schema",
+)
+
+
+avro_namespace_option = click.option(
+    "--namespace",
+    "-ns",
+    type=str,
+    required=True,
+    help="Avro namespace for types",
 )
 
 
@@ -518,13 +536,7 @@ def vspec(
 @output_option
 @root_type_option
 @naming_config_option
-@click.option(
-    "--strict",
-    "-S",
-    is_flag=True,
-    default=False,
-    help="Enforce strict field nullability translation from GraphQL to JSON Schema",
-)
+@strict_option
 @expanded_instances_option
 def jsonschema(
     schemas: list[Path],
@@ -551,21 +563,21 @@ def jsonschema(
 
 # Export -> avro
 # ----------
-@export.command
+@click.group()
+def avro() -> None:
+    """Apache Avro export commands."""
+    pass
+
+
+@avro.command
 @schema_option
 @selection_query_option(required=True)
 @output_option
 @root_type_option
 @naming_config_option
-@click.option(
-    "--namespace",
-    "-ns",
-    type=str,
-    required=True,
-    help="Avro namespace for types (required, e.g., com.example)",
-)
+@avro_namespace_option
 @expanded_instances_option
-def avro(
+def schema(
     schemas: list[Path],
     selection_query: Path,
     output: Path,
@@ -586,6 +598,52 @@ def avro(
 
     result = translate_to_avro(annotated_schema, namespace, cast(DocumentNode, query_document))
     _ = output.write_text(result)
+
+
+@avro.command
+@schema_option
+@selection_query_option(required=False)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output directory for .avdl files",
+)
+@root_type_option
+@naming_config_option
+@avro_namespace_option
+@expanded_instances_option
+@strict_option
+def idl(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    namespace: str,
+    expanded_instances: bool,
+    strict: bool,
+) -> None:
+    """Generate Avro IDL protocols for types marked with @struct directive."""
+    annotated_schema, _, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+    assert_correct_schema(annotated_schema.schema)
+
+    idl_protocols = translate_to_avro_idl(annotated_schema, namespace, strict)
+
+    output.mkdir(parents=True, exist_ok=True)
+
+    for type_name, idl_content in idl_protocols.items():
+        output_file = output / f"{type_name}.avdl"
+        _ = output_file.write_text(idl_content)
+
+    log.info(f"Generated {len(idl_protocols)} IDL protocol(s) in {output}")
 
 
 # Export -> protobuf
@@ -1242,7 +1300,7 @@ cli.add_command(check)
 cli.add_command(compose)
 cli.add_command(diff)
 
-
+export.add_command(avro)
 cli.add_command(export)
 cli.add_command(generate)
 cli.add_command(registry)

@@ -22,26 +22,9 @@ from graphql import (
 
 from s2dm import log
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
-from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 from s2dm.exporters.utils.extraction import get_all_named_types, get_query_operation_name
 
-INT32_MIN = -(2**31)
-INT32_MAX = 2**31 - 1
-
-GRAPHQL_SCALAR_TO_AVRO = {
-    "String": "string",
-    "Int": "int",
-    "Float": "double",
-    "Boolean": "boolean",
-    "ID": "string",
-    "Int8": "int",
-    "UInt8": "int",
-    "Int16": "int",
-    "UInt16": "int",
-    "UInt32": "long",
-    "Int64": "long",
-    "UInt64": "long",
-}
+from .common import get_avro_scalar_type
 
 
 class AvroTransformer:
@@ -230,20 +213,7 @@ class AvroTransformer:
 
         if is_scalar_type(field_type):
             scalar_type = cast(GraphQLScalarType, field_type)
-            base_type = GRAPHQL_SCALAR_TO_AVRO.get(scalar_type.name, "string")
-
-            if field and base_type in ("int", "long") and has_given_directive(field, "range"):
-                range_args = get_directive_arguments(field, "range")
-
-                for key in ("min", "max"):
-                    if key in range_args:
-                        val = range_args[key]
-                        if val < INT32_MIN or val > INT32_MAX:
-                            return "long"
-
-                return "int"
-
-            return base_type
+            return get_avro_scalar_type(scalar_type, field)
 
         if is_enum_type(field_type):
             enum_type = cast(GraphQLEnumType, field_type)

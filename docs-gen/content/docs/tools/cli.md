@@ -1099,17 +1099,35 @@ Field number changes break compatibility if you have:
 
 ### Apache Avro
 
-This exporter translates the given GraphQL schema to [Apache Avro](https://avro.apache.org/) schema format.
+The Avro exporter group provides two commands for exporting GraphQL schemas to [Apache Avro](https://avro.apache.org/) formats:
 
-#### Key Features
+- **`s2dm export avro schema`**: Exports to Avro schema format (`.avsc`) using a selection query
+- **`s2dm export avro idl`**: Exports to Avro IDL format (`.avdl`) for types marked with the `@vspec(element: STRUCT)` directive
+
+#### Common Features
+
+Both exporters share the following features:
 
 - **Complete GraphQL Type Support**: Handles all GraphQL types including scalars, objects, enums, unions, interfaces, and lists
-- **Selection Query (Required)**: Use the `--selection-query` flag to specify which types and fields to export via a GraphQL query
 - **Type Optimization**: Automatically optimizes integer types based on `@range` directive constraints
 - **Namespace Support**: Use the `--namespace` flag to specify an Avro namespace for type references
 - **Expanded Instance Tags**: Use the `--expanded-instances` flag to transform instance tag arrays into nested record structures
 
-#### Example Transformation
+#### Avro Schema (`s2dm export avro schema`)
+
+This exporter translates the given GraphQL schema to Avro schema format.
+
+##### Selection Query (Required)
+
+The Avro schema exporter requires a selection query to determine which types and fields to export:
+
+```bash
+s2dm export avro schema --schema schema.graphql --selection-query query.graphql --namespace com.example --output schema.avsc
+```
+
+See the [Selection Query Filtering](#selection-query-filtering) section for details on how selection queries work.
+
+##### Example Transformation
 
 Consider the following GraphQL schema and selection query:
 
@@ -1150,10 +1168,10 @@ query VehicleData {
 }
 ```
 
-The Avro exporter produces:
+The Avro schema exporter produces:
 
 ```bash
-s2dm export avro --schema schema.graphql --selection-query query.graphql --namespace com.example --output vehicle.avsc
+s2dm export avro schema --schema schema.graphql --selection-query query.graphql --namespace com.example --output vehicle.avsc
 ```
 
 ```json
@@ -1210,22 +1228,175 @@ s2dm export avro --schema schema.graphql --selection-query query.graphql --names
 }
 ```
 
-#### Selection Query (Required)
+#### Avro IDL (`s2dm export avro idl`)
 
-The Avro exporter requires a selection query to determine which types and fields to export:
+This exporter generates Avro IDL protocol files (`.avdl`) for types marked with the `@vspec(element: STRUCT)` directive. Each type generates a separate protocol file containing the type and its dependencies.
+
+##### Usage
 
 ```bash
-s2dm export avro --schema schema.graphql --selection-query query.graphql --namespace com.example --output schema.avsc
+s2dm export avro idl --schema schema.graphql --namespace com.example --output ./output-directory
 ```
 
-See the [Selection Query Filtering](#selection-query-filtering) section for details on how selection queries work.
+The command creates one `.avdl` file per struct type in the output directory.
+
+##### Example
+
+Given a GraphQL schema:
+
+```graphql
+directive @vspec(element: VspecElement!) on OBJECT
+
+enum VspecElement {
+  STRUCT
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+type Vehicle @vspec(element: STRUCT) {
+  id: ID!
+  make: String!
+  status: Status
+}
+
+type Person {
+  name: String
+}
+
+type Query {
+  vehicle: Vehicle
+  person: Person
+}
+```
+
+The IDL exporter generates `Vehicle.avdl`:
+
+```avro
+@namespace("com.example")
+protocol Vehicle {
+  record Vehicle {
+    string? id;
+    string? make;
+    string? status;
+  }
+}
+```
+
+##### Strict Mode
+
+Use the `--strict` flag to enforce strict type translation:
+
+```bash
+s2dm export avro idl --schema schema.graphql --namespace com.example --output ./output-dir --strict
+```
+
+**Default behavior (without `--strict`):**
+
+- Enum types are mapped to `string?`
+- All fields are optional (use `?` suffix)
+- Enum definitions are not included in the protocol
+
+**Strict mode (with `--strict`):**
+
+- Enum types are mapped to actual Avro enum types
+- Nullability is enforced from GraphQL schema (non-null fields without `?`)
+- Enum definitions are included in the protocol
+
+Example with strict mode:
+
+```graphql
+type Vehicle @vspec(element: STRUCT) {
+  id: ID!
+  status: Status
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+```
+
+Generates:
+
+```avro
+@namespace("com.example")
+protocol Vehicle {
+  enum Status { ACTIVE, INACTIVE }
+  record Vehicle {
+    string id;
+    Status? status;
+  }
+}
+```
+
+##### Per-Type Namespaces
+
+After the tools collects types mapped with the `@vspec` directive, it scans the directive annotation for an optional `metadata` parameter, which you can utilize to specify a custom namespace for individual types using a key-value pair. If not provided, the global namespace from the `--namespace` flag is used.
+
+```graphql
+directive @vspec(element: VspecElement!, metadata: [KeyValue]) on OBJECT
+
+input KeyValue {
+  key: String!
+  value: String!
+}
+
+enum VspecElement {
+  STRUCT
+}
+
+type Vehicle @vspec(element: STRUCT, metadata: [{key: "namespace", value: "com.vehicle"}]) {
+  id: ID!
+  make: String!
+}
+
+type Person @vspec(element: STRUCT) {
+  name: String!
+}
+```
+
+Generates:
+
+**Vehicle.avdl:**
+
+```avro
+@namespace("com.vehicle")
+protocol Vehicle {
+  record Vehicle {
+    string? id;
+    string? make;
+  }
+}
+```
+
+**Person.avdl:**
+
+```avro
+@namespace("com.example")
+protocol Person {
+  record Person {
+    string? name;
+  }
+}
+```
+
+##### Help
+
+```bash
+s2dm export avro idl --help
+```
 
 #### Type Mappings
 
-GraphQL types are mapped to Avro types as follows:
+##### Scalar Types
+
+GraphQL scalar types are mapped to Avro types (same for both exporters):
 
 | GraphQL Type | Avro Type |
-|--------------|-----------|
+| -------------- | ----------- |
 | `String` | `string` |
 | `Int` | `int` |
 | `Float` | `double` |
@@ -1239,12 +1410,29 @@ GraphQL types are mapped to Avro types as follows:
 | `Int64` | `long` |
 | `UInt64` | `long` |
 
-**List types** are converted to Avro arrays:
+##### List Types
+
+**Avro Schema (`.avsc`):**
 
 - `[String]` → `{"type": "array", "items": ["null", "string"]}`
+- `[String!]` → `{"type": "array", "items": "string"}`
+- `[String]!` → `{"type": "array", "items": ["null", "string"]}`
 - `[String!]!` → `{"type": "array", "items": "string"}`
 
-**Enums** are converted to Avro enums:
+**Avro IDL (`.avdl`):**
+
+Non-strict mode (default):
+
+- All list fields → `array<type>?`
+
+Strict mode:
+
+- `[String]` (nullable list) → `array<string>?`
+- `[String]!` (non-null list) → `array<string>`
+
+##### Enum Types
+
+**Avro Schema (`.avsc`):**
 
 ```json
 {
@@ -1255,27 +1443,58 @@ GraphQL types are mapped to Avro types as follows:
 }
 ```
 
-**Field Nullability:**
+**Avro IDL (`.avdl`):**
 
-GraphQL field nullability is preserved in Avro using union types with `null`:
+Non-strict mode (default):
 
-- **Nullable fields** (e.g., `name: String`) → `["null", "string"]`
-- **Non-nullable fields** (e.g., `id: ID!`) → `"string"`
+- Enums are mapped to `string` type
 
-#### Range Directive Optimization
+Strict mode:
 
-The `@range` directive automatically optimizes integer type selection between `int` (32-bit) and `long` (64-bit):
+```avro
+enum Status {
+  ACTIVE,
+  INACTIVE
+}
+```
+
+##### Field Nullability
+
+**Avro Schema (`.avsc`):**
+
+- **Nullable fields** (`name: String`) → `["null", "string"]`
+- **Non-nullable fields** (`id: ID!`) → `"string"`
+
+**Avro IDL (`.avdl`):**
+
+Non-strict mode (default):
+
+- All fields → `string?` (always optional)
+
+Strict mode:
+
+- **Nullable fields** (`name: String`) → `string?`
+- **Non-nullable fields** (`id: ID!`) → `string`
+
+##### Range Directive Optimization
+
+The `@range` directive automatically optimizes integer type selection between `int` and `long` for both exporters:
 
 ```graphql
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
+directive @vspec(element: VspecElement!) on OBJECT
 
-type Sensor {
+enum VspecElement {
+  STRUCT
+}
+
+type Sensor @vspec(element: STRUCT) {
   temperature: Int64 @range(min: -40, max: 150)
   mileage: Int @range(min: 0, max: 5000000000)
 }
 ```
 
-Produces:
+**Avro Schema (`.avsc`) produces:**
 
 ```json
 {
@@ -1295,6 +1514,18 @@ Produces:
 }
 ```
 
+**Avro IDL (`.avdl`) produces:**
+
+```avro
+@namespace("com.example")
+protocol Sensor {
+  record Sensor {
+    int? temperature;
+    long? mileage;
+  }
+}
+```
+
 **Optimization rules:**
 
 - If all specified range bounds fit in 32-bit signed range (-2³¹ to 2³¹-1), use `int`
@@ -1305,7 +1536,8 @@ Produces:
 You can call the help for usage reference:
 
 ```bash
-s2dm export avro --help
+s2dm export avro schema --help
+s2dm export avro idl --help
 ```
 
 ## Common Features
