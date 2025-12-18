@@ -51,7 +51,7 @@ type Vehicle_ADAS_ABS {
 """Signals form Obstacle Sensor System."""
 type Vehicle_ADAS_ObstacleDetection {
   id: ID!
-  distance(unit: LengthUnitEnum = M): Float
+  distance(unit: LengthUnitEnum = M): Float @range(min: 0, max: 100)
   isEnabled: Boolean
   warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
 }

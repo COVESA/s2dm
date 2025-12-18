@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from s2dm.exporters.skos import SKOSConcept
-from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SKOSSearchService
+from s2dm.registry.search import NO_LIMIT_KEYWORDS, SKOSSearchService
 
 
 @pytest.fixture
@@ -213,14 +213,14 @@ class TestSKOSSearchService:
 
         # Test count query error
         with (
-            patch("s2dm.tools.skos_search.prepareQuery", side_effect=Exception("SPARQL error")),
+            patch("s2dm.registry.search.prepareQuery", side_effect=Exception("SPARQL error")),
             pytest.raises(ValueError, match="Count query execution failed"),
         ):
             search_service.count_keyword_matches("test")
 
         # Test search query preparation error
         with (
-            patch("s2dm.tools.skos_search.prepareQuery", side_effect=Exception("SPARQL prep error")),
+            patch("s2dm.registry.search.prepareQuery", side_effect=Exception("SPARQL prep error")),
             pytest.raises(ValueError, match="Invalid SPARQL query template"),
         ):
             search_service.search_keyword("test")
