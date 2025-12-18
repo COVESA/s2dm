@@ -11,7 +11,7 @@ from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
-from s2dm.exporters.avro import translate_to_avro, translate_to_avro_protocol
+from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.protobuf import translate_to_protobuf
@@ -596,7 +596,7 @@ def schema(
     )
     assert_correct_schema(annotated_schema.schema)
 
-    result = translate_to_avro(annotated_schema, namespace, cast(DocumentNode, query_document))
+    result = translate_to_avro_schema(annotated_schema, namespace, cast(DocumentNode, query_document))
     _ = output.write_text(result)
 
 

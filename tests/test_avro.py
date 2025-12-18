@@ -5,7 +5,7 @@ import json
 from avro.schema import parse as parse_avro_schema
 from graphql import build_schema, parse
 
-from s2dm.exporters.avro.avro import transform
+from s2dm.exporters.avro.schema import transform
 from s2dm.exporters.utils.schema_loader import process_schema
 
 

@@ -7,7 +7,7 @@ from typing import cast
 import pytest
 from graphql import DocumentNode
 
-from s2dm.exporters.avro import translate_to_avro
+from s2dm.exporters.avro import translate_to_avro_schema
 from s2dm.exporters.utils.schema_loader import load_and_process_schema
 
 
@@ -30,7 +30,7 @@ class TestAvroE2EExpandedInstances:
             root_type=root_type,
             expanded_instances=False,
         )
-        result = translate_to_avro(annotated_schema, "com.example", cast(DocumentNode, selection_query))
+        result = translate_to_avro_schema(annotated_schema, "com.example", cast(DocumentNode, selection_query))
         result_dict = json.loads(result)
 
         assert result_dict["name"] == "Selection"
@@ -90,7 +90,7 @@ class TestAvroE2EExpandedInstances:
             root_type=root_type,
             expanded_instances=True,
         )
-        result = translate_to_avro(annotated_schema, "com.example", cast(DocumentNode, selection_query))
+        result = translate_to_avro_schema(annotated_schema, "com.example", cast(DocumentNode, selection_query))
         result_dict = json.loads(result)
 
         assert result_dict["name"] == "Selection"
@@ -218,7 +218,7 @@ class TestAvroE2EExpandedInstances:
             root_type=root_type,
             expanded_instances=True,
         )
-        result = translate_to_avro(annotated_schema, "com.example", cast(DocumentNode, selection_query))
+        result = translate_to_avro_schema(annotated_schema, "com.example", cast(DocumentNode, selection_query))
         result_dict = json.loads(result)
 
         assert result_dict["name"] == "Selection"
