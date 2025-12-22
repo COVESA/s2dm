@@ -1,11 +1,113 @@
+"""GraphQL Inspector Python wrapper.
+
+This module provides a Python interface to the @graphql-inspector/cli Node.js tool
+for GraphQL schema analysis, validation, and comparison.
+
+The decorator pattern automatically locates the GraphQL Inspector installation and injects
+it to CLI commands, eliminating the need for global state or repeated lookups.
+
+Example:
+    @requires_graphql_inspector
+    def my_command(..., inspector_path: Path | None = None) -> None:
+        inspector = GraphQLInspector(schema_path, node_modules_path=inspector_path)
+        result = inspector.diff(other_schema)
+"""
+
 import json
+import shutil
 import subprocess
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
 from s2dm import log
 from s2dm.tools.diff_parser import DiffChange, parse_diff_output
+
+
+def locate_graphql_inspector(start_path: Path | None = None) -> Path | None:
+    """Locate the GraphQL Inspector installation by finding the node_modules directory.
+
+    Searches upward from the start path for a node_modules directory containing
+    the graphql-inspector CLI and its dependencies.
+
+    Args:
+        start_path: Path to start searching from (defaults to current working directory)
+
+    Returns:
+        Path to node_modules directory where graphql-inspector is installed, or None if not found
+    """
+    if start_path is None:
+        start_path = Path.cwd()
+
+    current = start_path.resolve()
+
+    # Walk up the directory tree looking for node_modules
+    for parent in [current, *current.parents]:
+        node_modules = parent / "node_modules"
+        if node_modules.exists() and node_modules.is_dir():
+            return node_modules
+
+    return None
+
+
+def requires_graphql_inspector(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator that injects inspector_path parameter for commands requiring GraphQL Inspector.
+
+    This decorator:
+    - Locates the graphql-inspector installation (node_modules directory)
+    - Injects it as 'inspector_path' parameter to the wrapped function
+    - Should be applied to CLI commands that need graphql-inspector tooling
+
+    The wrapped function must accept an 'inspector_path: Path | None' parameter.
+    """
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        # Locate graphql-inspector and inject the path into kwargs
+        inspector_path = locate_graphql_inspector()
+        kwargs["inspector_path"] = inspector_path
+        return func(*args, **kwargs)
+
+    # Preserve the original function's metadata for click
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    return wrapper
+
+
+def _check_node_dependencies(node_modules_path: Path) -> bool:
+    """Check if required Node.js dependencies are installed by attempting to require them.
+
+    This is more reliable than checking file existence as it verifies the actual
+    runtime environment and catches issues like broken installations.
+
+    Args:
+        node_modules_path: Path to the node_modules directory
+
+    Returns:
+        True if all required dependencies can be loaded, False otherwise
+    """
+
+    # Check if node is available
+    if not shutil.which("node"):
+        return False
+
+    # Try to require the modules to verify they're installed and accessible
+    # Run from node_modules parent to ensure node_modules can be resolved
+    try:
+        result = subprocess.run(
+            [
+                "node",
+                "-e",
+                "require('@graphql-inspector/core'); require('graphql');",
+            ],
+            cwd=str(node_modules_path.parent),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return False
 
 
 class InspectorCommands(Enum):
@@ -35,8 +137,48 @@ class InspectorOutput:
 
 
 class GraphQLInspector:
-    def __init__(self, schema_path: Path) -> None:
+    def __init__(self, schema_path: Path, node_modules_path: Path | None = None) -> None:
+        """Initialize GraphQL Inspector.
+
+        Args:
+            schema_path: Path to the GraphQL schema file
+            node_modules_path: Path to node_modules directory (for finding local binaries).
+                              Optional - if None, will only use globally installed CLI.
+
+        Raises:
+            RuntimeError: If graphql-inspector CLI is not found
+        """
         self.schema_path = schema_path
+        self.node_modules_path = node_modules_path
+
+        # Resolve CLI path once during initialization
+        self.cli_cmd = self._resolve_cli_path()
+
+    def _resolve_cli_path(self) -> str:
+        """Resolve the graphql-inspector CLI path.
+
+        Returns:
+            Path to the graphql-inspector CLI command
+
+        Raises:
+            RuntimeError: If graphql-inspector CLI is not found
+        """
+        # Try local installation first if node_modules_path is provided
+        if self.node_modules_path:
+            local_cli_path = self.node_modules_path / ".bin" / "graphql-inspector"
+            if local_cli_path.exists():
+                return str(local_cli_path)
+
+        # Fall back to global installation
+        if shutil.which("graphql-inspector"):
+            return "graphql-inspector"
+
+        # Not found - provide helpful error message
+        raise RuntimeError(
+            "graphql-inspector CLI not found. Please run 'npm install' in the project root "
+            "to install @graphql-inspector/cli, or install it globally with "
+            "'npm install -g @graphql-inspector/cli'."
+        )
 
     def _run_command(
         self: "GraphQLInspector",
@@ -44,11 +186,21 @@ class GraphQLInspector:
         *args: Any,
         **kwargs: Any,
     ) -> InspectorOutput:
-        """Execute command with comprehensive logging and improved error handling"""
+        """Execute command with comprehensive logging and improved error handling.
+
+        Args:
+            command: The inspector command to run
+            *args: Additional command arguments
+            **kwargs: Additional subprocess arguments
+
+        Returns:
+            InspectorOutput containing command results
+        """
+        # Build command using the pre-resolved CLI path
         if command in [InspectorCommands.DIFF, InspectorCommands.INTROSPECT, InspectorCommands.SIMILAR]:
-            cmd = ["graphql-inspector", command.value, str(self.schema_path)] + [str(a) for a in args]
+            cmd = [self.cli_cmd, command.value, str(self.schema_path)] + [str(a) for a in args]
         elif command == InspectorCommands.VALIDATE:
-            cmd = ["graphql-inspector", command.value] + [str(a) for a in args] + [str(self.schema_path)]
+            cmd = [self.cli_cmd, command.value] + [str(a) for a in args] + [str(self.schema_path)]
         else:
             raise ValueError(f"Unknown command: {command.value}")
 
@@ -109,8 +261,11 @@ class GraphQLInspector:
     def diff_structured(self, other_schema: Path) -> list[DiffChange]:
         """Compare schemas using custom Node.js script and return structured diff changes.
 
-        This method uses the custom graphql_inspector_diff.js script to get
-        structured JSON output instead of text output from the CLI.
+        This method uses a custom Node.js script that directly requires the npm packages
+        (@graphql-inspector/core and graphql) to get structured JSON output.
+
+        Note: Unlike other methods that use the CLI binary, this requires the actual npm
+        packages to be installed locally.
 
         Args:
             other_schema: Path to the schema to compare against
@@ -119,8 +274,23 @@ class GraphQLInspector:
             List of DiffChange instances with structured diff information
 
         Raises:
-            RuntimeError: If the Node.js script fails or returns invalid output
+            RuntimeError: If node_modules_path wasn't provided, npm packages aren't installed,
+                         or the Node.js script fails
         """
+        # Ensure node_modules_path was provided (required for npm package resolution)
+        if not self.node_modules_path:
+            raise RuntimeError(
+                "diff_structured requires node_modules_path. Please ensure npm packages are installed "
+                "in the project root and provide the path during initialization."
+            )
+
+        # Verify the npm packages are installed (not just the CLI binary)
+        if not _check_node_dependencies(self.node_modules_path):
+            raise RuntimeError(
+                "Required npm packages (@graphql-inspector/core, graphql) not found. "
+                "Please run 'npm install' in the project root."
+            )
+
         # Find the Node.js script relative to this file
         script_dir = Path(__file__).parent
         node_script_path = script_dir / "graphql_inspector_diff.js"
@@ -136,18 +306,15 @@ class GraphQLInspector:
             str(other_schema.absolute()),
         ]
 
-        # Find project root (go up from src/s2dm/tools to project root)
-        project_root = script_dir.parent.parent.parent
-
         log.info(f"Running structured diff: {' '.join(node_cmd)}")
 
-        # Run from project root to ensure node_modules can be found
+        # Run from node_modules parent to ensure node_modules can be found
         result = subprocess.run(
             node_cmd,
             capture_output=True,
             text=True,
             check=False,  # Don't raise exception for non-zero exit codes
-            cwd=str(project_root),  # Run from project root for module resolution
+            cwd=str(self.node_modules_path.parent),  # Run from node_modules parent for module resolution
         )
 
         # Exit code 1 is OK - it means breaking changes were detected
