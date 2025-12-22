@@ -126,15 +126,14 @@ runs:
         uv sync --frozen
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: "20"
 
-    - name: Install GraphQL Inspector dependencies
+    - name: Install Node.js dependencies
       working-directory: ${{ inputs.s2dm-path }}
       shell: bash
-      run: |
-        npm install @graphql-inspector/core graphql
+      run: npm install
 
     - name: Activate venv
       shell: bash

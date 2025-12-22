@@ -42,7 +42,7 @@ from s2dm.registry.concept_uris import create_concept_uri_model
 from s2dm.registry.search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.diff_parser import DiffChange
-from s2dm.tools.graphql_inspector import GraphQLInspector
+from s2dm.tools.graphql_inspector import GraphQLInspector, requires_graphql_inspector
 from s2dm.tools.validators import validate_language_tag
 from s2dm.units.sync import (
     UNITS_META_FILENAME,
@@ -796,7 +796,10 @@ def skos_skeleton(
     default=False,
     help="Output the version bump type for pipeline usage",
 )
-def version_bump(schemas: list[Path], previous: list[Path], output_type: bool) -> None:
+@requires_graphql_inspector
+def version_bump(
+    schemas: list[Path], previous: list[Path], output_type: bool, inspector_path: Path | None = None
+) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     Returns:
@@ -808,7 +811,7 @@ def version_bump(schemas: list[Path], previous: list[Path], output_type: bool) -
     # Note: GraphQL Inspector expects old schema first, then new schema
     # So we pass previous first, then schema (current)
     previous_schema_temp_path = create_tempfile_to_composed_schema(previous)
-    inspector = GraphQLInspector(previous_schema_temp_path)
+    inspector = GraphQLInspector(previous_schema_temp_path, node_modules_path=inspector_path)
 
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
     diff_result = inspector.diff(schema_temp_path)
@@ -880,10 +883,11 @@ def check_constraints(schemas: list[Path], naming_config: Path | None) -> None:
 @validate.command(name="graphql")
 @schema_option
 @output_option
-def validate_graphql(schemas: list[Path], output: Path) -> None:
+@requires_graphql_inspector
+def validate_graphql(schemas: list[Path], output: Path, inspector_path: Path | None = None) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
-    inspector = GraphQLInspector(schema_temp_path)
+    inspector = GraphQLInspector(schema_temp_path, node_modules_path=inspector_path)
     validation_result = inspector.introspect(output)
 
     log.print(validation_result.output)
@@ -905,7 +909,10 @@ def validate_graphql(schemas: list[Path], output: Path) -> None:
     multiple=True,
     help=("GraphQL schema file, directory, or URL to validate against. Can be specified multiple times."),
 )
-def diff_graphql(schemas: list[Path], val_schemas: list[Path], output: Path | None) -> None:
+@requires_graphql_inspector
+def diff_graphql(
+    schemas: list[Path], val_schemas: list[Path], output: Path | None, inspector_path: Path | None = None
+) -> None:
     """Diff for two GraphQL schemas.
 
     Uses the schema composer which includes all directives and types.
@@ -918,7 +925,7 @@ def diff_graphql(schemas: list[Path], val_schemas: list[Path], output: Path | No
 
     try:
         # Use GraphQLInspector's structured diff method
-        inspector = GraphQLInspector(input_temp_path)
+        inspector = GraphQLInspector(input_temp_path, node_modules_path=inspector_path)
         try:
             structured_diff = inspector.diff_structured(val_temp_path)
         except RuntimeError as e:
@@ -1436,11 +1443,12 @@ def search_skos(ttl_file: Path, term: str, case_insensitive: bool, limit: str) -
     required=False,
     help="Output file, only .json allowed here",
 )
-def similar_graphql(schemas: list[Path], keyword: str, output: Path | None) -> None:
+@requires_graphql_inspector
+def similar_graphql(schemas: list[Path], keyword: str, output: Path | None, inspector_path: Path | None = None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
     whole schema (in %)."""
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
-    inspector = GraphQLInspector(schema_temp_path)
+    inspector = GraphQLInspector(schema_temp_path, node_modules_path=inspector_path)
     if output:
         log.info(f"Search will write file to {output}")
 
