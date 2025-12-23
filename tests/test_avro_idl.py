@@ -90,7 +90,7 @@ class TestEnumInIDL:
         result = translate_to_avro_protocol(annotated_schema, "com.example")
 
         protocol = result["Vehicle"]
-        assert "enum Status" not in protocol, "Non-strict mode: enums should not be generated"
+        assert not re.search(r"^\s*enum\s+Status\s*\{", protocol, re.MULTILINE)
         assert re.search(
             r"protocol\s+Vehicle\s*\{.*?"
             r"record\s+Vehicle\s*\{.*?"
@@ -374,6 +374,71 @@ class TestStrictMode:
             re.DOTALL,
         ), "Strict mode: Vehicle record inside protocol with correct fields and nullability"
 
+    def test_strict_mode_includes_enums_from_instance_tag_types(self) -> None:
+        """Test that strict mode includes enum definitions used by @instanceTag types."""
+        schema_str = """
+        directive @vspec(element: VspecElement!) on OBJECT
+        directive @instanceTag on OBJECT
+
+        enum VspecElement {
+            STRUCT
+        }
+
+        enum RowEnum {
+            ROW1
+            ROW2
+        }
+
+        enum SideEnum {
+            DRIVERSIDE
+            PASSENGERSIDE
+        }
+
+        type DoorPosition @instanceTag {
+            row: RowEnum!
+            side: SideEnum!
+        }
+
+        type Door {
+            isLocked: Boolean
+            position: Int
+            instanceTag: DoorPosition
+        }
+
+        type Vehicle @vspec(element: STRUCT) {
+            doors: [Door]
+            model: String
+        }
+
+        type Query {
+            vehicle: Vehicle
+        }
+        """
+        graphql_schema = build_schema(schema_str)
+        annotated_schema = process_schema(schema=graphql_schema, source_map={}, query_document=None)
+
+        result = translate_to_avro_protocol(annotated_schema, "com.example", strict=True)
+
+        protocol = result["Vehicle"]
+
+        assert re.search(
+            r"enum\s+RowEnum\s*\{.*?ROW1.*?ROW2.*?\}",
+            protocol,
+            re.DOTALL,
+        ), "Strict mode: RowEnum should be defined in protocol"
+
+        assert re.search(
+            r"enum\s+SideEnum\s*\{.*?DRIVERSIDE.*?PASSENGERSIDE.*?\}",
+            protocol,
+            re.DOTALL,
+        ), "Strict mode: SideEnum should be defined in protocol"
+
+        assert re.search(
+            r"record\s+DoorPosition\s*\{.*?" r"RowEnum\s+row;.*?" r"SideEnum\s+side;.*?" r"\}",
+            protocol,
+            re.DOTALL,
+        ), "Strict mode: DoorPosition should reference RowEnum and SideEnum types (required fields)"
+
     def test_non_strict_mode_defaults(self) -> None:
         """Test that non-strict mode uses string for enums and all fields optional."""
         schema_str = """
@@ -405,7 +470,8 @@ class TestStrictMode:
         result = translate_to_avro_protocol(annotated_schema, "com.example", strict=False)
 
         protocol = result["Vehicle"]
-        assert "enum Status" not in protocol, "Non-strict mode: enums should not be generated"
+        # Non-strict mode: enum definitions should not be generated (but may appear in comments)
+        assert not re.search(r"^\s*enum\s+Status\s*\{", protocol, re.MULTILINE)
         assert re.search(
             r"protocol\s+Vehicle\s*\{.*?"
             r"record\s+Vehicle\s*\{.*?"

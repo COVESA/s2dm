@@ -1,5 +1,9 @@
 directive @vspec(element: VspecElement!) on OBJECT
 
+enum VspecElement {
+  STRUCT
+}
+
 enum RowEnum {
   ROW1
   ROW2
@@ -19,10 +23,6 @@ type Door {
   isLocked: Boolean
   position: Int @range(min: 0, max: 100)
   instanceTag: DoorPosition
-}
-
-enum VspecElement {
-  STRUCT
 }
 
 type Vehicle @vspec(element: STRUCT) {

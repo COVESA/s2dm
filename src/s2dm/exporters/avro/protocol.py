@@ -78,7 +78,7 @@ def _generate_protocol_for_struct_types(
 
         type_namespace = get_namespace_from_metadata(struct_type, namespace)
 
-        referenced_types = get_referenced_types(schema, type_name, include_instance_tag_fields=False)
+        referenced_types = get_referenced_types(schema, type_name, include_instance_tag_fields=True)
         referenced_named_types: set[GraphQLNamedType] = {
             cast(GraphQLNamedType, graphql_type) for graphql_type in referenced_types if is_named_type(graphql_type)
         }

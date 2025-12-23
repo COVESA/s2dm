@@ -11,6 +11,7 @@ from graphql import (
     GraphQLScalarType,
     GraphQLType,
     GraphQLUnionType,
+    get_named_type,
     is_enum_type,
     is_list_type,
     is_non_null_type,
@@ -80,7 +81,11 @@ class AvroProtocolTransformer:
 
         for field_name, field in obj_type.fields.items():
             field_type_str = self._get_field_type_string(field)
-            lines.append(f"    {field_type_str} {field_name};")
+            comment = self._get_field_comment(field)
+            if comment:
+                lines.append(f"    {field_type_str} {field_name}; {comment}")
+            else:
+                lines.append(f"    {field_type_str} {field_name};")
 
         lines.append("  }")
 
@@ -143,3 +148,14 @@ class AvroProtocolTransformer:
 
         log.warning(f"Unsupported GraphQL type '{field_type}' for Avro IDL protocol conversion, using string")
         return "string"
+
+    def _get_field_comment(self, field: GraphQLField) -> str:
+        """Get comment for enum fields in non-strict mode."""
+        if self.strict:
+            return ""
+
+        base_type = get_named_type(field.type)
+        if is_enum_type(base_type):
+            return f"/* enum {base_type.name} */"
+
+        return ""
