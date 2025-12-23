@@ -79,13 +79,13 @@ These tools are embedded in the spec history generation but can also be called s
 
 ### ID Generation
 
-Generate unique identifiers for schema elements:
+Generate variant-based identifiers for schema elements:
 
 ```bash
-s2dm registry id -s examples/spec-history-registry/sample.graphql -o examples/concept_ids.json
+s2dm registry id -s examples/spec-history-registry/sample.graphql -o examples/variant_ids.json --version-tag v1.0.0
 ```
 
-This creates `examples/concept_ids.json` with deterministic IDs for each field in the schema.
+This creates `examples/variant_ids_v1.0.0.json` with variant-based IDs (format: `Concept/vM.m`) for each field in the schema. The command creates a variant IDs file that tracks semantic versions and automatically increments them when schema changes are detected via GraphQL diffing (major version for breaking changes, minor version for non-breaking changes).
 
 ### Concept URI Generation
 
