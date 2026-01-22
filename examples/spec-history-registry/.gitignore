@@ -6,4 +6,4 @@
 !README.md
 !sample.graphql
 !sample_updated.graphql
-!units.yaml
+# no longer track a YAML units file

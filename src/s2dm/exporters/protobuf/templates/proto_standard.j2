@@ -1,0 +1,87 @@
+syntax = "{{ syntax }}";
+{% if imports %}{# if imports #}
+
+{% for import in imports %}{# for import in imports #}
+{{ import }}
+{% endfor %}{# endfor import #}
+{% endif %}{# endif imports #}
+{% if has_source_option %}{# if has_source_option #}
+
+extend google.protobuf.MessageOptions {
+  string message_source = 50001;
+}
+{% if flatten_mode %}{# if flatten_mode #}
+
+extend google.protobuf.FieldOptions {
+  string field_source = 50002;
+}
+{% endif %}{# endif flatten_mode #}
+{% endif %}{# endif has_source_option #}
+{% if package %}{# if package #}
+
+package {{ package }};
+{% endif %}{# endif package #}
+{% if enums %}{# if enums #}
+
+{% for enum in enums %}{# for enum in enums #}
+{% if enum.description %}{# if enum.description #}
+// {{ enum.description }}
+{% endif %}{# endif enum.description #}
+message {{ enum.name }} {
+{% if enum.source %}{# if enum.source #}
+  option (message_source) = "{{ enum.source }}";
+
+{% endif %}{# endif enum.source #}
+  enum Enum {
+    {{ enum.name | upper }}_UNSPECIFIED = 0;
+{% for value in enum.enum_values %}{# for value in enum.enum_values #}
+    {{ value.name }} = {{ value.number }};{% if value.description %}  // {{ value.description }}{% endif %}
+
+{% endfor %}{# endfor value #}
+  }
+}
+{% endfor %}{# endfor enum #}
+{% endif %}{# endif enums #}
+{% macro render_message(message, indent=0) %}{# macro render_message #}
+{% set indent_str = "  " * indent %}
+{% if message.description %}{# if message.description #}
+{{ indent_str }}// {{ message.description }}
+{% endif %}{# endif message.description #}
+{{ indent_str }}message {{ message.name }} {
+{% if message.source %}{# if message.source #}
+{{ indent_str }}  option (message_source) = "{{ message.source }}";
+
+{% endif %}{# endif message.source #}
+{% for nested in message.nested_messages %}{# for nested in message.nested_messages #}
+{{ render_message(nested, indent + 1) }}
+{% endfor %}{# endfor nested #}
+{% for field in message.fields %}{# for field in message.fields #}
+{{ indent_str }}  {{ field.type }} {{ field.name }} = {{ field.number }}{% if field.field_options %} {{ field.field_options }}{% endif %};{% if field.description %}  // {{ field.description }}{% endif %}
+
+{% endfor %}{# endfor field #}
+{{ indent_str }}}
+{% endmacro %}{# endmacro render_message #}
+{% if messages %}{# if messages #}
+
+{% for message in messages %}{# for message in messages #}
+{{ render_message(message) }}
+{% endfor %}{# endfor message #}
+{% endif %}{# endif messages #}
+{% if unions %}{# if unions #}
+{% for union in unions %}{# for union in unions #}
+{% if union.description %}{# if union.description #}
+// {{ union.description }}
+{% endif %}{# endif union.description #}
+message {{ union.name }} {
+{% if union.source %}{# if union.source #}
+  option (message_source) = "{{ union.source }}";
+
+{% endif %}{# endif union.source #}
+  oneof {{ union.name }} {
+{% for member in union.members %}{# for member in union.members #}
+    {{ member.type }} {{ member.name }} = {{ member.number }};
+{% endfor %}{# endfor member #}
+  }
+}
+{% endfor %}{# endfor union #}
+{% endif %}{# endif unions #}

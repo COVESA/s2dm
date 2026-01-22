@@ -1,0 +1,263 @@
+name: 'S2DM Publish'
+description: 'Automated artifact generation and publishing workflow through S2DM'
+author: 'COVESA'
+
+inputs:
+  repository-path:
+    description: 'Path to the git repository root'
+    required: true
+
+  spec-path:
+    description: 'Path to the spec directory'
+    required: false
+    default: './spec'
+
+  github-token:
+    description: 'GitHub token for creating releases'
+    required: true
+
+  s2dm-path:
+    description: 'Path where S2DM repository will be checked out'
+    required: false
+    default: 's2dm'
+
+  concept-namespace:
+    description: 'Concept namespace for registry'
+    required: false
+    default: ''
+
+  concept-prefix:
+    description: 'Concept prefix for registry'
+    required: false
+    default: ''
+
+  shacl-serialization-format:
+    description: 'SHACL serialization format'
+    required: false
+    default: ''
+
+  shacl-shapes-namespace:
+    description: 'SHACL shapes namespace'
+    required: false
+    default: ''
+
+  shacl-shapes-prefix:
+    description: 'SHACL shapes prefix'
+    required: false
+    default: ''
+
+  shacl-model-namespace:
+    description: 'SHACL model namespace'
+    required: false
+    default: ''
+
+  shacl-model-prefix:
+    description: 'SHACL model prefix'
+    required: false
+    default: ''
+
+  skos-namespace:
+    description: 'SKOS namespace'
+    required: false
+    default: ''
+
+  skos-prefix:
+    description: 'SKOS prefix'
+    required: false
+    default: ''
+
+  skos-language:
+    description: 'SKOS language'
+    required: false
+    default: ''
+
+outputs:
+  version-bump:
+    description: 'Type of version bump (major, minor, patch, none)'
+    value: ${{ steps.version-check.outputs.VERSION_BUMP }}
+
+  latest-tag:
+    description: 'The latest git tag after release'
+    value: ${{ steps.get-latest-tag.outputs.LATEST_TAG }}
+
+  continue:
+    description: 'Whether migration should continue'
+    value: ${{ steps.version-check.outputs.CONTINUE }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout S2DM repository
+      uses: actions/checkout@v4
+      with:
+        repository: COVESA/s2dm
+        path: ${{ inputs.s2dm-path }}
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+
+    - name: Install S2DM dependencies
+      working-directory: ${{ inputs.s2dm-path }}
+      shell: bash
+      run: |
+        uv sync --frozen
+
+    - name: Activate venv
+      shell: bash
+      run: |
+        echo "${{ github.workspace }}/${{ inputs.s2dm-path }}/.venv/bin" >> $GITHUB_PATH
+
+    - name: Verify S2DM installation
+      shell: bash
+      run: |
+        s2dm --help
+
+    - name: Download latest release
+      working-directory: ${{ inputs.repository-path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+      run: |
+        mkdir -p ${{ github.workspace }}/.previous-release
+        gh release download --pattern "*" --dir ${{ github.workspace }}/.previous-release || echo "No previous release found"
+
+    - name: Extract previous release
+      shell: bash
+      run: |
+        if [ -f "${{ github.workspace }}/.previous-release/release.tar.gz" ]; then
+          tar -xzf ${{ github.workspace }}/.previous-release/release.tar.gz -C ${{ github.workspace }}/.previous-release
+          rm ${{ github.workspace }}/.previous-release/release.tar.gz
+        fi
+
+    - name: Prepare artifacts
+      shell: bash
+      run: |
+        mkdir -p ${{ github.workspace }}/.artifacts/graphql
+        mkdir -p ${{ github.workspace }}/.artifacts/jsonschema
+        mkdir -p ${{ github.workspace }}/.artifacts/registry
+        mkdir -p ${{ github.workspace }}/.artifacts/shacl
+        mkdir -p ${{ github.workspace }}/.artifacts/skos
+        mkdir -p ${{ github.workspace }}/.artifacts/vspec
+
+    - name: Check spec version bump
+      id: version-check
+      shell: bash
+      run: |
+        VERSION_BUMP=major
+        if [ -d "${{ github.workspace }}/.previous-release" ] && [ "$(ls -A ${{ github.workspace }}/.previous-release)" ]; then
+          echo "Previous release found"
+          VERSION_BUMP=$(s2dm check version-bump -s ${{ inputs.spec-path }} -p ${{ github.workspace }}/.previous-release/graphql/schema.graphql --output-type | tail -n 1)
+          if [[ "$VERSION_BUMP" != "none" ]]; then
+            echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "No previous release found"
+          echo "IS_INITIAL_RELEASE=true" >> "$GITHUB_OUTPUT"
+          echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
+        fi
+        echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
+
+    - name: Sync units
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        s2dm units sync
+
+    - name: Initialize registry
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
+      shell: bash
+      run: |
+        CMD="s2dm registry init -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/registry/registry.json"
+        [ -n "${{ inputs.concept-namespace }}" ] && CMD="$CMD --concept-namespace '${{ inputs.concept-namespace }}'"
+        [ -n "${{ inputs.concept-prefix }}" ] && CMD="$CMD --concept-prefix '${{ inputs.concept-prefix }}'"
+        eval "$CMD"
+
+    - name: Update registry
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
+      shell: bash
+      run: |
+        CMD="s2dm registry update -s ${{ inputs.spec-path }} -sh ${{ github.workspace }}/.previous-release/registry/registry.json -o ${{ github.workspace }}/.artifacts/registry/registry.json"
+        [ -n "${{ inputs.concept-namespace }}" ] && CMD="$CMD --concept-namespace '${{ inputs.concept-namespace }}'"
+        [ -n "${{ inputs.concept-prefix }}" ] && CMD="$CMD --concept-prefix '${{ inputs.concept-prefix }}'"
+        eval "$CMD"
+
+    - name: Compose GraphQL schema
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        s2dm compose -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/graphql/schema.graphql
+
+    - name: Generate JSON schema
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        s2dm export jsonschema -S -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/jsonschema/schema.json
+
+    - name: Generate SHACL
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        CMD="s2dm export shacl -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/shacl/schema.ttl"
+        [ -n "${{ inputs.shacl-serialization-format }}" ] && CMD="$CMD --serialization-format '${{ inputs.shacl-serialization-format }}'"
+        [ -n "${{ inputs.shacl-shapes-namespace }}" ] && CMD="$CMD --shapes-namespace '${{ inputs.shacl-shapes-namespace }}'"
+        [ -n "${{ inputs.shacl-shapes-prefix }}" ] && CMD="$CMD --shapes-namespace-prefix '${{ inputs.shacl-shapes-prefix }}'"
+        [ -n "${{ inputs.shacl-model-namespace }}" ] && CMD="$CMD --model-namespace '${{ inputs.shacl-model-namespace }}'"
+        [ -n "${{ inputs.shacl-model-prefix }}" ] && CMD="$CMD --model-namespace-prefix '${{ inputs.shacl-model-prefix }}'"
+        eval "$CMD"
+
+    - name: Generate SKOS RDF
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        CMD="s2dm generate skos-skeleton -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/skos/schema.ttl"
+        [ -n "${{ inputs.skos-namespace }}" ] && CMD="$CMD --namespace '${{ inputs.skos-namespace }}'"
+        [ -n "${{ inputs.skos-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.skos-prefix }}'"
+        [ -n "${{ inputs.skos-language }}" ] && CMD="$CMD --language '${{ inputs.skos-language }}'"
+        eval "$CMD"
+
+    - name: Generate VSpec
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        s2dm export vspec -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/vspec/schema.vspec
+
+    - name: Bump version and push tags
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      working-directory: ${{ inputs.repository-path }}
+      shell: bash
+      run: |
+        git config --local user.email "s2dm-automation-action@covesa.global"
+        git config --local user.name "S2DM Automation Action"
+        bump-my-version bump ${{ steps.version-check.outputs.VERSION_BUMP }} --config-file ./.bumpversion.toml
+        git push origin ${{ github.ref_name }}
+        git push origin --tags
+
+    - name: Get latest tag
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      id: get-latest-tag
+      working-directory: ${{ inputs.repository-path }}
+      shell: bash
+      run: |
+        LATEST_TAG=$(git describe --tags --abbrev=0)
+        echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+    - name: Create release
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      working-directory: ${{ inputs.repository-path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+      run: |
+        LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}"
+        tar -czf release.tar.gz -C ${{ github.workspace }}/.artifacts .
+        gh release create "${LATEST_TAG}" \
+          --title "Release ${LATEST_TAG}" \
+          --notes "This release contains the artifacts from the automated publishing workflow." \
+          release.tar.gz

@@ -275,379 +275,130 @@ Please, refer to the CLI help for usage reference.
 s2dm shacl --help
 ```
 
-### JSON Schema exporter
+## Naming Configuration
 
-This exporter translates the given GraphQL schema to [JSON Schema](https://json-schema.org/) format.
+All export commands support a global naming configuration feature that allows you to transform element names during the export process using the `[--naming-config | -n]` flag.
 
-#### Key Features
+### Usage
 
-- **Complete GraphQL Type Support**: Handles all GraphQL types including scalars, objects, enums, unions, interfaces, and lists
-- **Root Type Filtering**: Use the `--root-type` flag to export only a specific type and its dependencies
-- **Strict Nullability Mode**: Use the `--strict` flag to enforce GraphQL nullability in JSON Schema validation
-- **Directive Support**: Converts S2DM directives like `@cardinality`, `@range`, and `@noDuplicates` to JSON Schema constraints
-- **Reference-based Output**: Uses JSON Schema `$ref` for type references, creating clean and maintainable schemas
-
-#### Example Transformation
-
-Consider the following GraphQL schema:
-
-```gql
-directive @instanceTag on OBJECT
-directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT
-
-type Vehicle @metadata(comment: "Vehicle entity", vssType: "branch") {
-    id: ID!
-    door: Door!
-}
-
-type Door {
-    locked: Boolean!
-    instanceTag: InCabinArea2x3
-}
-
-enum TwoRowsInCabinEnum {
-    ROW1
-    ROW2
-}
-
-enum ThreeColumnsInCabinEnum {
-    DRIVERSIDE
-    MIDDLE
-    PASSENGERSIDE
-}
-
-type InCabinArea2x3 @instanceTag {
-    row: TwoRowsInCabinEnum
-    column: ThreeColumnsInCabinEnum
-}
-```
-
-The JSON Schema exporter produces:
-
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$defs": {
-    "Vehicle": {
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "door": {
-          "additionalProperties": false,
-          "properties": {
-            "ROW1": {
-              "additionalProperties": false,
-              "properties": {
-                "DRIVERSIDE": {
-                  "$ref": "#/$defs/Door"
-                },
-                "MIDDLE": {
-                  "$ref": "#/$defs/Door"
-                },
-                "PASSENGERSIDE": {
-                  "$ref": "#/$defs/Door"
-                }
-              },
-              "type": "object"
-            },
-            "ROW2": {
-              "additionalProperties": false,
-              "properties": {
-                "DRIVERSIDE": {
-                  "$ref": "#/$defs/Door"
-                },
-                "MIDDLE": {
-                  "$ref": "#/$defs/Door"
-                },
-                "PASSENGERSIDE": {
-                  "$ref": "#/$defs/Door"
-                }
-              },
-              "type": "object"
-            }
-          },
-          "type": "object"
-        }
-      },
-      "type": "object",
-      "$comment": "Vehicle entity",
-      "x-metadata": {
-        "vssType": "branch"
-      },
-      "required": [
-        "id",
-        "door"
-      ]
-    },
-    "Door": {
-      "additionalProperties": false,
-      "properties": {
-        "locked": {
-          "type": "boolean"
-        }
-      },
-      "type": "object",
-      "required": [
-        "locked"
-      ]
-    }
-  },
-  "title": "Vehicle",
-  "$ref": "#/$defs/Vehicle"
-}
-```
-
-#### Root Type Filtering
-
-Use the `--root-type` flag to export only a specific type and its dependencies:
+Apply naming configuration to any export command:
 
 ```bash
-s2dm export jsonschema --schema schema.graphql --output vehicle.json --root-type Vehicle
+s2dm export [--naming-config | -n] naming.yaml ...
 ```
 
-This creates a JSON Schema that references the Vehicle type as the root:
+### Configuration Format
 
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Vehicle",
-  "$ref": "#/$defs/Vehicle",
-  "$defs": {
-    "Vehicle": { ... },
-    "Engine": { ... },
-    "FuelType": { ... }
-  }
-}
+The naming configuration is defined in a YAML file with the following structure:
+
+```yaml
+# Transform type names by type context
+type:
+  object: PascalCase
+  interface: PascalCase
+  input: PascalCase
+  enum: PascalCase
+  union: PascalCase
+  scalar: PascalCase
+
+# Transform field names by type context
+field:
+  object: camelCase
+  interface: camelCase
+  input: snake_case
+
+# Transform enum values (no context needed)
+enumValue: MACROCASE
+
+# Transform instanceTag field names (no context needed)
+instanceTag: COBOL-CASE
+
+# Transform argument names by context
+argument:
+  field: camelCase
 ```
 
-#### Directive Support
+### Supported Case Formats
 
-S2DM directives are converted to JSON Schema constraints:
+The naming configuration supports the following case conversion formats:
 
-- `@cardinality(min: 1, max: 5)` → `"minItems": 1, "maxItems": 5`
-- `@range(min: 0.0, max: 100.0)` → `"minimum": 0.0, "maximum": 100.0`
-- `@noDuplicates` → `"uniqueItems": true`
-- `@metadata(comment: "Description", vssType: "branch")` → `"$comment": "Description", "x-metadata": {"vssType": "branch"}`
-- Custom directives → `"x-directiveName": true` or `"x-directiveName": {...}`
+- **camelCase**: `myVariableName`
+- **PascalCase**: `MyVariableName`
+- **snake_case**: `my_variable_name`
+- **kebab-case**: `my-variable-name`
+- **MACROCASE**: `MY_VARIABLE_NAME`
+- **COBOL-CASE**: `MY-VARIABLE-NAME`
+- **flatcase**: `myvariablename`
+- **TitleCase**: `My Variable Name`
 
-#### Strict Nullability Mode
-
-The `--strict` flag enforces GraphQL field nullability in the resulting JSON Schema:
-
-```bash
-s2dm export jsonschema --schema schema.graphql --output schema.json --strict
-```
-
-##### Examples
+### Example Conversion
 
 Given this GraphQL schema:
 
 ```graphql
-type Vehicle {
-  id: ID!              # Non-null
-  description: String  # Nullable
-  year: Int           # Nullable
-  category: VehicleCategory  # Nullable enum
-  parts: [Part]       # Nullable list of nullable parts
-  doors: [Door!]!     # Non-null list of non-null doors
-  wheels: [Wheel]!    # Non-null list of nullable wheels
+type vehicle_info {
+  avg_speed: Float
+  fuel_type: fuel_type_enum
 }
 
-enum VehicleCategory {
-  CAR
-  TRUCK
+enum fuel_type_enum {
+  GASOLINE_TYPE
+  DIESEL_TYPE
 }
 ```
 
-**Default mode** produces:
+And this naming configuration:
 
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$defs": {
-    "Vehicle": {
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "category": {
-          "$ref": "#/$defs/VehicleCategory"
-        },
-        "doorsOptional": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Door"
-          }
-        },
-        "doorsRequired": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Door"
-          }
-        },
-        "doors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Door"
-          }
-        }
-      },
-      "type": "object",
-      "required": [
-        "id",
-        "doorsRequired",
-        "doors"
-      ]
-    },
-    "Door": {
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      },
-      "type": "object",
-      "required": [
-        "id"
-      ]
-    },
-    "VehicleCategory": {
-      "type": "string",
-      "enum": [
-        "CAR",
-        "TRUCK"
-      ]
-    }
-  },
-  "title": "Vehicle",
-  "$ref": "#/$defs/Vehicle"
-}
+```yaml
+type:
+  object: PascalCase
+  enum: PascalCase
+field:
+  object: camelCase
+enumValue: PascalCase
 ```
 
-**Strict mode** produces:
+The exported schema will transform names as follows:
 
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$defs": {
-    "Vehicle": {
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "description": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "category": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/VehicleCategory"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "doorsOptional": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "$ref": "#/$defs/Door"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "doorsRequired": {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "$ref": "#/$defs/Door"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "doors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Door"
-          }
-        }
-      },
-      "type": "object",
-      "required": [
-        "id",
-        "doorsRequired",
-        "doors"
-      ]
-    },
-    "Door": {
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      },
-      "type": "object",
-      "required": [
-        "id"
-      ]
-    },
-    "VehicleCategory": {
-      "type": "string",
-      "enum": [
-        "CAR",
-        "TRUCK"
-      ]
-    }
-  },
-  "title": "Vehicle",
-  "$ref": "#/$defs/Vehicle"
-}
-```
+- Type: `vehicle_info` → `VehicleInfo`
+- Field: `avg_speed` → `avgSpeed`
+- Field: `fuel_type` → `fuelType`
+- Enum type: `fuel_type_enum` → `FuelTypeEnum`
+- Enum values: `GASOLINE_TYPE` → `GasolineType`, `DIESEL_TYPE` → `DieselType`
 
-##### Nullability Rules
+### Validation Rules
 
-| GraphQL Type | Strict Mode JSON Schema |
-|-------------|------------------------|
-| `String` | `{"type": ["string", "null"]}` |
-| `String!` | `{"type": "string"}` |
-| `VehicleType` (enum) | `{"oneOf": [{"$ref": "#/$defs/VehicleType"}, {"type": "null"}]}` |
-| `VehicleType!` (enum) | `{"$ref": "#/$defs/VehicleType"}` |
-| `[String]` | Array and items both nullable |
-| `[String!]` | Array nullable, items non-null |
-| `[String]!` | Array non-null, items nullable |
-| `[String!]!` | Array and items both non-null |
+The naming configuration system enforces several validation rules to ensure consistency and correctness:
 
-You can call the help for usage reference:
+#### Element Type Validation
 
-```bash
-s2dm export jsonschema --help
-```
+- **Valid element types**: Only `type`, `field`, `argument`, `enumValue`, and `instanceTag` are allowed
+- **Context restrictions**: Some element types cannot have context-specific configurations:
+  - `enumValue` and `instanceTag` are contextless and use a single case format
+  - `argument` can only have `field` context
+- **Value type validation**: Element values must be either strings (case formats) or dictionaries (for context-specific configurations)
+
+#### Context Validation
+
+- **Type contexts**: `object`, `interface`, `input`, `scalar`, `union`, `enum`
+- **Field contexts**: `object`, `interface`, `input`
+- **Argument contexts**: `field`
+
+#### Case Format Validation
+
+- **Valid case formats**: `camelCase`, `PascalCase`, `snake_case`, `kebab-case`, `MACROCASE`, `COBOL-CASE`, `flatcase`, `TitleCase`
+- **Format enforcement**: Only recognized case formats are accepted; invalid formats will cause validation errors
+
+#### Special Rules
+
+- **EnumValue-InstanceTag pairing**: If `enumValue` is present in the configuration, `instanceTag` must also be present
+- **InstanceTag preservation**: The literal field name `instanceTag` is never transformed, regardless of naming configuration, to preserve its semantic meaning
+
+### Notes
+
+- Built-in GraphQL types (`String`, `Int`, `Float`, `Boolean`, `ID`, `Query`, `Mutation`, `Subscription`) are never transformed
+- If a configuration is not provided for an element type, the original names are preserved
+- Configuration is loaded once at the command level and applied consistently across the entire export process
 
 ## Identifiers
 With the asumption that specification files will be hosted in a certain Git repository, the tools include functions to support the proper identification of concepts and their metadata to facilite their evolution.

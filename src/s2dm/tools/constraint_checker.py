@@ -1,9 +1,6 @@
 from graphql import GraphQLEnumType, GraphQLObjectType, GraphQLSchema, get_named_type
 
-from s2dm.exporters.utils import (
-    get_directive_arguments,
-    has_directive,
-)
+from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 
 
 class ConstraintChecker:
@@ -14,7 +11,7 @@ class ConstraintChecker:
         errors = []
         for obj in objects:
             for fname, field in obj.fields.items():
-                if has_directive(field, directive):
+                if has_given_directive(field, directive):
                     args = get_directive_arguments(field, directive)
                     try:
                         min_val = args.get("min")
@@ -33,14 +30,14 @@ class ConstraintChecker:
             if "instanceTag" in obj.fields:
                 field = obj.fields["instanceTag"]
                 output_type = self.schema.get_type(get_named_type(field.type).name)
-                if not (isinstance(output_type, GraphQLObjectType) and has_directive(output_type, "instanceTag")):
+                if not (isinstance(output_type, GraphQLObjectType) and has_given_directive(output_type, "instanceTag")):
                     errors.append(
                         f"[instanceTag] {obj.name}.instanceTag must reference an object type with @instanceTag"
                     )
 
         # instanceTag object fields must be enums
         for obj in objects:
-            if has_directive(obj, "instanceTag"):
+            if has_given_directive(obj, "instanceTag"):
                 for fname, field in obj.fields.items():
                     if not isinstance(field.type, GraphQLEnumType):
                         errors.append(f"[instanceTag] {obj.name}.{fname} must be an enum (in @instanceTag object)")

@@ -20,5 +20,5 @@ type Seating
   """
   Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).
   """
-  length(unit: Length_Unit_Enum = MILLIMETER): UInt16 @metadata(vssType: "actuator")
+  length(unit: LengthUnitEnum = MILLIM): UInt16 @metadata(vssType: "actuator")
 }

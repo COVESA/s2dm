@@ -1,0 +1,11 @@
+query Selection {
+  vehicle(instance: "instance") {
+    averageSpeed
+    lowVoltageSystemState
+    adas {
+      abs {
+        isEngaged
+      }
+    }
+  }
+}

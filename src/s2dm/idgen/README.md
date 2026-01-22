@@ -137,25 +137,12 @@ type Vehicle {
 
 ```
 
-and units.yaml as
-
-```yaml
-km/h:
-  definition: Velocity measured in kilometers per hours
-  unit: kilometer per hour
-  quantity: velocity
-  allowed-datatypes: ['numeric']
-m/s:
-  definition: Speed measured in meters per second
-  unit: meters per second
-  quantity: velocity
-  allowed-datatypes: ['numeric']
-```
+and unit enums generated from QUDT
 
 Running this command:
 
 ```bash
-uv run python src/tools/to_id.py -o output.json test.graphql units.yaml
+s2dm registry id -o output.json -s test.graphql
 ```
 
 would generate this output.json:
@@ -173,7 +160,7 @@ would generate this output.json:
 If you want to see the "node identifier strings" (the strings that we generate the id hash from), you could change the logging level to DEBUG with:
 
 ```bash
-LOG_LEVEL=debug uv run python src/tools/to_id.py -o output.json test.graphql units.yaml
+s2dm --log-level=DEBUG registry id -o output.json -s test.graphql
 ```
 
 ## References

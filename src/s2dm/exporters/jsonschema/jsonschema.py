@@ -1,37 +1,32 @@
 import json
-from pathlib import Path
 
 from graphql import GraphQLSchema
 
 from s2dm import log
-from s2dm.exporters.utils import load_schema
+from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 
 from .transformer import JsonSchemaTransformer
 
 
 def transform(
-    graphql_schema: GraphQLSchema, root_type: str | None = None, strict: bool = False, expanded_instances: bool = False
+    graphql_schema: GraphQLSchema,
+    root_type: str | None = None,
+    strict: bool = False,
 ) -> str:
     """
     Transform a GraphQL schema object to JSON Schema format.
 
     Args:
         graphql_schema: The GraphQL schema object to transform
-        root_type: Optional root type name for the JSON schema
         strict: Enforce strict field nullability translation from GraphQL to JSON Schema
-        expanded_instances: Expand instance tags into nested structure instead of arrays
+        root_type: Optional root type name for the JSON schema
 
     Returns:
         str: JSON Schema representation as a string
     """
     log.info(f"Transforming GraphQL schema to JSON Schema with {len(graphql_schema.type_map)} types")
 
-    if root_type:
-        if root_type not in graphql_schema.type_map:
-            raise ValueError(f"Root type '{root_type}' not found in schema")
-        log.info(f"Using root type: {root_type}")
-
-    transformer = JsonSchemaTransformer(graphql_schema, root_type, strict, expanded_instances)
+    transformer = JsonSchemaTransformer(graphql_schema, root_type, strict)
     json_schema = transformer.transform()
 
     json_schema_str = json.dumps(json_schema, indent=2)
@@ -42,23 +37,19 @@ def transform(
 
 
 def translate_to_jsonschema(
-    schema_path: Path, root_type: str | None = None, strict: bool = False, expanded_instances: bool = False
+    annotated_schema: AnnotatedSchema,
+    root_type: str | None = None,
+    strict: bool = False,
 ) -> str:
     """
     Translate a GraphQL schema file to JSON Schema format.
 
     Args:
-        schema_path: Path to a GraphQL schema file or directory containing schema files
-        root_type: Optional root type name for the JSON schema
+        annotated_schema: The annotated GraphQL schema object to transform
         strict: Enforce strict field nullability translation from GraphQL to JSON Schema
-        expanded_instances: Expand instance tags into nested structure instead of arrays
+        root_type: Optional root type name for the JSON schema
 
     Returns:
         str: JSON Schema representation as a string
     """
-    log.info(f"Loading GraphQL schema from: {schema_path}")
-
-    graphql_schema = load_schema(schema_path)
-    log.info(f"Successfully loaded GraphQL schema with {len(graphql_schema.type_map)} types")
-
-    return transform(graphql_schema, root_type, strict, expanded_instances)
+    return transform(annotated_schema.schema, root_type, strict)

@@ -1,0 +1,15 @@
+query Selection {
+  vehicle {
+    averageSpeed
+    lowVoltageSystemState
+    adas {
+      abs {
+        isEngaged
+      }
+      obstacleDetection_s {
+        isEnabled
+        warningType
+      }
+    }
+  }
+}

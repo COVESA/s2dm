@@ -6,7 +6,7 @@ type VehicleTrailerAxle {
     """
     The lateral distance between the wheel mounting faces, measured along the spindle axis.
     """
-    axleWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16 @metadata(comment: "Corresponds to SAE J1100-2009 W113.")
+    axleWidth(unit: LengthUnitEnum = MILLIM): UInt16 @metadata(comment: "Corresponds to SAE J1100-2009 W113.")
 
     """
     Axle position from 1 to 15, 1 being in the front closest to the truck, according to ISO 11992-2.
@@ -16,39 +16,39 @@ type VehicleTrailerAxle {
     """
     Single track two-axle model steering angle. Angle according to ISO 8855. Positive = degrees to the left. Negative = degrees to the right.
     """
-    steeringAngle(unit: Angle_Unit_Enum = DEGREE): Float
+    steeringAngle(unit: AngleUnitEnum = DEG): Float
     @metadata(comment: "@comment: Single track two-axle model steering angle refers to the angle that a centrally mounted wheel would have.")
 
     """
     Aspect ratio between tire section height and tire section width, as per ETRTO / TRA standard.
     """
-    tireAspectRatio(unit: Relation_Unit_Enum = PERCENT): UInt8
+    tireAspectRatio(unit: DimensionlessRatioUnitEnum = PERCENT): UInt8
 
     """Outer diameter of tires, in inches, as per ETRTO / TRA standard."""
-    tireDiameter(unit: Length_Unit_Enum = INCH): Float
+    tireDiameter(unit: LengthUnitEnum = IN): Float
 
     """Nominal section width of tires, in mm, as per ETRTO / TRA standard."""
-    tireWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+    tireWidth(unit: LengthUnitEnum = MILLIM): UInt16
 
     """
     The lateral distance between the centers of the wheels, measured along the spindle, or axle axis. If there are dual rear wheels, measure from the midway points between the inner and outer tires.
     """
-    trackWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16 @metadata(comment: "Corresponds to SAE J1100-2009 W102.")
+    trackWidth(unit: LengthUnitEnum = MILLIM): UInt16 @metadata(comment: "Corresponds to SAE J1100-2009 W102.")
 
     """
     The lateral distance between the centerlines of the base tires at ground, including camber angle. If there are dual rear wheels, measure from the midway points between the inner and outer tires.
     """
-    treadWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16 @metadata(comment: "Corresponds to SAE J1100-2009 W101.")
+    treadWidth(unit: LengthUnitEnum = MILLIM): UInt16 @metadata(comment: "Corresponds to SAE J1100-2009 W101.")
 
     """
     Diameter of wheels (rims without tires), in inches, as per ETRTO / TRA standard.
     """
-    wheelDiameter(unit: Length_Unit_Enum = INCH): Float
+    wheelDiameter(unit: LengthUnitEnum = IN): Float
 
     """
     Width of wheels (rims without tires), in inches, as per ETRTO / TRA standard.
     """
-    wheelWidth(unit: Length_Unit_Enum = INCH): Float
+    wheelWidth(unit: LengthUnitEnum = IN): Float
 
     """List of wheels on the axle."""
     wheels: [VehicleTrailerWheel]

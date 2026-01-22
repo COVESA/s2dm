@@ -1,5 +1,4 @@
 import logging
-import re
 import types
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,13 +8,10 @@ from rdflib import Graph, Literal
 from rdflib.plugins.sparql import prepareQuery
 from rdflib.query import ResultRow
 
+from s2dm.tools.string import normalize_whitespace
+
 # Module-level constant for limit keywords
 NO_LIMIT_KEYWORDS = {"inf", "infinity", "-1", "no", "none", "unlimited", "all"}
-
-
-def _normalize_whitespace(text: str) -> str:
-    """Normalize whitespace in text by collapsing multiple spaces/newlines."""
-    return re.sub(r"\s+", " ", text).strip()
 
 
 @dataclass
@@ -248,10 +244,10 @@ class SKOSSearchService:
         for row in results:
             # Cast to ResultRow to access SPARQL result variables by name
             result_row: ResultRow = cast(ResultRow, row)
-            subject = _normalize_whitespace(str(result_row["subject"]))
-            predicate = _normalize_whitespace(str(result_row["predicate"]))
-            object_value = _normalize_whitespace(str(result_row["object"]))
-            match_type = _normalize_whitespace(str(result_row["match_type"]))
+            subject = normalize_whitespace(str(result_row["subject"]))
+            predicate = normalize_whitespace(str(result_row["predicate"]))
+            object_value = normalize_whitespace(str(result_row["object"]))
+            match_type = normalize_whitespace(str(result_row["match_type"]))
 
             # Create a unique key for this triple including match type
             triple_key = (subject, predicate, object_value, match_type)

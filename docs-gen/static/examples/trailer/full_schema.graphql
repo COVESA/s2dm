@@ -1,0 +1,446 @@
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+directive @noDuplicates on FIELD_DEFINITION
+
+directive @instanceTag on OBJECT
+
+directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT
+
+enum TwoRowsInCabinEnum {
+    ROW1
+    ROW2
+}
+
+enum ThreeRowsInCabinEnum {
+    ROW1
+    ROW2
+    ROW3
+}
+
+enum TwoColumnsInCabinEnum {
+    DRIVERSIDE
+    PASSENGERSIDE
+}
+
+enum ThreeColumnsInCabinEnum {
+    DRIVERSIDE
+    MIDDLE
+    PASSENGERSIDE
+}
+
+type InCabinArea2x2 {
+    row: TwoRowsInCabinEnum
+    column: TwoColumnsInCabinEnum
+}
+
+type InCabinArea2x3 {
+    row: TwoRowsInCabinEnum
+    column: ThreeColumnsInCabinEnum
+}
+
+type InCabinArea3x3 {
+    row: ThreeRowsInCabinEnum
+    column: ThreeColumnsInCabinEnum
+}
+
+input InCabinArea2x2Input {
+    row: TwoRowsInCabinEnum
+    column: TwoColumnsInCabinEnum
+}
+
+input InCabinArea2x3Input {
+    row: TwoRowsInCabinEnum
+    column: ThreeColumnsInCabinEnum
+}
+
+input InCabinArea3x3Input {
+    row: ThreeRowsInCabinEnum
+    column: ThreeColumnsInCabinEnum
+}
+
+scalar Int8 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#byte")
+
+scalar UInt8 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedByte")
+
+scalar Int16 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#short")
+
+scalar UInt16 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedShort")
+
+scalar UInt32 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedInt")
+
+scalar Int64 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#long")
+
+scalar UInt64 @specifiedBy(url: "http://www.w3.org/2001/XMLSchema#unsignedLong")
+
+"""An object representing a vehicle."""
+type Vehicle {
+    vin: ID!
+
+    """Maximum vertical weight on the tow ball of a trailer."""
+    maxTowBallWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+    """Maximum weight of trailer."""
+    maxTowWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+    """List of trailers attached to the vehicle."""
+    trailers: [VehicleTrailer]
+
+    """Number of trailers connected to the vehicle"""
+    trailerCount: UInt8
+}
+
+"""A trailer attached to a vehicle and its associated properties."""
+type VehicleTrailer {
+    """
+    17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
+    """
+    vin: ID!
+
+    """Type of trailer as defined in ISO 11992-2"""
+    trailerKind: VehicleTrailerKindEnum
+
+    """The sum of the static vertical loads of the trailer axles."""
+    axleLoadSum(unit: Mass_Unit_Enum = KILOGRAM): UInt32
+
+    """The customer's name for the trailer"""
+    customerTrailerName: String
+
+    """List of axles on the trailer."""
+    axles: [VehicleTrailerAxle]
+
+    """Number of axles on the trailer"""
+    axleCount: UInt8
+    instanceTag: TrailerTag
+}
+
+enum VehicleTrailerKindEnum {
+    UNDEFINED
+    SEMI_TRAILER
+    CENTER_AXLE_TRAILER
+    FULL_TRAILER
+    CONVERTER_DOLLY
+    LINK_TRAILER
+    TOWING_SEMI_TRAILER
+    TOWING_CENTRE_AXLE_TRAILER
+    TOWING_FULL_TRAILER
+}
+
+"""Axle signals for vehicles (towing or towed) with 1 to 15 axles"""
+type VehicleTrailerAxle {
+    """The static vertical load of a trailer axle in kilograms."""
+    axleLoad: UInt16
+
+    """
+    The lateral distance between the wheel mounting faces, measured along the spindle axis.
+    """
+    axleWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+    """
+    Axle position from 1 to 15, 1 being in the front closest to the truck, according to ISO 11992-2.
+    """
+    position: AxlePositionEnum
+
+    """
+    Single track two-axle model steering angle. Angle according to ISO 8855. Positive = degrees to the left. Negative = degrees to the right.
+    """
+    steeringAngle(unit: Angle_Unit_Enum = DEGREE): Float
+
+    """
+    Aspect ratio between tire section height and tire section width, as per ETRTO / TRA standard.
+    """
+    tireAspectRatio(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+    """Outer diameter of tires, in inches, as per ETRTO / TRA standard."""
+    tireDiameter(unit: Length_Unit_Enum = INCH): Float
+
+    """Nominal section width of tires, in mm, as per ETRTO / TRA standard."""
+    tireWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+    """
+    The lateral distance between the centers of the wheels, measured along the spindle, or axle axis. If there are dual rear wheels, measure
+from the midway points between the inner and outer tires.
+    """
+    trackWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+    """
+    The lateral distance between the centerlines of the base tires at ground, including camber angle. If there are dual rear wheels, measure
+from the midway points between the inner and outer tires.
+    """
+    treadWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+    """
+    Diameter of wheels (rims without tires), in inches, as per ETRTO / TRA standard.
+    """
+    wheelDiameter(unit: Length_Unit_Enum = INCH): Float
+
+    """
+    Width of wheels (rims without tires), in inches, as per ETRTO / TRA standard.
+    """
+    wheelWidth(unit: Length_Unit_Enum = INCH): Float
+
+    """List of wheels on the axle."""
+    wheels: [VehicleTrailerWheel]
+
+    """Number of wheels on the axle"""
+    wheelCount: UInt8
+    instanceTag: TrailerAxleTag
+}
+
+"""
+Wheel signals for axle. Instances. Counted from the center line (3:rd left is on the left side of 2:left in the vehicle direction)
+"""
+type VehicleTrailerWheel {
+    """Angular (Rotational) speed of a vehicle's wheel."""
+    angularSpeed(unit: Angularspeed_Unit_Enum = DEGREE_PER_SECOND): Float
+
+    """Linear speed of a vehicle's wheel."""
+    speed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+    brake: TrailerWheelBrake
+    tire: TrailerWheelTire
+    instanceTag: TrailerWheelTag
+}
+
+"""Brake signals for wheel"""
+type TrailerWheelBrake {
+    """Brake fluid level as percent. 0 = Empty. 100 = Full."""
+    fluidLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+    """Brake pad wear status. True = Worn. False = Not Worn."""
+    isBrakesWorn: Boolean
+
+    """
+    Brake fluid level status. True = Brake fluid level low. False = Brake fluid level OK.
+    """
+    isFluidLevelLow: Boolean
+
+    """Brake pad wear as percent. 0 = No Wear. 100 = Worn."""
+    padWear(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""Tire signals for wheel."""
+type TrailerWheelTire {
+    """
+    Tire Pressure Status. True = Low tire pressure. False = Good tire pressure.
+    """
+    isPressureLow: Boolean
+
+    """Tire pressure in kilo-Pascal."""
+    pressure(unit: Pressure_Unit_Enum = KILOPASCAL): UInt16
+
+    """Tire temperature in Celsius."""
+    temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+type TrailerTag {
+    instance: ThreeTrailers
+}
+
+enum ThreeTrailers {
+    TRAILER_1
+    TRAILER_2
+    TRAILER_3
+}
+
+type TrailerAxleTag {
+    position: AxlePositionEnum
+}
+
+enum AxlePositionEnum {
+    POSITION_1
+    POSITION_2
+    POSITION_3
+    POSITION_4
+    POSITION_5
+    POSITION_6
+    POSITION_7
+    POSITION_8
+    POSITION_9
+    POSITION_10
+    POSITION_11
+    POSITION_12
+    POSITION_13
+    POSITION_14
+    POSITION_15
+}
+
+type TrailerWheelTag {
+    axle: AxlePositionEnum
+    side: TwoSides
+    outsideInNumber: EightOutsideInNumber
+}
+
+enum TwoSides {
+    LEFT
+    RIGHT
+}
+
+enum EightOutsideInNumber {
+    _1ST
+    _2ND
+    _3RD
+    _4TH
+    _5TH
+    _6TH
+    _7TH
+    _8TH
+}
+
+enum Acceleration_Unit_Enum {
+    CENTIMETERS_PER_SECOND_SQUARED
+    METERS_PER_SECOND_SQUARED
+}
+
+enum Angle_Unit_Enum {
+    DEGREE
+}
+
+enum Angularspeed_Unit_Enum {
+    DEGREE_PER_SECOND
+    RADIANS_PER_SECOND
+}
+
+enum Datetime_Unit_Enum {
+    ISO_8601
+    UNIX_TIMESTAMP
+}
+
+enum Distancepervolume_Unit_Enum {
+    KILOMETERS_PER_LITER
+    MILES_PER_GALLON
+}
+
+enum Duration_Unit_Enum {
+    DAYS
+    HOUR
+    MILLISECOND
+    MINUTE
+    MONTHS
+    SECOND
+    WEEKS
+    YEARS
+}
+
+enum Electriccharge_Unit_Enum {
+    AMPERE_HOURS
+}
+
+enum Electriccurrent_Unit_Enum {
+    AMPERE
+}
+
+enum Energyconsumptionperdistance_Unit_Enum {
+    KILOWATT_HOURS_PER_100_KILOMETERS
+    WATT_HOUR_PER_KM
+}
+
+enum Force_Unit_Enum {
+    KILO_NEWTON
+    NEWTON
+}
+
+enum Frequency_Unit_Enum {
+    BEATS_PER_MINUTE
+    CYCLES_PER_MINUTE
+    HERTZ
+}
+
+enum Illuminance_Unit_Enum {
+    LUX
+}
+
+enum Length_Unit_Enum {
+    CENTIMETER
+    INCH
+    KILOMETER
+    METER
+    MILLIMETER
+}
+
+enum Mass_Unit_Enum {
+    GRAM
+    KILOGRAM
+    POUND
+}
+
+enum Massperdistance_Unit_Enum {
+    GRAMS_PER_KILOMETER
+}
+
+enum Masspertime_Unit_Enum {
+    GRAMS_PER_SECOND
+}
+
+enum Power_Unit_Enum {
+    HORSEPOWER
+    KILOWATT
+    WATT
+}
+
+enum Pressure_Unit_Enum {
+    KILOPASCAL
+    MILLIBAR
+    PASCAL
+    POUNDS_PER_SQUARE_INCH
+}
+
+enum Rating_Unit_Enum {
+    STARS
+}
+
+enum Relation_Unit_Enum {
+    DECIBEL
+    DECIBEL_MILLIWATT
+    NANO_METER_PER_KILOMETER
+    PERCENT
+    RATIO
+}
+
+enum Resistance_Unit_Enum {
+    OHM
+}
+
+enum Rotationalspeed_Unit_Enum {
+    REVOLUTIONS_PER_MINUTE
+}
+
+enum Temperature_Unit_Enum {
+    DEGREE_CELSIUS
+}
+
+enum Torque_Unit_Enum {
+    NEWTON_METER
+}
+
+enum Velocity_Unit_Enum {
+    KILOMETER_PER_HOUR
+    METERS_PER_SECOND
+}
+
+enum Voltage_Unit_Enum {
+    VOLT
+}
+
+enum Volume_Unit_Enum {
+    CUBIC_CENTIMETERS
+    LITER
+    MILLILITER
+}
+
+enum Volumeflowrate_Unit_Enum {
+    LITER_PER_HOUR
+}
+
+enum Volumeperdistance_Unit_Enum {
+    LITER_PER_100_KILOMETERS
+    MILLILITER_PER_100_KILOMETERS
+}
+
+enum Work_Unit_Enum {
+    KILOWATT_HOURS
+}
+
+type Query {
+    ping: String
+}

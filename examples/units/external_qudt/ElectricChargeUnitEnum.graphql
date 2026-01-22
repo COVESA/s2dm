@@ -1,0 +1,104 @@
+# Generated from QUDT units catalog version v3.1.6
+enum ElectricChargeUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricCharge", versionTag: "v3.1.6") {
+  """Attocoulomb | UCUM: aC"""
+  ATTOC @reference(uri: "http://qudt.org/vocab/unit/AttoC", versionTag: "v3.1.6")
+
+  """Ampere Hour | UCUM: A.h"""
+  A_HR @reference(uri: "http://qudt.org/vocab/unit/A-HR", versionTag: "v3.1.6")
+
+  """Ampere Second | UCUM: A.s"""
+  A_SEC @reference(uri: "http://qudt.org/vocab/unit/A-SEC", versionTag: "v3.1.6")
+
+  """Coulomb | UCUM: C"""
+  C @reference(uri: "http://qudt.org/vocab/unit/C", versionTag: "v3.1.6")
+
+  """Centicoulomb | UCUM: cC"""
+  CENTIC @reference(uri: "http://qudt.org/vocab/unit/CentiC", versionTag: "v3.1.6")
+
+  """Abcoulomb | UCUM: 10.C"""
+  C_AB @reference(uri: "http://qudt.org/vocab/unit/C_Ab", versionTag: "v3.1.6")
+
+  """Statcoulomb"""
+  C_STAT @reference(uri: "http://qudt.org/vocab/unit/C_Stat", versionTag: "v3.1.6")
+
+  """Decacoulomb | UCUM: daC"""
+  DECAC @reference(uri: "http://qudt.org/vocab/unit/DecaC", versionTag: "v3.1.6")
+
+  """Decicoulomb | UCUM: dC"""
+  DECIC @reference(uri: "http://qudt.org/vocab/unit/DeciC", versionTag: "v3.1.6")
+
+  """Elementary Charge | UCUM: [e]"""
+  E @reference(uri: "http://qudt.org/vocab/unit/E", versionTag: "v3.1.6")
+
+  """Elementary Charge | UCUM: [e]"""
+  ELEMENTARYCHARGE @reference(uri: "http://qudt.org/vocab/unit/ElementaryCharge", versionTag: "v3.1.6")
+
+  """Exacoulomb | UCUM: EC"""
+  EXAC @reference(uri: "http://qudt.org/vocab/unit/ExaC", versionTag: "v3.1.6")
+
+  """Faraday"""
+  F @reference(uri: "http://qudt.org/vocab/unit/F", versionTag: "v3.1.6")
+
+  """Femtocoulomb | UCUM: fC"""
+  FEMTOC @reference(uri: "http://qudt.org/vocab/unit/FemtoC", versionTag: "v3.1.6")
+
+  """Franklin"""
+  FR @reference(uri: "http://qudt.org/vocab/unit/FR", versionTag: "v3.1.6")
+
+  """Gigacoulomb | UCUM: GC"""
+  GIGAC @reference(uri: "http://qudt.org/vocab/unit/GigaC", versionTag: "v3.1.6")
+
+  """Hectocoulomb | UCUM: hC"""
+  HECTOC @reference(uri: "http://qudt.org/vocab/unit/HectoC", versionTag: "v3.1.6")
+
+  """Kiloampere Hour | UCUM: kA.h"""
+  KILOA_HR @reference(uri: "http://qudt.org/vocab/unit/KiloA-HR", versionTag: "v3.1.6")
+
+  """Kilocoulomb | UCUM: kC"""
+  KILOC @reference(uri: "http://qudt.org/vocab/unit/KiloC", versionTag: "v3.1.6")
+
+  """Kilojoule per Kilovolt | UCUM: kJ.kV-1"""
+  KILOJ_PER_KILOV @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-KiloV", versionTag: "v3.1.6")
+
+  """Megacoulomb | UCUM: MC"""
+  MEGAC @reference(uri: "http://qudt.org/vocab/unit/MegaC", versionTag: "v3.1.6")
+
+  """Microcoulomb | UCUM: uC"""
+  MICROC @reference(uri: "http://qudt.org/vocab/unit/MicroC", versionTag: "v3.1.6")
+
+  """Milliampere Hour | UCUM: mA.h"""
+  MILLIA_HR @reference(uri: "http://qudt.org/vocab/unit/MilliA-HR", versionTag: "v3.1.6")
+
+  """Milliampere Second | UCUM: mA.s"""
+  MILLIA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliA-SEC", versionTag: "v3.1.6")
+
+  """Millicoulomb | UCUM: mC"""
+  MILLIC @reference(uri: "http://qudt.org/vocab/unit/MilliC", versionTag: "v3.1.6")
+
+  """Nanocoulomb | UCUM: nC"""
+  NANOC @reference(uri: "http://qudt.org/vocab/unit/NanoC", versionTag: "v3.1.6")
+
+  """Petacoulomb | UCUM: PC"""
+  PETAC @reference(uri: "http://qudt.org/vocab/unit/PetaC", versionTag: "v3.1.6")
+
+  """Picocoulomb | UCUM: pC"""
+  PICOC @reference(uri: "http://qudt.org/vocab/unit/PicoC", versionTag: "v3.1.6")
+
+  """Planck Charge"""
+  PLANCKCHARGE @reference(uri: "http://qudt.org/vocab/unit/PlanckCharge", versionTag: "v3.1.6")
+
+  """Teracoulomb | UCUM: TC"""
+  TERAC @reference(uri: "http://qudt.org/vocab/unit/TeraC", versionTag: "v3.1.6")
+
+  """Yoctocoulomb | UCUM: yC"""
+  YOCTOC @reference(uri: "http://qudt.org/vocab/unit/YoctoC", versionTag: "v3.1.6")
+
+  """Yottacoulomb | UCUM: YC"""
+  YOTTAC @reference(uri: "http://qudt.org/vocab/unit/YottaC", versionTag: "v3.1.6")
+
+  """Zeptocoulomb | UCUM: zC"""
+  ZEPTOC @reference(uri: "http://qudt.org/vocab/unit/ZeptoC", versionTag: "v3.1.6")
+
+  """Zettacoulomb | UCUM: ZC"""
+  ZETTAC @reference(uri: "http://qudt.org/vocab/unit/ZettaC", versionTag: "v3.1.6")
+}

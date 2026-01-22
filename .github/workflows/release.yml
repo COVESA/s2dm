@@ -19,7 +19,7 @@ jobs:
       id-token: write  # For trusted publishing (future enhancement)
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ssh-key: ${{ secrets.DEPLOY_KEY }}
           fetch-depth: 0
@@ -30,7 +30,7 @@ jobs:
           python-version: "3.13"
 
       - name: uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: sync
         run: uv sync --frozen

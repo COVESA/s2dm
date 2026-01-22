@@ -5,7 +5,6 @@ from graphql import (
     GraphQLField,
     GraphQLInterfaceType,
     GraphQLList,
-    GraphQLNamedType,
     GraphQLNonNull,
     GraphQLObjectType,
     GraphQLScalarType,
@@ -22,14 +21,11 @@ from graphql import (
 )
 
 from s2dm import log
-from s2dm.exporters.utils import (
-    expand_instance_tag,
-    get_all_named_types,
-    get_cardinality,
-    get_directive_arguments,
-    get_instance_tag_object,
-    get_referenced_types,
-    has_directive,
+from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
+from s2dm.exporters.utils.extraction import get_all_named_types
+from s2dm.exporters.utils.field import get_cardinality
+from s2dm.exporters.utils.instance_tag import (
+    is_instance_tag_field,
     is_valid_instance_tag_field,
 )
 
@@ -62,12 +58,10 @@ class JsonSchemaTransformer:
         graphql_schema: GraphQLSchema,
         root_type: str | None = None,
         strict: bool = False,
-        expanded_instances: bool = False,
     ):
         self.graphql_schema = graphql_schema
         self.root_type = root_type
         self.strict = strict
-        self.expanded_instances = expanded_instances
 
     def transform(self) -> dict[str, Any]:
         """
@@ -75,10 +69,6 @@ class JsonSchemaTransformer:
 
         Converts all GraphQL types (except Query/Mutation/Subscription) into JSON Schema
         definitions in the $defs section. Handles directives as well.
-
-        Args:
-            graphql_schema: The GraphQL schema object to transform
-            root_type: Optional root type name for the JSON schema
 
         Returns:
             Dict[str, Any]: JSON Schema representation
@@ -106,13 +96,8 @@ class JsonSchemaTransformer:
                 }
             )
 
-        if self.root_type:
-            referenced_types = get_referenced_types(self.graphql_schema, self.root_type)
-            user_defined_types: list[GraphQLNamedType] = [
-                t for t in referenced_types if isinstance(t, GraphQLNamedType)
-            ]
-        else:
-            user_defined_types = get_all_named_types(self.graphql_schema)
+        all_types = get_all_named_types(self.graphql_schema)
+        user_defined_types = [graphql_type for graphql_type in all_types if not is_scalar_type(graphql_type)]
 
         log.info(f"Found {len(user_defined_types)} user-defined types to transform")
 
@@ -143,9 +128,11 @@ class JsonSchemaTransformer:
         Returns:
             Optional[Dict[str, Any]]: JSON Schema definition or None if not transformable
         """
-        if is_object_type(graphql_type) and not has_directive(cast(GraphQLObjectType, graphql_type), "instanceTag"):
+        if is_object_type(graphql_type) and not has_given_directive(
+            cast(GraphQLObjectType, graphql_type), "instanceTag"
+        ):
             return self.transform_object_type(cast(GraphQLObjectType, graphql_type))
-        elif is_object_type(graphql_type) and has_directive(cast(GraphQLObjectType, graphql_type), "instanceTag"):
+        elif is_object_type(graphql_type) and has_given_directive(cast(GraphQLObjectType, graphql_type), "instanceTag"):
             object_type = cast(GraphQLObjectType, graphql_type)
             log.warning(f"Skipping object type with @instanceTag directive: {object_type.name}")
             return None
@@ -182,18 +169,15 @@ class JsonSchemaTransformer:
 
         # Process directives
         if hasattr(object_type, "ast_node") and object_type.ast_node and object_type.ast_node.directives:
-            directive_extensions = self.process_directives(object_type)
-            definition.update(directive_extensions)
+            directive_result = self.process_directives(object_type)
+            definition.update(directive_result["field"])
 
         required_fields = []
         for field_name, field in object_type.fields.items():
             if is_valid_instance_tag_field(field, self.graphql_schema):
-                if field_name == "instanceTag":
-                    # Skip instanceTag field as it is handled separately
+                if is_instance_tag_field(field_name):
                     continue
                 else:
-                    # Fields with an instanceTag object type should not be allowed since object
-                    # types with @instanceTag directives are not included in the JSON schema.
                     raise ValueError(
                         f"Invalid schema: instanceTag object found on non-instanceTag named field '{field_name}'"
                     )
@@ -202,21 +186,14 @@ class JsonSchemaTransformer:
                 required_fields.append(field_name)
 
             field_definition = self.transform_field(field)
-
-            # Handle the case where field_definition might be a tuple (for expanded instances)
-            property_name = field_name
-            if isinstance(field_definition, tuple):
-                field_definition, singular_name = field_definition
-                property_name = singular_name
-
-            definition["properties"][property_name] = field_definition
+            definition["properties"][field_name] = field_definition
 
         if required_fields:
             definition["required"] = required_fields
 
         return definition
 
-    def transform_field(self, field: GraphQLField) -> dict[str, Any] | tuple[dict[str, Any], str]:
+    def transform_field(self, field: GraphQLField) -> dict[str, Any]:
         """
         Transform a GraphQL field to JSON Schema property.
 
@@ -224,37 +201,26 @@ class JsonSchemaTransformer:
             field: The GraphQL field
 
         Returns:
-            JSON Schema property definition, or tuple of (definition, singular_name) for expanded instances
+            JSON Schema property definition
         """
         field_type = field.type
         definition = self.get_field_type_definition(field_type)
 
-        # Handle the case where definition might be a tuple (for expanded instances)
-        singular_name = None
-        if isinstance(definition, tuple):
-            definition, singular_name = definition
-
         if field.description:
             definition["description"] = field.description
 
-        # Process field directives
         if hasattr(field, "ast_node") and field.ast_node and field.ast_node.directives:
-            directive_extensions = self.process_directives(field)
-            # For expanded instances (when we return a tuple), don't apply array-specific directives
-            if singular_name is not None:
-                # Remove array-specific directives for expanded instances since they become objects
-                directive_extensions.pop("uniqueItems", None)
-                directive_extensions.pop("minItems", None)
-                directive_extensions.pop("maxItems", None)
-            definition.update(directive_extensions)
+            directive_result = self.process_directives(field, field_type)
+            field_directives = directive_result["field"]
+            contained_type_directives = directive_result["contained_type"]
 
-        if singular_name:
-            return (definition, singular_name)
+            definition.update(field_directives)
+            if contained_type_directives and definition.get("type") == "array" and "items" in definition:
+                definition["items"].update(contained_type_directives)
+
         return definition
 
-    def get_field_type_definition(
-        self, field_type: GraphQLType, nullable: bool = True
-    ) -> dict[str, Any] | tuple[dict[str, Any], str]:
+    def get_field_type_definition(self, field_type: GraphQLType, nullable: bool = True) -> dict[str, Any]:
         """
         Get JSON Schema definition for a GraphQL field type.
 
@@ -263,8 +229,10 @@ class JsonSchemaTransformer:
             nullable: Whether the field is nullable (not wrapped in NonNull)
 
         Returns:
-            JSON Schema type definition, or tuple of (definition, singular_name) for expanded instances
+            JSON Schema type definition
         """
+        definition: dict[str, Any] = {}
+
         # Handle NonNull wrapper. e.g. `Type!`
         if is_non_null_type(field_type):
             return self.get_field_type_definition(cast(GraphQLNonNull[Any], field_type).of_type, nullable=False)
@@ -272,32 +240,8 @@ class JsonSchemaTransformer:
         # Handle List wrapper
         if is_list_type(field_type):
             list_type = cast(GraphQLList[Any], field_type)
-
-            # Check if we should expand instances and if list contains objects with instance tags
-            if self.expanded_instances:
-                # Get the actual item type (unwrap NonNull if present)
-                item_type = list_type.of_type
-                if is_non_null_type(item_type):
-                    item_type = item_type.of_type
-
-                # Check if the item type is an object with instance tags
-                if is_object_type(item_type):
-                    item_object_type = cast(GraphQLObjectType, item_type)
-                    instance_tag_object = get_instance_tag_object(item_object_type, self.graphql_schema)
-                    if instance_tag_object:
-                        # Create expanded nested structure instead of array
-                        expanded_def = self.create_expanded_instance_structure(item_object_type, instance_tag_object)
-                        # Return both the definition and the singular type name
-                        return (expanded_def, item_object_type.name)
-
             item_definition = self.get_field_type_definition(list_type.of_type)
 
-            # Handle the case where item_definition might be a tuple (for nested expanded instances)
-            if isinstance(item_definition, tuple):
-                item_definition = item_definition[0]
-
-            # Check if the list items are nullable (not wrapped in NonNull). e.g. `[Type]`
-            # This handles cases like [Type] where items can be null: [Type, null, Type, ...]
             if not is_non_null_type(list_type.of_type) and self.strict:
                 # For nullable items, allow the item type or null
                 if "$ref" in item_definition:
@@ -321,8 +265,9 @@ class JsonSchemaTransformer:
         # Handle scalar types
         if is_scalar_type(field_type):
             scalar_type = cast(GraphQLScalarType, field_type)
-            json_type = GRAPHQL_SCALAR_TO_JSON_SCHEMA.get(scalar_type.name, "string")
-            definition = {"type": json_type}
+            json_type = GRAPHQL_SCALAR_TO_JSON_SCHEMA.get(scalar_type.name)
+            if json_type:
+                definition = {"type": json_type}
 
             if nullable and self.strict:
                 definition = {"type": [json_type, "null"]}
@@ -371,127 +316,62 @@ class JsonSchemaTransformer:
             Dict[str, Any]: JSON Schema definition for the object type
         """
         named_type = cast(GraphQLObjectType | GraphQLInterfaceType, field_type)
-
-        if is_object_type(named_type):
-            instance_tag_object = get_instance_tag_object(cast(GraphQLObjectType, named_type), self.graphql_schema)
-            if instance_tag_object:
-                expanded_instance_tag = expand_instance_tag(instance_tag_object)
-
-                definition: dict[str, Any] = {
-                    "additionalProperties": False,
-                    "properties": {},
-                    "type": "object",
-                }
-                for expanded_instance in expanded_instance_tag:
-                    current_definition = definition["properties"]
-                    expanded_instance_split = expanded_instance.split(".")
-
-                    for index, part in enumerate(expanded_instance_split):
-                        is_last_split_element = index == len(expanded_instance_split) - 1
-
-                        if part not in current_definition:
-                            if is_last_split_element:
-                                current_definition[part] = {}
-                            else:
-                                current_definition[part] = {
-                                    "additionalProperties": False,
-                                    "properties": {},
-                                    "type": "object",
-                                }
-
-                        if is_last_split_element:
-                            current_definition = current_definition[part]
-                        else:
-                            current_definition = current_definition[part]["properties"]
-
-                    current_definition["$ref"] = f"#/$defs/{named_type.name}"
-                return definition
-
         return {"$ref": f"#/$defs/{named_type.name}"}
 
-    def create_expanded_instance_structure(
-        self, object_type: GraphQLObjectType, instance_tag_object: GraphQLObjectType
+    def process_directives(
+        self, element: GraphQLField | GraphQLObjectType, field_type: GraphQLType | None = None
     ) -> dict[str, Any]:
-        """
-        Create an expanded nested structure for objects with instance tags instead of arrays.
-
-        Args:
-            object_type: The GraphQL object type that contains the instance tag
-            instance_tag_object: The instance tag object type
-
-        Returns:
-            Dict[str, Any]: JSON Schema definition with expanded nested structure
-        """
-        expanded_instance_tags = expand_instance_tag(instance_tag_object)
-
-        definition: dict[str, Any] = {
-            "additionalProperties": False,
-            "properties": {},
-            "type": "object",
-        }
-
-        for expanded_instance in expanded_instance_tags:
-            current_definition = definition["properties"]
-            expanded_instance_split = expanded_instance.split(".")
-
-            for index, part in enumerate(expanded_instance_split):
-                is_last_split_element = index == len(expanded_instance_split) - 1
-
-                if part not in current_definition:
-                    if is_last_split_element:
-                        # For the last element, use a reference to the object type
-                        current_definition[part] = {"$ref": f"#/$defs/{object_type.name}"}
-                    else:
-                        current_definition[part] = {
-                            "additionalProperties": False,
-                            "properties": {},
-                            "type": "object",
-                        }
-
-                if not is_last_split_element:
-                    current_definition = current_definition[part]["properties"]
-
-        return definition
-
-    def process_directives(self, element: GraphQLField | GraphQLObjectType) -> dict[str, Any]:
         """
         Process GraphQL directives and convert them to JSON Schema extensions.
 
         Args:
-            directives: List of GraphQL directive nodes
+            element: The GraphQL field or object type with directives
+            field_type: The GraphQL type of the field (for context-aware processing)
 
         Returns:
-            Dict[str, Any]: JSON Schema extensions for the directives
+            Dict with 'field' and 'contained_type' keys for directives that apply to
+            the field itself vs the contained type (items in arrays, members in unions, etc.)
         """
-        extensions: dict[str, Any] = {}
+        field_extensions: dict[str, Any] = {}
+        contained_type_extensions: dict[str, Any] = {}
 
-        if has_directive(element, "noDuplicates"):
-            extensions["uniqueItems"] = True
+        if has_given_directive(element, "noDuplicates"):
+            field_extensions["uniqueItems"] = True
 
         if isinstance(element, GraphQLField):
             cardinality = get_cardinality(element)
             if cardinality:
                 if cardinality.min is not None:
-                    extensions["minItems"] = cardinality.min
+                    field_extensions["minItems"] = cardinality.min
                 if cardinality.max is not None:
-                    extensions["maxItems"] = cardinality.max
+                    field_extensions["maxItems"] = cardinality.max
 
-        if has_directive(element, "range"):
+        if has_given_directive(element, "range"):
             args = get_directive_arguments(element, "range")
+            range_extensions = {}
             if "min" in args:
-                extensions["minimum"] = args["min"]
+                range_extensions["minimum"] = args["min"]
             if "max" in args:
-                extensions["maximum"] = args["max"]
+                range_extensions["maximum"] = args["max"]
 
-        if has_directive(element, "metadata"):
+            unwrapped_type = field_type
+            if unwrapped_type and is_non_null_type(unwrapped_type):
+                unwrapped_type = cast(GraphQLNonNull[Any], unwrapped_type).of_type
+
+            if unwrapped_type and is_list_type(unwrapped_type):
+                contained_type_extensions.update(range_extensions)
+            else:
+                field_extensions.update(range_extensions)
+
+        if has_given_directive(element, "metadata"):
             args = get_directive_arguments(element, "metadata")
             if "comment" in args:
-                extensions["$comment"] = args["comment"]
+                field_extensions["$comment"] = args["comment"]
             other_metadata = {k: v for k, v in args.items() if k != "comment"}
             if other_metadata:
-                extensions["x-metadata"] = other_metadata
+                field_extensions["x-metadata"] = other_metadata
 
-        return extensions
+        return {"field": field_extensions, "contained_type": contained_type_extensions}
 
     def transform_enum_type(self, enum_type: GraphQLEnumType) -> dict[str, Any]:
         """

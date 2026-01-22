@@ -76,37 +76,6 @@ class TestRootNodeFiltering:
         assert schema["$ref"] == "#/$defs/Vehicle"
         assert "Vehicle" in schema["$defs"]
 
-    def test_root_node_filters_types(self) -> None:
-        """Test that root node filtering only includes reachable types."""
-        schema_str = """
-            type Query { vehicle: Vehicle, engine: Engine }
-            type Vehicle { id: ID!, engine: Engine }
-            type Engine { id: ID!, displacement: Float! }
-            type UnrelatedType { id: ID!, data: String }
-        """
-        graphql_schema = build_schema(schema_str)
-
-        result = transform(graphql_schema, "Vehicle")
-        schema = json.loads(result)
-
-        # Should include Vehicle and Engine (referenced by Vehicle)
-        assert "Vehicle" in schema["$defs"]
-        assert "Engine" in schema["$defs"]
-
-        # Should NOT include UnrelatedType
-        assert "UnrelatedType" not in schema["$defs"]
-
-    def test_invalid_root_node_raises_error(self) -> None:
-        """Test that specifying an invalid root node raises an error."""
-        schema_str = """
-            type Query { vehicle: Vehicle }
-            type Vehicle { id: ID!, make: String! }
-        """
-        graphql_schema = build_schema(schema_str)
-
-        with pytest.raises(ValueError, match="Root type 'NonExistent' not found in schema"):
-            transform(graphql_schema, "NonExistent")
-
 
 class TestGraphQLTypeHandling:
     def test_scalar_types(self) -> None:
@@ -437,6 +406,43 @@ class TestDirectives:
         assert "maximum" in price_prop
         assert price_prop["minimum"] == 0.0
         assert price_prop["maximum"] == 999999.99
+
+    def test_range_directive_on_array_field(self) -> None:
+        """Test that @range directive on array fields applies constraints to items, not the array."""
+        schema_str = """
+            directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+            type Query { vehicle: Vehicle }
+            type Vehicle {
+                temperatures: [Float!]! @range(min: -40.0, max: 120.0)
+                seatHeights: [Int] @range(min: 0, max: 100)
+            }
+        """
+        graphql_schema = build_schema(schema_str)
+        result = transform(graphql_schema)
+        schema = json.loads(result)
+
+        vehicle_def = schema["$defs"]["Vehicle"]
+        temperatures_prop = vehicle_def["properties"]["temperatures"]
+        seat_heights_prop = vehicle_def["properties"]["seatHeights"]
+
+        assert temperatures_prop["type"] == "array"
+        assert "items" in temperatures_prop
+        assert "minimum" not in temperatures_prop
+        assert "maximum" not in temperatures_prop
+        assert "minimum" in temperatures_prop["items"]
+        assert "maximum" in temperatures_prop["items"]
+        assert temperatures_prop["items"]["minimum"] == -40.0
+        assert temperatures_prop["items"]["maximum"] == 120.0
+
+        assert seat_heights_prop["type"] == "array"
+        assert "items" in seat_heights_prop
+        assert "minimum" not in seat_heights_prop
+        assert "maximum" not in seat_heights_prop
+        assert "minimum" in seat_heights_prop["items"]
+        assert "maximum" in seat_heights_prop["items"]
+        assert seat_heights_prop["items"]["minimum"] == 0
+        assert seat_heights_prop["items"]["maximum"] == 100
 
     def test_no_duplicates_directive(self) -> None:
         schema_str = """
@@ -783,129 +789,6 @@ class TestInstanceTagHandling:
 
         assert "id" in vehicle_def["properties"]
         assert "normalField" in vehicle_def["properties"]
-
-    def test_instance_tag_object_expansion(self) -> None:
-        """Test that instanceTag objects are expanded correctly in the schema."""
-        schema_str = """
-            directive @instanceTag on OBJECT
-
-            type Query {
-                vehicle: Vehicle
-            }
-
-            type Vehicle {
-                id: ID!
-                door: Door!
-            }
-
-            type Door {
-                locked: Boolean!
-                instanceTag: InCabinArea2x2
-            }
-
-            enum TwoRowsInCabinEnum {
-                ROW1
-                ROW2
-            }
-
-            enum ThreeColumnsInCabinEnum {
-                DRIVERSIDE
-                MIDDLE
-                PASSENGERSIDE
-            }
-
-            type InCabinArea2x2 @instanceTag {
-                row: TwoRowsInCabinEnum
-                column: ThreeColumnsInCabinEnum
-            }
-        """
-        graphql_schema = build_schema(schema_str)
-        result = transform(graphql_schema)
-        schema = json.loads(result)
-
-        assert "Vehicle" in schema["$defs"]
-        vehicle_def = schema["$defs"]["Vehicle"]
-
-        assert "door" in vehicle_def["properties"]
-
-        door_property = vehicle_def["properties"]["door"]
-        assert door_property["type"] == "object"
-        assert "properties" in door_property
-        assert door_property["additionalProperties"] is False
-
-        door_property_properties = door_property["properties"]
-        assert door_property_properties["ROW1"]["properties"]["DRIVERSIDE"]["$ref"] == "#/$defs/Door"
-        assert door_property_properties["ROW1"]["properties"]["MIDDLE"]["$ref"] == "#/$defs/Door"
-        assert door_property_properties["ROW1"]["properties"]["PASSENGERSIDE"]["$ref"] == "#/$defs/Door"
-
-        assert "Door" in schema["$defs"]
-        door_def = schema["$defs"]["Door"]
-
-        assert "locked" in door_def["properties"]
-
-    def test_instance_tag_list_object_expansion(self) -> None:
-        """Test that instanceTag objects in lists are expanded correctly in the schema."""
-        schema_str = """
-            directive @instanceTag on OBJECT
-
-            type Query {
-                vehicle: Vehicle
-            }
-
-            type Vehicle {
-                id: ID!
-                doors: [Door]!
-            }
-
-            type Door {
-                locked: Boolean!
-                instanceTag: InCabinArea2x2
-            }
-
-            enum TwoRowsInCabinEnum {
-                ROW1
-                ROW2
-            }
-
-            enum ThreeColumnsInCabinEnum {
-                DRIVERSIDE
-                MIDDLE
-                PASSENGERSIDE
-            }
-
-            type InCabinArea2x2 @instanceTag {
-                row: TwoRowsInCabinEnum
-                column: ThreeColumnsInCabinEnum
-            }
-        """
-        graphql_schema = build_schema(schema_str)
-        result = transform(graphql_schema)
-        schema = json.loads(result)
-
-        assert "Vehicle" in schema["$defs"]
-        vehicle_def = schema["$defs"]["Vehicle"]
-
-        assert "doors" in vehicle_def["properties"]
-
-        door_property = vehicle_def["properties"]["doors"]
-        assert door_property["type"] == "array"
-        assert "items" in door_property
-        assert "additionalProperties" not in door_property
-
-        door_property_items = door_property["items"]
-        assert door_property_items["type"] == "object"
-        assert door_property_items["additionalProperties"] is False
-        assert "properties" in door_property_items
-
-        door_property_items_properties = door_property_items["properties"]
-        assert door_property_items_properties["ROW1"]["properties"]["DRIVERSIDE"]["$ref"] == "#/$defs/Door"
-        assert door_property_items_properties["ROW1"]["properties"]["MIDDLE"]["$ref"] == "#/$defs/Door"
-        assert door_property_items_properties["ROW1"]["properties"]["PASSENGERSIDE"]["$ref"] == "#/$defs/Door"
-
-        assert "Door" in schema["$defs"]
-        door_def = schema["$defs"]["Door"]
-
-        assert "locked" in door_def["properties"]
 
 
 class TestStrictMode:

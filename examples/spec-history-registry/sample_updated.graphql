@@ -26,7 +26,7 @@ enum Vehicle_LowVoltageSystemState_Enum {
 """High-level vehicle data."""
 type Vehicle {
   id: ID!
-  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Int
+  averageSpeed(unit: VelocityUnitEnum = KILOM_PER_HR): Int
   isAutoPowerOptimize: Boolean
   lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
   adas: Vehicle_ADAS
@@ -52,7 +52,7 @@ type Vehicle_ADAS_ABS {
 """Signals form Obstacle Sensor System."""
 type Vehicle_ADAS_ObstacleDetection {
   id: ID!
-  distance(unit: Length_Unit_Enum = METER): Int
+  distance(unit: LengthUnitEnum = M): Int
   isEnabled: Boolean
   warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
 }

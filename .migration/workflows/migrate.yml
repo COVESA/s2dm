@@ -1,0 +1,38 @@
+name: Automated Migration Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'spec/**'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: current
+          ssh-key: ${{ secrets.DEPLOY_KEY || '' }}
+
+      - name: Run s2dm-publish Action
+        uses: COVESA/s2dm/actions/s2dm-publish@main
+        with:
+          repository-path: ./current
+          spec-path: ./current/spec
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          concept-namespace: ${{ vars.CONCEPT_NAMESPACE || '' }}
+          concept-prefix: ${{ vars.CONCEPT_PREFIX || '' }}
+          shacl-serialization-format: ${{ vars.SHACL_SERIALIZATION_FORMAT || '' }}
+          shacl-shapes-namespace: ${{ vars.SHACL_SHAPES_NAMESPACE || '' }}
+          shacl-shapes-prefix: ${{ vars.SHACL_SHAPES_PREFIX || '' }}
+          shacl-model-namespace: ${{ vars.SHACL_MODEL_NAMESPACE || '' }}
+          shacl-model-prefix: ${{ vars.SHACL_MODEL_PREFIX || '' }}
+          skos-namespace: ${{ vars.SKOS_NAMESPACE || '' }}
+          skos-prefix: ${{ vars.SKOS_PREFIX || '' }}
+          skos-language: ${{ vars.SKOS_LANGUAGE || '' }}

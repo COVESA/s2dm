@@ -1,0 +1,116 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LengthUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Length", versionTag: "3.1.5") {
+  """Angstrom | UCUM: Ao"""
+  ANGSTROM @reference(uri: "http://qudt.org/vocab/unit/ANGSTROM", versionTag: "3.1.5")
+
+  """Astronomical-unit | UCUM: AU"""
+  AU @reference(uri: "http://qudt.org/vocab/unit/AU", versionTag: "3.1.5")
+
+  """British Thermal Unit (international Definition) per Pound Force | UCUM: [Btu_IT].[lbf_av]-1"""
+  BTU_IT_PER_LB_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-LB_F", versionTag: "3.1.5")
+
+  """Centimeter | UCUM: cm"""
+  CENTIM @reference(uri: "http://qudt.org/vocab/unit/CentiM", versionTag: "3.1.5")
+
+  """Chain | UCUM: [ch_br]"""
+  CH @reference(uri: "http://qudt.org/vocab/unit/CH", versionTag: "3.1.5")
+
+  """Chain (based on U.s. Survey Foot)"""
+  CHAIN_US @reference(uri: "http://qudt.org/vocab/unit/CHAIN_US", versionTag: "3.1.5")
+
+  """Decameter | UCUM: dam"""
+  DECAM @reference(uri: "http://qudt.org/vocab/unit/DecaM", versionTag: "3.1.5")
+
+  """Decimeter | UCUM: dm"""
+  DECIM @reference(uri: "http://qudt.org/vocab/unit/DeciM", versionTag: "3.1.5")
+
+  """Fathom | UCUM: [fth_i]"""
+  FATH @reference(uri: "http://qudt.org/vocab/unit/FATH", versionTag: "3.1.5")
+
+  """Femtometer | UCUM: fm"""
+  FEMTOM @reference(uri: "http://qudt.org/vocab/unit/FemtoM", versionTag: "3.1.5")
+
+  """Fermi"""
+  FM @reference(uri: "http://qudt.org/vocab/unit/FM", versionTag: "3.1.5")
+
+  """Foot | UCUM: [ft_i]"""
+  FT @reference(uri: "http://qudt.org/vocab/unit/FT", versionTag: "3.1.5")
+
+  """Us Survey Foot | UCUM: [ft_us]"""
+  FT_US @reference(uri: "http://qudt.org/vocab/unit/FT_US", versionTag: "3.1.5")
+
+  """Furlong | UCUM: [fur_us]"""
+  FUR @reference(uri: "http://qudt.org/vocab/unit/FUR", versionTag: "3.1.5")
+
+  """French Gauge | UCUM: [Ch]"""
+  GAUGE_FR @reference(uri: "http://qudt.org/vocab/unit/GAUGE_FR", versionTag: "3.1.5")
+
+  """Charrière Gauge"""
+  GA_CHARRIERE @reference(uri: "http://qudt.org/vocab/unit/GA_Charriere", versionTag: "3.1.5")
+
+  """Hectometer | UCUM: hm"""
+  HECTOM @reference(uri: "http://qudt.org/vocab/unit/HectoM", versionTag: "3.1.5")
+
+  """Inch | UCUM: [in_i]"""
+  IN @reference(uri: "http://qudt.org/vocab/unit/IN", versionTag: "3.1.5")
+
+  """Kilometer | UCUM: km"""
+  KILOM @reference(uri: "http://qudt.org/vocab/unit/KiloM", versionTag: "3.1.5")
+
+  """Light Year | UCUM: [ly]"""
+  LY @reference(uri: "http://qudt.org/vocab/unit/LY", versionTag: "3.1.5")
+
+  """Meter | UCUM: m"""
+  M @reference(uri: "http://qudt.org/vocab/unit/M", versionTag: "3.1.5")
+
+  """International Mile | UCUM: [mi_i]"""
+  MI @reference(uri: "http://qudt.org/vocab/unit/MI", versionTag: "3.1.5")
+
+  """Microinch | UCUM: u[in_i]"""
+  MICROIN @reference(uri: "http://qudt.org/vocab/unit/MicroIN", versionTag: "3.1.5")
+
+  """Micrometer | UCUM: um"""
+  MICROM @reference(uri: "http://qudt.org/vocab/unit/MicroM", versionTag: "3.1.5")
+
+  """Mil Length | UCUM: [mil_i]"""
+  MILLENGTH @reference(uri: "http://qudt.org/vocab/unit/MilLength", versionTag: "3.1.5")
+
+  """Milliinch | UCUM: m[in_i]"""
+  MILLIIN @reference(uri: "http://qudt.org/vocab/unit/MilliIN", versionTag: "3.1.5")
+
+  """Millimeter | UCUM: mm"""
+  MILLIM @reference(uri: "http://qudt.org/vocab/unit/MilliM", versionTag: "3.1.5")
+
+  """Nautical Mile | UCUM: [nmi_i]"""
+  MI_N @reference(uri: "http://qudt.org/vocab/unit/MI_N", versionTag: "3.1.5")
+
+  """Mile Us Statute | UCUM: [mi_us]"""
+  MI_US @reference(uri: "http://qudt.org/vocab/unit/MI_US", versionTag: "3.1.5")
+
+  """Nanometer | UCUM: nm"""
+  NANOM @reference(uri: "http://qudt.org/vocab/unit/NanoM", versionTag: "3.1.5")
+
+  """Parsec | UCUM: pc"""
+  PARSEC @reference(uri: "http://qudt.org/vocab/unit/PARSEC", versionTag: "3.1.5")
+
+  """Pica | UCUM: [pca]"""
+  PCA @reference(uri: "http://qudt.org/vocab/unit/PCA", versionTag: "3.1.5")
+
+  """Picometer | UCUM: pm"""
+  PICOM @reference(uri: "http://qudt.org/vocab/unit/PicoM", versionTag: "3.1.5")
+
+  """Planck Length"""
+  PLANCKLENGTH @reference(uri: "http://qudt.org/vocab/unit/PlanckLength", versionTag: "3.1.5")
+
+  """Point | UCUM: [pnt]"""
+  PT @reference(uri: "http://qudt.org/vocab/unit/PT", versionTag: "3.1.5")
+
+  """Rod | UCUM: [rd_br]"""
+  ROD @reference(uri: "http://qudt.org/vocab/unit/ROD", versionTag: "3.1.5")
+
+  """Yard | UCUM: [yd_i]"""
+  YD @reference(uri: "http://qudt.org/vocab/unit/YD", versionTag: "3.1.5")
+
+  """Inch"""
+  ZOLL @reference(uri: "http://qudt.org/vocab/unit/ZOLL", versionTag: "3.1.5")
+}

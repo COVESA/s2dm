@@ -6,7 +6,7 @@ The correspondance in the GraphQL SDL is available in the folder `/modular_seat_
 
 By calling the exporter:
 ```bash
-s2dm export vspec -s /modular_seat_spec -o result.vspec
+s2dm export vspec -s modular_seat_spec -o result.vspec
 ```
 
 We obtain the `Seat` in the original `VSPEC` format.

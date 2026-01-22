@@ -1,0 +1,43 @@
+<!-- GraphQL Voyager Assets -->
+<!-- GraphQL core library (needed for buildSchema) -->
+<script src="https://unpkg.com/graphql@16/index.min.js"></script>
+
+<!-- CSS for GraphQL Voyager styling -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.css" />
+
+<!-- GraphQL Voyager JS (standalone version with React bundled) -->
+<script src="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.standalone.js"></script>
+
+<!-- Optional: Custom styles for GraphQL Voyager integration -->
+<style>
+  .graphql-voyager-container {
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .graphql-voyager-title {
+    background-color: #f6f8fa;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e1e5e9;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .graphql-voyager-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #586069;
+    background-color: #fafbfc;
+  }
+
+  .graphql-voyager-error {
+    padding: 1rem;
+    background-color: #ffeef0;
+    color: #d1242f;
+    border-left: 3px solid #d1242f;
+  }
+</style>
