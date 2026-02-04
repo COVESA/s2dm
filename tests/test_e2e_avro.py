@@ -13,9 +13,9 @@ from s2dm.exporters.utils.schema_loader import load_and_process_schema
 
 class TestAvroE2EExpandedInstances:
     @pytest.fixture
-    def test_schema_path(self) -> list[Path]:
+    def test_schema_path(self, spec_directory: Path) -> list[Path]:
         """Path to the test GraphQL schema."""
-        return [Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"]
+        return [spec_directory, Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"]
 
     def test_expanded_instances_default(self, test_schema_path: list[Path], tmp_path: Path) -> None:
         """Test that instance tags are NOT expanded by default (treated as regular types)."""

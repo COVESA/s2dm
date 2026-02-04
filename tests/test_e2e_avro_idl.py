@@ -12,9 +12,9 @@ from s2dm.exporters.utils.schema_loader import load_and_process_schema
 
 class TestAvroIDLE2EExpandedInstances:
     @pytest.fixture
-    def test_schema_path(self) -> list[Path]:
+    def test_schema_path(self, spec_directory: Path) -> list[Path]:
         """Path to the test GraphQL schema with @struct and @instanceTag."""
-        return [Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"]
+        return [spec_directory, Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"]
 
     def test_basic_struct_types_no_expanded_instances(self, test_schema_path: list[Path]) -> None:
         """Test that only types with @struct directive generate IDL protocols."""
