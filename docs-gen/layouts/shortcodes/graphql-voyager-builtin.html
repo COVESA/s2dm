@@ -42,34 +42,41 @@
 </div>
 
 <style>
-/* Position menu-content to top right within the iframe/container bounds */
-[class*="menu-content"] {
+/* Establish stacking context for Voyager UI */
+.graphql-voyager-container {
+  position: relative !important;
+  z-index: 0 !important;
+  isolation: isolate !important;
+}
+
+/* Position menu-content to top right within the GraphQL Voyager container */
+.graphql-voyager-container [class*="menu-content"] {
   position: absolute !important;
   top: 20px !important;
   bottom: auto !important;
   right: 20px !important;
   left: auto !important;
   transform: none !important;
-  z-index: 9999 !important;
+  z-index: 10 !important;
 }
 
 /* Alternative selectors in case the above doesn't work */
-.menu-content,
-div[class*="menu-content"],
-*[class*="menu-content"] {
+.graphql-voyager-container .menu-content,
+.graphql-voyager-container div[class*="menu-content"],
+.graphql-voyager-container *[class*="menu-content"] {
   position: absolute !important;
   top: 20px !important;
   bottom: auto !important;
   right: 20px !important;
   left: auto !important;
   transform: none !important;
-  z-index: 9999 !important;
+  z-index: 10 !important;
 }
 
 /* Ensure the GraphQL Voyager container has relative positioning */
-.graphql-voyager-container,
+/* Keep Voyager layout positioned but within container stacking context */
 .graphql-voyager-container > div,
-[class*="MuiBox-root"] {
+.graphql-voyager-container [class*="MuiBox-root"] {
   position: relative !important;
 }
 
@@ -79,35 +86,37 @@ div[class*="menu-content"],
   --menu-right: 50px;
 }
 
-[class*="menu-content"][style] {
+.graphql-voyager-container [class*="menu-content"][style] {
   position: fixed !important;
   bottom: var(--menu-bottom, 50px) !important;
   right: var(--menu-right, 50px) !important;
   top: auto !important;
   left: auto !important;
+  z-index: 10 !important;
 }
 
 /* Ensure modals and dialogs appear above the menu-content panel */
-[class*="modal"],
-[class*="dialog"],
-[class*="popover"],
-[class*="dropdown"],
-.MuiModal-root,
-.MuiDialog-root,
-.MuiPopover-root,
-[role="dialog"],
-[role="menu"],
-[aria-modal="true"] {
-  z-index: 10000 !important;
+/* Keep Voyager-specific overlays above its UI but below global modals */
+.graphql-voyager-container [class*="modal"],
+.graphql-voyager-container [class*="dialog"],
+.graphql-voyager-container [class*="popover"],
+.graphql-voyager-container [class*="dropdown"],
+.graphql-voyager-container .MuiModal-root,
+.graphql-voyager-container .MuiDialog-root,
+.graphql-voyager-container .MuiPopover-root,
+.graphql-voyager-container [role="dialog"],
+.graphql-voyager-container [role="menu"],
+.graphql-voyager-container [aria-modal="true"] {
+  z-index: 20 !important;
 }
 
 /* Target specific GraphQL Voyager modal elements */
-[class*="voyager"] [class*="modal"],
-[class*="voyager"] [class*="dialog"],
-[class*="voyager"] [class*="options"],
-[class*="settings-modal"],
-[class*="options-modal"] {
-  z-index: 10001 !important;
+.graphql-voyager-container [class*="voyager"] [class*="modal"],
+.graphql-voyager-container [class*="voyager"] [class*="dialog"],
+.graphql-voyager-container [class*="voyager"] [class*="options"],
+.graphql-voyager-container [class*="settings-modal"],
+.graphql-voyager-container [class*="options-modal"] {
+  z-index: 21 !important;
 }
 </style>
 
