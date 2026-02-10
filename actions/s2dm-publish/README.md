@@ -5,7 +5,6 @@ GitHub Action for automated artifact generation and publishing workflow through 
 ## Features
 
 - Automatic version bump detection
-- Units synchronization
 - Registry management (init/update)
 - GraphQL schema composition
 - JSON schema generation
@@ -178,14 +177,39 @@ Your repository must have:
  commit_args = ""
 ```
 
+## Registry and Variant IDs
+
+The action automatically manages variant-based IDs for schema concepts:
+
+- **Variant IDs**: Each concept gets a semantic version (e.g., `Vehicle.speed/v1.0`)
+- **Change Detection**: GraphQL Inspector detects schema changes and triggers version increments
+- **Breaking vs Non-Breaking**: Breaking changes increment major version (v1.0 → v2.0), non-breaking changes increment minor (v1.0 → v1.1)
+- **History Tracking**: All concept definitions are saved to a history directory for traceability
+
+### Release Artifacts
+
+Each release includes:
+- `registry.json` - Complete spec history with variant IDs
+- `variant_ids_<tag>.json` - Current variant ID mappings
+- `concept_uris_<tag>.json` - Concept URI definitions
+- `history/` - Directory with historical concept definitions
+
 ## How It Works
 
 1. **Validation**: Validates that the spec directory exists and contains at least one .graphql file
-2. **Setup**: Checks out S2DM repository, installs Python 3.13, uv, and S2DM dependencies
-3. **Download Previous Release**: Downloads previous release artifacts (if available)
-4. **Version Check**: Compares current spec with previous schema to determine version bump type
-5. **Units Sync**: Synchronizes units definitions
-6. **Registry Management**: Initializes registry for first release or updates it for subsequent releases
-7. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, SKOS, VSpec) to temporary location outside repository
-8. **Version Bump**: Updates version using bump-my-version and creates git tag
-9. **Release Creation**: Creates GitHub release with all generated artifacts in a tarball
+1. **Setup**: Checks out S2DM repository, installs Python 3.13, Node.js 20, uv, and S2DM dependencies
+2. **Version Check**: Downloads previous release and compares current spec to determine version bump type
+3. **GraphQL Diff Generation**: Uses `s2dm diff graphql` (powered by @graphql-inspector/core) to detect schema changes (for updates)
+4. **Registry Management**:
+   - For initial release: Initializes registry with variant IDs starting at v1.0
+   - For updates: Increments variant IDs based on detected changes (major for breaking, minor for non-breaking)
+5. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, SKOS, VSpec)
+6. **Version Bump**: Updates version using bump-my-version and creates git tag
+7. **Release Creation**: Creates GitHub release with all generated artifacts including:
+   - Composed GraphQL schema
+   - JSON Schema
+   - SHACL shapes
+   - SKOS RDF
+   - VSpec
+   - Registry files (spec_history, variant_ids, concept_uris)
+   - History directory with concept definitions

@@ -1,87 +1,87 @@
-name: 'S2DM Publish'
-description: 'Automated artifact generation and publishing workflow through S2DM'
-author: 'COVESA'
+name: "S2DM Publish"
+description: "Automated artifact generation and publishing workflow through S2DM"
+author: "COVESA"
 
 inputs:
   repository-path:
-    description: 'Path to the git repository root'
+    description: "Path to the git repository root"
     required: true
 
   spec-path:
-    description: 'Path to the spec directory relative to the root of the repository'
+    description: "Path to the spec directory relative to the root of the repository"
     required: false
-    default: './spec'
+    default: "./spec"
 
   github-token:
-    description: 'GitHub token for creating releases'
+    description: "GitHub token for creating releases"
     required: true
 
   s2dm-path:
-    description: 'Path where S2DM repository will be checked out'
+    description: "Path where S2DM repository will be checked out"
     required: false
-    default: 's2dm'
+    default: "s2dm"
 
   concept-namespace:
-    description: 'Concept namespace for registry'
+    description: "Concept namespace for registry"
     required: false
-    default: ''
+    default: ""
 
   concept-prefix:
-    description: 'Concept prefix for registry'
+    description: "Concept prefix for registry"
     required: false
-    default: ''
+    default: ""
 
   shacl-serialization-format:
-    description: 'SHACL serialization format'
+    description: "SHACL serialization format"
     required: false
-    default: ''
+    default: ""
 
   shacl-shapes-namespace:
-    description: 'SHACL shapes namespace'
+    description: "SHACL shapes namespace"
     required: false
-    default: ''
+    default: ""
 
   shacl-shapes-prefix:
-    description: 'SHACL shapes prefix'
+    description: "SHACL shapes prefix"
     required: false
-    default: ''
+    default: ""
 
   shacl-model-namespace:
-    description: 'SHACL model namespace'
+    description: "SHACL model namespace"
     required: false
-    default: ''
+    default: ""
 
   shacl-model-prefix:
-    description: 'SHACL model prefix'
+    description: "SHACL model prefix"
     required: false
-    default: ''
+    default: ""
 
   skos-namespace:
-    description: 'SKOS namespace'
+    description: "SKOS namespace"
     required: false
-    default: ''
+    default: ""
 
   skos-prefix:
-    description: 'SKOS prefix'
+    description: "SKOS prefix"
     required: false
-    default: ''
+    default: ""
 
   skos-language:
-    description: 'SKOS language'
+    description: "SKOS language"
     required: false
-    default: ''
+    default: ""
 
 outputs:
   version-bump:
-    description: 'Type of version bump (major, minor, patch, none)'
+    description: "Type of version bump (major, minor, patch, none)"
     value: ${{ steps.version-check.outputs.VERSION_BUMP }}
 
   latest-tag:
-    description: 'The latest git tag after release'
+    description: "The latest git tag after release"
     value: ${{ steps.get-latest-tag.outputs.LATEST_TAG }}
 
   continue:
-    description: 'Whether migration should continue'
+    description: "Whether migration should continue"
     value: ${{ steps.version-check.outputs.CONTINUE }}
 
 runs:
@@ -112,7 +112,7 @@ runs:
     - name: Install Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: "3.13"
 
     - name: Install uv
       uses: astral-sh/setup-uv@v4
@@ -125,6 +125,16 @@ runs:
       run: |
         uv sync --frozen
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: "20"
+
+    - name: Install Node.js dependencies
+      working-directory: ${{ inputs.s2dm-path }}
+      shell: bash
+      run: npm install
+
     - name: Activate venv
       shell: bash
       run: |
@@ -136,12 +146,25 @@ runs:
         s2dm --help
 
     - name: Download latest release
+      id: download-release
+      working-directory: ${{ inputs.repository-path }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       shell: bash
       run: |
         mkdir -p ${{ github.workspace }}/.previous-release
-        gh release download --pattern "*" --dir ${{ github.workspace }}/.previous-release || echo "No previous release found"
+
+        # Get the latest release tag
+        PREV_TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "")
+
+        if [ -n "$PREV_TAG" ]; then
+          echo "PREV_TAG=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "Downloading release: $PREV_TAG"
+          gh release download "$PREV_TAG" --pattern "*" --dir ${{ github.workspace }}/.previous-release
+        else
+          echo "No previous release found"
+          echo "PREV_TAG=" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Extract previous release
       shell: bash
@@ -179,39 +202,6 @@ runs:
           echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
         fi
         echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
-
-    - name: Sync units
-      if: steps.version-check.outputs.CONTINUE == 'true'
-      working-directory: ${{ inputs.repository-path }}
-      shell: bash
-      run: |
-        s2dm units sync
-
-    - name: Initialize registry
-      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
-      working-directory: ${{ inputs.repository-path }}
-      shell: bash
-      run: |
-        CMD="s2dm registry init -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/registry/registry.json"
-        [ -n "${{ inputs.concept-namespace }}" ] && CMD="$CMD --concept-namespace '${{ inputs.concept-namespace }}'"
-        [ -n "${{ inputs.concept-prefix }}" ] && CMD="$CMD --concept-prefix '${{ inputs.concept-prefix }}'"
-        eval "$CMD"
-
-    - name: Update registry
-      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
-      working-directory: ${{ inputs.repository-path }}
-      shell: bash
-      run: |
-        if [ ! -f "${{ github.workspace }}/.previous-release/registry/registry.json" ]; then
-          echo "ERROR: Previous registry file not found at ${{ github.workspace }}/.previous-release/registry/registry.json"
-          echo "Cannot update registry without previous version. This indicates an inconsistent release state."
-          exit 1
-        fi
-
-        CMD="s2dm registry update -s ${{ inputs.spec-path }} -sh ${{ github.workspace }}/.previous-release/registry/registry.json -o ${{ github.workspace }}/.artifacts/registry/registry.json"
-        [ -n "${{ inputs.concept-namespace }}" ] && CMD="$CMD --concept-namespace '${{ inputs.concept-namespace }}'"
-        [ -n "${{ inputs.concept-prefix }}" ] && CMD="$CMD --concept-prefix '${{ inputs.concept-prefix }}'"
-        eval "$CMD"
 
     - name: Compose GraphQL schema
       if: steps.version-check.outputs.CONTINUE == 'true'
@@ -278,8 +268,103 @@ runs:
         LATEST_TAG=$(git describe --tags --abbrev=0)
         echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
 
-    - name: Create release
+    - name: Generate GraphQL diff
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
+      id: generate-diff
+      shell: bash
+      run: |
+        s2dm diff graphql \
+          -s ${{ github.workspace }}/.previous-release/graphql/schema.graphql \
+          -v ${{ inputs.spec-path }} \
+          -o ${{ github.workspace }}/.artifacts/diff.json || true
+
+        # Check if diff file exists and has changes
+        if [ -f "${{ github.workspace }}/.artifacts/diff.json" ]; then
+          # Check if diff file is not empty and contains actual changes (not just empty array "[]")
+          # Use Python to parse JSON and check array length
+          DIFF_COUNT=$(python3 -c "import json; f=open('${{ github.workspace }}/.artifacts/diff.json'); data=json.load(f); print(len(data)) if isinstance(data, list) else print(0)" 2>/dev/null || echo "0")
+          if [ "$DIFF_COUNT" -gt 0 ]; then
+            echo "HAS_CHANGES=true" >> "$GITHUB_OUTPUT"
+            echo "Found $DIFF_COUNT change(s) in schema"
+          else
+            echo "HAS_CHANGES=false" >> "$GITHUB_OUTPUT"
+            echo "No schema changes detected (diff file is empty or contains no changes)"
+          fi
+        else
+          echo "HAS_CHANGES=false" >> "$GITHUB_OUTPUT"
+          echo "Diff file not generated (no previous schema or error)"
+        fi
+
+    - name: Initialize registry
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
+      shell: bash
+      run: |
+        LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}"
+        echo "Initializing registry with version tag: $LATEST_TAG"
+
+        CMD="s2dm registry init -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/registry/registry.json --version-tag $LATEST_TAG"
+        [ -n "${{ inputs.concept-namespace }}" ] && CMD="$CMD --concept-namespace '${{ inputs.concept-namespace }}'"
+        [ -n "${{ inputs.concept-prefix }}" ] && CMD="$CMD --concept-prefix '${{ inputs.concept-prefix }}'"
+        eval "$CMD"
+
+    - name: Update registry
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true' && steps.generate-diff.outputs.HAS_CHANGES == 'true'
+      working-directory: ${{ inputs.repository-path }}
+      shell: bash
+      run: |
+        # Use the previous release tag from downloaded artifacts
+        PREV_TAG="${{ steps.download-release.outputs.PREV_TAG }}"
+        LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}"
+
+        echo "Using previous tag: $PREV_TAG for registry files"
+        echo "New version tag: $LATEST_TAG"
+
+        PREV_IDS="${{ github.workspace }}/.previous-release/registry/variant_ids_${PREV_TAG}.json"
+        PREV_REGISTRY="${{ github.workspace }}/.previous-release/registry/registry_${PREV_TAG}.json"
+
+        # Fallback to files without version suffix if versioned files don't exist
+        [ ! -f "$PREV_IDS" ] && PREV_IDS="${{ github.workspace }}/.previous-release/registry/variant_ids.json"
+        [ ! -f "$PREV_REGISTRY" ] && PREV_REGISTRY="${{ github.workspace }}/.previous-release/registry/registry.json"
+
+        # Diff file is required for registry update (we only run this step if HAS_CHANGES is true)
+        if [ ! -f "${{ github.workspace }}/.artifacts/diff.json" ]; then
+          echo "Error: Diff file is required for registry update but was not found"
+          exit 1
+        fi
+
+        CMD="s2dm registry update -s ${{ inputs.spec-path }} -sh $PREV_REGISTRY -o ${{ github.workspace }}/.artifacts/registry/registry.json --previous-ids $PREV_IDS --version-tag $LATEST_TAG --diff-file ${{ github.workspace }}/.artifacts/diff.json"
+
+        [ -n "${{ inputs.concept-namespace }}" ] && CMD="$CMD --concept-namespace '${{ inputs.concept-namespace }}'"
+        [ -n "${{ inputs.concept-prefix }}" ] && CMD="$CMD --concept-prefix '${{ inputs.concept-prefix }}'"
+        eval "$CMD"
+
+    - name: Skip registry update (no changes)
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true' && steps.generate-diff.outputs.HAS_CHANGES == 'false'
+      shell: bash
+      run: |
+        echo "No schema changes detected, skipping registry update"
+        echo "Registry files from previous release will be reused"
+
+    - name: Abort release (no changes detected)
+      if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true' && steps.generate-diff.outputs.HAS_CHANGES == 'false'
+      shell: bash
+      run: |
+        echo "ERROR: No schema changes detected but version check indicated changes"
+        echo "This should not happen - aborting release to prevent creating a release with no changes"
+        exit 1
+
+    - name: Verify history directory
       if: steps.version-check.outputs.CONTINUE == 'true'
+      shell: bash
+      run: |
+        if [ -d "${{ github.workspace }}/.artifacts/registry/history" ]; then
+          echo "History directory found, will be included in release"
+        else
+          echo "No history directory found (this is normal for releases with no changes)"
+        fi
+
+    - name: Create release
+      if: steps.version-check.outputs.CONTINUE == 'true' && (steps.version-check.outputs.IS_INITIAL_RELEASE == 'true' || steps.generate-diff.outputs.HAS_CHANGES == 'true')
       working-directory: ${{ inputs.repository-path }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}

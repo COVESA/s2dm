@@ -91,7 +91,44 @@ For detailed usage examples and documentation, see [examples/graphql-to-skos/REA
 
 ### GraphQL Inspector
 
-Tool for analyzing and inspecting GraphQL schemas. See `graphql_inspector.py` for implementation details.
+The GraphQL Inspector wrapper (`graphql_inspector.py`) provides a Python interface to the `@graphql-inspector/cli` Node.js tool for GraphQL schema analysis.
+
+#### Architecture
+
+**Decorator Pattern:**
+- `@requires_graphql_inspector` - Automatically locates and injects the `node_modules` path to CLI commands
+- Applied to CLI commands that need GraphQL Inspector functionality
+- The decorator calls `locate_graphql_inspector()` to find the installation
+
+**Location Resolution:**
+- `locate_graphql_inspector()` - Searches upward from current directory for `node_modules`
+- Handles both local project installations and global installations
+- Resolves the CLI path once during `GraphQLInspector.__init__()` for performance
+
+**Dependency Checking:**
+- `_check_node_dependencies()` - Verifies npm packages can be loaded by Node.js
+- More reliable than file existence checks (catches broken installations)
+- Used by `diff_structured()` which directly requires npm packages
+
+#### Key Features
+
+- **CLI Operations**: `diff()`, `validate()`, `introspect()`, `similar()` - Use the graphql-inspector CLI binary
+- **Structured Diff**: `diff_structured()` - Uses custom Node.js script for JSON output (requires npm packages)
+- **Automatic Fallback**: Tries local installation first, falls back to global installation
+- **Clear Error Messages**: Guides users to install missing dependencies
+
+#### Usage in CLI Commands
+
+CLI commands decorated with `@requires_graphql_inspector` automatically receive an `inspector_path` parameter:
+
+```python
+@requires_graphql_inspector
+def diff_graphql(..., inspector_path: Path | None = None) -> None:
+    inspector = GraphQLInspector(schema_path, node_modules_path=inspector_path)
+    result = inspector.diff_structured(other_schema)
+```
+
+See `graphql_inspector.py` for detailed implementation.
 
 ### Constraint Checker
 

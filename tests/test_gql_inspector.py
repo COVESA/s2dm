@@ -28,8 +28,9 @@ def schema2_tmp(spec_directory: Path) -> Generator[Path, None, None]:
         tmp.unlink()
 
 
-def test_introspect(schema1_tmp: Path) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+@pytest.mark.graphql_inspector
+def test_introspect(schema1_tmp: Path, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
         output_path = Path(tmpfile.name + ".graphql")
     result = inspector.introspect(output=output_path)
@@ -42,31 +43,35 @@ def test_introspect(schema1_tmp: Path) -> None:
     output_path.unlink()
 
 
-def test_diff_no_changes(schema1_tmp: Path) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+@pytest.mark.graphql_inspector
+def test_diff_no_changes(schema1_tmp: Path, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     result = inspector.diff(schema1_tmp)
     assert hasattr(result, "output")
     assert result.returncode == 0
     assert "No changes detected" in result.output
 
 
-def test_diff_with_changes(schema1_tmp: Path, schema2_tmp: Path) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+@pytest.mark.graphql_inspector
+def test_diff_with_changes(schema1_tmp: Path, schema2_tmp: Path, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     result = inspector.diff(schema2_tmp)
     assert hasattr(result, "output")
     assert "Detected" in result.output or "No changes detected" in result.output
 
 
-def test_similar(schema1_tmp: Path) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+@pytest.mark.graphql_inspector
+def test_similar(schema1_tmp: Path, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     result = inspector.similar(output=None)
     assert hasattr(result, "output")
     assert result.returncode == 0
 
 
+@pytest.mark.graphql_inspector
 @pytest.mark.parametrize("output_to_file", [False, True])
-def test_similar_output(schema1_tmp: Path, output_to_file: bool) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+def test_similar_output(schema1_tmp: Path, output_to_file: bool, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     output_path = None
     file_content = None
     if output_to_file:
@@ -84,8 +89,9 @@ def test_similar_output(schema1_tmp: Path, output_to_file: bool) -> None:
     assert result.returncode == 0
 
 
-def test_similar_keyword(schema1_tmp: Path) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+@pytest.mark.graphql_inspector
+def test_similar_keyword(schema1_tmp: Path, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     # Use a keyword that is likely to exist in the test schema, e.g. "Query"
     result = inspector.similar_keyword("Vehicle_ADAS", output=None)
     assert hasattr(result, "output")
@@ -95,9 +101,10 @@ def test_similar_keyword(schema1_tmp: Path) -> None:
         assert "Vehicle_ADAS" in result.output
 
 
+@pytest.mark.graphql_inspector
 @pytest.mark.parametrize("output_to_file", [False, True])
-def test_similar_keyword_output(schema1_tmp: Path, output_to_file: bool) -> None:
-    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
+def test_similar_keyword_output(schema1_tmp: Path, output_to_file: bool, inspector_path: Path | None) -> None:
+    inspector: GraphQLInspector = GraphQLInspector(schema1_tmp, node_modules_path=inspector_path)
     keyword = "Vehicle_ADAS"  # Use a keyword likely to exist
     output_path = None
     file_content = None
@@ -118,15 +125,3 @@ def test_similar_keyword_output(schema1_tmp: Path, output_to_file: bool) -> None
         assert keyword in normalize_whitespace(result.output) or (
             output_to_file and file_content and keyword in file_content
         )
-
-
-# ToDo: add a test for validate if we have a query file
-# def test_validate(schema1_tmp: Path) -> None:
-#     inspector: GraphQLInspector = GraphQLInspector(schema1_tmp)
-#     query_file: Path = DATA_DIR / "query.graphql"
-#     assert query_file.exists()
-#     result: dict = inspector.validate(str(query_file))
-#     print(f"{result=}")
-#     assert isinstance(result, dict)
-#     assert "stdout" in result
-#     assert result["returncode"] == 0
