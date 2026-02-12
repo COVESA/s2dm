@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from s2dm.exporters.utils.field import FieldCase, get_field_case, get_field_case_extended
+from s2dm.exporters.utils.field import (
+    FieldCase,
+    field_case_to_type_wrapper_pattern,
+    get_field_case,
+    get_field_case_extended,
+)
 from s2dm.exporters.utils.schema_loader import load_schema
 
 
@@ -141,3 +146,21 @@ def test_field_case_consistency(test_schema):  # type: ignore[no-untyped-def]
         assert len(set(cases)) == 1, (
             f"Inconsistent field cases for pattern {pattern_name}: " f"{dict(zip(field_names, cases, strict=True))}"
         )
+
+
+@pytest.mark.parametrize(
+    "field_case,expected_pattern",
+    [
+        (FieldCase.DEFAULT, "bare"),
+        (FieldCase.NON_NULL, "nonNull"),
+        (FieldCase.LIST, "list"),
+        (FieldCase.LIST_NON_NULL, "listOfNonNull"),
+        (FieldCase.NON_NULL_LIST, "nonNullList"),
+        (FieldCase.NON_NULL_LIST_NON_NULL, "nonNullListOfNonNull"),
+        (FieldCase.SET, "list"),
+        (FieldCase.SET_NON_NULL, "listOfNonNull"),
+    ],
+)
+def test_field_case_to_type_wrapper_pattern(field_case: FieldCase, expected_pattern: str) -> None:
+    """Test mapping from FieldCase to s2dm TypeWrapperPattern."""
+    assert field_case_to_type_wrapper_pattern(field_case) == expected_pattern
