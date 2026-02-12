@@ -1,0 +1,46 @@
+# Sample GraphQL schema for RDF materialization example.
+# Cabin/Door/Window structure from the s2dm ontology reference.
+
+type Query {
+  cabin: Cabin
+}
+
+"""Cabin type with kind and doors."""
+type Cabin {
+  kind: CabinKindEnum
+  doors: [Door]
+}
+
+"""Cabin kind enumeration."""
+enum CabinKindEnum {
+  SUV
+  VAN
+}
+
+"""Door with instance tag, isOpen, and window."""
+type Door {
+  instanceTag: InCabinArea2x2
+  isOpen: Boolean
+  window: Window
+}
+
+"""Window with tint option."""
+type Window {
+  isTinted: Boolean
+}
+
+"""Instance tag for cabin area 2x2."""
+type InCabinArea2x2 {
+  row: TwoRowsInCabinEnum
+  column: TwoColumnsInCabinEnum
+}
+
+enum TwoRowsInCabinEnum {
+  ROW1
+  ROW2
+}
+
+enum TwoColumnsInCabinEnum {
+  DRIVER_SIDE
+  PASSENGER_SIDE
+}
