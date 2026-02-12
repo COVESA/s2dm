@@ -16,7 +16,9 @@ from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_sc
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.protobuf import translate_to_protobuf
+from s2dm.exporters.rdf_materializer import materialize_schema_to_rdf, write_rdf_artifacts
 from s2dm.exporters.shacl import translate_to_shacl
+from s2dm.exporters.skos import generate_skos_skeleton
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
@@ -759,8 +761,6 @@ def skos_skeleton(
     language: str,
 ) -> None:
     """Generate SKOS skeleton RDF file from GraphQL schema."""
-    from s2dm.exporters.skos import generate_skos_skeleton
-
     try:
         with output.open("w") as output_stream:
             generate_skos_skeleton(
@@ -775,6 +775,59 @@ def skos_skeleton(
         raise click.ClickException(f"SKOS generation failed: {e}") from e
     except OSError as e:
         raise click.ClickException(f"Failed to write output file: {e}") from e
+
+
+# Generate -> schema-rdf
+# ----------
+@generate.command(name="schema-rdf")
+@schema_option
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output directory for schema.nt and schema.ttl",
+)
+@click.option(
+    "--namespace",
+    required=True,
+    help="Namespace URI for concept URIs (e.g. https://covesa.org/s2dm/mydomain#)",
+)
+@click.option(
+    "--prefix",
+    default="ns",
+    help="The prefix to use for the concept URIs",
+)
+@click.option(
+    "--language",
+    default="en",
+    callback=validate_language_tag,
+    help="BCP 47 language tag for prefLabels",
+    show_default=True,
+)
+def schema_rdf(
+    schemas: list[Path],
+    output: Path,
+    namespace: str,
+    prefix: str,
+    language: str,
+) -> None:
+    """Materialize GraphQL schema as RDF triples with SKOS and s2dm ontology.
+
+    Produces sorted n-triples (schema.nt) and Turtle (schema.ttl) in the output directory.
+    """
+    try:
+        graphql_schema = load_schema(schemas)
+        graph = materialize_schema_to_rdf(
+            schema=graphql_schema,
+            namespace=namespace,
+            prefix=prefix,
+            language=language,
+        )
+        write_rdf_artifacts(graph, output, base_name="schema")
+        log.success(f"RDF artifacts written to {output}/schema.nt and {output}/schema.ttl")
+    except OSError as e:
+        raise click.ClickException(f"Failed to write RDF artifacts: {e}") from e
 
 
 # Check -> version bump

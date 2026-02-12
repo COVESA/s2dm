@@ -264,6 +264,43 @@ def test_generate_skos_skeleton(
     assert "Vehicle_ADAS_ObstacleDetection" in content
 
 
+def test_generate_schema_rdf(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    """Generate RDF triples from GraphQL schema."""
+    out_dir = tmp_outputs / "schema_rdf"
+    result = runner.invoke(
+        cli,
+        [
+            "generate",
+            "schema-rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out_dir),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    nt_file = out_dir / "schema.nt"
+    ttl_file = out_dir / "schema.ttl"
+    assert nt_file.exists(), result.output
+    assert ttl_file.exists(), result.output
+
+    nt_content = nt_file.read_text()
+    assert "skos:Concept" in nt_content or "Concept" in nt_content
+    assert "hasField" in nt_content or "hasOutputType" in nt_content
+
+    ttl_content = ttl_file.read_text()
+    assert "@prefix" in ttl_content
+    assert "Vehicle" in ttl_content
+
+
 @pytest.mark.parametrize(
     "schema_file,previous_file,expected_output",
     [
