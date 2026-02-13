@@ -71,6 +71,21 @@ inputs:
     required: false
     default: ""
 
+  schema-rdf-namespace:
+    description: "Namespace URI for schema-rdf concept URIs (e.g. https://covesa.org/s2dm/mydomain#). If provided, schema.nt and schema.ttl are generated."
+    required: false
+    default: ""
+
+  schema-rdf-prefix:
+    description: "Prefix for schema-rdf concept URIs"
+    required: false
+    default: "ns"
+
+  schema-rdf-language:
+    description: "BCP 47 language tag for schema-rdf prefLabels"
+    required: false
+    default: "en"
+
 outputs:
   version-bump:
     description: "Type of version bump (major, minor, patch, none)"
@@ -182,6 +197,7 @@ runs:
         mkdir -p ${{ github.workspace }}/.artifacts/registry
         mkdir -p ${{ github.workspace }}/.artifacts/shacl
         mkdir -p ${{ github.workspace }}/.artifacts/skos
+        mkdir -p ${{ github.workspace }}/.artifacts/schema-rdf
         mkdir -p ${{ github.workspace }}/.artifacts/vspec
 
     - name: Check spec version bump
@@ -239,6 +255,16 @@ runs:
         [ -n "${{ inputs.skos-namespace }}" ] && CMD="$CMD --namespace '${{ inputs.skos-namespace }}'"
         [ -n "${{ inputs.skos-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.skos-prefix }}'"
         [ -n "${{ inputs.skos-language }}" ] && CMD="$CMD --language '${{ inputs.skos-language }}'"
+        eval "$CMD"
+
+    - name: Generate schema RDF
+      if: steps.version-check.outputs.CONTINUE == 'true' && inputs.schema-rdf-namespace != ''
+      working-directory: ${{ inputs.repository-path }}
+      shell: bash
+      run: |
+        CMD="s2dm generate schema-rdf -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/schema-rdf --namespace '${{ inputs.schema-rdf-namespace }}'"
+        [ -n "${{ inputs.schema-rdf-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.schema-rdf-prefix }}'"
+        [ -n "${{ inputs.schema-rdf-language }}" ] && CMD="$CMD --language '${{ inputs.schema-rdf-language }}'"
         eval "$CMD"
 
     - name: Generate VSpec

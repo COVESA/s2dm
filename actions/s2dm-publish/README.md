@@ -10,6 +10,7 @@ GitHub Action for automated artifact generation and publishing workflow through 
 - JSON schema generation
 - SHACL generation
 - SKOS RDF generation
+- Schema RDF generation (sorted n-triples and Turtle)
 - VSpec generation
 - Automated release creation
 
@@ -78,6 +79,9 @@ jobs:
           skos-namespace: 'https://example.com/skos/'
           skos-prefix: 'skos'
           skos-language: 'en'
+          schema-rdf-namespace: 'https://example.com/ontology#'
+          schema-rdf-prefix: 'ns'
+          schema-rdf-language: 'en'
 ```
 
 ## Inputs
@@ -98,6 +102,9 @@ jobs:
 | `skos-namespace` | SKOS namespace | No | `''` |
 | `skos-prefix` | SKOS prefix | No | `''` |
 | `skos-language` | SKOS language | No | `''` |
+| `schema-rdf-namespace` | Namespace URI for schema-rdf (e.g. `https://example.com/ontology#`). If provided, generates schema.nt and schema.ttl. | No | `''` |
+| `schema-rdf-prefix` | Prefix for schema-rdf concept URIs | No | `ns` |
+| `schema-rdf-language` | BCP 47 language tag for schema-rdf prefLabels | No | `en` |
 
 ## Outputs
 
@@ -203,13 +210,14 @@ Each release includes:
 4. **Registry Management**:
    - For initial release: Initializes registry with variant IDs starting at v1.0
    - For updates: Increments variant IDs based on detected changes (major for breaking, minor for non-breaking)
-5. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, SKOS, VSpec)
+5. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, SKOS, schema RDF, VSpec)
 6. **Version Bump**: Updates version using bump-my-version and creates git tag
 7. **Release Creation**: Creates GitHub release with all generated artifacts including:
    - Composed GraphQL schema
    - JSON Schema
    - SHACL shapes
    - SKOS RDF
+   - Schema RDF (schema.nt, schema.ttl) when `schema-rdf-namespace` is provided
    - VSpec
    - Registry files (spec_history, variant_ids, concept_uris)
    - History directory with concept definitions
