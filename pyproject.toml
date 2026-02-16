@@ -23,6 +23,8 @@ dependencies = [
     "case-converter>=1.2.0",
     "inflect>=7.0.0",
     "requests>=2.32.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 requires-python = ">=3.11"
 
