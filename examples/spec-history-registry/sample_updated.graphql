@@ -1,3 +1,15 @@
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+enum LengthUnitEnum {
+  M
+  CENTIM
+}
+
+enum VelocityUnitEnum {
+  KILOM_PER_HR
+  MILES_PER_HR
+}
+
 type Query {
   vehicle: Vehicle
 }
