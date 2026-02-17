@@ -29,11 +29,11 @@ jobs:
         with:
           node-version: "20"
 
+      - name: install node dependencies
+        run: npm install
+
       - name: uv
         uses: astral-sh/setup-uv@v7
-
-      - name: npm install gql-inspector
-        run: npm i --global @graphql-inspector/cli graphql
 
       - name: sync
         run: |

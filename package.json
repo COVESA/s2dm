@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@graphql-inspector/cli": "^6.0.5",
+    "@graphql-inspector/core": "^7.1.0",
+    "graphql": "^16.12.0"
+  }
+}

@@ -75,6 +75,9 @@ warn_required_dynamic_aliases = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov --cov-report=xml:coverage.xml"
+markers = [
+    "graphql_inspector: mark test as requiring graphql-inspector CLI (can be skipped with -m 'not graphql_inspector')",
+]
 
 
 [tool.ruff]

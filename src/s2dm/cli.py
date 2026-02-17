@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -10,7 +11,7 @@ from graphql import DocumentNode, GraphQLSchema, parse
 from rich.traceback import install
 
 from s2dm import __version__, log
-from s2dm.concept.services import create_concept_uri_model, iter_all_concepts
+from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -23,6 +24,8 @@ from s2dm.exporters.utils.naming import load_naming_config
 from s2dm.exporters.utils.naming_config import ValidationMode, load_naming_convention_config
 from s2dm.exporters.utils.schema import search_schema
 from s2dm.exporters.utils.schema_loader import (
+    build_schema_str,
+    build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
     download_schema_to_temp,
@@ -35,9 +38,11 @@ from s2dm.exporters.utils.schema_loader import (
     resolve_graphql_files,
 )
 from s2dm.exporters.vspec import translate_to_vspec
+from s2dm.registry.concept_uris import create_concept_uri_model
+from s2dm.registry.search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.constraint_checker import ConstraintChecker
-from s2dm.tools.graphql_inspector import GraphQLInspector
-from s2dm.tools.skos_search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
+from s2dm.tools.diff_parser import DiffChange
+from s2dm.tools.graphql_inspector import GraphQLInspector, requires_graphql_inspector
 from s2dm.tools.validators import validate_language_tag
 from s2dm.units.sync import (
     UNITS_META_FILENAME,
@@ -123,6 +128,25 @@ optional_output_option = click.option(
     required=False,
     help="Output file",
 )
+
+
+def apply_version_tag_suffix(output: Path, version_tag: str) -> Path:
+    """Append version tag to output filename if provided and not already suffixed."""
+    if not output.stem.endswith(f"_{version_tag}"):
+        return output.with_name(f"{output.stem}_{version_tag}{output.suffix}")
+    return output
+
+
+def ensure_output_parent(output: Path | None) -> None:
+    """Create parent directory for the given output path if provided."""
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+
+
+def derive_variant_ids_path(base_dir: Path, version_tag: str) -> Path:
+    """Build variant IDs filename using version tag."""
+    filename = f"variant_ids_{version_tag}.json"
+    return base_dir / filename
 
 
 units_directory_option = click.option(
@@ -251,7 +275,14 @@ def generate() -> None:
 
 @click.group()
 def registry() -> None:
-    """Spec history generation/updating"""
+    """Registry commands for variant IDs and spec history tracking.
+
+    This group includes commands for:
+    - Generating variant-based concept IDs (registry id)
+    - Initializing spec history with variant tracking (registry init)
+    - Updating spec history with schema changes (registry update)
+    - Generating concept URIs (registry concept-uri)
+    """
     pass
 
 
@@ -757,7 +788,7 @@ def skos_skeleton(
     cls=SchemaResolverOption,
     required=True,
     multiple=True,
-    help=("Previous GraphQL schema file, directory, or URL to validate against. " "Can be specified multiple times."),
+    help=("Previous GraphQL schema file, directory, or URL to validate against. Can be specified multiple times."),
 )
 @click.option(
     "--output-type",
@@ -765,7 +796,10 @@ def skos_skeleton(
     default=False,
     help="Output the version bump type for pipeline usage",
 )
-def version_bump(schemas: list[Path], previous: list[Path], output_type: bool) -> None:
+@requires_graphql_inspector
+def version_bump(
+    schemas: list[Path], previous: list[Path], output_type: bool, inspector_path: Path | None = None
+) -> None:
     """Check if version bump needed. Uses GraphQL inspector's diff to search for (breaking) changes.
 
     Returns:
@@ -777,7 +811,7 @@ def version_bump(schemas: list[Path], previous: list[Path], output_type: bool) -
     # Note: GraphQL Inspector expects old schema first, then new schema
     # So we pass previous first, then schema (current)
     previous_schema_temp_path = create_tempfile_to_composed_schema(previous)
-    inspector = GraphQLInspector(previous_schema_temp_path)
+    inspector = GraphQLInspector(previous_schema_temp_path, node_modules_path=inspector_path)
 
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
     diff_result = inspector.diff(schema_temp_path)
@@ -849,10 +883,11 @@ def check_constraints(schemas: list[Path], naming_config: Path | None) -> None:
 @validate.command(name="graphql")
 @schema_option
 @output_option
-def validate_graphql(schemas: list[Path], output: Path) -> None:
+@requires_graphql_inspector
+def validate_graphql(schemas: list[Path], output: Path, inspector_path: Path | None = None) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
-    inspector = GraphQLInspector(schema_temp_path)
+    inspector = GraphQLInspector(schema_temp_path, node_modules_path=inspector_path)
     validation_result = inspector.introspect(output)
 
     log.print(validation_result.output)
@@ -872,26 +907,54 @@ def validate_graphql(schemas: list[Path], output: Path) -> None:
     cls=SchemaResolverOption,
     required=True,
     multiple=True,
-    help=("GraphQL schema file, directory, or URL to validate against. " "Can be specified multiple times."),
+    help=("GraphQL schema file, directory, or URL to validate against. Can be specified multiple times."),
 )
-def diff_graphql(schemas: list[Path], val_schemas: list[Path], output: Path | None) -> None:
-    """Diff for two GraphQL schemas."""
+@requires_graphql_inspector
+def diff_graphql(
+    schemas: list[Path], val_schemas: list[Path], output: Path | None, inspector_path: Path | None = None
+) -> None:
+    """Diff for two GraphQL schemas.
+
+    Uses the schema composer which includes all directives and types.
+    """
     log.info(f"Comparing schemas: {schemas} and {val_schemas} and writing output to {output}")
 
+    # Use schema composer to create composed schemas (includes directives and all types)
     input_temp_path = create_tempfile_to_composed_schema(schemas)
-    inspector = GraphQLInspector(input_temp_path)
-
     val_temp_path = create_tempfile_to_composed_schema(val_schemas)
-    diff_result = inspector.diff(val_temp_path)
 
-    if output is not None:
-        log.info(f"writing file to {output=}")
-        output.parent.mkdir(parents=True, exist_ok=True)
-        processed = pretty_print_dict_json(diff_result.as_dict())
-        output.write_text(json.dumps(processed, indent=2, sort_keys=True, ensure_ascii=False))
+    try:
+        # Use GraphQLInspector's structured diff method
+        inspector = GraphQLInspector(input_temp_path, node_modules_path=inspector_path)
+        try:
+            structured_diff = inspector.diff_structured(val_temp_path)
+        except RuntimeError as e:
+            log.error(f"Failed to get structured diff: {e}")
+            sys.exit(2)
 
-    log.print(diff_result.output)
-    sys.exit(diff_result.returncode)
+        # Format JSON output as a direct array
+        json_output = json.dumps([change.model_dump() for change in structured_diff], indent=2, ensure_ascii=False)
+
+        if output is not None:
+            log.info(f"writing file to {output=}")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            # Write file synchronously to ensure it's on disk before exit
+            with open(output, "w", encoding="utf-8") as f:
+                f.write(json_output)
+                f.flush()
+                os.fsync(f.fileno())
+        else:
+            # If no output file specified, still print structured format
+            log.print(json_output)
+
+        # Exit with code 1 if breaking changes detected, 0 otherwise
+        has_breaking = any(change.criticality != "NON_BREAKING" for change in structured_diff)
+        exit_code = 1 if has_breaking else 0
+        sys.exit(exit_code)
+    finally:
+        # Clean up temporary files
+        input_temp_path.unlink(missing_ok=True)
+        val_temp_path.unlink(missing_ok=True)
 
 
 # registry -> concept-uri
@@ -930,16 +993,80 @@ def export_concept_uri(schemas: list[Path], output: Path | None, namespace: str,
 @registry.command(name="id")
 @schema_option
 @optional_output_option
-@click.option("--strict-mode/--no-strict-mode", default=False)
-def export_id(schemas: list[Path], output: Path | None, strict_mode: bool) -> None:
-    """Generate concept IDs for GraphQL schema fields and enums."""
+@click.option(
+    "--previous-ids",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Path to previous ID file for comparison",
+)
+@click.option(
+    "--diff-file",
+    "diff_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Path to structured diff JSON output from 'diff graphql' command",
+)
+@click.option(
+    "--version-tag",
+    type=str,
+    required=True,
+    help="Version tag/identifier for metadata",
+)
+def export_id(
+    schemas: list[Path],
+    output: Path | None,
+    previous_ids: Path | None,
+    diff_file: Path | None,
+    version_tag: str,
+) -> None:
+    """Generate variant-based concept IDs for GraphQL schema fields and enums.
 
+    Uses graphql-inspector diff to detect changes and only increments
+    variants for fields that actually changed.
+
+    The workflow will provide:
+    - previous_ids: Previous variant-ids.json file
+    - diff_file: Path to structured diff JSON from 'diff graphql' command (required if previous_ids provided)
+    - version-tag: Version tag/identifier for metadata (required)
+    """
     composed_schema = load_schema(schemas)
-    exporter = IDExporter(schema=composed_schema, output=output, strict_mode=strict_mode, dry_run=output is None)
-    node_ids = exporter.run()
 
-    log.rule("Concept IDs")
-    log.print_dict(node_ids)
+    # Validate: if previous_ids is provided, diff_file must also be provided
+    # Without diff_file, variant increments won't work correctly
+    # Note: Click already validates that previous_ids exists (exists=True)
+    if previous_ids and not diff_file:
+        log.error(
+            "When --previous-ids is provided, --diff-file is required. "
+            "The diff file is needed to determine which concepts changed and should have their variants incremented."
+        )
+        sys.exit(1)
+
+    # Use version tag as postfix for output file when provided
+    if output:
+        output = apply_version_tag_suffix(output, version_tag)
+
+    # Load diff output if provided
+    diff_output: list[DiffChange] | None = None
+    if diff_file:
+        try:
+            with open(diff_file, encoding="utf-8") as f:
+                json_data = json.load(f)
+                if not isinstance(json_data, list):
+                    raise ValueError("Invalid diff file: expected a JSON array")
+                diff_output = [DiffChange.model_validate(change) for change in json_data]
+        except (json.JSONDecodeError, OSError, ValueError) as e:
+            log.error(f"Failed to load diff file from {diff_file}: {e}")
+            sys.exit(1)
+
+    exporter = IDExporter(
+        schema=composed_schema,
+        version_tag=version_tag,
+        output=output,
+        previous_ids_path=previous_ids,
+        diff_output=diff_output,
+    )
+    result = exporter.run()
+
+    log.rule("Variant IDs")
+    log.print_dict(result.to_dict())
 
 
 # registry -> init
@@ -956,23 +1083,47 @@ def export_id(schemas: list[Path], output: Path | None, strict_mode: bool) -> No
     default="ns",
     help="The prefix to use for the concept URIs",
 )
+@click.option(
+    "--version-tag",
+    type=str,
+    required=True,
+    help="Version tag/identifier for metadata",
+)
 def registry_init(
     schemas: list[Path],
     output: Path,
     concept_namespace: str,
     concept_prefix: str,
+    version_tag: str,
 ) -> None:
-    """Initialize your spec history with the given schema."""
-    output.parent.mkdir(parents=True, exist_ok=True)
+    """Initialize spec history with variant tracking for the given schema.
 
-    # Generate concept IDs
-    composed_schema = load_schema(schemas)
-    id_exporter = IDExporter(schema=composed_schema, output=None, strict_mode=False, dry_run=False)
-    concept_ids = id_exporter.run()
+    This creates a spec history file with concept IDs.
+    Use 'registry update' to update an existing spec history with schema changes.
+    """
+    output = apply_version_tag_suffix(output, version_tag)
+    ensure_output_parent(output)
+
+    composed_schema_str = build_schema_str(schemas)
+    composed_schema = build_schema_with_query(composed_schema_str)
+
+    # Generate variant IDs file path (same directory as output)
+    variant_ids_output = derive_variant_ids_path(output.parent, version_tag)
+
+    id_exporter = IDExporter(
+        schema=composed_schema,
+        version_tag=version_tag,
+        output=variant_ids_output,
+    )
+    id_result = id_exporter.run()
+
+    # Extract variant IDs dict (format: {"concept_name": "Concept/vN"})
+    variant_ids: dict[str, str] = {}
+    for concept_name, variant_entry in id_result.concepts.items():
+        variant_ids[concept_name] = variant_entry.id
 
     # Generate concept URIs
-    graphql_schema = load_schema(schemas)
-    all_named_types = get_all_named_types(graphql_schema)
+    all_named_types = get_all_named_types(composed_schema)
     concepts = iter_all_concepts(all_named_types)
     concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
     concept_uris = concept_uri_model.to_json_ld()
@@ -982,14 +1133,16 @@ def registry_init(
     history_dir = output_real.parent / "history"
 
     spec_history_exporter = SpecHistoryExporter(
-        schemas=schemas,
+        schema_content=composed_schema_str,
         output=output,
         history_dir=history_dir,
     )
-    spec_history_result = spec_history_exporter.init_spec_history_model(concept_uris, concept_ids, concept_uri_model)
+    spec_history_result = spec_history_exporter.init_spec_history_model(
+        concept_uris, variant_ids, concept_uri_model, version_tag
+    )
 
-    log.rule("Concept IDs")
-    log.print_dict(concept_ids)
+    log.rule("Variant IDs")
+    log.print_dict(variant_ids)
     log.rule("Concept URIs")
     log.print_dict(concept_uris)
     log.rule("Spec history (updated)")
@@ -1006,6 +1159,18 @@ def registry_init(
     required=True,
     help="Path to the previously generated spec history file",
 )
+@click.option(
+    "--previous-ids",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to previous variant IDs file (e.g., variant_ids_v1.0.0.json)",
+)
+@click.option(
+    "--diff-file",
+    "diff_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Path to structured diff JSON output from 'diff graphql' command",
+)
 @output_option
 @click.option(
     "--concept-namespace",
@@ -1017,24 +1182,65 @@ def registry_init(
     default="ns",
     help="The prefix to use for the concept URIs",
 )
+@click.option(
+    "--version-tag",
+    type=str,
+    required=True,
+    help="Version tag/identifier for metadata",
+)
 def registry_update(
     schemas: list[Path],
     spec_history: Path,
     output: Path,
+    previous_ids: Path,
+    diff_file: Path | None,
     concept_namespace: str,
     concept_prefix: str,
+    version_tag: str,
 ) -> None:
-    """Update a given spec history file with your new schema."""
-    output.parent.mkdir(parents=True, exist_ok=True)
+    """Update a spec history file with schema changes, tracking variant increments.
 
-    # Generate concept IDs
-    schema = load_schema(schemas)
-    id_exporter = IDExporter(schema=schema, output=None, strict_mode=False, dry_run=False)
-    concept_ids = id_exporter.run()
+    Uses graphql-inspector diff to detect changes and only increments
+    variants for fields that actually changed.
+    """
+    output = apply_version_tag_suffix(output, version_tag)
+    ensure_output_parent(output)
+
+    # Load diff output if provided
+    diff_output: list[DiffChange] | None = None
+    if diff_file:
+        try:
+            with open(diff_file, encoding="utf-8") as f:
+                json_data = json.load(f)
+                if not isinstance(json_data, list):
+                    raise ValueError("Invalid diff file: expected a JSON array")
+                diff_output = [DiffChange.model_validate(change) for change in json_data]
+        except (json.JSONDecodeError, OSError, ValueError) as e:
+            log.error(f"Failed to load diff file from {diff_file}: {e}")
+            sys.exit(1)
+
+    composed_schema_str = build_schema_str(schemas)
+    composed_schema = build_schema_with_query(composed_schema_str)
+
+    # Determine variant IDs output path based on the existing output option.
+    variant_ids_output = derive_variant_ids_path(output.parent, version_tag)
+
+    id_exporter = IDExporter(
+        schema=composed_schema,
+        version_tag=version_tag,
+        output=variant_ids_output,
+        previous_ids_path=previous_ids,
+        diff_output=diff_output,
+    )
+    id_result = id_exporter.run()
+
+    # Extract variant IDs dict (format: {"concept_name": "Concept/vN"})
+    variant_ids: dict[str, str] = {}
+    for concept_name, variant_entry in id_result.concepts.items():
+        variant_ids[concept_name] = variant_entry.id
 
     # Generate concept URIs
-    graphql_schema = load_schema(schemas)
-    all_named_types = get_all_named_types(graphql_schema)
+    all_named_types = get_all_named_types(composed_schema)
     concepts = iter_all_concepts(all_named_types)
     concept_uri_model = create_concept_uri_model(concepts, concept_namespace, concept_prefix)
     concept_uris = concept_uri_model.to_json_ld()
@@ -1044,19 +1250,20 @@ def registry_update(
     history_dir = output_real.parent / "history"
 
     spec_history_exporter = SpecHistoryExporter(
-        schemas=schemas,
+        schema_content=composed_schema_str,
         output=output,
         history_dir=history_dir,
     )
     spec_history_result = spec_history_exporter.update_spec_history_model(
         concept_uris=concept_uris,
-        concept_ids=concept_ids,
+        variant_ids=variant_ids,
         concept_uri_model=concept_uri_model,
         spec_history_path=spec_history,
+        version_tag=version_tag,
     )
 
-    log.rule("Concept IDs")
-    log.print_dict(concept_ids)
+    log.rule("Variant IDs")
+    log.print_dict(variant_ids)
     log.rule("Concept URIs")
     log.print_dict(concept_uris)
     log.rule("Spec history (updated)")
@@ -1236,11 +1443,12 @@ def search_skos(ttl_file: Path, term: str, case_insensitive: bool, limit: str) -
     required=False,
     help="Output file, only .json allowed here",
 )
-def similar_graphql(schemas: list[Path], keyword: str, output: Path | None) -> None:
+@requires_graphql_inspector
+def similar_graphql(schemas: list[Path], keyword: str, output: Path | None, inspector_path: Path | None = None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
     whole schema (in %)."""
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
-    inspector = GraphQLInspector(schema_temp_path)
+    inspector = GraphQLInspector(schema_temp_path, node_modules_path=inspector_path)
     if output:
         log.info(f"Search will write file to {output}")
 

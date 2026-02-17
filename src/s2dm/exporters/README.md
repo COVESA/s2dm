@@ -404,7 +404,7 @@ The naming configuration system enforces several validation rules to ensure cons
 With the asumption that specification files will be hosted in a certain Git repository, the tools include functions to support the proper identification of concepts and their metadata to facilite their evolution.
 The identification process is based on the following principles, which are describes in the rest of this subsection:
 * Concepts of interest (e.g., object types or fields) must have unique identifiers for the intended meaning. This is solved by the [creation of URIs for the concepts](#creation-of-uris-for-the-concepts).
-* A concept can have multiple different realizations (i.e., incarnations) depending on the used metadata. For example, different datatypes, units, etc. This is true for the evolution of the model. However, it is assumed that the latests realization documented is the valid one. This is solved by the [creation of hashed IDs based on specified metadata](#creation-of-hashed-ids-based-on-metadata).
+* A concept can have multiple different realizations (i.e., incarnations) depending on the used metadata. For example, different datatypes, units, etc. This is true for the evolution of the model. However, it is assumed that the latests realization documented is the valid one. This is solved by the [creation of variant-based IDs](#creation-of-variant-based-ids).
 * A history of concepts and their realizations over time must be explicitly given as part of the model evolution. This is solved by combining concepts' URIs and their realizations into an [spec history registry](#spec-history-registry).
 
 ### Creation of URIs for the concepts
@@ -531,20 +531,23 @@ This JSON-LD output shows that:
 - `Vehicle_ADAS` is an object type with two fields
 - `Vehicle_ADAS_ActiveAutonomyLevel_Enum` is an enum type
 
-### Creation of hashed IDs based on specified metadata
-The ID exporter `to_id.py` traverses a GraphQL schema and generates deterministic, unique hash IDs for schema elements.
-If a breaking change is introduced in the specification, it will result in a different ID.
+### Creation of variant-based IDs
+The ID exporter `to_id.py` traverses a GraphQL schema and generates deterministic, unique variant-based IDs for schema elements in the format `Concept/vM.m` where `M.m` follows semantic versioning (major.minor).
+When a change is detected in a concept's specification (via GraphQL schema diffing), the version increments according to the change type.
 
 #### How It Works
 
-1. **Schema Traversal**: The exporter traverses the GraphQL schema, processing each type and field.
-2. **Spec Generation**: For each field, an `IDGenerationSpec` is created containing:
-   - Name: Fully qualified name of the field
-   - Data Type: Scalar type of the field
-   - Unit: Unit of measurement (if applicable)
-   - Allowed Values: For enum types
-   - Minimum/Maximum: Range constraints (if applicable)
-3. **ID Generation**: A 32-bit FNV-1a hash is generated from these properties.
+1. **Schema Traversal**: The exporter traverses the GraphQL schema, processing each enum, object type, and object field.
+2. **Concept Extraction**: For each enum, object type, and leaf field, the concept name is extracted:
+   - Enums: Use the enum type name directly (e.g., `WarningTypeEnum`)
+   - Object Types: Use the object type name directly (e.g., `Vehicle`, `Vehicle_ADAS`)
+   - Fields: Use the fully qualified field name (e.g., `Vehicle.averageSpeed`)
+3. **Variant Tracking**: Variant versions are tracked for each concept using semantic versioning:
+   - New concepts start at version v1.0
+   - **Breaking changes** (BREAKING or DANGEROUS criticality) increment the major version (v1.0 → v2.0)
+   - **Non-breaking changes** (NON_BREAKING criticality) increment the minor version (v1.0 → v1.1)
+   - Variant IDs are persisted to a JSON file (typically `variant-ids.json`) for tracking across runs
+4. **ID Generation**: Variant-based IDs are generated in the format `Concept/vM.m` where `M.m` follows semantic versioning.
 
 #### Example
 
@@ -561,16 +564,37 @@ type Vehicle_ADAS {
 }
 ```
 
-The ID exporter generates a json output that has the element's name as the key and its ID as the value, like:
+The ID exporter generates a JSON output with git tag and concepts:
 
 ```json
 {
-  "Vehicle.averageSpeed": "0x9B020962",
-  "Vehicle_ADAS.isAutoPowerOptimize": "0x1B10735A"
+  "version_tag": "v1.0.0",
+  "concepts": {
+    "Vehicle": {
+      "id": "Vehicle/v1.0",
+      "variant_counter": 1
+    },
+    "Vehicle.averageSpeed": {
+      "id": "Vehicle.averageSpeed/v1.0",
+      "variant_counter": 1
+    },
+    "Vehicle_ADAS": {
+      "id": "Vehicle_ADAS/v1.0",
+      "variant_counter": 1
+    },
+    "Vehicle_ADAS.isAutoPowerOptimize": {
+      "id": "Vehicle_ADAS.isAutoPowerOptimize/v1.0",
+      "variant_counter": 1
+    }
+  }
 }
 ```
 
-For detailed information about the ID generation mechanism, refer to the [IDGen README](../idgen/README.md).
+Object types (e.g., `Vehicle`, `Vehicle_ADAS`) are tracked separately from their fields. When a field changes within an object type, both the field's variant ID and the object type's variant ID are incremented, allowing tracking of changes to the type structure itself.
+
+The exporter saves variant IDs to a JSON file (typically `variant-ids.json`), which tracks the current variant for each concept. When running with `--previous-ids` and `--diff-file` options, variants will increment correctly for changed concepts detected via GraphQL schema diffing.
+
+For detailed information about the ID generation mechanism, refer to the [Registry README](../registry/README.md).
 
 
 ### Spec History Registry
@@ -580,14 +604,13 @@ The `to_spec_history.py` script tracks changes in schema realizations over time.
 ### How It Works
 
 1. **Initialization**: The registry is initialized with concept URIs and their corresponding IDs.
-2. **Tracking**: For each field in the schema, a `specHistory` property tracks the history of IDs with timestamps.
+2. **Tracking**: For each field in the schema, a `specHistory` property tracks the history of IDs.
 3. **Updates**: When schema changes occur, new IDs are appended to the history, maintaining a chronological record.
 4. **Type Definition History**: The tool also saves the complete type definition for any new or updated concept to individual files in a history directory.
 
 ### Features
 
 - Preserves the full history of realization IDs for each concept
-- Records timestamps for each change
 - Detects and logs new concepts and updated IDs
 - Maintains valid JSON-LD structure
 - Saves GraphQL type definitions to individual files for historical reference
@@ -619,12 +642,10 @@ When initialized with the concept URIs and IDs, the registry creates a JSON-LD f
       "@type": "Field",
       "specHistory": [
         {
-          "id": "0x9B020962",
-          "timestamp": "2025-05-14T10:22:00.000000"
+          "id": "Vehicle.averageSpeed/v1.0"
         },
         {
-          "id": "0xA2C48D71",
-          "timestamp": "2025-05-14T10:22:30.000000"
+          "id": "Vehicle.averageSpeed/v1.1"
         }
       ]
     },
@@ -639,26 +660,26 @@ When initialized with the concept URIs and IDs, the registry creates a JSON-LD f
 
 This history shows that the implementation of `Vehicle.averageSpeed` changed on May 14, 2025, with new realization IDs. The registry maintains this chronological record for all concepts.
 
-Additionally, the tool saves the complete type definition for each concept to a file in the history directory. The files are named according to the pattern `<type_name>_<YYYYMMDDHHMMSS>_<id>.graphql`, where:
-- `<type_name>` is the name of the GraphQL type
-- `<YYYYMMDDHHMMSS>` is the timestamp in UTC time
-- `<id>` is the concept ID
+Additionally, the tool saves the complete type definition for each concept to a file in the history directory. The files are named according to the pattern `<sanitized_id>.graphql`, where:
+- `<sanitized_id>` is the variant-based concept ID (format: `Concept/vM.m`) with `/` replaced by `_` for filesystem compatibility
 
 For example:
 
 ```
 history/
-├── Vehicle_20250501111111_0x9B020962.graphql
-└── Vehicle_20250502222222_0xA2C48D71.graphql
+├── Vehicle.averageSpeed_v1.0.graphql
+└── Vehicle.averageSpeed_v1.1.graphql
 ```
 
-These files contain the complete GraphQL type definitions, allowing you to review how the type structure has changed over time. Files generated in the same batch operation will have the same timestamp.
+Note: The ID already contains the concept name, so no type prefix is needed in the filename.
+
+These files contain the complete GraphQL type definitions, allowing you to review how the type structure has changed over time.
 
 ### Usage
 
 For initialization:
 ```bash
-python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids concept_ids.json --schema schema.graphql --output spec_history.json --init
+python src/tools/to_spec_history.py --concept-uri concept_uri.json --ids variant_ids.json --schema schema.graphql --output spec_history.json --init
 ```
 
 For updates:

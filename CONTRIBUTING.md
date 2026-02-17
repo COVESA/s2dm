@@ -25,6 +25,24 @@ uv sync
 ```
 
 It will create a virtual environment `.venv` in the root of the project.
+
+### Node.js Dependencies
+
+Some features require Node.js dependencies for GraphQL schema operations. Install them with:
+
+```shell
+npm install
+```
+
+This installs `@graphql-inspector/cli`, `@graphql-inspector/core`, and `graphql` packages required by:
+- `s2dm diff graphql` - Structured diff output
+- `s2dm check version-bump` - Version bump detection
+- `s2dm validate graphql` - Schema validation
+- `s2dm similar graphql` - Type similarity search
+- `s2dm registry init` and `s2dm registry update` - Registry functionality
+
+> [!NOTE]
+> The `@requires_graphql_inspector` decorator automatically locates and injects the path to the local `node_modules` directory. Commands will fail with clear error messages if dependencies are missing. The GraphQL Inspector wrapper resolves the CLI path once during initialization for optimal performance.
 You can run things in the virtual environment by using a `uv run` prefix for commands, e.g.:
 
 ```shell
@@ -79,6 +97,42 @@ pytest --cov-report term-missing --cov=s2dm -vv
 ```
 
 New code should ideally have tests and not break existing tests.
+
+#### Skipping GraphQL Inspector Tests
+
+Some tests require the `@graphql-inspector/cli` package to be installed via npm. These tests are marked with `@pytest.mark.graphql_inspector`.
+
+**If you don't have Node.js dependencies installed:**
+
+These tests will automatically be skipped with a message:
+```
+SKIPPED [9] tests/conftest.py:309: graphql-inspector not found. Run 'npm install' to install dependencies.
+```
+
+**To explicitly skip these tests:**
+
+```bash
+# Skip all graphql_inspector tests
+pytest -m "not graphql_inspector"
+
+# Skip graphql_inspector tests with verbose output
+pytest -m "not graphql_inspector" -v
+
+# Run only graphql_inspector tests
+pytest -m "graphql_inspector"
+```
+
+**To run these tests:**
+
+1. Install Node.js dependencies first:
+   ```bash
+   npm install
+   ```
+
+2. Then run all tests normally:
+   ```bash
+   pytest
+   ```
 
 ### Type Checking
 

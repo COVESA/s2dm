@@ -31,13 +31,15 @@ def tmp_outputs(tmp_path_factory: pytest.TempPathFactory) -> Path:
 class ExpectedIds:
     """Expected spec history IDs for the test cases.
 
-    The IDs are based on the test data files.
+    The IDs are variant-based IDs in the format Concept/vN.
+    - Initial IDs are v1.0 (from schema1-1/schema1-2)
+    - Updated IDs are v2.0 (from schema2-1/schema2-2, after BREAKING changes)
     """
 
-    VEHICLE_AVG_SPEED_ID = "0x2B6F41EE"  # schema1-1.graphql
-    NEW_VEHICLE_AVG_SPEED_ID = "0x6002D5AD"  # schema1-2.graphql
-    PERSON_HEIGHT_ID = "0xC3D633BB"  # schema1-1.graphql
-    NEW_PERSON_HEIGHT_ID = "0xBB5A2DD0"  # schema1-2.graphql
+    VEHICLE_AVG_SPEED_ID = "Vehicle.averageSpeed/v1.0"  # schema1-1.graphql (Float)
+    NEW_VEHICLE_AVG_SPEED_ID = "Vehicle.averageSpeed/v2.0"  # schema2-1.graphql (Int - changed from Float, BREAKING)
+    PERSON_HEIGHT_ID = "Person.height/v1.0"  # schema1-2.graphql (Float)
+    NEW_PERSON_HEIGHT_ID = "Person.height/v2.0"  # schema2-2.graphql (Int - changed from Float, BREAKING)
 
 
 def contains_value(obj: dict[str, Any] | list[Any] | str, target: str) -> bool:
@@ -433,10 +435,17 @@ def test_diff_graphql(
             str(out),
         ],
     )
-    assert out.exists()
+    # diff_graphql exits with code 1 if breaking changes detected, 0 otherwise
+    # Both are valid outcomes, so we check if file was created
+    assert result.exit_code in (0, 1), f"Command failed with exit code {result.exit_code}. Output: {result.output}"
+    assert out.exists(), f"Output file {out} was not created. Exit code: {result.exit_code}, Output: {result.output}"
     with open(out) as f:
-        file_content = f.read()
-    assert expected_output in file_content or expected_output in result.output
+        diff_output = json.load(f)
+
+    if expected_output == "No changes detected":
+        assert len(diff_output) == 0
+    elif expected_output == "Detected":
+        assert len(diff_output) > 0
 
 
 def test_registry_export_concept_uri(
@@ -492,14 +501,21 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path, spec_directory
             str(units_directory),
             "-o",
             str(out),
+            "--version-tag",
+            "v1.0.0",
         ],
     )
     assert result.exit_code == 0, f"Expected exit code 0, but got {result.exit_code}."
+    out = out.with_name(f"{out.stem}_v1.0.0{out.suffix}")
     assert out.exists(), f"Expected output file {out} not found."
     with open(out) as f:
         data = json.load(f)
-    assert any("Vehicle.averageSpeed" in k for k in data), "Expected 'Vehicle.averageSpeed' not found in the output."
-    assert any("Person.name" in k for k in data), "Expected 'Person.name' not found in the output."
+    # New format has 'concepts' key with concept names as keys
+    concepts = data["concepts"]
+    assert any(
+        "Vehicle.averageSpeed" in k for k in concepts
+    ), "Expected 'Vehicle.averageSpeed' not found in the output."
+    assert any("Person.name" in k for k in concepts), "Expected 'Person.name' not found in the output."
 
 
 def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
@@ -519,9 +535,12 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
             str(units_directory),
             "-o",
             str(out),
+            "--version-tag",
+            "v1.0.0",
         ],
     )
     assert result.exit_code == 0, result.output
+    out = out.with_name(f"{out.stem}_v1.0.0{out.suffix}")
     assert out.exists()
     with open(out) as f:
         data = json.load(f)
@@ -562,9 +581,11 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
 
 def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
     out = tmp_outputs / "spec_history_update.json"
+    version_tag_initial = "v1.0.0"
+    version_tag_updated = "v1.1.0"
     # First, create a spec history file
     init_out = tmp_outputs / "spec_history.json"
-    runner.invoke(
+    init_result = runner.invoke(
         cli,
         [
             "registry",
@@ -579,9 +600,46 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: P
             str(units_directory),
             "-o",
             str(init_out),
+            "--version-tag",
+            version_tag_initial,
         ],
     )
-    runner.invoke(
+    assert init_result.exit_code == 0, f"registry init failed: {init_result.output}"
+    init_out = init_out.with_name(f"{init_out.stem}_{version_tag_initial}{init_out.suffix}")
+    assert init_out.exists(), f"Init output file {init_out} was not created. Output: {init_result.output}"
+
+    # Generate diff between old and new schemas
+    diff_file = tmp_outputs / "diff.json"
+    diff_result = runner.invoke(
+        cli,
+        [
+            "diff",
+            "graphql",
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "--val-schema",
+            str(TSD.SAMPLE2_1),
+            "--val-schema",
+            str(TSD.SAMPLE2_2),
+            "--val-schema",
+            str(units_directory),
+            "-o",
+            str(diff_file),
+        ],
+    )
+    # diff_graphql exits with code 1 if breaking changes detected, 0 otherwise
+    assert diff_result.exit_code in (0, 1), f"diff graphql failed: {diff_result.output}"
+    assert diff_file.exists(), f"Diff file {diff_file} was not created. Output: {diff_result.output}"
+
+    # Get previous variant IDs file (created during init)
+    previous_ids = init_out.parent / f"variant_ids_{version_tag_initial}.json"
+    assert previous_ids.exists(), f"Previous IDs file {previous_ids} was not created during init"
+
+    update_result = runner.invoke(
         cli,
         [
             "registry",
@@ -598,9 +656,17 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: P
             str(init_out),
             "-o",
             str(out),
+            "--previous-ids",
+            str(previous_ids),
+            "--diff-file",
+            str(diff_file),
+            "--version-tag",
+            version_tag_updated,
         ],
     )
-    assert out.exists()
+    assert update_result.exit_code == 0, f"registry update failed: {update_result.output}"
+    out = out.with_name(f"{out.stem}_{version_tag_updated}{out.suffix}")
+    assert out.exists(), f"Update output file {out} was not created. Output: {update_result.output}"
     with open(out) as f:
         data = json.load(f)
     found_vehicle_old = False
