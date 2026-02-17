@@ -71,6 +71,11 @@ inputs:
     required: false
     default: "en"
 
+  rdf-output-formats:
+    description: "Comma-separated RDF output formats (e.g. nt,turtle,json-ld)"
+    required: false
+    default: ""
+
 outputs:
   version-bump:
     description: "Type of version bump (major, minor, patch, none)"
@@ -238,6 +243,7 @@ runs:
         CMD="s2dm export rdf -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/rdf --namespace '${{ inputs.rdf-namespace }}'"
         [ -n "${{ inputs.rdf-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.rdf-prefix }}'"
         [ -n "${{ inputs.rdf-language }}" ] && CMD="$CMD --language '${{ inputs.rdf-language }}'"
+        [ -n "${{ inputs.rdf-output-formats }}" ] && CMD="$CMD --output-formats '${{ inputs.rdf-output-formats }}'"
         eval "$CMD"
 
     - name: Generate VSpec
