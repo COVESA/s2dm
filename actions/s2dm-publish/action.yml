@@ -262,7 +262,7 @@ runs:
       working-directory: ${{ inputs.repository-path }}
       shell: bash
       run: |
-        CMD="s2dm generate schema-rdf -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/schema-rdf --namespace '${{ inputs.schema-rdf-namespace }}'"
+        CMD="s2dm generate schema-rdf -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/schema-rdf --namespace '${{ inputs.schema-rdf-namespace }}' --output-formats nt,ttl,jsonld"
         [ -n "${{ inputs.schema-rdf-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.schema-rdf-prefix }}'"
         [ -n "${{ inputs.schema-rdf-language }}" ] && CMD="$CMD --language '${{ inputs.schema-rdf-language }}'"
         eval "$CMD"
