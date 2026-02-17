@@ -8,6 +8,7 @@ This module materializes GraphQL SDL into two separate RDF graphs:
   hasOutputType, hasEnumValue, hasUnionMember, usesTypeWrapperPattern
 """
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
@@ -275,8 +276,9 @@ def _add_skos_concept(
     """
     graph.add((uri, RDF.type, SKOS.Concept))
     graph.add((uri, SKOS.prefLabel, Literal(pref_label, lang=language)))
-    if description.strip():
-        graph.add((uri, SKOS.definition, Literal(description)))
+    stripped_description = description.strip()
+    if stripped_description:
+        graph.add((uri, SKOS.definition, Literal(stripped_description)))
         note = _SKOS_NOTE_TEMPLATE.format(name=pref_label, uri=str(uri))
         graph.add((uri, SKOS.note, Literal(note)))
 
@@ -327,6 +329,15 @@ def materialize_skos_graph(
     Returns:
         rdflib Graph containing only SKOS triples.
     """
+    if not namespace.endswith(("#", "/")):
+        logging.getLogger(__name__).warning(
+            "Namespace '%s' does not end with '#' or '/'. "
+            "Generated URIs may be malformed (e.g. '%sCabin' instead of '%s#Cabin').",
+            namespace,
+            namespace,
+            namespace,
+        )
+
     graph, concept_ns = _create_bound_graph(namespace, prefix)
 
     # Top-level collections
@@ -465,6 +476,42 @@ def materialize_data_graph(
 
 
 # ---------------------------------------------------------------------------
+# Combined graph materialization
+# ---------------------------------------------------------------------------
+
+
+def materialize_schema_to_rdf(
+    schema: GraphQLSchema,
+    namespace: str,
+    prefix: str = "ns",
+    language: str = "en",
+) -> Graph:
+    """Materialize a GraphQL schema as a single RDF graph (SKOS + ontology).
+
+    Convenience wrapper that extracts the schema, builds both the SKOS
+    and ontology data graphs, and merges them into one graph suitable
+    for SPARQL querying.
+
+    Args:
+        schema: The GraphQL schema to materialize.
+        namespace: URI namespace for concept URIs.
+        prefix: Prefix for concept URIs (e.g., "ns").
+        language: BCP 47 language tag for skos:prefLabel.
+
+    Returns:
+        rdflib Graph containing both SKOS and ontology triples.
+    """
+    extract = extract_schema_for_rdf(schema)
+    skos_graph = materialize_skos_graph(extract, namespace, prefix, language)
+    data_graph = materialize_data_graph(extract, namespace, prefix, language)
+
+    for triple in data_graph:
+        skos_graph.add(triple)
+
+    return skos_graph
+
+
+# ---------------------------------------------------------------------------
 # Serialization and file output
 # ---------------------------------------------------------------------------
 
@@ -492,21 +539,95 @@ def serialize_sorted_ntriples(graph: Graph) -> str:
     return _sort_ntriples_lines(nt)
 
 
+# Registry mapping rdflib format names to file extensions.
+# The keys are the canonical format identifiers (also accepted by rdflib).
+# New formats can be added here without further code changes.
+FORMAT_REGISTRY: dict[str, str] = {
+    "nt": ".nt",
+    "turtle": ".ttl",
+    "json-ld": ".jsonld",
+}
+
+# Common short aliases that users may prefer on the CLI.
+FORMAT_ALIASES: dict[str, str] = {
+    "ttl": "turtle",
+    "jsonld": "json-ld",
+}
+
+# Default formats for day-to-day use (sorted n-triples for git, Turtle for reading).
+DEFAULT_FORMATS: list[str] = ["nt", "turtle"]
+
+
+def resolve_format(fmt: str) -> str:
+    """Resolve a format key to its canonical rdflib name.
+
+    Accepts both canonical names (``"turtle"``, ``"json-ld"``) and common
+    aliases (``"ttl"``, ``"jsonld"``).
+
+    Args:
+        fmt: User-supplied format key.
+
+    Returns:
+        Canonical rdflib format name.
+
+    Raises:
+        ValueError: If *fmt* is not a known format or alias.
+    """
+    if fmt in FORMAT_REGISTRY:
+        return fmt
+    if fmt in FORMAT_ALIASES:
+        return FORMAT_ALIASES[fmt]
+    all_accepted = sorted(set(FORMAT_REGISTRY) | set(FORMAT_ALIASES))
+    raise ValueError(f"Unknown RDF format: '{fmt}'. Supported: {', '.join(all_accepted)}")
+
+
 def write_rdf_artifacts(
     graph: Graph,
     output_dir: Path,
     base_name: str = "schema",
-) -> None:
-    """Write RDF graph to sorted n-triples and Turtle files.
+    formats: list[str] | None = None,
+) -> list[Path]:
+    """Write RDF graph to one or more serialization formats.
+
+    Uses FORMAT_REGISTRY to resolve format keys to rdflib serializer names and
+    file extensions.  The ``"nt"`` format is special-cased to use
+    ``serialize_sorted_ntriples`` for deterministic, git-friendly output.
+
+    Accepts both canonical rdflib names (e.g. ``"turtle"``) and common
+    aliases (e.g. ``"ttl"``).
 
     Args:
         graph: The rdflib Graph to write.
         output_dir: Directory to write files into (created if needed).
         base_name: Base filename without extension (default: "schema").
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-    nt_path = output_dir / f"{base_name}.nt"
-    ttl_path = output_dir / f"{base_name}.ttl"
+        formats: List of format keys (e.g. ``["nt", "ttl", "json-ld"]``).
+            Defaults to ``["nt", "turtle"]`` when *None*.
 
-    nt_path.write_text(serialize_sorted_ntriples(graph), encoding="utf-8")
-    graph.serialize(destination=str(ttl_path), format="turtle")
+    Returns:
+        List of paths to the written files.
+
+    Raises:
+        ValueError: If an unknown format key is provided.
+    """
+    if formats is None:
+        formats = list(DEFAULT_FORMATS)
+
+    # Resolve aliases to canonical names
+    resolved = [resolve_format(f) for f in formats]
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+
+    for fmt in resolved:
+        extension = FORMAT_REGISTRY[fmt]
+        out_path = output_dir / f"{base_name}{extension}"
+
+        if fmt == "nt":
+            # Sorted n-triples for deterministic, git-friendly output
+            out_path.write_text(serialize_sorted_ntriples(graph), encoding="utf-8")
+        else:
+            graph.serialize(destination=str(out_path), format=fmt)
+
+        written.append(out_path)
+
+    return written

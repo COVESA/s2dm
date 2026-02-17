@@ -8,6 +8,7 @@ from typing import Any, cast
 
 import rich_click as click
 from graphql import DocumentNode, GraphQLSchema, parse
+from rdflib import Graph
 from rich.traceback import install
 
 from s2dm import __version__, log
@@ -17,12 +18,23 @@ from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.rdf_materializer import (
+    FORMAT_ALIASES,
+    FORMAT_REGISTRY,
     extract_schema_for_rdf,
     materialize_data_graph,
+    materialize_schema_to_rdf,
     materialize_skos_graph,
     write_rdf_artifacts,
 )
 from s2dm.exporters.shacl import translate_to_shacl
+from s2dm.exporters.sparql_queries import (
+    QUERIES as SPARQL_QUERIES,
+)
+from s2dm.exporters.sparql_queries import (
+    format_results_as_table,
+    load_rdf_graph,
+    run_query,
+)
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
@@ -153,6 +165,28 @@ def derive_variant_ids_path(base_dir: Path, version_tag: str) -> Path:
     """Build variant IDs filename using version tag."""
     filename = f"variant_ids_{version_tag}.json"
     return base_dir / filename
+
+
+def load_diff_changes(diff_file: Path | None) -> list[DiffChange] | None:
+    """Load and validate a structured diff JSON file.
+
+    Args:
+        diff_file: Path to the JSON diff file, or None.
+
+    Returns:
+        List of DiffChange objects, or None if *diff_file* is None.
+    """
+    if diff_file is None:
+        return None
+    try:
+        with open(diff_file, encoding="utf-8") as f:
+            json_data = json.load(f)
+            if not isinstance(json_data, list):
+                raise ValueError("Invalid diff file: expected a JSON array")
+            return [DiffChange.model_validate(change) for change in json_data]
+    except (json.JSONDecodeError, OSError, ValueError) as e:
+        log.error(f"Failed to load diff file from {diff_file}: {e}")
+        sys.exit(1)
 
 
 units_directory_option = click.option(
@@ -291,6 +325,60 @@ def registry() -> None:
     - Generating concept URIs (registry concept-uri)
     """
     pass
+
+
+@click.command()
+@click.argument("query_name", type=click.Choice(sorted(SPARQL_QUERIES.keys()), case_sensitive=False))
+@click.option(
+    "--rdf",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Pre-generated RDF file (.nt or .ttl) to query",
+)
+@click.option(
+    "--schema",
+    "-s",
+    "schemas",
+    type=str,
+    cls=SchemaResolverOption,
+    default=None,
+    multiple=True,
+    help="GraphQL schema file/dir (used with --namespace for on-the-fly materialization)",
+)
+@click.option(
+    "--namespace",
+    default=None,
+    help="Namespace URI for on-the-fly materialization (requires --schema)",
+)
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    default=False,
+    help="Output results as JSON instead of a table",
+)
+@optional_output_option
+def query(
+    query_name: str,
+    rdf: Path | None,
+    schemas: list[Path] | None,
+    namespace: str | None,
+    json_output: bool,
+    output: Path | None,
+) -> None:
+    """Run a predefined SPARQL query against an RDF-materialized schema.
+
+    Load a pre-generated RDF file (--rdf) or materialize on-the-fly
+    from a GraphQL schema (-s/--schema + --namespace).
+
+    Available queries:
+      fields-outputting-enum    Find fields whose output type is an enum
+      object-types-with-fields  List object types and their fields
+      list-type-fields          Find fields using list-like wrappers
+    """
+    graph = _resolve_graph(rdf, schemas, namespace)
+    results = run_query(graph, query_name)
+    _output_results(results, query_name, json_output=json_output, output=output)
 
 
 @click.group()
@@ -745,7 +833,7 @@ def protobuf(
     "-o",
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     required=True,
-    help="Output directory for skos.{nt,ttl} and data_graph.{nt,ttl}",
+    help="Output directory for RDF artifacts (skos and data_graph in selected formats)",
 )
 @click.option(
     "--namespace",
@@ -764,19 +852,29 @@ def protobuf(
     help="BCP 47 language tag for prefLabels",
     show_default=True,
 )
+@click.option(
+    "--output-formats",
+    default="nt,turtle",
+    help=f"Comma-separated output formats. Supported: {', '.join(sorted(set(FORMAT_REGISTRY) | set(FORMAT_ALIASES)))}",
+    show_default=True,
+)
 def rdf(
     schemas: list[Path],
     output: Path,
     namespace: str,
     prefix: str,
     language: str,
+    output_formats: str,
 ) -> None:
     """Export GraphQL schema as RDF with separate SKOS and ontology data graphs.
 
-    Produces two pairs of files in the output directory:
-      skos.nt / skos.ttl         -- SKOS concepts, collections, and labels
-      data_graph.nt / data_graph.ttl -- s2dm ontology instantiation
+    Produces two pairs of files in the output directory (formats configurable
+    via --output-formats, default: nt, turtle):
+      skos.{nt,ttl}         -- SKOS concepts, collections, and labels
+      data_graph.{nt,ttl}   -- s2dm ontology instantiation
     """
+    formats = [f.strip() for f in output_formats.split(",") if f.strip()]
+
     try:
         graphql_schema = load_schema(schemas)
         extract = extract_schema_for_rdf(graphql_schema)
@@ -784,12 +882,17 @@ def rdf(
         skos_graph = materialize_skos_graph(extract, namespace, prefix, language)
         data_graph = materialize_data_graph(extract, namespace, prefix, language)
 
-        write_rdf_artifacts(skos_graph, output, base_name="skos")
-        write_rdf_artifacts(data_graph, output, base_name="data_graph")
+        skos_written = write_rdf_artifacts(skos_graph, output, base_name="skos", formats=formats)
+        data_written = write_rdf_artifacts(data_graph, output, base_name="data_graph", formats=formats)
 
-        log.success(f"RDF artifacts written to {output}/")
+        written = skos_written + data_written
+    except ValueError as e:
+        raise click.ClickException(str(e)) from e
     except OSError as e:
         raise click.ClickException(f"Failed to write RDF artifacts: {e}") from e
+
+    file_list = ", ".join(str(p) for p in written)
+    log.success(f"RDF artifacts written: {file_list}")
 
 
 # Check -> version bump
@@ -1074,18 +1177,7 @@ def export_id(
     if output:
         output = apply_version_tag_suffix(output, version_tag)
 
-    # Load diff output if provided
-    diff_output: list[DiffChange] | None = None
-    if diff_file:
-        try:
-            with open(diff_file, encoding="utf-8") as f:
-                json_data = json.load(f)
-                if not isinstance(json_data, list):
-                    raise ValueError("Invalid diff file: expected a JSON array")
-                diff_output = [DiffChange.model_validate(change) for change in json_data]
-        except (json.JSONDecodeError, OSError, ValueError) as e:
-            log.error(f"Failed to load diff file from {diff_file}: {e}")
-            sys.exit(1)
+    diff_output = load_diff_changes(diff_file)
 
     exporter = IDExporter(
         schema=composed_schema,
@@ -1238,18 +1330,7 @@ def registry_update(
     output = apply_version_tag_suffix(output, version_tag)
     ensure_output_parent(output)
 
-    # Load diff output if provided
-    diff_output: list[DiffChange] | None = None
-    if diff_file:
-        try:
-            with open(diff_file, encoding="utf-8") as f:
-                json_data = json.load(f)
-                if not isinstance(json_data, list):
-                    raise ValueError("Invalid diff file: expected a JSON array")
-                diff_output = [DiffChange.model_validate(change) for change in json_data]
-        except (json.JSONDecodeError, OSError, ValueError) as e:
-            log.error(f"Failed to load diff file from {diff_file}: {e}")
-            sys.exit(1)
+    diff_output = load_diff_changes(diff_file)
 
     composed_schema_str = build_schema_str(schemas)
     composed_schema = build_schema_with_query(composed_schema_str)
@@ -1537,12 +1618,82 @@ def stats_graphql(schemas: list[Path]) -> None:
     log.print_dict(type_counts)
 
 
+# ---------------------------------------------------------------------------
+# Query commands (SPARQL-based schema traversal)
+# ---------------------------------------------------------------------------
+
+
+def _resolve_graph(
+    rdf: Path | None,
+    schemas: list[Path] | None,
+    namespace: str | None,
+) -> Graph:
+    """Resolve an RDF graph from either a file or on-the-fly materialization.
+
+    Args:
+        rdf: Path to a pre-generated RDF file.
+        schemas: GraphQL schema paths for on-the-fly materialization.
+        namespace: Namespace URI (required with schemas).
+
+    Returns:
+        Loaded or materialized rdflib Graph.
+
+    Raises:
+        click.UsageError: If neither ``--rdf`` nor ``--schema + --namespace``
+            are provided, or if both are provided.
+    """
+    if rdf and schemas:
+        raise click.UsageError("Provide either --rdf or --schema/--namespace, not both.")
+
+    if rdf:
+        return load_rdf_graph(rdf)
+
+    if schemas:
+        if not namespace:
+            raise click.UsageError("--namespace is required when using --schema.")
+        graphql_schema = load_schema(schemas)
+        return materialize_schema_to_rdf(schema=graphql_schema, namespace=namespace, prefix="ns")
+
+    raise click.UsageError("Provide --rdf or --schema with --namespace.")
+
+
+def _output_results(
+    results: list[dict[str, str]],
+    query_name: str,
+    json_output: bool,
+    output: Path | None = None,
+) -> None:
+    """Print query results as a table or write JSON to a file.
+
+    Args:
+        results: Query result rows.
+        query_name: Name of the query (for table title).
+        json_output: If True, output JSON to stdout (or to *output* file).
+        output: Optional file path to write JSON results to.
+    """
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(results, indent=2), encoding="utf-8")
+        log.success(f"Query results written to {output}")
+        return
+
+    if json_output:
+        click.echo(json.dumps(results, indent=2))
+        return
+
+    compact = format_results_as_table(results)
+    log.print_table(compact, title=query_name)
+    if compact:
+        log.info(f"{len(compact)} result(s).")
+
+
 cli.add_command(check)
 cli.add_command(compose)
 cli.add_command(diff)
 
 export.add_command(avro)
 cli.add_command(export)
+cli.add_command(query)
 cli.add_command(registry)
 cli.add_command(similar)
 cli.add_command(search)
