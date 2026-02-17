@@ -1595,6 +1595,166 @@ s2dm playground start
 s2dm playground start
 ```
 
+
+## Generate Commands
+
+### Schema RDF
+
+The `generate schema-rdf` command materializes a GraphQL schema as RDF triples using the s2dm ontology. The generated RDF mirrors the schema's structure (types, fields, enums, unions, interfaces) as a semantic graph that can be queried with SPARQL.
+
+#### Usage
+```bash
+s2dm generate schema-rdf -s <schema_path> -o <output_dir> --namespace <uri>
+```
+
+#### Options
+
+- `-s, --schema PATH`: GraphQL schema file, directory, or URL (required, can be specified multiple times)
+- `-o, --output DIR`: Output directory for RDF artifacts (required)
+- `--namespace URI`: Namespace URI for concept URIs (required)
+- `--prefix TEXT`: Prefix for concept URIs (default: `ns`)
+- `--language TEXT`: BCP 47 language tag for prefLabels (default: `en`)
+- `--output-formats TEXT`: Comma-separated output formats (default: `nt,turtle`). Supported: `json-ld` (or `jsonld`), `nt`, `turtle` (or `ttl`)
+
+#### Examples
+
+Generate sorted n-triples and Turtle (default):
+
+```bash
+s2dm generate schema-rdf \
+  -s spec/ \
+  -o ./rdf-output \
+  --namespace "https://covesa.org/s2dm/mydomain#"
+```
+
+Generate all formats including JSON-LD (for releases):
+
+```bash
+s2dm generate schema-rdf \
+  -s spec/ \
+  -o ./rdf-output \
+  --namespace "https://covesa.org/s2dm/mydomain#" \
+  --output-formats nt,turtle,json-ld
+```
+
+Generate only n-triples (for git):
+
+```bash
+s2dm generate schema-rdf \
+  -s spec/ \
+  -o ./rdf-output \
+  --namespace "https://covesa.org/s2dm/mydomain#" \
+  --output-formats nt
+```
+
+#### Output Formats
+
+| Format | Alias | Extension | Description |
+|--------|-------|-----------|-------------|
+| `nt` | | `.nt` | Sorted n-triples (deterministic, git-friendly diffs) |
+| `turtle` | `ttl` | `.ttl` | Turtle (human-readable, for consumption) |
+| `json-ld` | `jsonld` | `.jsonld` | JSON-LD (for web and linked data tooling) |
+
+The `nt` format is special-cased to produce lexicographically sorted lines, ensuring deterministic output suitable for version control.
+
+#### Ontology Mapping
+
+The s2dm ontology maps GraphQL SDL elements to RDF as follows:
+
+- **Object types**: `rdf:type skos:Concept, s2dm:ObjectType`
+- **Fields**: `rdf:type skos:Concept, s2dm:Field` with `s2dm:hasOutputType` and `s2dm:usesTypeWrapperPattern`
+- **Enum types**: `rdf:type skos:Concept, s2dm:EnumType` with `s2dm:hasEnumValue`
+- **Enum values**: `rdf:type skos:Concept, s2dm:EnumValue`
+- **Interface types**: `rdf:type skos:Concept, s2dm:InterfaceType`
+- **Input object types**: `rdf:type skos:Concept, s2dm:InputObjectType`
+- **Union types**: `rdf:type skos:Concept, s2dm:UnionType` with `s2dm:hasUnionMember`
+- **Built-in scalars**: `s2dm:Int`, `s2dm:Float`, `s2dm:String`, `s2dm:Boolean`, `s2dm:ID`
+
+## Query Commands
+
+The `query` command group provides predefined SPARQL queries for traversing and analysing an RDF-materialized schema. Each command can either load a pre-generated RDF file or materialize on-the-fly from a GraphQL schema.
+
+### Input Options (shared by all query commands)
+
+Provide **one** of the following:
+
+- `--rdf PATH`: Path to a pre-generated `.nt` or `.ttl` file
+- `-s, --schema PATH` + `--namespace URI`: Materialize from GraphQL schema on-the-fly
+
+Additional option:
+
+- `--json`: Output results as JSON instead of a table
+
+### fields-outputting-enum
+
+Find all fields whose output type is an enum type.
+
+```bash
+# From a pre-generated file
+s2dm query fields-outputting-enum --rdf schema.nt
+
+# From a GraphQL schema
+s2dm query fields-outputting-enum -s spec/ --namespace "https://example.org/#"
+
+# JSON output
+s2dm query fields-outputting-enum --rdf schema.nt --json
+```
+
+**Example output:**
+
+```
+             fields-outputting-enum
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ field                 ┃ enumType              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Cabin.kind            │ CabinKindEnum         │
+│ InCabinArea2x2.column │ TwoColumnsInCabinEnum │
+│ InCabinArea2x2.row    │ TwoRowsInCabinEnum    │
+└───────────────────────┴───────────────────────┘
+```
+
+### object-types-with-fields
+
+List all object types and their fields.
+
+```bash
+s2dm query object-types-with-fields --rdf schema.nt
+```
+
+**Example output:**
+
+```
+         object-types-with-fields
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ objectType     ┃ field                 ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Cabin          │ Cabin.doors           │
+│ Cabin          │ Cabin.kind            │
+│ Door           │ Door.isOpen           │
+│ Door           │ Door.window           │
+│ Window         │ Window.isTinted       │
+└────────────────┴───────────────────────┘
+```
+
+### list-type-fields
+
+Find all fields that use a list-like type wrapper pattern (`list`, `nonNullList`, `listOfNonNull`, `nonNullListOfNonNull`).
+
+```bash
+s2dm query list-type-fields --rdf schema.nt --json
+```
+
+**Example JSON output:**
+
+```json
+[
+  {
+    "field": "https://example.org/my-domain#Cabin.doors",
+    "pattern": "https://covesa.global/models/s2dm#list"
+  }
+]
+```
+
 ## Common Features
 
 ### Selection Query Filtering
