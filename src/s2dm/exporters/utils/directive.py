@@ -15,7 +15,7 @@ from graphql import (
     GraphQLUnionType,
     IntValueNode,
 )
-from graphql.language.ast import StringValueNode
+from graphql.language.printer import print_ast
 
 GRAPHQL_TYPE_DEFINITION_PATTERN = r"^(type|interface|input|enum|union|scalar)\s+(\w+)"
 
@@ -104,13 +104,8 @@ def format_directive_from_ast(directive_node: Any) -> str:
         args_list = []
         for arg_node in directive_node.arguments:
             arg_name = arg_node.name.value
-            if hasattr(arg_node.value, "value"):
-                if isinstance(arg_node.value, StringValueNode):
-                    arg_value = f'"{arg_node.value.value}"'
-                else:
-                    arg_value = str(arg_node.value.value)
-            else:
-                arg_value = str(arg_node.value)
+            # Use graphql-core's print_ast to properly serialize all value types
+            arg_value = print_ast(arg_node.value)
             args_list.append(f"{arg_name}: {arg_value}")
         args_str = f"({', '.join(args_list)})"
 
