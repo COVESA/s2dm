@@ -151,3 +151,111 @@ def test_reference_directive_with_all_standard_locations(spec_directory: Path) -
     assert 'enum TestEnum @reference(source: "enums.graphql")' in result
     assert 'scalar TestScalar @reference(source: "scalars.graphql")' in result
     assert 'input TestInput @reference(source: "inputs.graphql")' in result
+
+
+def test_compose_preserves_directive_with_list_arguments() -> None:
+    """Test that directives with list arguments are serialized correctly."""
+    schema_str = """
+    directive @vspec(element: String, metadata: [KeyValue]) on ENUM | ENUM_VALUE
+
+    input KeyValue {
+      key: String!
+      value: String!
+    }
+
+    enum LengthUnit @vspec(element: "QUANTITY_KIND", metadata: [{key: "quantity", value: "length"}]) {
+      MILLIMETER @vspec(element: "UNIT", metadata: [{key: "unit", value: "mm"}])
+      CENTIMETER @vspec(element: "UNIT", metadata: [{key: "unit", value: "cm"}])
+      METER @vspec(element: "UNIT", metadata: [{key: "unit", value: "m"}])
+    }
+
+    type Query { field: String }
+    """
+
+    schema = build_schema(schema_str)
+    source_map: dict[str, str] = {}
+
+    result = print_schema_with_directives_preserved(schema, source_map)
+
+    # Verify list arguments are properly serialized, not as "ListValueNode at X:Y"
+    assert 'enum LengthUnit @vspec(element: "QUANTITY_KIND", metadata: [{key: "quantity", value: "length"}])' in result
+    assert 'MILLIMETER @vspec(element: "UNIT", metadata: [{key: "unit", value: "mm"}])' in result
+    assert 'CENTIMETER @vspec(element: "UNIT", metadata: [{key: "unit", value: "cm"}])' in result
+    assert 'METER @vspec(element: "UNIT", metadata: [{key: "unit", value: "m"}])' in result
+
+    # Ensure no AST node representations leaked into output
+    assert "ListValueNode" not in result
+    assert "ObjectValueNode" not in result
+
+
+def test_compose_preserves_directive_with_nested_objects() -> None:
+    """Test that directives with nested object structures are serialized correctly."""
+    schema_str = """
+    directive @metadata(config: ConfigInput) on OBJECT
+
+    input ConfigInput {
+      settings: SettingsInput
+      name: String
+    }
+
+    input SettingsInput {
+      enabled: Boolean
+      count: Int
+    }
+
+    type TestType @metadata(config: {settings: {enabled: true, count: 42}, name: "test"}) {
+      field: String
+    }
+
+    type Query { field: String }
+    """
+
+    schema = build_schema(schema_str)
+    source_map: dict[str, str] = {}
+
+    result = print_schema_with_directives_preserved(schema, source_map)
+
+    # Verify nested objects are properly serialized
+    assert '@metadata(config: {settings: {enabled: true, count: 42}, name: "test"})' in result
+    assert "ObjectValueNode" not in result
+
+
+def test_compose_preserves_directive_with_various_scalar_types() -> None:
+    """Test that directives with different scalar types are serialized correctly."""
+    schema_str = """
+    directive @config(
+      name: String
+      count: Int
+      ratio: Float
+      enabled: Boolean
+      status: StatusEnum
+    ) on OBJECT
+
+    enum StatusEnum {
+      ACTIVE
+      INACTIVE
+    }
+
+    type TestType @config(name: "test", count: 123, ratio: 3.14, enabled: true, status: ACTIVE) {
+      field: String
+    }
+
+    type Query { field: String }
+    """
+
+    schema = build_schema(schema_str)
+    source_map: dict[str, str] = {}
+
+    result = print_schema_with_directives_preserved(schema, source_map)
+
+    # Verify all scalar types are properly serialized
+    assert '@config(name: "test", count: 123, ratio: 3.14, enabled: true, status: ACTIVE)' in result
+    # Ensure strings are properly quoted
+    assert 'name: "test"' in result
+    # Ensure numbers are not quoted
+    assert "count: 123" in result
+    assert "ratio: 3.14" in result
+    # Ensure booleans are lowercase
+    assert "enabled: true" in result
+    # Ensure enums are not quoted
+    assert "status: ACTIVE" in result
