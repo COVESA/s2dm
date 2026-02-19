@@ -59,6 +59,7 @@ dev = [
     "hypothesis>=6.131.9",
     "types-pyyaml>=6.0.12.20250516",
     "gitlint>=0.20.0.dev48",
+    "httpx>=0.28.0",
 ]
 
 [tool.mypy]
