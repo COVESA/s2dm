@@ -194,6 +194,13 @@ naming_config_option = click.option(
     help="YAML file containing naming configuration",
 )
 
+node_modules_path_option = click.option(
+    "--node-modules-path",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    default=None,
+    help="Path to node_modules directory containing graphql-inspector (auto-detected if not provided).",
+)
+
 
 def pretty_print_dict_json(result: dict[str, Any]) -> dict[str, Any]:
     """
@@ -849,6 +856,7 @@ def schema_rdf(
     default=False,
     help="Output the version bump type for pipeline usage",
 )
+@node_modules_path_option
 @requires_graphql_inspector
 def version_bump(
     schemas: list[Path], previous: list[Path], output_type: bool, inspector_path: Path | None = None
@@ -936,6 +944,7 @@ def check_constraints(schemas: list[Path], naming_config: Path | None) -> None:
 @validate.command(name="graphql")
 @schema_option
 @output_option
+@node_modules_path_option
 @requires_graphql_inspector
 def validate_graphql(schemas: list[Path], output: Path, inspector_path: Path | None = None) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
@@ -962,6 +971,7 @@ def validate_graphql(schemas: list[Path], output: Path, inspector_path: Path | N
     multiple=True,
     help=("GraphQL schema file, directory, or URL to validate against. Can be specified multiple times."),
 )
+@node_modules_path_option
 @requires_graphql_inspector
 def diff_graphql(
     schemas: list[Path], val_schemas: list[Path], output: Path | None, inspector_path: Path | None = None
@@ -1496,6 +1506,7 @@ def search_skos(ttl_file: Path, term: str, case_insensitive: bool, limit: str) -
     required=False,
     help="Output file, only .json allowed here",
 )
+@node_modules_path_option
 @requires_graphql_inspector
 def similar_graphql(schemas: list[Path], keyword: str, output: Path | None, inspector_path: Path | None = None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the

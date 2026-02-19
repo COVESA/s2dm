@@ -25,18 +25,26 @@ from s2dm import log
 from s2dm.tools.diff_parser import DiffChange, parse_diff_output
 
 
-def locate_graphql_inspector(start_path: Path | None = None) -> Path | None:
+def locate_graphql_inspector(node_modules_path: Path | None = None, start_path: Path | None = None) -> Path | None:
     """Locate the GraphQL Inspector installation by finding the node_modules directory.
 
-    Searches upward from the start path for a node_modules directory containing
-    the graphql-inspector CLI and its dependencies.
+    If an explicit node_modules_path is provided (e.g. via --node-modules-path in CI),
+    it is used directly. Otherwise, searches upward from the start path for a
+    node_modules directory.
 
     Args:
+        node_modules_path: Explicit path to a node_modules directory. Takes priority
+            over directory-tree search when provided.
         start_path: Path to start searching from (defaults to current working directory)
 
     Returns:
         Path to node_modules directory where graphql-inspector is installed, or None if not found
     """
+    if node_modules_path is not None:
+        node_modules = Path(node_modules_path)
+        if node_modules.exists() and node_modules.is_dir():
+            return node_modules
+
     if start_path is None:
         start_path = Path.cwd()
 
@@ -52,19 +60,21 @@ def locate_graphql_inspector(start_path: Path | None = None) -> Path | None:
 
 
 def requires_graphql_inspector(func: Callable[..., Any]) -> Callable[..., Any]:
-    """Decorator that injects inspector_path parameter for commands requiring GraphQL Inspector.
+    """Decorator that resolves the graphql-inspector path and injects it as inspector_path.
 
     This decorator:
-    - Locates the graphql-inspector installation (node_modules directory)
-    - Injects it as 'inspector_path' parameter to the wrapped function
-    - Should be applied to CLI commands that need graphql-inspector tooling
+    - Reads the node_modules_path kwarg (provided by the node_modules_path_option click option)
+    - Locates the graphql-inspector installation (using the explicit path if given,
+      otherwise searching upward from cwd)
+    - Injects the result as 'inspector_path' parameter to the wrapped function
 
     The wrapped function must accept an 'inspector_path: Path | None' parameter.
+    Commands using this decorator should also apply @node_modules_path_option.
     """
 
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        # Locate graphql-inspector and inject the path into kwargs
-        inspector_path = locate_graphql_inspector()
+        node_modules_path = kwargs.pop("node_modules_path", None)
+        inspector_path = locate_graphql_inspector(node_modules_path=node_modules_path)
         kwargs["inspector_path"] = inspector_path
         return func(*args, **kwargs)
 

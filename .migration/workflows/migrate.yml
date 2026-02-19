@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'spec/**'
+      - "spec/**"
 
 jobs:
   migrate:
@@ -36,3 +36,6 @@ jobs:
           skos-namespace: ${{ vars.SKOS_NAMESPACE || '' }}
           skos-prefix: ${{ vars.SKOS_PREFIX || '' }}
           skos-language: ${{ vars.SKOS_LANGUAGE || '' }}
+          schema-rdf-namespace: ${{ vars.SCHEMA_RDF_NAMESPACE || '' }}
+          schema-rdf-prefix: ${{ vars.SCHEMA_RDF_PREFIX || '' }}
+          schema-rdf-language: ${{ vars.SCHEMA_RDF_LANGUAGE || '' }}

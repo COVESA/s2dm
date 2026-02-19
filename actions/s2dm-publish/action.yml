@@ -208,7 +208,7 @@ runs:
         VERSION_BUMP=major
         if [ -f "${{ github.workspace }}/.previous-release/graphql/schema.graphql" ]; then
           echo "Previous schema found"
-          VERSION_BUMP=$(s2dm check version-bump -s ${{ inputs.spec-path }} -p ${{ github.workspace }}/.previous-release/graphql/schema.graphql --output-type | tail -n 1)
+          VERSION_BUMP=$(s2dm check version-bump -s ${{ inputs.spec-path }} -p ${{ github.workspace }}/.previous-release/graphql/schema.graphql --node-modules-path ${{ github.workspace }}/${{ inputs.s2dm-path }}/node_modules --output-type | tail -n 1)
           if [[ "$VERSION_BUMP" != "none" ]]; then
             echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
           fi
@@ -302,6 +302,7 @@ runs:
         s2dm diff graphql \
           -s ${{ github.workspace }}/.previous-release/graphql/schema.graphql \
           -v ${{ inputs.spec-path }} \
+          --node-modules-path ${{ github.workspace }}/${{ inputs.s2dm-path }}/node_modules \
           -o ${{ github.workspace }}/.artifacts/diff.json || true
 
         # Check if diff file exists and has changes
@@ -323,6 +324,7 @@ runs:
 
     - name: Initialize registry
       if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
+      working-directory: ${{ inputs.repository-path }}
       shell: bash
       run: |
         LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}"
