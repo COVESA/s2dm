@@ -2,10 +2,12 @@
 
 import json
 import logging
+from collections.abc import Sequence
 from typing import Any
 
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.table import Table
 
 
 class S2DMLogger(logging.Logger):
@@ -127,6 +129,31 @@ class S2DMLogger(logging.Logger):
             self.colored(f"{prefix} {text}", style)
         else:
             self.print(f"{prefix} {text}")
+
+    def print_table(
+        self,
+        rows: Sequence[dict[str, str]],
+        title: str = "",
+        columns: Sequence[str] | None = None,
+    ) -> None:
+        """Print a list of dicts as a Rich table.
+
+        Args:
+            rows: Sequence of dicts where keys are column names.
+            title: Optional table title.
+            columns: Explicit column order. Inferred from the first row when *None*.
+        """
+        if not rows:
+            self.print("No results.")
+            return
+
+        cols = list(columns) if columns else list(rows[0].keys())
+        table = Table(title=title or None)
+        for col in cols:
+            table.add_column(col)
+        for row in rows:
+            table.add_row(*(row.get(c, "") for c in cols))
+        self.console.print(table)
 
     def format_error_with_stderr(self, base_error_msg: str, stderr: str | None) -> str:
         """Format and log error message with stderr preview if available.

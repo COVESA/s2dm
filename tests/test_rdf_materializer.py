@@ -1,14 +1,18 @@
 """Tests for RDF materialization of GraphQL schemas."""
 
+import json
 from pathlib import Path
 from typing import Any
 
+import pytest
 from graphql import GraphQLSchema, build_schema
 from rdflib import Graph
 from rdflib.namespace import RDF, SKOS
 
 from s2dm.exporters.rdf_materializer import (
     BUILTIN_SCALARS,
+    DEFAULT_FORMATS,
+    FORMAT_REGISTRY,
     extract_schema_for_rdf,
     materialize_schema_to_rdf,
     serialize_sorted_ntriples,
@@ -255,17 +259,62 @@ class TestMaterializeSchemaToRdf:
         assert serialize_sorted_ntriples(graph).endswith("\n")
 
     def test_writes_nt_and_ttl(self, tmp_path: Path) -> None:
-        """write_rdf_artifacts creates .nt and .ttl files."""
+        """write_rdf_artifacts creates .nt and .ttl files with default formats."""
         graph = materialize_schema_to_rdf(schema=_cabin_door_schema(), namespace=NS, prefix=PREFIX)
-        write_rdf_artifacts(graph, tmp_path, base_name="schema")
+        written = write_rdf_artifacts(graph, tmp_path, base_name="schema")
 
         assert (tmp_path / "schema.nt").exists()
         assert (tmp_path / "schema.ttl").exists()
+        assert len(written) == 2
         nt = (tmp_path / "schema.nt").read_text()
         assert "skos:Concept" in nt or "Concept" in nt  # format varies: prefix or full URI
         assert "hasField" in nt and "hasOutputType" in nt
         ttl = (tmp_path / "schema.ttl").read_text()
         assert "@prefix" in ttl and "skos:" in ttl and "s2dm:" in ttl
+
+    def test_writes_nt_only(self, tmp_path: Path) -> None:
+        """write_rdf_artifacts with formats=['nt'] produces only .nt."""
+        graph = materialize_schema_to_rdf(schema=_cabin_door_schema(), namespace=NS, prefix=PREFIX)
+        written = write_rdf_artifacts(graph, tmp_path, base_name="schema", formats=["nt"])
+
+        assert len(written) == 1
+        assert (tmp_path / "schema.nt").exists()
+        assert not (tmp_path / "schema.ttl").exists()
+        assert not (tmp_path / "schema.jsonld").exists()
+
+    def test_writes_all_formats(self, tmp_path: Path) -> None:
+        """write_rdf_artifacts with all formats produces .nt, .ttl, and .jsonld."""
+        graph = materialize_schema_to_rdf(schema=_cabin_door_schema(), namespace=NS, prefix=PREFIX)
+        written = write_rdf_artifacts(graph, tmp_path, base_name="schema", formats=["nt", "ttl", "jsonld"])
+
+        assert len(written) == 3
+        assert (tmp_path / "schema.nt").exists()
+        assert (tmp_path / "schema.ttl").exists()
+        assert (tmp_path / "schema.jsonld").exists()
+
+    def test_jsonld_output_is_valid(self, tmp_path: Path) -> None:
+        """JSON-LD output is valid JSON with RDF content."""
+        graph = materialize_schema_to_rdf(schema=_cabin_door_schema(), namespace=NS, prefix=PREFIX)
+        write_rdf_artifacts(graph, tmp_path, base_name="schema", formats=["jsonld"])
+
+        jsonld_path = tmp_path / "schema.jsonld"
+        assert jsonld_path.exists()
+        data = json.loads(jsonld_path.read_text())
+        jsonld_str = jsonld_path.read_text()
+        assert "Cabin" in jsonld_str
+        assert "hasField" in jsonld_str or "Field" in jsonld_str
+        assert isinstance(data, list | dict)
+
+    def test_unknown_format_raises(self, tmp_path: Path) -> None:
+        """write_rdf_artifacts raises ValueError for unknown format keys."""
+        graph = materialize_schema_to_rdf(schema=_cabin_door_schema(), namespace=NS, prefix=PREFIX)
+        with pytest.raises(ValueError, match="Unknown RDF format"):
+            write_rdf_artifacts(graph, tmp_path, base_name="schema", formats=["rdfxml"])
+
+    def test_format_registry_has_defaults(self) -> None:
+        """All default formats are present in FORMAT_REGISTRY."""
+        for fmt in DEFAULT_FORMATS:
+            assert fmt in FORMAT_REGISTRY
 
     def test_real_schema_materializes(self) -> None:
         """Real schema from files materializes successfully."""

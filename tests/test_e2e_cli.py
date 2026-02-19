@@ -301,6 +301,234 @@ def test_generate_schema_rdf(runner: CliRunner, tmp_outputs: Path, spec_director
     assert "Vehicle" in ttl_content
 
 
+def test_generate_schema_rdf_all_formats(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Generate RDF triples in all formats including JSON-LD."""
+    out_dir = tmp_outputs / "schema_rdf_all"
+    result = runner.invoke(
+        cli,
+        [
+            "generate",
+            "schema-rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt,ttl,jsonld",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert (out_dir / "schema.nt").exists()
+    assert (out_dir / "schema.ttl").exists()
+    assert (out_dir / "schema.jsonld").exists()
+
+    import json
+
+    jsonld_content = (out_dir / "schema.jsonld").read_text()
+    data = json.loads(jsonld_content)
+    assert isinstance(data, list | dict)
+    assert "Vehicle" in jsonld_content
+
+
+def test_generate_schema_rdf_invalid_format(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Invalid output format shows error."""
+    out_dir = tmp_outputs / "schema_rdf_bad"
+    result = runner.invoke(
+        cli,
+        [
+            "generate",
+            "schema-rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "rdfxml",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "Unknown RDF format" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Query command E2E tests
+# ---------------------------------------------------------------------------
+
+
+def test_query_fields_outputting_enum_from_schema(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query fields-outputting-enum via on-the-fly materialization, output to file."""
+    out_file = tmp_outputs / "query_enum_fields.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "fields-outputting-enum",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "--namespace",
+            "https://example.org/vss#",
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+    assert all("field" in row and "enumType" in row for row in data)
+
+
+def test_query_object_types_with_fields_from_rdf(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query object-types-with-fields from a pre-generated .nt file, output to file."""
+    # First generate the RDF (include sample schemas that contain Vehicle)
+    rdf_dir = tmp_outputs / "query_rdf"
+    runner.invoke(
+        cli,
+        [
+            "generate",
+            "schema-rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "schema.nt"
+    assert nt_file.exists()
+
+    # Then query it
+    out_file = tmp_outputs / "query_obj_types.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "object-types-with-fields",
+            "--rdf",
+            str(nt_file),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+    type_names = {row["objectType"] for row in data}
+    assert any("Vehicle" in t for t in type_names)
+
+
+def test_query_list_type_fields_from_schema(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query list-type-fields via on-the-fly materialization, output to file."""
+    out_file = tmp_outputs / "query_list_fields.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "list-type-fields",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "--namespace",
+            "https://example.org/vss#",
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+
+
+def test_query_no_source_shows_error(runner: CliRunner) -> None:
+    """Query without --rdf or --schema shows usage error."""
+    result = runner.invoke(
+        cli,
+        ["query", "fields-outputting-enum"],
+    )
+    assert result.exit_code != 0
+
+
+def test_query_both_sources_shows_error(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query with both --rdf and --schema shows usage error."""
+    # First generate an RDF file to use as the --rdf argument
+    rdf_dir = tmp_outputs / "query_both_src"
+    runner.invoke(
+        cli,
+        [
+            "generate",
+            "schema-rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "schema.nt"
+    assert nt_file.exists()
+
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "fields-outputting-enum",
+            "--rdf",
+            str(nt_file),
+            "-s",
+            str(spec_directory),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "not both" in result.output.lower() or "Provide either" in result.output
+
+
 @pytest.mark.parametrize(
     "schema_file,previous_file,expected_output",
     [
