@@ -44,7 +44,9 @@ def export_protobuf(request: ProtobufExportRequest) -> ApiResponse:
         if request.flatten_naming:
             flatten_root_types = get_root_level_types_from_query(annotated_schema.schema, query_document)
 
-        proto_content = translate_to_protobuf(annotated_schema, query_document, request.package_name, flatten_root_types)
+        proto_content = translate_to_protobuf(
+            annotated_schema, query_document, request.package_name, flatten_root_types
+        )
         return [proto_content]
 
     return execute_and_respond(executor=process_request, result_format="proto")
