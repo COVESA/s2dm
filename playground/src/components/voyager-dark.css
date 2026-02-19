@@ -1,0 +1,235 @@
+/* biome-ignore-all lint/complexity/noImportantStyles: Voyager styles must override upstream Material UI and SVG defaults. */
+/* Dark mode styles for GraphQL Voyager */
+/* Source: https://github.com/APIs-guru/graphql-voyager/issues/140 */
+
+/* Docs Panel - using theme variables */
+.dark .doc-panel {
+	background: hsl(var(--card));
+	color: hsl(var(--card-foreground));
+}
+
+.dark .doc-panel > .contents {
+	background: hsl(var(--card));
+	color: hsl(var(--card-foreground));
+}
+
+.dark .doc-wrapper {
+	background: hsl(var(--card));
+	color: hsl(var(--card-foreground));
+}
+
+.dark .doc-navigation {
+	background: hsl(var(--background));
+	border-bottom: 1px solid hsl(var(--border));
+}
+
+.dark .doc-navigation > .back {
+	color: hsl(var(--muted-foreground));
+}
+
+.dark .doc-navigation > .back:hover {
+	color: hsl(var(--foreground));
+	background: hsl(var(--accent));
+}
+
+.dark .doc-navigation > .active {
+	color: hsl(var(--foreground));
+}
+
+.dark .doc-navigation > .header {
+	color: hsl(var(--foreground));
+}
+
+.dark .doc-category {
+	color: hsl(var(--card-foreground));
+}
+
+.dark .doc-category > .title {
+	color: hsl(var(--muted-foreground));
+}
+
+.dark .doc-category > .item {
+	color: hsl(var(--foreground));
+}
+
+.dark .doc-category > .item:hover {
+	background: hsl(var(--accent));
+}
+
+.dark .doc-category > .item.-selected {
+	background: hsl(var(--accent));
+}
+
+.dark .type-doc {
+	background: hsl(var(--card));
+	color: hsl(var(--card-foreground));
+}
+
+.dark .type-doc > .scroll-area {
+	background: hsl(var(--card));
+}
+
+.dark .description-box {
+	color: hsl(var(--card-foreground));
+}
+
+.dark .doc-alert-text {
+	color: hsl(var(--muted-foreground));
+}
+
+.dark .doc-panel .MuiBox-root {
+	background: hsl(var(--card));
+}
+
+.dark .doc-panel .MuiInputBase-root {
+	color: hsl(var(--foreground));
+	background: hsl(var(--background));
+}
+
+.dark .doc-panel .MuiInput-underline:before {
+	border-bottom-color: hsl(var(--border)) !important;
+}
+
+.dark .doc-panel .MuiInput-underline:after {
+	border-bottom-color: hsl(var(--primary)) !important;
+}
+
+.dark .doc-panel .MuiInput-underline:hover:not(.Mui-disabled):before {
+	border-bottom-color: hsl(var(--foreground)) !important;
+}
+
+.dark .doc-panel .MuiInputBase-input {
+	color: hsl(var(--foreground));
+}
+
+.dark .doc-panel .MuiInputBase-input::placeholder {
+	color: hsl(var(--muted-foreground));
+	opacity: 1;
+}
+
+/* HTML/Material-UI components - using theme variables */
+.dark .graphql-voyager > .menu-content {
+	background: hsl(var(--card));
+	color: hsl(var(--card-foreground));
+}
+
+.dark .MuiInputBase-root.root-selector {
+	color: hsl(var(--foreground));
+}
+
+.dark .MuiInputBase-root.root-selector::before {
+	border-bottom: 1px solid hsl(var(--border));
+}
+
+.dark
+	.MuiInputBase-root.root-selector:hover:not(
+		.Mui-disabled,
+		.Mui-error
+	)::before {
+	border-bottom: 1px solid hsl(var(--foreground));
+}
+
+.dark .MuiInputBase-root svg {
+	fill: hsl(var(--foreground));
+}
+
+.dark .MuiButtonBase-root svg {
+	fill: hsl(var(--foreground));
+}
+
+.dark .MuiPaper-root {
+	background: hsl(var(--card)) !important;
+	color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .MuiButtonBase-root.Mui-selected {
+	background-color: hsl(var(--background)) !important;
+}
+
+.dark li.MuiButtonBase-root.MuiMenuItem-root:hover {
+	background: hsl(var(--accent)) !important;
+}
+
+.dark .MuiCheckbox-root svg {
+	fill: #a1a1aa;
+}
+
+.dark .MuiCheckbox-root.Mui-checked svg {
+	fill: #e4e4e7;
+}
+
+.dark .MuiFormControlLabel-root {
+	color: hsl(var(--foreground));
+}
+
+/* SVG graph elements - using hardcoded zinc colors for SVG compatibility */
+.dark .node .type-title polygon {
+	fill: #3f3f46 !important;
+}
+
+.dark .node polygon {
+	stroke: #52525b !important;
+	fill: #27272a !important;
+}
+
+.dark .field-name {
+	fill: #fafafa !important;
+}
+
+.dark .node .type-title text {
+	fill: #fafafa !important;
+}
+
+.dark .field text {
+	fill: #fafafa !important;
+}
+
+.dark .edge path {
+	stroke: #71717a;
+	stroke-width: 2;
+	fill: none;
+}
+
+.dark .edge polygon {
+	stroke: #71717a;
+	stroke-width: 1;
+	fill: #71717a;
+}
+
+.dark .edge.highlighted path:not(.hover-path),
+.dark .edge.hovered path:not(.hover-path),
+.dark .edge:hover path:not(.hover-path) {
+	stroke: #a1a1aa;
+	stroke-width: 2;
+}
+
+.dark .edge.highlighted polygon,
+.dark .edge.hovered polygon,
+.dark .edge:hover polygon {
+	stroke: #a1a1aa;
+	stroke-width: 1;
+	fill: #a1a1aa;
+}
+
+.dark .edge.selected path:not(.hover-path) {
+	stroke: #e4e4e7;
+	stroke-width: 2;
+}
+
+.dark .edge.selected polygon {
+	stroke: #e4e4e7;
+	stroke-width: 1;
+	fill: #e4e4e7;
+}
+
+.dark .edge text {
+	fill: #a1a1aa;
+}
+
+.dark g.node.type text {
+	fill: #fafafa !important;
+}
+
+.dark g.possible-type edge-source text {
+	fill: #fafafa !important;
+}
