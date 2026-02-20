@@ -7,10 +7,14 @@ import { Pane } from "@/components/Pane";
 import { QueryEditorWrapper } from "@/components/QueryEditorWrapper";
 import { SchemaVisualizer } from "@/components/SchemaVisualizer";
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
+import { FormLabel } from "@/components/ui/form-label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SELECTION_QUERY_FILENAME } from "@/constants";
 import { useTheme } from "@/hooks/useTheme";
+import {
+	selectExporterByEndpoint,
+	selectSelectedExporterEndpoint,
+} from "@/store/capabilities/capabilitiesSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectFilteredSchema,
@@ -58,6 +62,12 @@ export function ExplorePane({
 	const originalSchema = useAppSelector(selectOriginalSchema);
 	const filteredSchema = useAppSelector(selectFilteredSchema);
 	const selectionQuery = useAppSelector(selectSelectionQuery);
+	const selectedExporterEndpoint = useAppSelector(
+		selectSelectedExporterEndpoint,
+	);
+	const selectedExporter = useAppSelector((state) =>
+		selectExporterByEndpoint(state, selectedExporterEndpoint),
+	);
 	const isPruning = useAppSelector(selectIsPruning);
 	const inputCollapsed = useAppSelector(selectInputPaneCollapsed);
 	const resultCollapsed = useAppSelector(selectResultPaneCollapsed);
@@ -70,6 +80,8 @@ export function ExplorePane({
 		result: false,
 	});
 	const prevTabRef = useRef<ExploreTab>(activeTab);
+	const isSelectionQueryRequired =
+		selectedExporter?.requiresSelectionQuery ?? false;
 
 	const graphqlSchema = useMemo(() => {
 		if (!originalSchema?.trim()) return undefined;
@@ -113,23 +125,28 @@ export function ExplorePane({
 	}, [graphqlSchema]);
 
 	useEffect(() => {
-		if (activeTab === "voyager") {
-			setSavedExpandedPanes({
-				input: !inputCollapsed,
-				result: !resultCollapsed,
-			});
+		const didSwitchToVoyager =
+			activeTab === "voyager" && prevTabRef.current !== "voyager";
 
-			if (!inputCollapsed) dispatch(toggleInputPane());
-			if (!resultCollapsed) dispatch(toggleResultPane());
+		if (!didSwitchToVoyager) {
+			return;
 		}
+
+		setSavedExpandedPanes({
+			input: !inputCollapsed,
+			result: !resultCollapsed,
+		});
+
+		if (!inputCollapsed) dispatch(toggleInputPane());
+		if (!resultCollapsed) dispatch(toggleResultPane());
 	}, [activeTab, inputCollapsed, resultCollapsed, dispatch]);
 
 	useEffect(() => {
-		const justSwitchedToGraphiQL =
+		const didSwitchToGraphiQL =
 			activeTab === "graphiql" && prevTabRef.current !== "graphiql";
 		prevTabRef.current = activeTab;
 
-		if (!justSwitchedToGraphiQL) {
+		if (!didSwitchToGraphiQL) {
 			return;
 		}
 
@@ -139,17 +156,6 @@ export function ExplorePane({
 		if (savedExpandedPanes.result && resultCollapsed) {
 			dispatch(toggleResultPane());
 		}
-
-		const timer = setTimeout(() => {
-			const searchInput = document.querySelector(
-				'.graphiql-doc-explorer-search input[role="combobox"]',
-			) as HTMLInputElement;
-			if (searchInput) {
-				searchInput.placeholder = "Search";
-			}
-		}, 100);
-
-		return () => clearTimeout(timer);
 	}, [
 		activeTab,
 		savedExpandedPanes.input,
@@ -158,6 +164,39 @@ export function ExplorePane({
 		resultCollapsed,
 		dispatch,
 	]);
+
+	useEffect(() => {
+		if (activeTab !== "graphiql") {
+			return;
+		}
+
+		const applySearchPlaceholder = () => {
+			const searchInputs = document.querySelectorAll<HTMLInputElement>(
+				'.graphiql-doc-explorer-search input[role="combobox"]',
+			);
+
+			for (const searchInput of searchInputs) {
+				if (searchInput.placeholder !== "Search") {
+					searchInput.placeholder = "Search";
+				}
+			}
+		};
+
+		applySearchPlaceholder();
+		const timer = window.setTimeout(applySearchPlaceholder, 100);
+		const observerTarget =
+			document.querySelector(".graphiql-container") || document.body;
+		const observer = new MutationObserver(applySearchPlaceholder);
+		observer.observe(observerTarget, {
+			childList: true,
+			subtree: true,
+		});
+
+		return () => {
+			window.clearTimeout(timer);
+			observer.disconnect();
+		};
+	}, [activeTab]);
 
 	const handleDownloadQuery = () => {
 		if (!selectionQuery) {
@@ -243,9 +282,14 @@ export function ExplorePane({
 										<DocExplorer />
 									</div>
 									<div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
-										<div className="px-6 py-4 border-b">
-											<Heading level="h2">Selection Query</Heading>
-										</div>
+									<div className="px-6 py-4 border-b">
+										<FormLabel
+											showRequired={isSelectionQueryRequired}
+											className="text-2xl leading-none font-bold text-foreground"
+										>
+											Selection Query
+										</FormLabel>
+									</div>
 										<QueryEditorWrapper
 											selectionQuery={selectionQueryState}
 											onSelectionQueryChange={setSelectionQueryState}

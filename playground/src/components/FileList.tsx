@@ -55,14 +55,8 @@ import { resetApp } from "@/store/app/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectSourceFiles, setSourceFiles } from "@/store/schema/schemaSlice";
 import { selectIsValidating } from "@/store/validation/validationSlice";
+import type { ImportedFile } from "@/types/importedFile";
 import { isGraphQLFile, isValidUrl } from "@/utils/validation";
-
-export type ImportedFile = {
-	name: string;
-	path: string;
-	type: "file" | "url";
-	content?: string;
-};
 
 type FileWithPath = File & {
 	webkitRelativePath?: string;

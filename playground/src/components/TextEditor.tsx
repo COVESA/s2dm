@@ -12,6 +12,7 @@ import {
 import { useMonacoTheme } from "@/hooks/useMonacoTheme";
 import { registerTurtle } from "@/language-support/turtleMonaco";
 import { downloadTextFile } from "@/utils/download";
+import { resolveMonacoLanguage } from "@/utils/monacoLanguage";
 
 type TextEditorProps = {
 	language: string;
@@ -32,6 +33,7 @@ export function TextEditor({
 }: TextEditorProps) {
 	const theme = useMonacoTheme();
 	const [isFullscreen, setIsFullscreen] = useState(false);
+	const monacoLanguage = resolveMonacoLanguage(language);
 
 	const handleEditorBeforeMount = useCallback((monaco: Monaco) => {
 		registerTurtle(monaco);
@@ -57,12 +59,13 @@ export function TextEditor({
 	const renderEditor = () => (
 		<Editor
 			beforeMount={handleEditorBeforeMount}
-			language={language}
+			language={monacoLanguage}
 			value={value}
 			onChange={readOnly ? undefined : handleChange}
 			theme={theme}
 			options={{
 				readOnly,
+				contextmenu: false,
 				minimap: { enabled: false },
 				fontSize: 14,
 				lineNumbers: "on",

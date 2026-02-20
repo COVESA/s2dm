@@ -6,6 +6,7 @@ import type { RootState } from "@/store/types";
 export interface CapabilitiesState {
 	spec: OpenAPISpec | null;
 	exporters: ExporterCapability[];
+	selectedExporterEndpoint: string;
 	isLoading: boolean;
 	error: string | null;
 }
@@ -13,6 +14,7 @@ export interface CapabilitiesState {
 const initialState: CapabilitiesState = {
 	spec: null,
 	exporters: [],
+	selectedExporterEndpoint: "",
 	isLoading: false,
 	error: null,
 };
@@ -38,6 +40,12 @@ const capabilitiesSlice = createSlice({
 		) => {
 			state.isLoading = false;
 			state.exporters = action.payload;
+			const selectedExporterStillExists = action.payload.some(
+				(exporter) => exporter.endpoint === state.selectedExporterEndpoint,
+			);
+			if (!selectedExporterStillExists) {
+				state.selectedExporterEndpoint = action.payload[0]?.endpoint || "";
+			}
 			state.error = null;
 		},
 		fetchCapabilitiesFailure: (state, action: PayloadAction<string>) => {
@@ -47,19 +55,22 @@ const capabilitiesSlice = createSlice({
 		updatePropertyValue: (
 			state,
 			action: PayloadAction<{
-				exporterName: string;
+				exporterEndpoint: string;
 				propertyKey: string;
 				value: unknown;
 			}>,
 		) => {
 			const exporter = state.exporters.find(
-				(exp) => exp.name === action.payload.exporterName,
+				(exp) => exp.endpoint === action.payload.exporterEndpoint,
 			);
 			if (!exporter) {
 				return;
 			}
 			exporter.propertyValues[action.payload.propertyKey] =
 				action.payload.value;
+		},
+		setSelectedExporterEndpoint: (state, action: PayloadAction<string>) => {
+			state.selectedExporterEndpoint = action.payload;
 		},
 	},
 });
@@ -71,6 +82,7 @@ export const {
 	computeCapabilities,
 	computeCapabilitiesSuccess,
 	updatePropertyValue,
+	setSelectedExporterEndpoint,
 } = capabilitiesSlice.actions;
 
 export const selectCapabilitiesSpec = (state: RootState) =>
@@ -81,7 +93,9 @@ export const selectIsLoadingCapabilities = (state: RootState) =>
 	state.capabilities.isLoading;
 export const selectCapabilitiesError = (state: RootState) =>
 	state.capabilities.error;
-export const selectExporterByName = (state: RootState, name: string) =>
-	state.capabilities.exporters.find((exp) => exp.name === name);
+export const selectExporterByEndpoint = (state: RootState, endpoint: string) =>
+	state.capabilities.exporters.find((exp) => exp.endpoint === endpoint);
+export const selectSelectedExporterEndpoint = (state: RootState) =>
+	state.capabilities.selectedExporterEndpoint;
 
 export default capabilitiesSlice.reducer;

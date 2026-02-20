@@ -1,8 +1,8 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { call, put, select, takeLatest } from "redux-saga/effects";
+import { mapImportedFilesToSchemaInputs } from "@/api/schemaInputs";
 import { ApiValidationError, filterSchema } from "@/api/s2dm";
-import type { ExportResponse, QueryInput, SchemaInput } from "@/api/types";
-import type { ImportedFile } from "@/components/FileList";
+import type { ExportResponse, QueryInput } from "@/api/types";
 import {
 	selectSourceFiles,
 	setFilteredSchema,
@@ -14,6 +14,7 @@ import {
 	resetSelectionQuery,
 } from "@/store/selection/selectionSlice";
 import type { RootState } from "@/store/store";
+import type { ImportedFile } from "@/types/importedFile";
 
 function* pruneSchemaWorker(action: PayloadAction<string>) {
 	const query = action.payload;
@@ -28,12 +29,7 @@ function* pruneSchemaWorker(action: PayloadAction<string>) {
 	const sourceFiles: ImportedFile[] = yield select(selectSourceFiles);
 
 	try {
-		const schemas: SchemaInput[] = sourceFiles.map((file) => {
-			if (file.type === "url") {
-				return { type: "url", url: file.path };
-			}
-			return { type: "content", content: file.content! };
-		});
+		const schemas = mapImportedFilesToSchemaInputs(sourceFiles);
 
 		const selectionQuery: QueryInput = { type: "content", content: query };
 

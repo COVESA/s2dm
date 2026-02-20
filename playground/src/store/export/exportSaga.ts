@@ -2,8 +2,8 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 import { call, put, select, takeLatest } from "redux-saga/effects";
 import { apiClient } from "@/api/client";
+import { mapImportedFilesToSchemaInputs } from "@/api/schemaInputs";
 import type { ExportResponse } from "@/api/types";
-import type { ImportedFile } from "@/components/FileList";
 import { selectExporters } from "@/store/capabilities/capabilitiesSlice";
 import {
 	type ExportSchemaOptions,
@@ -13,6 +13,7 @@ import {
 } from "@/store/export/exportSlice";
 import { selectSourceFiles } from "@/store/schema/schemaSlice";
 import { selectSelectionQuery } from "@/store/selection/selectionSlice";
+import type { ImportedFile } from "@/types/importedFile";
 
 function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 	try {
@@ -22,13 +23,19 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 		const exporters: ReturnType<typeof selectExporters> =
 			yield select(selectExporters);
 
-		const exporter = exporters.find((exp) => exp.endpoint === endpoint);
+		const exporter = exporters.find((exporter) => exporter.endpoint === endpoint);
 		if (!exporter) {
-			yield put(exportFailure("Exporter not found"));
+			yield put(exportFailure({ endpoint, error: "Exporter not found" }));
 			return;
 		}
 
+		const hasSelectionQuery = selectionQuery.trim().length > 0;
+
 		const missingRequired: string[] = [];
+		if (exporter.requiresSelectionQuery && !hasSelectionQuery) {
+			missingRequired.push("Selection Query");
+		}
+
 		for (const [key, property] of Object.entries(exporter.properties)) {
 			if (
 				property.required &&
@@ -41,20 +48,18 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 
 		if (missingRequired.length > 0) {
 			yield put(
-				exportFailure(`Missing required fields: ${missingRequired.join(", ")}`),
+				exportFailure({
+					endpoint,
+					error: `Missing required fields: ${missingRequired.join(", ")}`,
+				}),
 			);
 			return;
 		}
 
-		const schemas = sourceFiles.map((file) => {
-			if (file.type === "url") {
-				return { type: "url", url: file.path };
-			}
-			return { type: "content", content: file.content! };
-		});
+		const schemas = mapImportedFilesToSchemaInputs(sourceFiles);
 
 		let selectionQueryPayload = null;
-		if (selectionQuery) {
+		if (hasSelectionQuery) {
 			selectionQueryPayload = { type: "content", content: selectionQuery };
 		}
 
@@ -89,7 +94,7 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 		const output = response.result.join("\n");
 		const format = response.metadata?.result_format || "text";
 
-		yield put(exportSuccess({ output, format }));
+		yield put(exportSuccess({ endpoint, output, format }));
 	} catch (err) {
 		let errorMsg = "Export failed";
 
@@ -101,7 +106,7 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 			errorMsg = String(err);
 		}
 
-		yield put(exportFailure(errorMsg));
+		yield put(exportFailure({ endpoint: action.payload.endpoint, error: errorMsg }));
 	}
 }
 

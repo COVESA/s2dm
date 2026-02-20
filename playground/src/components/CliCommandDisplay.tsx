@@ -1,14 +1,15 @@
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { selectExporterByName } from "@/store/capabilities/capabilitiesSlice";
+import { selectExporterByEndpoint } from "@/store/capabilities/capabilitiesSlice";
+import { selectExportFormat, selectExportResult } from "@/store/export/exportSlice";
 import { useAppSelector } from "@/store/hooks";
 import { selectSourceFiles } from "@/store/schema/schemaSlice";
 import { selectSelectionQuery } from "@/store/selection/selectionSlice";
 import { buildCliCommand, buildComposeCommand } from "@/utils/buildCliCommand";
 
 type CliCommandDisplayProps =
-	| { type: "export"; selectedExporter: string }
+	| { type: "export"; selectedExporterEndpoint: string }
 	| { type: "compose" };
 
 export function CliCommandDisplay(props: CliCommandDisplayProps) {
@@ -17,9 +18,23 @@ export function CliCommandDisplay(props: CliCommandDisplayProps) {
 	const selectionQuery = useAppSelector(selectSelectionQuery);
 	const exporter = useAppSelector((state) =>
 		props.type === "export"
-			? selectExporterByName(state, props.selectedExporter)
+			? selectExporterByEndpoint(state, props.selectedExporterEndpoint)
 			: null,
 	);
+	const exportResult = useAppSelector((state) => {
+		if (!exporter) {
+			return "";
+		}
+
+		return selectExportResult(state, exporter.endpoint);
+	});
+	const exportFormat = useAppSelector((state) => {
+		if (!exporter) {
+			return "text";
+		}
+
+		return selectExportFormat(state, exporter.endpoint);
+	});
 
 	let command: string | null = null;
 
@@ -27,7 +42,8 @@ export function CliCommandDisplay(props: CliCommandDisplayProps) {
 		if (!exporter) {
 			return null;
 		}
-		command = buildCliCommand(exporter, schemas, selectionQuery);
+		const outputFormat = exportResult ? exportFormat : undefined;
+		command = buildCliCommand(exporter, schemas, selectionQuery, outputFormat);
 	} else if (props.type === "compose") {
 		command = buildComposeCommand(schemas);
 	}

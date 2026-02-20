@@ -4,25 +4,25 @@ import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { FormLabel } from "@/components/ui/form-label";
 import { Input } from "@/components/ui/input";
 import {
-	selectExporterByName,
+	selectExporterByEndpoint,
 	updatePropertyValue,
 } from "@/store/capabilities/capabilitiesSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 type ExportConfigProps = {
-	selectedExporter: string;
+	selectedExporterEndpoint: string;
 };
 
-export function ExportConfig({ selectedExporter }: ExportConfigProps) {
+export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 	const dispatch = useAppDispatch();
 	const exporter = useAppSelector((state) =>
-		selectExporterByName(state, selectedExporter),
+		selectExporterByEndpoint(state, selectedExporterEndpoint),
 	);
 
 	const handleValueChange = (propertyKey: string, value: unknown) => {
 		dispatch(
 			updatePropertyValue({
-				exporterName: selectedExporter,
+				exporterEndpoint: selectedExporterEndpoint,
 				propertyKey,
 				value,
 			}),
