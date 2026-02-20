@@ -498,15 +498,19 @@ def playground_start() -> None:
     def wait_for_react_server(
         host: str, port: int, process: subprocess.Popen[str], timeout_seconds: float = 15.0
     ) -> bool:
+        candidate_hosts = [host, "127.0.0.1", "::1"]
+        unique_hosts = list(dict.fromkeys(candidate_hosts))
         deadline = time.monotonic() + timeout_seconds
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 return False
-            try:
-                with socket.create_connection((host, port), timeout=0.5):
-                    return True
-            except OSError:
-                time.sleep(0.1)
+            for candidate_host in unique_hosts:
+                try:
+                    with socket.create_connection((candidate_host, port), timeout=0.5):
+                        return True
+                except OSError:
+                    continue
+            time.sleep(0.1)
         return False
 
     exit_code = 0
@@ -542,7 +546,7 @@ def playground_start() -> None:
         react_thread = threading.Thread(target=stream_output, args=(react_process, "React"), daemon=True)
         react_thread.start()
 
-        if not wait_for_react_server(host="127.0.0.1", port=react_port, process=react_process):
+        if not wait_for_react_server(host="localhost", port=react_port, process=react_process):
             log.error(f"React dev server did not become ready at {react_url}")
             exit_code = 1
 
