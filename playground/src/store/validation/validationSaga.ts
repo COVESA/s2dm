@@ -1,9 +1,10 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { call, put, takeLatest } from "redux-saga/effects";
+import { mapImportedFilesToSchemaInputs } from "@/api/schemaInputs";
 import { ApiValidationError, validateSchemas } from "@/api/s2dm";
-import type { ExportResponse, SchemaInput } from "@/api/types";
-import type { ImportedFile } from "@/components/FileList";
+import type { ExportResponse } from "@/api/types";
 import { setOriginalSchema, setSourceFiles } from "@/store/schema/schemaSlice";
+import type { ImportedFile } from "@/types/importedFile";
 import {
 	validateAndCompose,
 	validationFailure,
@@ -21,12 +22,7 @@ function* validateAndComposeWorker(action: PayloadAction<ImportedFile[]>) {
 	}
 
 	try {
-		const schemas: SchemaInput[] = files.map((file) => {
-			if (file.type === "url") {
-				return { type: "url", url: file.path };
-			}
-			return { type: "content", content: file.content || "" };
-		});
+		const schemas = mapImportedFilesToSchemaInputs(files);
 
 		const response: ExportResponse = yield call(validateSchemas, schemas);
 		const composedSchema = response.result[0] || "";

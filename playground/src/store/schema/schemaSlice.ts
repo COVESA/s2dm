@@ -1,7 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
-import type { ImportedFile } from "@/components/FileList";
 import type { RootState } from "@/store/types";
+import type { ImportedFile } from "@/types/importedFile";
 
 export interface SchemaState {
 	original: string;

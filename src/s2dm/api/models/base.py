@@ -1,6 +1,6 @@
-from typing import Any, Literal, Self
+from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, FilePath, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, FilePath
 
 
 class PathInput(BaseModel):
@@ -61,12 +61,10 @@ class BaseExportRequest(BaseModel):
 class QueryBasedExportRequest(BaseExportRequest):
     """Export request that requires a selection query."""
 
-    @model_validator(mode="after")
-    def validate_selection_query_required(self) -> Self:
-        """Ensure selection_query is provided."""
-        if self.selection_query is None:
-            raise ValueError("selection_query is required for this export format")
-        return self
+    selection_query: ConfigInput = Field(
+        description="GraphQL query for filtering (path or inline content)",
+        json_schema_extra={"x-property-format": "graphql", "x-cli-flag": "--selection-query"},
+    )
 
 
 class ResponseMetadata(BaseModel):

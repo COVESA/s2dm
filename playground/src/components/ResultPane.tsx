@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { CliCommandDisplay } from "@/components/CliCommandDisplay";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { ExportConfig } from "@/components/ExportConfig";
@@ -16,17 +16,21 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
 	fetchCapabilities,
+	setSelectedExporterEndpoint,
 	selectCapabilitiesError,
+	selectSelectedExporterEndpoint,
+	selectExporterByEndpoint,
 	selectExporters,
 	selectIsLoadingCapabilities,
 } from "@/store/capabilities/capabilitiesSlice";
 import {
 	clearExportResult,
+	clearExportResultForEndpoint,
 	exportSchema,
 	selectExportError,
 	selectExportFormat,
 	selectExportResult,
-	selectIsExporting,
+	selectIsExportingEndpoint,
 } from "@/store/export/exportSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectFilteredSchema } from "@/store/schema/schemaSlice";
@@ -49,27 +53,35 @@ export function ResultPane({
 	const dispatch = useAppDispatch();
 	const isCollapsed = useAppSelector(selectResultPaneCollapsed);
 	const filteredSchema = useAppSelector(selectFilteredSchema);
-	const isExporting = useAppSelector(selectIsExporting);
-	const exportResult = useAppSelector(selectExportResult);
-	const exportError = useAppSelector(selectExportError);
-	const exportFormat = useAppSelector(selectExportFormat);
+	const hasFilteredSchema = filteredSchema.trim().length > 0;
+	const canCollapsePane = Boolean(collapsible && hasFilteredSchema);
+	const shouldCollapsePane = !hasFilteredSchema || isCollapsed;
 	const exporters = useAppSelector(selectExporters);
+	const selectedExporterEndpoint = useAppSelector(
+		selectSelectedExporterEndpoint,
+	);
+	const selectedExporterData = useAppSelector((state) =>
+		selectExporterByEndpoint(state, selectedExporterEndpoint),
+	);
+	const selectedEndpoint = selectedExporterData?.endpoint || "";
+	const isExporting = useAppSelector((state) =>
+		selectedEndpoint
+			? selectIsExportingEndpoint(state, selectedEndpoint)
+			: false,
+	);
+	const exportResult = useAppSelector((state) =>
+		selectedEndpoint ? selectExportResult(state, selectedEndpoint) : "",
+	);
+	const exportError = useAppSelector((state) =>
+		selectedEndpoint ? selectExportError(state, selectedEndpoint) : null,
+	);
+	const exportFormat = useAppSelector((state) =>
+		selectedEndpoint ? selectExportFormat(state, selectedEndpoint) : "text",
+	);
 	const isLoadingCapabilities = useAppSelector(selectIsLoadingCapabilities);
 	const capabilitiesError = useAppSelector(selectCapabilitiesError);
-	const [selectedExporter, setSelectedExporter] = useState<string>(
-		exporters[0]?.name || "",
-	);
-
-	useEffect(() => {
-		if (exporters.length > 0 && !selectedExporter) {
-			setSelectedExporter(exporters[0].name);
-		}
-	}, [exporters, selectedExporter]);
 
 	const handleGenerate = useCallback(() => {
-		const selectedExporterData = exporters.find(
-			(exp) => exp.name === selectedExporter,
-		);
 		if (!selectedExporterData) {
 			return;
 		}
@@ -79,11 +91,16 @@ export function ResultPane({
 				endpoint: selectedExporterData.endpoint,
 			}),
 		);
-	}, [selectedExporter, dispatch, exporters]);
+	}, [selectedExporterData, dispatch]);
 
 	const handleReset = useCallback(() => {
-		dispatch(clearExportResult());
-	}, [dispatch]);
+		if (!selectedEndpoint) {
+			dispatch(clearExportResult());
+			return;
+		}
+
+		dispatch(clearExportResultForEndpoint(selectedEndpoint));
+	}, [dispatch, selectedEndpoint]);
 
 	const handleRetryCapabilities = useCallback(() => {
 		dispatch(fetchCapabilities());
@@ -132,18 +149,25 @@ export function ResultPane({
 		<Pane
 			className={className}
 			position={position}
-			collapsible={collapsible}
-			isCollapsed={isCollapsed}
-			onToggleCollapse={() => dispatch(toggleResultPane())}
+			collapsible={canCollapsePane}
+			isCollapsed={shouldCollapsePane}
+			onToggleCollapse={
+				canCollapsePane ? () => dispatch(toggleResultPane()) : undefined
+			}
 		>
 			<div className="flex gap-2 p-4 items-center justify-center">
-				<Select value={selectedExporter} onValueChange={setSelectedExporter}>
+				<Select
+					value={selectedExporterEndpoint}
+					onValueChange={(value) =>
+						dispatch(setSelectedExporterEndpoint(value))
+					}
+				>
 					<SelectTrigger className="w-[200px]">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
 						{exporters.map((exporter) => (
-							<SelectItem key={exporter.name} value={exporter.name}>
+							<SelectItem key={exporter.endpoint} value={exporter.endpoint}>
 								{exporter.name}
 							</SelectItem>
 						))}
@@ -167,10 +191,13 @@ export function ResultPane({
 			</div>
 
 			<div className="px-4 pb-4">
-				<CliCommandDisplay type="export" selectedExporter={selectedExporter} />
+				<CliCommandDisplay
+					type="export"
+					selectedExporterEndpoint={selectedExporterEndpoint}
+				/>
 			</div>
 
-			<ExportConfig selectedExporter={selectedExporter} />
+			<ExportConfig selectedExporterEndpoint={selectedExporterEndpoint} />
 
 			{exportResult && <Separator />}
 

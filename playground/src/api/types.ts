@@ -66,6 +66,7 @@ export type SchemaProperty = {
 export type ExporterCapability = {
 	name: string;
 	endpoint: string;
+	requiresSelectionQuery: boolean;
 	properties: Record<string, SchemaProperty>;
 	propertyValues: Record<string, unknown>;
 	cliCommandName: string;

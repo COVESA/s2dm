@@ -20,6 +20,8 @@ export function QueryEditorWrapper({
 	useEffect(() => {
 		if (!queryEditor) return;
 
+		queryEditor.updateOptions({ contextmenu: false });
+
 		if (selectionQuery !== queryEditor.getValue()) {
 			queryEditor.setValue(selectionQuery);
 		}

@@ -1,10 +1,10 @@
 import type { ExporterCapability } from "@/api/types";
-import type { ImportedFile } from "@/components/FileList";
 import {
 	FILTERED_SCHEMA_FILENAME,
 	ORIGINAL_SCHEMA_FILENAME,
 	SELECTION_QUERY_FILENAME,
 } from "@/constants";
+import type { ImportedFile } from "@/types/importedFile";
 
 export function buildComposeCommand(schemas: ImportedFile[]): string | null {
 	if (schemas.length === 0) {
@@ -50,6 +50,7 @@ export function buildCliCommand(
 	exporter: ExporterCapability,
 	schemas: ImportedFile[],
 	selectionQuery: string,
+	outputFormat?: string,
 ): string | null {
 	if (schemas.length === 0) {
 		return null;
@@ -100,6 +101,10 @@ export function buildCliCommand(
 			property.format,
 		);
 		parts.push(`${property.cliFlagName} ${formattedValue}`);
+	}
+
+	if (outputFormat) {
+		parts.push(`--output output.${outputFormat}`);
 	}
 
 	return parts.join(" ");

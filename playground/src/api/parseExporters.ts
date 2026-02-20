@@ -163,6 +163,14 @@ function extractProperties(
 	return properties;
 }
 
+function isSelectionQueryRequired(schema: Record<string, unknown>): boolean {
+	if (!Array.isArray(schema.required)) {
+		return false;
+	}
+
+	return schema.required.includes("selection_query");
+}
+
 export function computePropertyValues(
 	properties: Record<string, SchemaProperty>,
 ): Record<string, unknown> {
@@ -205,6 +213,7 @@ export function parseExporters(spec: OpenAPISpec): ExporterCapability[] {
 			}
 
 			let properties: Record<string, SchemaProperty> = {};
+			let requiresSelectionQuery = false;
 
 			const schemaRef =
 				operation.requestBody?.content?.["application/json"]?.schema?.$ref;
@@ -213,6 +222,7 @@ export function parseExporters(spec: OpenAPISpec): ExporterCapability[] {
 				const resolvedSchema = resolveSchemaRef(schemaRef, spec);
 				if (resolvedSchema) {
 					properties = extractProperties(resolvedSchema, spec);
+					requiresSelectionQuery = isSelectionQueryRequired(resolvedSchema);
 				}
 			}
 
@@ -226,6 +236,7 @@ export function parseExporters(spec: OpenAPISpec): ExporterCapability[] {
 			exporters.push({
 				name: operation["x-exporter-name"],
 				endpoint: path,
+				requiresSelectionQuery,
 				properties,
 				propertyValues,
 				cliCommandName,
