@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from ariadne import gql
 from faker import Faker
+from fastapi.testclient import TestClient
 from graphql import (
     GraphQLNamedType,
     GraphQLSchema,
@@ -14,6 +15,7 @@ from graphql import (
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
+from s2dm.api.main import app
 from s2dm.exporters.utils.extraction import get_all_named_types
 from s2dm.exporters.utils.schema_loader import ensure_query
 from s2dm.tools.graphql_inspector import locate_graphql_inspector
@@ -330,3 +332,8 @@ def pytest_configure(config: pytest.Config) -> None:
             " (can be skipped with -m 'not graphql_inspector')"
         ),
     )
+
+@pytest.fixture(scope="module")
+def test_client() -> TestClient:
+    """FastAPI TestClient for API integration tests."""
+    return TestClient(app)

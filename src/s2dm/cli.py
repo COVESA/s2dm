@@ -1,7 +1,13 @@
 import json
 import logging
 import os
+import queue
+import socket
+import subprocess
 import sys
+import threading
+import time
+import webbrowser
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
@@ -54,6 +60,15 @@ from s2dm.units.sync import (
 
 S2DM_HOME = Path.home() / ".s2dm"
 DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
+
+
+def get_free_port() -> int:
+    """Get a free port allocated by the OS."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        sock.listen(1)
+        port: int = sock.getsockname()[1]
+        return port
 
 
 class SchemaResolverOption(click.Option):
@@ -386,6 +401,181 @@ def stats() -> None:
 def validate() -> None:
     """Diff commands for multiple input types."""
     pass
+
+
+@click.group()
+def playground() -> None:
+    """GUI playground commands."""
+    pass
+
+
+@playground.command(name="init")
+def playground_init() -> None:
+    """Initialize the GUI playground by installing its dependencies and building it."""
+    playground_dir = Path.cwd() / "playground"
+
+    if not playground_dir.exists():
+        log.error(f"Playground directory not found at {playground_dir}")
+        sys.exit(1)
+
+    if not (playground_dir / "package.json").exists():
+        log.error(f"package.json not found in {playground_dir}")
+        sys.exit(1)
+
+    log.info("Installing playground dependencies...")
+    try:
+        subprocess.run(
+            ["npm", "install"],
+            cwd=playground_dir,
+            check=True,
+        )
+        log.success("Dependencies installed successfully")
+    except subprocess.CalledProcessError as e:
+        log.error(f"Failed to install dependencies: {e}")
+        sys.exit(1)
+    except FileNotFoundError:
+        log.error("npm not found. Please install Node.js and npm.")
+        sys.exit(1)
+
+    log.info("Building playground...")
+    try:
+        subprocess.run(
+            ["npm", "run", "build"],
+            cwd=playground_dir,
+            check=True,
+        )
+        log.success("Playground built successfully")
+    except subprocess.CalledProcessError as e:
+        log.error(f"Failed to build playground: {e}")
+        sys.exit(1)
+
+    log.success("Playground initialization complete!")
+
+
+@playground.command(name="start")
+def playground_start() -> None:
+    """Launch the GUI playground."""
+    playground_dir = Path.cwd() / "playground"
+
+    if not playground_dir.exists():
+        log.error(f"Playground directory not found at {playground_dir}")
+        sys.exit(1)
+
+    if not (playground_dir / "node_modules").exists():
+        log.error("node_modules not found. Run 's2dm playground init' first.")
+        sys.exit(1)
+
+    api_process: subprocess.Popen[str] | None = None
+    react_process: subprocess.Popen[str] | None = None
+
+    def stop_process(process: subprocess.Popen[str] | None) -> None:
+        if process is None or process.poll() is not None:
+            return
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+
+    def cleanup() -> None:
+        log.info("Stopping servers...")
+        stop_process(react_process)
+        stop_process(api_process)
+        log.success("All servers stopped")
+
+    def stream_output(process: subprocess.Popen[str], prefix: str) -> None:
+        if process.stdout:
+            for line in process.stdout:
+                print(f"{prefix}: {line}", end="")
+
+    shutdown_events: queue.SimpleQueue[str] = queue.SimpleQueue()
+
+    def watch_process(process: subprocess.Popen[str], process_name: str) -> None:
+        process.wait()
+        shutdown_events.put(process_name)
+
+    def wait_for_react_server(
+        host: str, port: int, process: subprocess.Popen[str], timeout_seconds: float = 15.0
+    ) -> bool:
+        candidate_hosts = [host, "127.0.0.1", "::1"]
+        unique_hosts = list(dict.fromkeys(candidate_hosts))
+        deadline = time.monotonic() + timeout_seconds
+        while time.monotonic() < deadline:
+            if process.poll() is not None:
+                return False
+            for candidate_host in unique_hosts:
+                try:
+                    with socket.create_connection((candidate_host, port), timeout=0.5):
+                        return True
+                except OSError:
+                    continue
+            time.sleep(0.1)
+        return False
+
+    exit_code = 0
+
+    try:
+        api_port = get_free_port()
+        api_url = f"http://127.0.0.1:{api_port}"
+        react_port = get_free_port()
+        react_url = f"http://localhost:{react_port}"
+
+        log.info(f"Starting API server on {api_url}")
+        api_process = subprocess.Popen(
+            ["uvicorn", "s2dm.api.main:app", "--reload", "--host", "127.0.0.1", "--port", str(api_port)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        api_thread = threading.Thread(target=stream_output, args=(api_process, "API"), daemon=True)
+        api_thread.start()
+
+        log.info(f"Starting React dev server on {react_url}")
+        react_env = {**os.environ, "VITE_API_BASE_URL": api_url}
+        react_process = subprocess.Popen(
+            ["npm", "run", "dev", "--", "--port", str(react_port), "--strictPort"],
+            cwd=playground_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=react_env,
+        )
+
+        react_thread = threading.Thread(target=stream_output, args=(react_process, "React"), daemon=True)
+        react_thread.start()
+
+        if not wait_for_react_server(host="localhost", port=react_port, process=react_process):
+            log.error(f"React dev server did not become ready at {react_url}")
+            exit_code = 1
+
+        if exit_code == 0:
+            log.info(f"Opening browser at {react_url}")
+            webbrowser.open(react_url)
+
+            log.success("Both servers running. Press Ctrl+C to stop.")
+
+            threading.Thread(target=watch_process, args=(api_process, "API server"), daemon=True).start()
+            threading.Thread(target=watch_process, args=(react_process, "React dev server"), daemon=True).start()
+
+            stopped_process_name = shutdown_events.get()
+            log.error(f"{stopped_process_name} stopped unexpectedly")
+            exit_code = 1
+
+    except FileNotFoundError as error:
+        log.error(f"Command not found: {error}. Ensure Node.js/npm and uvicorn are installed.")
+        exit_code = 1
+    except OSError as error:
+        log.error(f"Failed to start playground processes: {error}")
+        exit_code = 1
+    except KeyboardInterrupt:
+        log.info("Interrupted by user")
+    finally:
+        cleanup()
+
+    if exit_code != 0:
+        sys.exit(exit_code)
 
 
 @click.command()
@@ -1511,6 +1701,7 @@ cli.add_command(diff)
 export.add_command(avro)
 cli.add_command(export)
 cli.add_command(generate)
+cli.add_command(playground)
 cli.add_command(registry)
 cli.add_command(similar)
 cli.add_command(search)
