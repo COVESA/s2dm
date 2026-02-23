@@ -333,6 +333,7 @@ def pytest_configure(config: pytest.Config) -> None:
         ),
     )
 
+
 @pytest.fixture(scope="module")
 def test_client() -> TestClient:
     """FastAPI TestClient for API integration tests."""
