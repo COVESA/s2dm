@@ -816,29 +816,35 @@ def version_bump(
     schema_temp_path = create_tempfile_to_composed_schema(schemas)
     diff_result = inspector.diff(schema_temp_path)
 
-    # Determine version bump type based on output analysis
+    # Determine version bump type based on exit code and output symbols.
+    # graphql-inspector exit codes: 0 = no breaking changes, 1 = breaking changes found
     version_bump_type = None
 
     if diff_result.returncode == 0:
-        if "No changes detected" in diff_result.output:
-            log.success("No version bump needed")
-            version_bump_type = None
-        elif "No breaking changes detected" in diff_result.output:
-            # Check for dangerous changes (⚠ symbols)
-            if "⚠" in diff_result.output:
-                log.warning("Minor version bump needed")
-                version_bump_type = "minor"
-            else:
-                log.success("Patch version bump needed")
-                version_bump_type = "patch"
+        # No breaking changes — check for dangerous (⚠) or non-breaking (✔) changes
+        if "⚠" in diff_result.output:
+            log.warning("Dangerous changes detected - minor version bump needed")
+            version_bump_type = "minor"
+        elif "✔" in diff_result.output:
+            log.success("Non-breaking changes detected - patch version bump needed")
+            version_bump_type = "patch"
         else:
-            log.error("Unknown state, please check your input with 'diff' tool.")
-    else:
-        if "Detected" in diff_result.output and "breaking changes" in diff_result.output:
-            log.error("Detected breaking changes, major version bump needed")
+            log.success("No changes detected - no version bump needed")
+            version_bump_type = None
+    elif diff_result.returncode == 1:
+        # Exit code 1 means breaking changes were detected
+        if "✖" in diff_result.output or "breaking change" in diff_result.output:
+            log.error("Breaking changes detected - major version bump needed")
             version_bump_type = "major"
         else:
-            log.error("Unknown error occurred during schema comparison")
+            # Exit code 1 without recognizable diff output may indicate an actual error
+            log.error("Schema comparison failed with exit code 1")
+            if diff_result.output:
+                log.error(f"graphql-inspector output: {diff_result.output}")
+    else:
+        log.error(f"Schema comparison failed with exit code {diff_result.returncode}")
+        if diff_result.output:
+            log.error(f"graphql-inspector output: {diff_result.output}")
 
     # Output the version bump type for pipeline usage
     if output_type:
