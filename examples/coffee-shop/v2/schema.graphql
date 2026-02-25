@@ -1,0 +1,31 @@
+type CoffeeShop {
+  menu: [Beverage]
+  orders: [Order]
+  appliances: [Appliance]
+  tables: [Table]
+}
+
+type Appliance {
+  kind: String
+  isWorking: Boolean
+}
+
+type Beverage {
+  name: String
+  price: Float
+}
+
+type Customer {
+  customerId: ID!
+  name: String
+}
+
+type Order {
+  table: Table
+  customer: Customer
+  beverages: [Beverage]
+}
+
+type Table {
+  isOccupied: Boolean
+}

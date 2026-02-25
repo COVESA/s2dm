@@ -1,5 +1,5 @@
 ---
-title: "Introduction"
+title: "Get started"
 description: ""
 summary: ""
 date: 2023-09-07T16:06:50+02:00

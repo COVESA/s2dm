@@ -15,41 +15,39 @@
       </div>
       <div class="col-lg-9 col-xl-8 text-center">
         <p class="lead">{{ .Params.lead | safeHTML }}</p>
-        <a class="btn btn-primary btn-cta rounded-1 btn-lg my-3" href="{{ "docs/introduction/s2dm-documentation/" | relURL }}" role="button">Get Started</a>
+        <a class="btn btn-primary btn-cta rounded-5 btn-lg my-3" href="{{ "docs/introduction/coffee-shop-domain-example/" | relURL }}" role="button">Get started</a>
       </div>
     </div>
   </section>
 
   <!-- Key Features Section -->
   <section class="section section-sm border-bottom border-light">
+    <div class="row justify-content-center">
+        <div class="col-lg-12 text-center"> <h2 class="h5">S2DM is suitable for...</h2> </div>
+      </div>
     <div class="container">
-      <div class="row justify-content-center text-center">
-        <div class="col-lg-8">
-          <h2 class="h3 mb-4">Why S2DM?</h2>
+      <div class="row justify-content-center">
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="text-center">
+        <i data-lucide="users" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
+        <h3 class="h5">...domain experts</h3>
+        <p class="text-muted">Describe your domain consistently with a few good data modeling practices and a low entry barrier.</p>
         </div>
       </div>
-      <div class="row justify-content-center">
-        <div class="col-lg-4 col-md-6 mb-4">
-          <div class="text-center">
-            <i data-lucide="target" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
-            <h3 class="h5">Simple</h3>
-            <p class="text-muted">Any Subject Matter Expert can contribute to controlled vocabularies with minimal data modeling expertise.</p>
-          </div>
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="text-center">
+        <i data-lucide="git-graph" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
+        <h3 class="h5">...data governance teams</h3>
+        <p class="text-muted">Keep your data models organized and up to date with helpful tools and automatic checks.</p>
         </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-          <div class="text-center">
-            <i data-lucide="network" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
-            <h3 class="h5">Semantic</h3>
-            <p class="text-muted">Specifies meaningful data structures, cross-domain relationships, and arbitrary classification schemes.</p>
-          </div>
+      </div>
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="text-center">
+        <i data-lucide="code" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
+        <h3 class="h5">...developers</h3>
+        <p class="text-muted">Benefit from controlled vocabularies and their released artifacts for downstream usage.</p>
         </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-          <div class="text-center">
-            <i data-lucide="link" class="lucide-icon text-primary mb-3" style="width: 3rem; height: 3rem;"></i>
-            <h3 class="h5">Interoperable</h3>
-            <p class="text-muted">Built on GraphQL SDL and SKOS standards for maximum compatibility and reusability.</p>
-          </div>
-        </div>
+      </div>
       </div>
     </div>
   </section>
@@ -80,23 +78,23 @@
     </div>
   {{ end -}}
 
-  <section class="section section-md section-features border-bottom border-dark">
+  <section class="section section-md section-features">
     <div class="container py-4">
       <div class="row justify-content-center text-center gap-4 px-4">
         <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
-          <h2 class="h4">S2DM Approach</h2>
-          <p>Get a basic understanding of the S2DM approach for modeling data across multiple domains with minimal expertise required.</p>
-          <a href="{{ "docs/approach-overview/actively-developed-sme/" | relURL }}" class="btn btn-outline-primary btn-sm mt-2">Learn More</a>
+          <h2 class="h4">Understand the basics</h2>
+          <p>Follow along a simple example (Recommended for first-time users)</p>
+          <a href="{{ "docs/approach-overview/actively-developed-sme/" | relURL }}" class="btn btn-outline-primary rounded-5 btn-sm mt-2 mb-3">Get started</a>
         </div>
         <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
-          <h2 class="h4">Data Modeling Guideline</h2>
-          <p>Follow our comprehensive guideline to model your domain using S2DM principles and best practices.</p>
-          <a href="{{ "docs/data-modeling-guideline/how-to.../" | relURL }}" class="btn btn-outline-primary btn-sm mt-2">View Guide</a>
+          <h2 class="h4">Learn the S2DM approach</h2>
+          <p>Read about the modeling guideline, automation, and best practices.</p>
+          <a href="{{ "docs/data-modeling-guideline/how-to.../" | relURL }}" class="btn btn-outline-primary rounded-5 btn-sm mt-2 mb-3">Take me there</a>
         </div>
         <div class="col-lg-5 border rounded-1 bg-light bg-opacity-25">
-          <h2 class="h4">S2DM Tools</h2>
-          <p>Maintain your domain model with the support of our provided S2DM tools and automation utilities.</p>
-          <a href="{{ "docs/tools/automation/" | relURL }}" class="btn btn-outline-primary btn-sm mt-2">Explore Tools</a>
+          <h2 class="h4">Explore the Tools</h2>
+          <p>See how the S2DM tooling supports validation, export, and model evolution.</p>
+          <a href="{{ "docs/tools/automation/" | relURL }}" class="btn btn-outline-primary rounded-5 btn-sm mt-2">Explore Tools</a>
         </div>
       </div>
     </div>
@@ -110,7 +108,7 @@
         <div class="col-lg-7">
           <h2 class="mt-2 h5">Start modeling your data semantically today!</h2>
           <p class="text-muted">S2DM enables Subject Matter Experts to contribute to controlled vocabularies with minimal data modeling expertise.</p>
-          <a class="btn btn-outline-primary btn-lg rounded-1 px-4 my-2" href="{{ "docs/approach-overview/actively-developed-sme/" | relURL }}" role="button">Get Started</a>
+          <a class="btn btn-outline-primary btn-md rounded-1 px-4 my-2" href="{{ "docs/approach-overview/actively-developed-sme/" | relURL }}" role="button">Get Started</a>
         </div>
       </div>
     </section>
@@ -120,8 +118,15 @@
   <section class="section section-sm py-4">
     <div class="container">
       <div class="row justify-content-center text-center">
+        <div class="col-lg-8">
+          <p class="text-muted small">S2DM is an open-source project developed in the automotive alliance</p>
+        </div>
+      </div>
+      <div class="row justify-content-center text-center mt-2">
         <div class="col-auto">
-                    <img src="{{ "images/COVESA-Logo-Small.png" | relURL }}" alt="COVESA Logo" class="img-fluid" style="max-height: 60px;">
+          <a href="https://covesa.global" target="_blank" rel="noopener">
+        <img src="{{ "images/COVESA-Logo-Small.png" | relURL }}" alt="COVESA Logo" class="img-fluid" style="max-height: 60px;">
+          </a>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 [[main]]
   name = "Docs"
-  url = "/docs/introduction/s2dm-documentation/"
+  url = "docs/get-started/example--coffee-shop-domain/"
   weight = 10
 
 [[main]]

@@ -1,0 +1,21 @@
+type Beverage {
+  name: String
+  price: Float
+}
+
+type Customer {
+  name: String
+}
+
+type Order {
+  customer: Customer
+  table: Table
+}
+
+type Query {
+  ping: String
+}
+
+type Table {
+  isOccupied: Boolean
+}

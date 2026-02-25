@@ -1,0 +1,17 @@
+type Beverage ( 
+  name: string 
+  price: float 
+)
+
+type Order {
+  table: Table
+  customer: Customer
+}
+
+type Table {
+  isOccupied: Boolean
+}
+
+type Customer {
+  name: String
+}
