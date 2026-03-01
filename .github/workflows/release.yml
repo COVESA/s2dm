@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - build and create release but do not commit or publish to PyPI'
+        required: false
+        type: boolean
+        default: false
 
 env:
   ZERO_BASED_VERSIONING: true # set this to false when you want to release v1.0.0
@@ -99,10 +106,11 @@ jobs:
           git config --local user.name "GitHub Action"
 
           # Bump version without creating a tag or commit (since commit=false in .bumpversion.toml)
-          uv run bump-my-version bump ${{ steps.version.outputs.bump }} --no-tag
+          uv run bump-my-version bump ${{ steps.version.outputs.bump }} --no-tag --no-commit
 
           # Get the new version from .bumpversion.toml
           NEW_VERSION="v$(grep -E '^current_version = ' .bumpversion.toml | cut -d'"' -f2)"
+          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
 
           # Generate changelog with git-cliff for the changes since last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
@@ -126,7 +134,38 @@ jobs:
           mv updated_changelog.md CHANGELOG.md
           rm temp_changelog.md
 
-          # Stage all changes (version files and changelog) and commit together
+      - name: build package
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          uv build
+
+      - name: verify build
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          # Verify the build artifacts exist
+          ls -la dist/
+          echo "Build artifacts:"
+          ls dist/
+
+          # Test that the version can be imported and matches
+          uv pip install dist/*.whl --force-reinstall
+          PACKAGE_VERSION=$(uv run python -c "import s2dm; print(s2dm.__version__)")
+          EXPECTED_VERSION=$(grep -E '^current_version = ' .bumpversion.toml | cut -d'"' -f2)
+
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Expected version: $EXPECTED_VERSION"
+
+          if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "ERROR: Version mismatch!"
+            exit 1
+          fi
+
+          echo "✓ Build verification successful"
+
+      - name: commit and tag
+        if: steps.version.outputs.bump != 'none' && (github.event.inputs.dry_run != 'true')
+        run: |
+          # Stage all changes (version files and changelog)
           git add .bumpversion.toml src/s2dm/__init__.py tests/test_s2dm.py CHANGELOG.md
           git commit -m "chore: release ${NEW_VERSION}
 
@@ -137,18 +176,15 @@ jobs:
           git tag ${NEW_VERSION}
 
       - name: push changes
-        if: steps.version.outputs.bump != 'none'
+        if: steps.version.outputs.bump != 'none' && (github.event.inputs.dry_run != 'true')
         run: |
           git push origin ${{ github.ref_name }} --tags
 
       - name: create release
-        if: steps.version.outputs.bump != 'none'
+        if: steps.version.outputs.bump != 'none' && (github.event.inputs.dry_run != 'true')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the new version
-          NEW_VERSION=$(git describe --tags --abbrev=0)
-
           # Generate changelog with git-cliff
           LAST_TAG=$(git tag --sort=-version:refname | sed -n '2p')
           if [ -z "$LAST_TAG" ]; then
@@ -163,3 +199,28 @@ jobs:
             --notes "## Changes
 
           ${CHANGELOG}"
+
+      - name: dry run summary
+        if: steps.version.outputs.bump != 'none' && github.event.inputs.dry_run == 'true'
+        run: |
+          echo "DRY RUN MODE"
+          echo "============================================"
+          echo "The following would be released:"
+          echo "  Version: ${NEW_VERSION}"
+          echo "  Package version: $(uv run python -c 'import s2dm; print(s2dm.__version__)')"
+          echo ""
+          echo "Build artifacts:"
+          ls -lh dist/
+          echo ""
+          echo "Skipped steps:"
+          echo " Git commit and tag"
+          echo " Push to repository"
+          echo " GitHub release creation"
+          echo " Publish to test PyPI"
+
+      - name: publish to test-pypi
+        if: steps.version.outputs.bump != 'none' && (github.event.inputs.dry_run != 'true')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
