@@ -15,6 +15,7 @@ from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.mongodb import translate_to_mongodb
 from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
@@ -590,6 +591,61 @@ def jsonschema(
 
     result = translate_to_jsonschema(annotated_schema, root_type, strict)
     _ = output.write_text(result)
+
+
+# Export -> mongodb
+# ----------
+@export.command
+@schema_option
+@selection_query_option()
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output directory. Default mode writes output.json; --modular writes one file per type.",
+)
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+@click.option(
+    "--modular",
+    "-m",
+    is_flag=True,
+    default=False,
+    help="Write one JSON file per type instead of a single output.json",
+)
+def mongodb(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    modular: bool,
+) -> None:
+    """Generate MongoDB BSON Schema validators from a given GraphQL schema."""
+    annotated_schema, _, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+    assert_correct_schema(annotated_schema.schema)
+
+    result = translate_to_mongodb(annotated_schema)
+    output.mkdir(parents=True, exist_ok=True)
+
+    if modular:
+        for type_name, validator in result.items():
+            file_path = output / f"{type_name}.json"
+            _ = file_path.write_text(json.dumps(validator, indent=2))
+        log.info(f"Wrote {len(result)} validator file(s) to {output}")
+    else:
+        out_file = output / "output.json"
+        _ = out_file.write_text(json.dumps(result, indent=2))
+        log.info(f"Wrote all validators to {out_file}")
 
 
 # Export -> avro
