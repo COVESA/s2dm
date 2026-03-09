@@ -8,7 +8,7 @@ from graphql import GraphQLError, GraphQLSyntaxError
 
 from s2dm import __version__, log
 from s2dm.api.models.base import ErrorResponse
-from s2dm.api.routes import avro, filter, jsonschema, protobuf, query_validate, shacl, validate, vspec
+from s2dm.api.routes import avro, filter, jsonschema, linkml, protobuf, query_validate, shacl, validate, vspec
 
 app = FastAPI(
     title="S2DM Export API",
@@ -108,6 +108,7 @@ def health() -> dict[str, str]:
 app.include_router(shacl.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(vspec.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(jsonschema.router, prefix="/api/v1/export", tags=["export"])
+app.include_router(linkml.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(avro.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(protobuf.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(filter.router, prefix="/api/v1/schema", tags=["schema"])

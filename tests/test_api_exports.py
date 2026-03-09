@@ -8,6 +8,11 @@ from unittest.mock import Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+LINKML_SCHEMA_ID = "https://covesa.global/s2dm"
+LINKML_SCHEMA_NAME = "TestSchema"
+LINKML_DEFAULT_PREFIX = "s2dm"
+LINKML_DEFAULT_PREFIX_URL = "https://covesa.global/s2dm"
+
 
 class TestExporters:
     """Test exporters endpoints."""
@@ -149,6 +154,145 @@ class TestExporters:
         assert response.status_code == 200
         data = response.json()
         assert data["metadata"]["result_format"] == "vspec"
+
+    def test_linkml_export(self, test_client: TestClient) -> None:
+        """Export to LinkML format."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "id": LINKML_SCHEMA_ID,
+                "name": LINKML_SCHEMA_NAME,
+                "default_prefix": LINKML_DEFAULT_PREFIX,
+                "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["metadata"]["result_format"] == "yaml"
+
+    def test_linkml_export_missing_id_returns_400(self, test_client: TestClient) -> None:
+        """LinkML export returns 400 when id is missing."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "name": LINKML_SCHEMA_NAME,
+                "default_prefix": LINKML_DEFAULT_PREFIX,
+                "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "BadRequest"
+
+    def test_linkml_export_missing_name_returns_400(self, test_client: TestClient) -> None:
+        """LinkML export returns 400 when name is missing."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "id": LINKML_SCHEMA_ID,
+                "default_prefix": LINKML_DEFAULT_PREFIX,
+                "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "BadRequest"
+
+    def test_linkml_export_missing_default_prefix_returns_400(self, test_client: TestClient) -> None:
+        """LinkML export returns 400 when default_prefix is missing."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "id": LINKML_SCHEMA_ID,
+                "name": LINKML_SCHEMA_NAME,
+                "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "BadRequest"
+
+    def test_linkml_export_missing_default_prefix_url_returns_400(self, test_client: TestClient) -> None:
+        """LinkML export returns 400 when default_prefix_url is missing."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "id": LINKML_SCHEMA_ID,
+                "name": LINKML_SCHEMA_NAME,
+                "default_prefix": LINKML_DEFAULT_PREFIX,
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "BadRequest"
+
+    def test_linkml_export_invalid_id_returns_400(self, test_client: TestClient) -> None:
+        """LinkML export returns 400 when id is not a valid LinkML URI value."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "id": "foo bar",
+                "name": LINKML_SCHEMA_NAME,
+                "default_prefix": LINKML_DEFAULT_PREFIX,
+                "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "BadRequest"
+        assert "validation_errors" in data["details"]
+        assert any(
+            "valid LinkML URI value" in validation_error["msg"]
+            for validation_error in data["details"]["validation_errors"]
+        )
+
+    def test_linkml_export_invalid_default_prefix_url_returns_400(self, test_client: TestClient) -> None:
+        """LinkML export returns 400 when default_prefix_url is not a valid LinkML URI value."""
+        simple_schema = "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"
+
+        response = test_client.post(
+            "/api/v1/export/linkml",
+            json={
+                "schemas": [{"type": "content", "content": simple_schema}],
+                "id": LINKML_SCHEMA_ID,
+                "name": LINKML_SCHEMA_NAME,
+                "default_prefix": LINKML_DEFAULT_PREFIX,
+                "default_prefix_url": "foo bar",
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "BadRequest"
+        assert "validation_errors" in data["details"]
+        assert any(
+            "valid LinkML URI value" in validation_error["msg"]
+            for validation_error in data["details"]["validation_errors"]
+        )
 
     def test_export_accepts_url_schema_input(self, test_client: TestClient, tmp_path: Path) -> None:
         """Export route accepts URL schema input and processes it."""
@@ -322,6 +466,32 @@ class TestExportersInternalFunctionsCalled:
         schema_check_mock.assert_called_once()
         exporter_mock.assert_called_once()
 
+    def test_linkml_route_calls_internal_functions(self, test_client: TestClient) -> None:
+        """LinkML route calls wrapper, schema check, and exporter."""
+        payload = {
+            "schemas": [{"type": "content", "content": "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"}],
+            "id": LINKML_SCHEMA_ID,
+            "name": LINKML_SCHEMA_NAME,
+            "default_prefix": LINKML_DEFAULT_PREFIX,
+            "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+        }
+
+        with (
+            patch(
+                "s2dm.api.routes.linkml.load_and_process_schema_wrapper",
+                return_value=(SimpleNamespace(schema=object()), object()),
+            ) as wrapper_mock,
+            patch("s2dm.api.routes.linkml.check_correct_schema", return_value=[]) as schema_check_mock,
+            patch("s2dm.api.routes.linkml.translate_to_linkml", return_value="name: test_schema") as exporter_mock,
+        ):
+            response = test_client.post("/api/v1/export/linkml", json=payload)
+
+        assert response.status_code == 200
+        assert response.json()["metadata"]["result_format"] == "yaml"
+        wrapper_mock.assert_called_once()
+        schema_check_mock.assert_called_once()
+        exporter_mock.assert_called_once()
+
 
 class TestExportSchemaValidationGuards:
     """Test that exporters are skipped when schema validation fails."""
@@ -395,6 +565,20 @@ class TestExportSchemaValidationGuards:
                 },
                 "s2dm.api.routes.vspec",
                 "translate_to_vspec",
+            ),
+            (
+                "/api/v1/export/linkml",
+                {
+                    "schemas": [
+                        {"type": "content", "content": "type Query { vehicle: Vehicle } type Vehicle { id: ID! }"}
+                    ],
+                    "id": LINKML_SCHEMA_ID,
+                    "name": LINKML_SCHEMA_NAME,
+                    "default_prefix": LINKML_DEFAULT_PREFIX,
+                    "default_prefix_url": LINKML_DEFAULT_PREFIX_URL,
+                },
+                "s2dm.api.routes.linkml",
+                "translate_to_linkml",
             ),
         ],
     )

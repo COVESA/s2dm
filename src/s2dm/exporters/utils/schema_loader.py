@@ -56,7 +56,7 @@ from s2dm.exporters.utils.directive import (
     get_type_directive_location,
     has_given_directive,
 )
-from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_introspection_type
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
@@ -800,6 +800,16 @@ def build_annotated_schema(
     return AnnotatedSchema(schema=schema, type_metadata=type_metadata, field_metadata=field_metadata)
 
 
+def remove_introspection_types(schema: GraphQLSchema) -> GraphQLSchema:
+    """Remove GraphQL introspection types from the schema type map."""
+    introspection_types = [type_name for type_name in schema.type_map if is_introspection_type(type_name)]
+
+    for type_name in introspection_types:
+        del schema.type_map[type_name]
+
+    return schema
+
+
 def process_schema(
     schema: GraphQLSchema,
     source_map: dict[str, str],
@@ -835,6 +845,8 @@ def process_schema(
 
     if expanded_instances:
         schema, expansion_type_meta, expansion_field_meta = expand_instances_in_schema(schema, naming_config)
+
+    schema = remove_introspection_types(schema)
 
     return build_annotated_schema(schema, source_map, expansion_type_meta, expansion_field_meta)
 

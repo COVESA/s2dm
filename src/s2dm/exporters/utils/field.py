@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from graphql import GraphQLField, is_list_type, is_non_null_type
+from graphql import GraphQLField, GraphQLInputField, is_list_type, is_non_null_type
 
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 
@@ -119,12 +119,12 @@ def get_field_case_extended(field: GraphQLField) -> FieldCase:
         return base_case
 
 
-def get_cardinality(field: GraphQLField) -> Cardinality | None:
+def get_cardinality(field: GraphQLField | GraphQLInputField) -> Cardinality | None:
     """
     Extracts the @cardinality directive arguments from a GraphQL field, if present.
 
     Args:
-        field (GraphQLField): The field to extract cardinality from.
+        field (GraphQLField | GraphQLInputField): The field to extract cardinality from.
 
     Returns:
         Cardinality | None: The Cardinality if the directive is present, otherwise None.
