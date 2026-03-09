@@ -26,6 +26,7 @@ dependencies = [
     "packaging>=24.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
+    "linkml-runtime>=1.10.0",
 ]
 requires-python = ">=3.11"
 
