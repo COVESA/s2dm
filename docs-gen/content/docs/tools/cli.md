@@ -519,6 +519,141 @@ You can call the help for usage reference:
 s2dm export jsonschema --help
 ```
 
+### LinkML
+
+This exporter translates the given GraphQL schema to [LinkML](https://linkml.io/linkml/) schema format (`.yaml`).
+
+#### Key Features
+
+- **Complete GraphQL Type Support**: Handles scalars, objects, input objects, enums, unions, interfaces, and list fields
+- **Selection Query**: Use `--selection-query` to filter exported types and fields
+- **Root Type Filtering**: Use `--root-type` to export one type and its transitive dependencies
+- **Naming Configuration**: Use `--naming-config` to transform names before export
+- **Expanded Instance Tags**: Use `--expanded-instances` to replace instance-tag arrays with singular attributes annotated with resolved instance names
+- **Explicit Schema Metadata**: Requires LinkML schema identity and namespace inputs (`--id`, `--name`, `--default-prefix`, `--default-prefix-url`)
+
+#### Usage
+
+```bash
+s2dm export linkml \
+  --schema schema.graphql \
+  --output schema.yaml \
+  --id https://covesa.global/s2dm \
+  --name VehicleSchema \
+  --default-prefix s2dm \
+  --default-prefix-url https://covesa.global/s2dm
+```
+
+#### Required Options
+
+- `--schema, -s`: GraphQL schema file, directory, or URL (repeatable)
+- `--output, -o`: Output file path (`.yaml`)
+- `--id, -i`: LinkML schema identifier
+- `--name, -n`: LinkML schema name
+- `--default-prefix`: LinkML default prefix label
+- `--default-prefix-url`: Namespace URI for `--default-prefix`
+
+#### Example Transformation
+
+Consider the following GraphQL schema:
+
+```graphql
+type Query {
+  vehicle: Vehicle
+}
+
+enum FuelType {
+  GASOLINE
+  ELECTRIC
+}
+
+type Vehicle {
+  id: ID!
+  make: String!
+  year: Int
+  fuelType: FuelType
+}
+```
+
+The LinkML exporter produces:
+
+```yaml
+name: VehicleSchema
+id: https://covesa.global/s2dm
+imports:
+  - linkml:types
+prefixes:
+  linkml: https://w3id.org/linkml/
+  s2dm: https://covesa.global/s2dm
+default_prefix: s2dm
+default_range: string
+enums:
+  FuelType:
+    permissible_values:
+      ELECTRIC: {}
+      GASOLINE: {}
+classes:
+  Vehicle:
+    attributes:
+      id:
+        range: string
+        required: true
+      make:
+        range: string
+        required: true
+      year:
+        range: integer
+      fuelType:
+        range: FuelType
+```
+
+#### Type Mappings
+
+GraphQL scalar types are mapped to LinkML ranges as follows:
+
+| GraphQL Type | LinkML Range |
+| -------------- | -------------- |
+| `String` | `string` |
+| `Int` | `integer` |
+| `Float` | `float` |
+| `Boolean` | `boolean` |
+| `ID` | `string` |
+| `Int8` | `integer` |
+| `UInt8` | `integer` |
+| `Int16` | `integer` |
+| `UInt16` | `integer` |
+| `UInt32` | `integer` |
+| `Int64` | `integer` |
+| `UInt64` | `integer` |
+
+Additional type behavior:
+
+- **Enums**: Converted to LinkML enums with `permissible_values`
+- **Lists**: Converted to `multivalued: true`
+- **Non-null fields**: Converted to `required: true`
+- **Input objects**: Exported as LinkML classes with attributes
+- **Unions**: Converted to `any_of` ranges
+- **Interfaces**: Converted to abstract classes; implementing types map to `is_a`/`mixins`
+- **Custom scalars**: Exported as LinkML types with `base: string`
+
+The exporter skips GraphQL root/introspection types and intermediate expansion types.
+
+#### Directive Support
+
+S2DM directives are converted to LinkML constraints and annotations:
+
+- `@range(min, max)` on output/input fields -> `minimum_value`, `maximum_value`
+- `@cardinality(min, max)` on output/input fields -> `minimum_cardinality`, `maximum_cardinality`
+- `@noDuplicates` on list fields -> `list_elements_unique: true`
+- List item non-null (`[Type!]` / `[Type!]!`) -> `annotations.s2dm_list_item_required: "true"`
+- `@metadata(...)` on object/interface/input object types and output/input fields -> LinkML annotations (`s2dm_metadata_*` keys)
+
+You can call the help for usage reference:
+
+```bash
+s2dm export linkml --help
+```
+
 ### Protocol Buffers (Protobuf)
 
 This exporter translates the given GraphQL schema to [Protocol Buffers](https://protobuf.dev/) (`.proto`) format.
@@ -1688,6 +1823,7 @@ Commands that support `--naming-config`:
 - `check constraints` - naming validation
 - `compose` - naming transformation
 - `export jsonschema` - naming transformation
+- `export linkml` - naming transformation
 - `export protobuf` - naming transformation
 - `export shacl` - naming transformation
 - `export vspec` - naming transformation

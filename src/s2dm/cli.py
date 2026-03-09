@@ -22,6 +22,7 @@ from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.linkml import translate_to_linkml
 from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
@@ -50,7 +51,7 @@ from s2dm.registry.search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchServ
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.diff_parser import DiffChange
 from s2dm.tools.graphql_inspector import GraphQLInspector, requires_graphql_inspector
-from s2dm.tools.validators import validate_language_tag
+from s2dm.tools.validators import validate_language_tag, validate_linkml_uri
 from s2dm.units.sync import (
     UNITS_README_FILENAME,
     UNITS_README_VERSION_PATTERN,
@@ -752,6 +753,65 @@ def vspec(
 
     result = translate_to_vspec(annotated_schema)
     output.parent.mkdir(parents=True, exist_ok=True)
+    _ = output.write_text(result)
+
+
+# Export -> linkml
+# ----------
+@export.command
+@schema_option
+@selection_query_option()
+@output_option
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+@click.option(
+    "--id",
+    "-i",
+    "schema_id",
+    type=str,
+    callback=validate_linkml_uri,
+    required=True,
+    help="LinkML schema id",
+)
+@click.option("--name", "-n", "schema_name", type=str, required=True, help="LinkML schema name")
+@click.option("--default-prefix", type=str, required=True, help="LinkML default prefix")
+@click.option(
+    "--default-prefix-url",
+    type=str,
+    callback=validate_linkml_uri,
+    required=True,
+    help="LinkML default prefix URL",
+)
+def linkml(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    schema_id: str,
+    schema_name: str,
+    default_prefix: str,
+    default_prefix_url: str,
+) -> None:
+    """Generate LinkML schema from a given GraphQL schema."""
+    annotated_schema, _, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+    assert_correct_schema(annotated_schema.schema)
+
+    result = translate_to_linkml(
+        annotated_schema,
+        schema_id,
+        schema_name,
+        default_prefix,
+        default_prefix_url,
+    )
     _ = output.write_text(result)
 
 
