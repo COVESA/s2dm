@@ -1,0 +1,147 @@
+/* biome-ignore-all lint/complexity/noImportantStyles: GraphiQL styles require strong overrides to beat library defaults. */
+.graphiql-container:not(.monaco-editor) {
+	color: var(--color-foreground);
+}
+
+.dark .graphiql-container:not(.monaco-editor),
+.dark .graphiql-dialog,
+.dark .graphiql-dialog-overlay,
+.dark .graphiql-tooltip,
+.dark [data-radix-popper-content-wrapper] {
+	--color-primary: 210, 90%, 70%;
+	--color-secondary: 240, 5%, 25%;
+	--color-neutral: 0, 0%, 65%;
+	--color-base: 240, 5%, 14%;
+}
+
+.graphiql-container .graphiql-doc-explorer-search-type,
+.graphiql-container .graphiql-doc-explorer-search-field,
+.graphiql-container .graphiql-doc-explorer-search-argument {
+	color: hsl(var(--color-primary));
+}
+
+.graphiql-container {
+	--color-primary: var(--primary);
+	--color-secondary: var(--muted-foreground);
+	--color-warning: var(--chart-1);
+	font-family: inherit !important;
+}
+
+.graphiql-doc-explorer svg {
+	display: inline-block !important;
+	vertical-align: middle !important;
+	margin-right: 0.5rem !important;
+}
+
+/* .graphiql-doc-explorer-title,
+.graphiql-doc-explorer-item {
+  display: flex !important;
+  align-items: center !important;
+} */
+
+/* .graphiql-doc-explorer-search {
+  display: block !important;
+} */
+
+/* .graphiql-doc-explorer-search-input {
+  display: flex !important;
+  align-items: center !important;
+} */
+
+.graphiql-doc-explorer-search [role="option"] {
+	color: var(--chart-1) !important;
+	cursor: pointer !important;
+}
+
+.graphiql-doc-explorer-search [role="option"]:hover {
+	background-color: var(--muted) !important;
+}
+
+.graphiql-doc-explorer-search [role="listbox"] {
+	max-height: 400px !important;
+	overflow-y: auto !important;
+}
+
+.graphiql-doc-explorer {
+	padding: 1.5rem !important;
+	height: 100% !important;
+	display: flex !important;
+	flex-direction: column !important;
+	overflow-y: visible !important;
+}
+
+.graphiql-doc-explorer-content {
+	flex: 1 1 0 !important;
+	min-height: 0 !important;
+	overflow-y: auto !important;
+	display: block !important;
+}
+
+.graphiql-doc-explorer-title {
+	font-weight: 700 !important;
+	padding-bottom: 1rem !important;
+	border-bottom: 1px solid hsl(var(--border)) !important;
+	margin-bottom: 1.5rem !important;
+	visibility: hidden !important;
+	font-size: 1.5rem !important;
+}
+
+.graphiql-doc-explorer-title::before {
+	content: "Explorer" !important;
+	visibility: visible !important;
+}
+
+/* .graphiql-doc-explorer-title * {
+  visibility: visible !important;
+} */
+
+.graphiql-doc-explorer-section-title {
+	color: hsl(var(--foreground)) !important;
+	font-weight: 600 !important;
+	font-size: 0.875rem !important;
+	padding: 1rem 0 0.75rem 0 !important;
+	margin-top: 1.5rem !important;
+}
+
+/* .graphiql-doc-explorer-section-title:first-of-type {
+  margin-top: 0 !important;
+} */
+
+.graphiql-markdown-description {
+	color: hsl(var(--muted-foreground)) !important;
+	font-size: 0.875rem !important;
+	line-height: 1.6 !important;
+	margin: 0.75rem 0 1.5rem 0 !important;
+}
+
+.graphiql-doc-explorer-item {
+	padding: 0.5rem 0 !important;
+	margin: 0.25rem 0 !important;
+}
+
+.graphiql-doc-explorer-root-type {
+	color: hsl(var(--muted-foreground)) !important;
+	font-weight: 400 !important;
+}
+
+.graphiql-doc-explorer::-webkit-scrollbar {
+	width: 0.5rem !important;
+}
+
+.graphiql-doc-explorer::-webkit-scrollbar-track {
+	background: transparent !important;
+}
+
+.graphiql-doc-explorer::-webkit-scrollbar-thumb {
+	background: hsl(var(--muted)) !important;
+	border-radius: 0.25rem !important;
+}
+
+.graphiql-doc-explorer::-webkit-scrollbar-thumb:hover {
+	background: hsl(var(--muted-foreground) / 0.3) !important;
+}
+
+.graphiql-editor,
+.graphiql-query-editor {
+	background-color: var(--muted) !important;
+}

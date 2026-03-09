@@ -1,14 +1,21 @@
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
+from click.exceptions import MissingParameter
 from click.testing import CliRunner
+from linkml_runtime.loaders import yaml_loader
 
 from s2dm.cli import cli
 from s2dm.tools.string import normalize_whitespace
 from tests.conftest import TestSchemaData as TSD
+
+LINKML_SCHEMA_ID = "https://covesa.global/s2dm"
+LINKML_SCHEMA_NAME = "TestSchema"
+LINKML_DEFAULT_PREFIX = "s2dm"
+LINKML_DEFAULT_PREFIX_URL = "https://covesa.global/s2dm"
 
 
 @pytest.fixture(scope="session")
@@ -143,6 +150,257 @@ def test_export_jsonschema(runner: CliRunner, tmp_outputs: Path, spec_directory:
 
     assert '"Vehicle"' in content
     assert '"Vehicle_ADAS_ObstacleDetection"' in content
+
+
+def test_export_linkml(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    out = tmp_outputs / "linkml.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        color=False,
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    schema = cast(dict[str, Any], yaml_loader.load_as_dict(str(out)))
+
+    assert schema["id"] == LINKML_SCHEMA_ID
+    assert schema["name"] == LINKML_SCHEMA_NAME
+    assert "classes" in schema
+    assert "enums" in schema
+    assert "Vehicle" in schema["classes"]
+    assert "Vehicle_ADAS_ObstacleDetection" in schema["classes"]
+
+
+def test_export_linkml_missing_id_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_id.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "schema_id"
+    assert result.exception.format_message() == "Missing option '--id' / '-i'."
+
+
+def test_export_linkml_missing_name_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_name.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "schema_name"
+    assert result.exception.format_message() == "Missing option '--name' / '-n'."
+
+
+def test_export_linkml_missing_default_prefix_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_default_prefix.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "default_prefix"
+    assert result.exception.format_message() == "Missing option '--default-prefix'."
+
+
+def test_export_linkml_missing_default_prefix_url_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_default_prefix_url.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "default_prefix_url"
+    assert result.exception.format_message() == "Missing option '--default-prefix-url'."
+
+
+def test_export_linkml_invalid_id_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_invalid_id.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            "foo bar",
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "not a valid LinkML" in result.output
+    assert "URI value" in result.output
+
+
+def test_export_linkml_invalid_default_prefix_url_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_invalid_default_prefix_url.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            "foo bar",
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "not a valid LinkML" in result.output
+    assert "URI value" in result.output
 
 
 def test_export_protobuf(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
