@@ -1,0 +1,46 @@
+"""A type covering all scalar types, nullable/non-null, enums, nested types, arrays, and GeoJSON."""
+type TestTypeA {
+  testFieldId: ID
+  testFieldIdRequired: ID!
+  testFieldString: String
+  testFieldStringRequired: String!
+  testFieldInt: Int
+  testFieldIntRequired: Int!
+  testFieldFloat: Float
+  testFieldBool: Boolean
+  testFieldInt8: Int8
+  testFieldInt64: Int64
+  testFieldEnum: AnEnumA
+  testFieldEnumRequired: AnEnumA!
+  testFieldNested: TestTypeB
+  testFieldNestedRequired: TestTypeB!
+  testFieldList: [TestTypeB]
+  testFieldListRequired: [TestTypeB]!
+  testFieldGeoPoint: GeoJSON @geoType(shape: POINT)
+  testFieldGeoPointRequired: GeoJSON! @geoType(shape: POINT)
+  testFieldGeoPolygon: GeoJSON @geoType(shape: POLYGON)
+  testFieldGeoNoShape: GeoJSON
+}
+
+"""A type with S2DM directive annotations."""
+type TestTypeB {
+  testFieldRange: Float @range(min: 0.0, max: 100.0)
+  testFieldNoDups: [String] @noDuplicates
+  testFieldCardinality: [String] @cardinality(min: 1, max: 5)
+  """A descriptive comment"""
+  testFieldMeta: String
+  testFieldEnumB: AnEnumB
+}
+
+"""A first test enum."""
+enum AnEnumA {
+  VALUE_1
+  VALUE_2
+  VALUE_3
+}
+
+"""A second test enum."""
+enum AnEnumB {
+  OPTION_X
+  OPTION_Y
+}

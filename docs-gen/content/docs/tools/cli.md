@@ -362,6 +362,304 @@ s2dm compose -s schema.graphql --expanded-instances -o output.graphql
 
 ## Export Commands
 
+### JSON Tree
+
+The `export json` command translates a GraphQL schema into a **hierarchical JSON tree** — a nested structure of branches and leaf signals. It is the primary S2DM output format and serves as the canonical human-readable representation of your domain model.
+
+#### Key Features
+
+- **Branch / leaf hierarchy**: Object types become branch nodes with a `children` map; scalar and enum fields become leaf nodes
+- **Schema-intrinsic fields by default**: Only information encoded in the GraphQL schema itself is written — `description`, `datatype`, `min`, `max`, `unit`, `deprecated`
+- **Raw datatype names**: Scalar and enum names are used as-is (e.g. `Float`, `Boolean`, `UInt8`, `GearPosition`)
+- **Instance dimensions from `@instanceTag`**: When a field references an `@instanceTag` type, it is excluded as a child and its enum dimensions are written as an `instances` array on the parent branch instead
+- **VSS metadata overlay** (`--vspec-meta`): Activates an optional YAML-based overlay that adds `type`, `comment`, `allowed`, `instances`, and other VSS-compatible keys — keyed by fully-qualified signal name (FQN)
+- **VSS struct type handling** (`--vspec-meta`): Fields referencing `@vspec(element: STRUCT)` types are emitted as leaf nodes whose `datatype` is the struct's FQN, not expanded branches. Struct type definitions are rendered in a separate top-level `ComplexDataTypes` section built from the YAML
+- **Root Type Filtering**: Use `--root-type` to export only one branch and its descendants
+- **Selection Query**: Use `--selection-query` to narrow the export to a specific set of fields
+- **Naming Configuration**: Use `--naming-config` to rename types and fields during export
+
+#### Usage
+
+```bash
+s2dm export json -s <schema_path> -o <output_file>
+```
+
+#### Options
+
+- `-s, --schema PATH`: GraphQL schema file or directory (required, can be specified multiple times)
+- `-o, --output FILE`: Output JSON file path (required)
+- `-r, --root-type TEXT`: Export only this type and its descendants (optional)
+- `-q, --selection-query PATH`: GraphQL query file to filter exported fields (optional)
+- `-n, --naming-config PATH`: YAML naming configuration for transforming names during export (optional)
+- `-e, --expanded-instances`: Unfold `@instanceTag` arrays into nested types before exporting (optional)
+- `--vspec-meta PATH`: YAML file with FQN-indexed VSS metadata overlay (optional — activates vspec-meta mode)
+
+#### Default Mode
+
+By default, only schema-intrinsic information is included. No `@vspec` annotations are processed and no `"type"` key is added to branch nodes.
+
+Given this schema:
+
+```graphql
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+directive @instanceTag on OBJECT
+
+enum SideEnum { LEFT  RIGHT }
+
+type MirrorTag @instanceTag {
+  side: SideEnum
+}
+
+type Mirror {
+  """Mirror pan as a percent."""
+  pan: Float @range(min: -100, max: 100)
+}
+
+type Body {
+  """All mirrors."""
+  mirrors: Mirror
+  instanceTag: MirrorTag
+}
+
+type Vehicle {
+  body: Body
+}
+```
+
+Running:
+
+```bash
+s2dm export json -s schema.graphql -o output.json -r Vehicle
+```
+
+Produces:
+
+```json
+{
+  "Vehicle": {
+    "children": {
+      "body": {
+        "children": {
+          "mirrors": {
+            "children": {
+              "pan": {
+                "description": "Mirror pan as a percent.",
+                "datatype": "Float",
+                "min": -100,
+                "max": 100
+              }
+            },
+            "description": "All mirrors.",
+            "instances": [
+              ["LEFT", "RIGHT"]
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Key behaviours to note:
+
+- `instanceTag` does **not** appear as a child of `mirrors`
+- Instead, the enum values of `SideEnum` are extracted and written as `"instances"` on `mirrors`
+- Multi-dimensional tags produce one list per enum field (e.g. a `row` + `side` tag produces `[["ROW1","ROW2"], ["LEFT","RIGHT"]]`)
+
+#### VSS Metadata Overlay (`--vspec-meta`)
+
+Passing `--vspec-meta` activates vspec-meta mode. A flat YAML file keyed by dot-separated FQN is merged on top of each matching node. This enables producing VSS-compatible output without encoding VSS-specific information directly in the GraphQL schema.
+
+```bash
+s2dm export json -s schema.graphql -o output.json -r Vehicle --vspec-meta vspec_lookup.yaml
+```
+
+The YAML file maps FQNs to dictionaries of keys to overlay:
+
+```yaml
+Vehicle.Body.Mirrors:
+  type: branch
+  instances: ["DriverSide", "PassengerSide"]
+  comment: Inherited from VSS 5.0
+
+Vehicle.Body.Mirrors.Pan:
+  type: sensor
+  unit: percent
+```
+
+In vspec-meta mode the following additional behaviour is enabled:
+
+- `"type"` is added to every branch node — derived from `@vspec(element: ...)` on the GraphQL type itself (e.g. `branch`, `struct`), falling back to `"branch"` if absent. The YAML overlay can still override it.
+- Fields with `@vspec(fqn: ...)` have their output key renamed to the last segment of the FQN
+- Enum fields annotated with `@vspec` gain an `"allowed"` list from the enum values
+- All YAML keys for a matching FQN entry are merged into the node, with the YAML taking precedence
+- Fields referencing a `@vspec(element: STRUCT)` type are exported as **leaf nodes** whose `datatype` is the struct's FQN (e.g. `VehicleDataTypes.TestBranch1.NestedStruct`) rather than expanded branch nodes
+- If the YAML contains a `ComplexDataTypes` key, its FQN-indexed entries are assembled into a nested `ComplexDataTypes` section in the output (see [VSS Struct Types](#vss-struct-types-vspec-meta-only) below)
+
+#### Output Structure
+
+Both modes share the same structural convention:
+
+```json
+{
+  "<RootTypeName>": {
+    "description": "...",
+    "children": {
+      "<fieldName>": {
+        "description": "...",
+        "datatype": "<ScalarOrEnumName>",
+        "unit": "...",
+        "min": 0,
+        "max": 100,
+        "deprecated": "..."
+      },
+      "<branchFieldName>": {
+        "children": { ... },
+        "description": "...",
+        "instances": [["VAL1", "VAL2"], ...]
+      }
+    }
+  }
+}
+```
+
+Leaf node keys (written when the corresponding information is present in the schema):
+
+| Key | Source |
+|-----|--------|
+| `description` | GraphQL field docstring |
+| `datatype` | Scalar or enum type name (`Float`, `UInt8`, `GearPosition`, `String[]`, …) |
+| `min` | `@range(min: …)` directive |
+| `max` | `@range(max: …)` directive |
+| `unit` | Field argument `unit` default value |
+| `deprecated` | GraphQL `@deprecated` reason |
+
+Branch node keys:
+
+| Key | Source |
+|-----|--------|
+| `children` | Object type fields |
+| `description` | GraphQL field docstring |
+| `instances` | Enum dimensions of the `@instanceTag` type (default mode) or YAML overlay (vspec-meta mode) |
+| `type` | vspec-meta mode only — from `@vspec(element: ...)` on the type (e.g. `branch`, `struct`), or YAML overlay |
+| `comment` | vspec-meta mode only — from YAML entry |
+
+#### Examples
+
+#### VSS Struct Types (vspec-meta only)
+
+When a GraphQL schema contains `@vspec(element: STRUCT)` types (representing VSS struct datatypes), vspec-meta mode handles them differently from regular branch types:
+
+- **Fields referencing a struct type become leaf nodes** — the field is not expanded into a branch; instead it gets a `datatype` equal to the struct's FQN as recorded in `@vspec(fqn: ...)` on the struct type. A `[]` suffix is appended for list fields.
+- **Struct types are excluded from the main export** — they do not appear as top-level keys alongside signal branches.
+- **A `ComplexDataTypes` section is built from the YAML** — when the `--vspec-meta` YAML contains a `ComplexDataTypes` key, its FQN-indexed entries are assembled into a nested hierarchy and added to the output as `result["ComplexDataTypes"]`.
+
+Example YAML with a `ComplexDataTypes` section:
+
+```yaml
+A:
+  description: Branch A.
+  type: branch
+
+A.NestedStructSensor:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+  description: A rich sensor with user-defined data type.
+  type: sensor
+
+ComplexDataTypes:
+  VehicleDataTypes:
+    description: Top-level branch for vehicle data types.
+    type: branch
+  VehicleDataTypes.TestBranch1:
+    description: Test branch with structs and properties definitions
+    type: branch
+  VehicleDataTypes.TestBranch1.NestedStruct:
+    description: A struct - Nested
+    type: struct
+  VehicleDataTypes.TestBranch1.NestedStruct.x:
+    datatype: double
+    description: x property
+    min: -10
+    type: property
+```
+
+Produces:
+
+```json
+{
+  "A": {
+    "children": {
+      "NestedStructSensor": {
+        "description": "A rich sensor with user-defined data type.",
+        "datatype": "VehicleDataTypes.TestBranch1.NestedStruct",
+        "type": "sensor"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  },
+  "ComplexDataTypes": {
+    "VehicleDataTypes": {
+      "description": "Top-level branch for vehicle data types.",
+      "type": "branch",
+      "children": {
+        "TestBranch1": {
+          "description": "Test branch with structs and properties definitions",
+          "type": "branch",
+          "children": {
+            "NestedStruct": {
+              "description": "A struct - Nested",
+              "type": "struct",
+              "children": {
+                "x": {
+                  "datatype": "double",
+                  "description": "x property",
+                  "min": -10,
+                  "type": "property"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+> **Default mode (no `--vspec-meta`)**: `@vspec(element: STRUCT)` types are treated as plain branches and expanded inline. Fields referencing them are expanded as nested `children` rather than leaf nodes with a struct FQN datatype. Field names reflect the camelCase names in the GraphQL schema rather than the original VSS snake_case names.
+
+#### Examples
+
+##### Export a Root Type
+
+```bash
+s2dm export json -s schema.graphql -o vehicle.json -r Vehicle
+```
+
+##### Export with VSS Metadata Overlay
+
+```bash
+s2dm export json \
+  -s schema.graphql \
+  -o vehicle_vss.json \
+  -r Vehicle \
+  --vspec-meta vspec_lookup.yaml
+```
+
+##### Filter to a Subset of Fields
+
+```bash
+s2dm export json -s schema.graphql -o adas.json -q adas_query.graphql
+```
+
+For help:
+
+```bash
+s2dm export json --help
+```
+
 ### JSON Schema
 
 This exporter translates the given GraphQL schema to [JSON Schema](https://json-schema.org/) format.
