@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from click.exceptions import MissingParameter
 from click.testing import CliRunner
 from linkml_runtime.loaders import yaml_loader
 
@@ -223,11 +224,13 @@ def test_export_linkml_missing_id_fails(
             "--default-prefix-url",
             LINKML_DEFAULT_PREFIX_URL,
         ],
-        color=False,
+        standalone_mode=False,
     )
 
-    assert result.exit_code == 2
-    assert "Missing option '--id' / '-i'" in result.output
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "schema_id"
+    assert result.exception.format_message() == "Missing option '--id' / '-i'."
 
 
 def test_export_linkml_missing_name_fails(
@@ -256,11 +259,13 @@ def test_export_linkml_missing_name_fails(
             "--default-prefix-url",
             LINKML_DEFAULT_PREFIX_URL,
         ],
-        color=False,
+        standalone_mode=False,
     )
 
-    assert result.exit_code == 2
-    assert "Missing option '--name' / '-n'" in result.output
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "schema_name"
+    assert result.exception.format_message() == "Missing option '--name' / '-n'."
 
 
 def test_export_linkml_missing_default_prefix_fails(
@@ -289,10 +294,13 @@ def test_export_linkml_missing_default_prefix_fails(
             "--default-prefix-url",
             LINKML_DEFAULT_PREFIX_URL,
         ],
+        standalone_mode=False,
     )
 
-    assert result.exit_code == 2
-    assert "Missing option '--default-prefix'" in result.output
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "default_prefix"
+    assert result.exception.format_message() == "Missing option '--default-prefix'."
 
 
 def test_export_linkml_missing_default_prefix_url_fails(
@@ -321,11 +329,13 @@ def test_export_linkml_missing_default_prefix_url_fails(
             "--default-prefix",
             LINKML_DEFAULT_PREFIX,
         ],
-        color=False,
+        standalone_mode=False,
     )
 
-    assert result.exit_code == 2
-    assert "Missing option '--default-prefix-url'" in result.output
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "default_prefix_url"
+    assert result.exception.format_message() == "Missing option '--default-prefix-url'."
 
 
 def test_export_linkml_invalid_id_fails(
