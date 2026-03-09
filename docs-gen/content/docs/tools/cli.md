@@ -1540,6 +1540,150 @@ s2dm export avro schema --help
 s2dm export avro protocol --help
 ```
 
+### MongoDB BSON Validators
+
+This exporter translates the given GraphQL schema into [MongoDB BSON validator schemas](https://www.mongodb.com/docs/manual/reference/operator/query/jsonSchema/), one schema per GraphQL object type. The output is designed to be used directly as a collection validator in MongoDB.
+
+#### Key Features
+
+- **BSON-native types**: Uses `bsonType` instead of `type`, with BSON-specific values like `objectId`, `int`, `long`, `double`, and `bool`
+- **No `$ref`**: All nested types are fully inlined — MongoDB's `$jsonSchema` does not support `$ref`
+- **Enum inlining**: Enum types are inlined at the field level as `{ bsonType: "string", enum: [...] }` rather than emitted as top-level entries
+- **Nullability**: Nullable fields use `bsonType: ["<type>", "null"]`; non-null fields appear in the `required` array
+- **Directive support**: Converts S2DM directives like `@cardinality`, `@range`, `@noDuplicates`, and `@metadata` to supported MongoDB constraints
+- **GeoJSON support**: Use the `GeoJSON` scalar with `@geoType` to emit precise BSON geometry validators (requires passing `tests/data/spec/geojson.graphql` via `-s`)
+- **Two output modes**: Default mode writes all types to a single `output.json`; `--modular` writes one file per type
+
+#### Usage
+
+```bash
+# All types in one file
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./out
+
+# One file per type
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./out \
+  --modular
+```
+
+#### Example Transformation
+
+Given this GraphQL schema:
+
+```graphql
+type ChargingStation {
+  id:           ID!
+  name:         String!
+  maxPowerKw:   Float!
+  connectors:   [ConnectorKind!]!
+  address:      Address
+}
+
+type Address {
+  street: String
+  city:   String
+}
+
+enum ConnectorKind { TYPE_A TYPE_B TYPE_C }
+```
+
+The MongoDB exporter produces (in `--modular` mode):
+
+`ChargingStation.json`:
+
+```json
+{
+  "bsonType": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id":         { "bsonType": "objectId" },
+    "name":       { "bsonType": "string" },
+    "maxPowerKw": { "bsonType": "double" },
+    "connectors": {
+      "bsonType": "array",
+      "items": { "bsonType": "string", "enum": ["TYPE_A", "TYPE_B", "TYPE_C"] }
+    },
+    "address": {
+      "bsonType": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "street": { "bsonType": ["string", "null"] },
+        "city":   { "bsonType": ["string", "null"] }
+      }
+    }
+  },
+  "required": ["id", "name", "maxPowerKw", "connectors"]
+}
+```
+
+Note how `Address` is inlined (no `$ref`), `ConnectorKind` is inlined as an enum, nullable fields have `bsonType: ["...", "null"]` and are absent from `required`.
+
+#### GeoJSON Support
+
+To validate GeoJSON geometry fields with precise shape constraints, include the GeoJSON spec file and annotate fields with `@geoType`:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema tests/data/spec/geojson.graphql \
+  --schema my_schema.graphql \
+  --output ./out --modular
+```
+
+```graphql
+type ChargingStation {
+  location: GeoJSON! @geoType(shape: POINT)
+}
+```
+
+Produces:
+
+```json
+"location": {
+  "bsonType": "object",
+  "required": ["type", "coordinates"],
+  "properties": {
+    "type":        { "bsonType": "string", "enum": ["Point"] },
+    "coordinates": { "bsonType": "array", "items": { "bsonType": "double" }, "minItems": 2, "maxItems": 2 }
+  }
+}
+```
+
+Supported shapes: `POINT`, `MULTIPOINT`, `LINESTRING`, `MULTILINESTRING`, `POLYGON`, `MULTIPOLYGON`. A `GeoJSON` field without `@geoType` emits a permissive object requiring only `type` and `coordinates`.
+
+#### Directive Support
+
+| S2DM directive | MongoDB BSON output |
+|---|---|
+| `@range(min: 0, max: 100)` | `minimum: 0, maximum: 100` on the field (or inside `items` for list fields) |
+| `@noDuplicates` | `uniqueItems: true` |
+| `@cardinality(min: 1, max: 5)` | `minItems: 1, maxItems: 5` |
+| `@instanceTag` | type **and** its reference field on parent types are both excluded — see note below |
+
+GraphQL field and type [descriptions (docstrings)](https://spec.graphql.org/October2021/#sec-Descriptions) are emitted directly as `"description"` in the BSON output — no directive needed:
+
+```graphql
+type ChargingStation {
+  """Geographical location of the station"""
+  location: GeoJSON! @geoType(shape: POINT)
+}
+```
+
+> **`@instanceTag` in this exporter:** without `--expanded-instances`, the exporter has no way to represent instance tag structures in MongoDB. Both the `@instanceTag` type itself *and* the `instanceTag` field on parent types are silently dropped from the output. If you need instance variants in your MongoDB schema, run with `--expanded-instances` so the schema loader unfolds the tag structure into concrete fields before the exporter runs.
+
+To use the generated schemas as collection validators:
+
+```js
+db.createCollection("ChargingStation", {
+  validator: { $jsonSchema: <contents of ChargingStation.json> }
+})
+```
+
 ## Playground Commands
 
 The playground commands initialize and run the local S2DM GUI playground.
