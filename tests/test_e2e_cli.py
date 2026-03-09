@@ -177,6 +177,7 @@ def test_export_linkml(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
             "--default-prefix-url",
             LINKML_DEFAULT_PREFIX_URL,
         ],
+        color=False,
     )
     assert result.exit_code == 0, result.output
     assert out.exists()
@@ -217,6 +218,7 @@ def test_export_linkml_missing_id_fails(
             "--default-prefix-url",
             LINKML_DEFAULT_PREFIX_URL,
         ],
+        color=False,
     )
 
     assert result.exit_code == 2
@@ -249,6 +251,7 @@ def test_export_linkml_missing_name_fails(
             "--default-prefix-url",
             LINKML_DEFAULT_PREFIX_URL,
         ],
+        color=False,
     )
 
     assert result.exit_code == 2
@@ -313,6 +316,7 @@ def test_export_linkml_missing_default_prefix_url_fails(
             "--default-prefix",
             LINKML_DEFAULT_PREFIX,
         ],
+        color=False,
     )
 
     assert result.exit_code == 2
@@ -720,12 +724,12 @@ def test_registry_export_concept_uri(
 
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
-    assert contains_value(
-        data, "ns:Vehicle.averageSpeed"
-    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
-    assert contains_value(
-        data, "ns:Person.name"
-    ), 'Expected value "ns:Person.name" not found in the concept URI output.'
+    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
+        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    )
+    assert contains_value(data, "ns:Person.name"), (
+        'Expected value "ns:Person.name" not found in the concept URI output.'
+    )
 
 
 def test_registry_export_id(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
@@ -756,9 +760,9 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path, spec_directory
         data = json.load(f)
     # New format has 'concepts' key with concept names as keys
     concepts = data["concepts"]
-    assert any(
-        "Vehicle.averageSpeed" in k for k in concepts
-    ), "Expected 'Vehicle.averageSpeed' not found in the output."
+    assert any("Vehicle.averageSpeed" in k for k in concepts), (
+        "Expected 'Vehicle.averageSpeed' not found in the output."
+    )
     assert any("Person.name" in k for k in concepts), "Expected 'Person.name' not found in the output."
 
 
@@ -818,9 +822,9 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
         'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id'
         + f'"{ExpectedIds.VEHICLE_AVG_SPEED_ID}" not found.'
     )
-    assert (
-        found_person
-    ), f'Expected entry with "@id": "ns:Person.height" and specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" not found.'
+    assert found_person, (
+        f'Expected entry with "@id": "ns:Person.height" and specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" not found.'
+    )
 
 
 def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
@@ -936,18 +940,18 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: P
                     found_person_new = True
         if found_vehicle_old and found_vehicle_new and found_person_old and found_person_new:
             break
-    assert (
-        found_vehicle_old
-    ), f'Expected old specHistory id "{ExpectedIds.VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
-    assert (
-        found_vehicle_new
-    ), f'Expected new specHistory id "{ExpectedIds.NEW_VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
-    assert (
-        found_person_old
-    ), f'Expected old specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" for Person.height not found.'
-    assert (
-        found_person_new
-    ), f'Expected new specHistory id "{ExpectedIds.NEW_PERSON_HEIGHT_ID}" for Person.height not found.'
+    assert found_vehicle_old, (
+        f'Expected old specHistory id "{ExpectedIds.VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
+    )
+    assert found_vehicle_new, (
+        f'Expected new specHistory id "{ExpectedIds.NEW_VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
+    )
+    assert found_person_old, (
+        f'Expected old specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" for Person.height not found.'
+    )
+    assert found_person_new, (
+        f'Expected new specHistory id "{ExpectedIds.NEW_PERSON_HEIGHT_ID}" for Person.height not found.'
+    )
 
 
 @pytest.mark.parametrize(
