@@ -9,8 +9,7 @@ GitHub Action for automated artifact generation and publishing workflow through 
 - GraphQL schema composition
 - JSON schema generation
 - SHACL generation
-- SKOS RDF generation
-- Schema RDF generation (sorted n-triples and Turtle)
+- RDF export (SKOS concepts + ontology data graph)
 - VSpec generation
 - Automated release creation
 
@@ -76,12 +75,9 @@ jobs:
           shacl-shapes-prefix: 'sh'
           shacl-model-namespace: 'https://example.com/model/'
           shacl-model-prefix: 'model'
-          skos-namespace: 'https://example.com/skos/'
-          skos-prefix: 'skos'
-          skos-language: 'en'
-          schema-rdf-namespace: 'https://example.com/ontology#'
-          schema-rdf-prefix: 'ns'
-          schema-rdf-language: 'en'
+          rdf-namespace: 'https://example.com/ontology#'
+          rdf-prefix: 'ns'
+          rdf-language: 'en'
 ```
 
 ## Inputs
@@ -99,12 +95,9 @@ jobs:
 | `shacl-shapes-prefix` | SHACL shapes prefix | No | `''` |
 | `shacl-model-namespace` | SHACL model namespace | No | `''` |
 | `shacl-model-prefix` | SHACL model prefix | No | `''` |
-| `skos-namespace` | SKOS namespace | No | `''` |
-| `skos-prefix` | SKOS prefix | No | `''` |
-| `skos-language` | SKOS language | No | `''` |
-| `schema-rdf-namespace` | Namespace URI for schema-rdf (e.g. `https://example.com/ontology#`). If provided, generates schema.nt and schema.ttl. | No | `''` |
-| `schema-rdf-prefix` | Prefix for schema-rdf concept URIs | No | `ns` |
-| `schema-rdf-language` | BCP 47 language tag for schema-rdf prefLabels | No | `en` |
+| `rdf-namespace` | Namespace URI for RDF export (e.g. `https://example.com/ontology#`). When provided, generates SKOS and data graph artifacts. | No | `''` |
+| `rdf-prefix` | Prefix for RDF export concept URIs | No | `ns` |
+| `rdf-language` | BCP 47 language tag for RDF export prefLabels | No | `en` |
 
 ## Outputs
 
@@ -188,7 +181,7 @@ Your repository must have:
 
 The action automatically manages variant-based IDs for schema concepts:
 
-- **Variant IDs**: Each concept gets a semantic version (e.g., `Vehicle.speed/v1.0`)
+- **Variant IDs**: Each concept gets a semantic version (e.g., `Vehicle.speed/v1.0`). When a namespace prefix is configured, IDs include the prefix (e.g., `ns:Vehicle.speed/v1.0`).
 - **Change Detection**: GraphQL Inspector detects schema changes and triggers version increments
 - **Breaking vs Non-Breaking**: Breaking changes increment major version (v1.0 → v2.0), non-breaking changes increment minor (v1.0 → v1.1)
 - **History Tracking**: All concept definitions are saved to a history directory for traceability
@@ -200,6 +193,8 @@ Each release includes:
 - `variant_ids_<tag>.json` - Current variant ID mappings
 - `concept_uris_<tag>.json` - Concept URI definitions
 - `history/` - Directory with historical concept definitions
+- `rdf/skos.nt`, `rdf/skos.ttl` - SKOS concepts, collections, and labels
+- `rdf/data_graph.nt`, `rdf/data_graph.ttl` - s2dm ontology instantiation
 
 ## How It Works
 
@@ -210,14 +205,13 @@ Each release includes:
 4. **Registry Management**:
    - For initial release: Initializes registry with variant IDs starting at v1.0
    - For updates: Increments variant IDs based on detected changes (major for breaking, minor for non-breaking)
-5. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, SKOS, schema RDF, VSpec)
+5. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, RDF, VSpec)
 6. **Version Bump**: Updates version using bump-my-version and creates git tag
 7. **Release Creation**: Creates GitHub release with all generated artifacts including:
    - Composed GraphQL schema
    - JSON Schema
    - SHACL shapes
-   - SKOS RDF
-   - Schema RDF (schema.nt, schema.ttl) when `schema-rdf-namespace` is provided
+   - RDF export (SKOS + data graph in .nt and .ttl formats) when `rdf-namespace` is provided
    - VSpec
    - Registry files (spec_history, variant_ids, concept_uris)
    - History directory with concept definitions
