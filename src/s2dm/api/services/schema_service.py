@@ -4,7 +4,7 @@ from pathlib import Path
 
 from graphql import DocumentNode
 
-from s2dm.api.models.base import BaseInput, ConfigInput, SchemaInput
+from s2dm.api.models.base import BaseInput, ConfigInput, FileContentInput, SchemaInput
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.schema_loader import download_schema_to_temp, load_and_process_schema
 from s2dm.utils.file import temp_file_from_content
@@ -14,16 +14,15 @@ def process_schema_input(schema_input: SchemaInput) -> Path:
     """Process schema input (path, URL, or content) and return Path object."""
     if schema_input.type == "url":
         return download_schema_to_temp(str(schema_input.url))
-    else:
-        return path_for_content(schema_input, "schema", ".graphql")
+    return path_for_content(schema_input, "schema", ".graphql")
 
 
-def path_for_content(source: BaseInput, filename: str, extension: str) -> Path:
+def path_for_content(source: BaseInput | FileContentInput, filename: str, extension: str) -> Path:
     """
     Get a Path for a BaseInput, creating a temp file if needed.
 
     Args:
-        source: Input (PathInput or ContentInput)
+        source: Input (PathInput, ContentInput, or FileContentInput)
         filename: Base filename for temp file (if needed)
         extension: File extension including dot (e.g., ".yaml", ".graphql")
 
@@ -35,12 +34,13 @@ def path_for_content(source: BaseInput, filename: str, extension: str) -> Path:
     """
     if source.type == "path":
         return Path(source.path)
-    else:
-        return temp_file_from_content(
-            content=source.content,
-            suffix=extension,
-            prefix=f"{filename}_",
-        )
+    if source.type == "file_content":
+        return temp_file_from_content(content=source.content, filename=source.filename)
+    return temp_file_from_content(
+        content=source.content,
+        suffix=extension,
+        prefix=f"{filename}_",
+    )
 
 
 def load_and_process_schema_wrapper(

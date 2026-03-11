@@ -157,6 +157,10 @@ function extractProperties(
 				typeof propObj["x-cli-flag"] === "string"
 					? propObj["x-cli-flag"]
 					: undefined,
+			docsUrl:
+				typeof propObj["x-docs-url"] === "string"
+					? propObj["x-docs-url"]
+					: undefined,
 		};
 	}
 

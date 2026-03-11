@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from graphql import GraphQLError, GraphQLSyntaxError
 
 from s2dm import __version__, log
+from s2dm.api.errors import ResponseError
 from s2dm.api.models.base import ErrorResponse
 from s2dm.api.routes import avro, filter, jsonschema, protobuf, query_validate, shacl, validate, vspec
 
@@ -27,6 +28,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(ResponseError)
+def response_error_handler(_request: Request, exc: ResponseError) -> JSONResponse:
+    """Handle validation-like errors that are safe to expose to clients."""
+    error_response = ErrorResponse(error="ValidationError", message=str(exc), details=None)
+    log.warning(f"User-facing validation error: {exc}")
+    return JSONResponse(status_code=422, content=error_response.model_dump())
 
 
 @app.exception_handler(RequestValidationError)
@@ -78,7 +87,7 @@ def type_error_handler(request: Request, exc: TypeError) -> JSONResponse:
 @app.exception_handler(GraphQLSyntaxError)
 def graphql_syntax_error_handler(request: Request, exc: GraphQLSyntaxError) -> JSONResponse:
     """Handle GraphQL syntax errors."""
-    error_response = ErrorResponse(error="GraphQLSyntaxError", message="Invalid GraphQL syntax", details=None)
+    error_response = ErrorResponse(error="GraphQLSyntaxError", message=exc.message, details=None)
     log.warning(f"GraphQL syntax error: {exc}")
     return JSONResponse(status_code=422, content=error_response.model_dump())
 
@@ -86,7 +95,7 @@ def graphql_syntax_error_handler(request: Request, exc: GraphQLSyntaxError) -> J
 @app.exception_handler(GraphQLError)
 def graphql_error_handler(request: Request, exc: GraphQLError) -> JSONResponse:
     """Handle GraphQL errors."""
-    error_response = ErrorResponse(error="GraphQLError", message="GraphQL validation failed", details=None)
+    error_response = ErrorResponse(error="GraphQLError", message=exc.message, details=None)
     log.warning(f"GraphQL error: {exc}")
     return JSONResponse(status_code=422, content=error_response.model_dump())
 

@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from s2dm.api.config import COMMON_RESPONSES
+from s2dm.api.errors import ResponseError
 from s2dm.api.models.base import ApiResponse
 from s2dm.api.models.validate import ValidateSchemaRequest
 from s2dm.api.services.response_service import execute_and_respond
@@ -27,7 +28,7 @@ def validate_schema(request: ValidateSchemaRequest) -> ApiResponse:
 
         errors = check_correct_schema(schema)
         if errors:
-            raise ValueError(f"Schema validation failed: {'; '.join(errors)}")
+            raise ResponseError(f"Schema validation failed: {'; '.join(errors)}")
 
         validated_schema = print_schema_with_directives_preserved(schema, source_map)
         return [validated_schema]

@@ -5,9 +5,12 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from graphql import GraphQLError, GraphQLSyntaxError, Source
+from rdflib.plugin import PluginException
 
 from s2dm import __version__
+from s2dm.api.errors import ResponseError
 from s2dm.api.main import app
+from s2dm.api.services.response_service import execute_and_respond
 
 
 class TestCoreEndpoints:
@@ -91,6 +94,22 @@ class TestErrorHandling:
         assert "access-control-allow-origin" in response.headers
 
 
+class TestResponseServiceErrorTranslation:
+    """Test shared translation of domain/library errors."""
+
+    def test_execute_and_respond_translates_plugin_exception(self) -> None:
+        """Exporter/library exceptions are normalized into ResponseError."""
+
+        def executor() -> list[str]:
+            raise PluginException("unsupported format")
+
+        try:
+            execute_and_respond(executor=executor, result_format="ttl")
+            raise AssertionError("Expected ResponseError to be raised")
+        except ResponseError as exc:
+            assert str(exc) == "unsupported format"
+
+
 class TestExceptionHandlers:
     """Test specific exception handlers in API app."""
 
@@ -133,6 +152,7 @@ class TestExceptionHandlers:
         assert response.status_code == 422
         data = response.json()
         assert data["error"] == "ValidationError"
+        assert data["message"] == "bad type"
 
     def test_graphql_syntax_error_returns_422(self, test_client: TestClient) -> None:
         """GraphQLSyntaxError is mapped to 422."""

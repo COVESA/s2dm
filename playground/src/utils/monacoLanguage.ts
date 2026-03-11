@@ -1,9 +1,12 @@
 const JSON_LANGUAGE_ALIASES = new Set([
 	"json-ld",
 	"jsonld",
-	"application/ld+json",
-	"ld+json",
 	"avsc",
+]);
+
+const TURTLE_LANGUAGE_ALIASES = new Set([
+	"ttl",
+	"turtle",
 ]);
 
 export function resolveMonacoLanguage(inputLanguage: string): string {
@@ -11,6 +14,10 @@ export function resolveMonacoLanguage(inputLanguage: string): string {
 
 	if (JSON_LANGUAGE_ALIASES.has(normalizedLanguage)) {
 		return "json";
+	}
+
+	if (TURTLE_LANGUAGE_ALIASES.has(normalizedLanguage)) {
+		return "turtle";
 	}
 
 	return normalizedLanguage;

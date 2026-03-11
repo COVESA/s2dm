@@ -1,7 +1,7 @@
 import re
 import tempfile
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 from urllib.parse import urlparse
 
 import requests
@@ -12,9 +12,7 @@ from graphql import (
     GraphQLField,
     GraphQLInputObjectType,
     GraphQLInterfaceType,
-    GraphQLList,
     GraphQLNamedType,
-    GraphQLNonNull,
     GraphQLObjectType,
     GraphQLSchema,
     GraphQLString,
@@ -25,8 +23,6 @@ from graphql import (
     get_named_type,
     is_input_object_type,
     is_interface_type,
-    is_list_type,
-    is_non_null_type,
     is_object_type,
     is_union_type,
     parse,
@@ -575,15 +571,7 @@ def get_referenced_types(
             visit_field_type(field.type)
 
     def visit_field_type(field_type: GraphQLType) -> None:
-        unwrapped_type = field_type
-        while is_non_null_type(unwrapped_type) or is_list_type(unwrapped_type):
-            if is_non_null_type(unwrapped_type):
-                unwrapped_type = cast(GraphQLNonNull[Any], unwrapped_type).of_type
-            elif is_list_type(unwrapped_type):
-                unwrapped_type = cast(GraphQLList[Any], unwrapped_type).of_type
-
-        if hasattr(unwrapped_type, "name"):
-            visit_type(unwrapped_type.name)
+        visit_type(get_named_type(field_type).name)
 
     visit_type(root_type)
 
@@ -644,6 +632,41 @@ def prune_schema_using_query_selection(
         for field in input_obj_type.fields.values():
             field_type = get_named_type(field.type)
             traverse_input_type_dependencies(field_type.name)
+
+    def collect_used_directives() -> set[str]:
+        """Collect directive names used on types and fields that are being kept."""
+        directives_used: set[str] = set()
+
+        for type_name in types_to_keep:
+            type_obj = schema.type_map.get(type_name)
+            if not type_obj:
+                continue
+
+            if type_obj.ast_node:
+                for directive in type_obj.ast_node.directives:
+                    directives_used.add(directive.name.value)
+
+            if not (is_object_type(type_obj) or is_interface_type(type_obj)):
+                continue
+
+            obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
+            for field in obj_type.fields.values():
+                if field.ast_node:
+                    for directive in field.ast_node.directives:
+                        directives_used.add(directive.name.value)
+
+        return directives_used
+
+    def collect_directive_argument_type_dependencies(directives_used: set[str]) -> None:
+        """Keep input types referenced by used directive argument definitions."""
+        for directive in schema.directives:
+            if directive.name not in directives_used:
+                continue
+
+            for argument in directive.args.values():
+                argument_type = get_named_type(argument.type)
+                if is_input_object_type(schema.type_map.get(argument_type.name)):
+                    traverse_input_type_dependencies(argument_type.name)
 
     def collect_selections(type_name: str, selection_set: SelectionSetNode) -> None:
         """Recursively collect field names and type names to keep."""
@@ -706,6 +729,8 @@ def prune_schema_using_query_selection(
 
     query_operation = query_operations[0]
     collect_selections(schema.query_type.name, query_operation.selection_set)
+    directives_used = collect_used_directives()
+    collect_directive_argument_type_dependencies(directives_used)
 
     for type_name, fields_to_keep_set in fields_to_keep.items():
         type_obj = schema.type_map.get(type_name)
@@ -727,31 +752,6 @@ def prune_schema_using_query_selection(
     for type_name in types_to_delete:
         del schema.type_map[type_name]
 
-    def collect_used_directives() -> set[str]:
-        """Collect all directive names used in types and fields to keep."""
-        directives_used: set[str] = set()
-
-        for type_name in types_to_keep:
-            type_obj = schema.type_map.get(type_name)
-            if not type_obj:
-                continue
-
-            if type_obj.ast_node:
-                for directive in type_obj.ast_node.directives:
-                    directives_used.add(directive.name.value)
-
-            if not (is_object_type(type_obj) or is_interface_type(type_obj)):
-                continue
-
-            obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
-            for field in obj_type.fields.values():
-                if field.ast_node:
-                    for directive in field.ast_node.directives:
-                        directives_used.add(directive.name.value)
-
-        return directives_used
-
-    directives_used = collect_used_directives()
     schema.directives = tuple(directive for directive in schema.directives if directive.name in directives_used)
 
     log.debug(f"Composed filtered schema with {len(fields_to_keep)} object types")

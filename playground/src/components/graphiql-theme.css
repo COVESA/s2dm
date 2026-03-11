@@ -3,11 +3,19 @@
 	color: var(--color-foreground);
 }
 
-.dark .graphiql-container:not(.monaco-editor),
-.dark .graphiql-dialog,
-.dark .graphiql-dialog-overlay,
-.dark .graphiql-tooltip,
-.dark [data-radix-popper-content-wrapper] {
+body.graphiql-light .graphiql-container:not(.monaco-editor),
+body.graphiql-light .graphiql-dialog,
+body.graphiql-light .graphiql-dialog-overlay,
+body.graphiql-light .graphiql-tooltip,
+body.graphiql-light [data-radix-popper-content-wrapper] {
+	--color-primary: 210, 90%, 70%;
+}
+
+body.graphiql-dark .graphiql-container:not(.monaco-editor),
+body.graphiql-dark .graphiql-dialog,
+body.graphiql-dark .graphiql-dialog-overlay,
+body.graphiql-dark .graphiql-tooltip,
+body.graphiql-dark [data-radix-popper-content-wrapper] {
 	--color-primary: 210, 90%, 70%;
 	--color-secondary: 240, 5%, 25%;
 	--color-neutral: 0, 0%, 65%;
@@ -21,7 +29,6 @@
 }
 
 .graphiql-container {
-	--color-primary: var(--primary);
 	--color-secondary: var(--muted-foreground);
 	--color-warning: var(--chart-1);
 	font-family: inherit !important;

@@ -3,6 +3,7 @@
 import time
 from collections.abc import Callable
 
+from s2dm.api.errors import to_response_error
 from s2dm.api.models.base import ApiResponse, ResponseMetadata
 
 
@@ -21,7 +22,13 @@ def execute_and_respond(
     """
     start_time = time.perf_counter()
 
-    result = executor()
+    try:
+        result = executor()
+    except Exception as exc:
+        response_error = to_response_error(exc)
+        if response_error is not None:
+            raise response_error from exc
+        raise
 
     processing_time_ms = int((time.perf_counter() - start_time) * 1000)
 
