@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from graphql import DocumentNode
 
 from s2dm.api.config import COMMON_RESPONSES
-from s2dm.api.errors import ResponseError
+from s2dm.api.errors import ResponseError, format_error_list
 from s2dm.api.models.avro import AvroProtocolExportRequest, AvroSchemaExportRequest
 from s2dm.api.models.base import ApiResponse
 from s2dm.api.services.response_service import execute_and_respond
@@ -36,7 +36,7 @@ def export_avro_schema(request: AvroSchemaExportRequest) -> ApiResponse:
 
         schema_errors = check_correct_schema(annotated_schema.schema)
         if schema_errors:
-            raise ResponseError(f"Schema validation failed: {'; '.join(schema_errors)}")
+            raise ResponseError(format_error_list("Schema validation failed", schema_errors))
 
         avro_schema = translate_to_avro_schema(annotated_schema, request.namespace, cast(DocumentNode, query_document))
         return [avro_schema]
@@ -63,7 +63,7 @@ def export_avro_protocol(request: AvroProtocolExportRequest) -> ApiResponse:
 
         schema_errors = check_correct_schema(annotated_schema.schema)
         if schema_errors:
-            raise ResponseError(f"Schema validation failed: {'; '.join(schema_errors)}")
+            raise ResponseError(format_error_list("Schema validation failed", schema_errors))
 
         protocols = translate_to_avro_protocol(annotated_schema, request.namespace, request.strict)
         return list(protocols.values())

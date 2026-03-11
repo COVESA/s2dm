@@ -11,6 +11,14 @@ class ResponseError(ValueError):
     """Validation-like error that is safe to expose to API clients."""
 
 
+def format_error_list(summary: str, errors: list[str]) -> str:
+    """Format multiple validation errors as a multiline message."""
+    if not errors:
+        return summary
+
+    return f"{summary}:\n" + "\n".join(errors)
+
+
 def to_response_error(exc: Exception) -> ResponseError | None:
     """Translate safe domain/library exceptions into API response errors."""
     if isinstance(exc, ResponseError):

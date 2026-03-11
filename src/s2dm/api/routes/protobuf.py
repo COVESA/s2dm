@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from graphql import DocumentNode
 
 from s2dm.api.config import COMMON_RESPONSES
-from s2dm.api.errors import ResponseError
+from s2dm.api.errors import ResponseError, format_error_list
 from s2dm.api.models.base import ApiResponse
 from s2dm.api.models.protobuf import ProtobufExportRequest
 from s2dm.api.services.response_service import execute_and_respond
@@ -37,7 +37,7 @@ def export_protobuf(request: ProtobufExportRequest) -> ApiResponse:
 
         schema_errors = check_correct_schema(annotated_schema.schema)
         if schema_errors:
-            raise ResponseError(f"Schema validation failed: {'; '.join(schema_errors)}")
+            raise ResponseError(format_error_list("Schema validation failed", schema_errors))
 
         query_document = cast(DocumentNode, query_document)
 
