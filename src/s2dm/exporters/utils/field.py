@@ -66,6 +66,34 @@ class FieldCase(Enum):
     )
 
 
+# Mapping of FieldCase to s2dm TypeWrapperPattern for RDF materialization.
+# See: https://covesa.global/models/s2dm#
+FIELD_CASE_TO_TYPE_WRAPPER_PATTERN: dict[FieldCase, str] = {
+    FieldCase.DEFAULT: "bare",
+    FieldCase.NON_NULL: "nonNull",
+    FieldCase.LIST: "list",
+    FieldCase.LIST_NON_NULL: "listOfNonNull",
+    FieldCase.NON_NULL_LIST: "nonNullList",
+    FieldCase.NON_NULL_LIST_NON_NULL: "nonNullListOfNonNull",
+    # SET and SET_NON_NULL are directive-based; map to underlying list variants
+    FieldCase.SET: "list",
+    FieldCase.SET_NON_NULL: "listOfNonNull",
+}
+
+
+def field_case_to_type_wrapper_pattern(field_case: FieldCase) -> str:
+    """Map a GraphQL FieldCase to s2dm TypeWrapperPattern for RDF materialization.
+
+    Args:
+        field_case: The GraphQL field case (DEFAULT, NON_NULL, LIST, etc.).
+
+    Returns:
+        The s2dm ontology TypeWrapperPattern name (bare, nonNull, list,
+        listOfNonNull, nonNullList, nonNullListOfNonNull).
+    """
+    return FIELD_CASE_TO_TYPE_WRAPPER_PATTERN[field_case]
+
+
 def get_field_case(field: GraphQLField) -> FieldCase:
     """
     Determine the case of a field in a GraphQL schema.

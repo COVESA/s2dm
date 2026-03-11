@@ -56,20 +56,20 @@ inputs:
     required: false
     default: ""
 
-  skos-namespace:
-    description: "SKOS namespace"
+  rdf-namespace:
+    description: "Namespace URI for RDF export concept URIs (e.g. https://covesa.org/s2dm/mydomain#). If provided, skos.{nt,ttl} and data_graph.{nt,ttl} are generated."
     required: false
     default: ""
 
-  skos-prefix:
-    description: "SKOS prefix"
+  rdf-prefix:
+    description: "Prefix for RDF export concept URIs"
     required: false
-    default: ""
+    default: "ns"
 
-  skos-language:
-    description: "SKOS language"
+  rdf-language:
+    description: "BCP 47 language tag for RDF export prefLabels"
     required: false
-    default: ""
+    default: "en"
 
 outputs:
   version-bump:
@@ -181,7 +181,7 @@ runs:
         mkdir -p ${{ github.workspace }}/.artifacts/jsonschema
         mkdir -p ${{ github.workspace }}/.artifacts/registry
         mkdir -p ${{ github.workspace }}/.artifacts/shacl
-        mkdir -p ${{ github.workspace }}/.artifacts/skos
+        mkdir -p ${{ github.workspace }}/.artifacts/rdf
         mkdir -p ${{ github.workspace }}/.artifacts/vspec
 
     - name: Check spec version bump
@@ -192,7 +192,7 @@ runs:
         VERSION_BUMP=major
         if [ -f "${{ github.workspace }}/.previous-release/graphql/schema.graphql" ]; then
           echo "Previous schema found"
-          VERSION_BUMP=$(s2dm check version-bump -s ${{ inputs.spec-path }} -p ${{ github.workspace }}/.previous-release/graphql/schema.graphql --output-type | tail -n 1)
+          VERSION_BUMP=$(s2dm check version-bump -s ${{ inputs.spec-path }} -p ${{ github.workspace }}/.previous-release/graphql/schema.graphql --node-modules-path ${{ github.workspace }}/${{ inputs.s2dm-path }}/node_modules --output-type | tail -n 1)
           if [[ "$VERSION_BUMP" != "none" ]]; then
             echo "CONTINUE=true" >> "$GITHUB_OUTPUT"
           fi
@@ -230,15 +230,14 @@ runs:
         [ -n "${{ inputs.shacl-model-prefix }}" ] && CMD="$CMD --model-namespace-prefix '${{ inputs.shacl-model-prefix }}'"
         eval "$CMD"
 
-    - name: Generate SKOS RDF
-      if: steps.version-check.outputs.CONTINUE == 'true'
+    - name: Export RDF
+      if: steps.version-check.outputs.CONTINUE == 'true' && inputs.rdf-namespace != ''
       working-directory: ${{ inputs.repository-path }}
       shell: bash
       run: |
-        CMD="s2dm generate skos-skeleton -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/skos/schema.ttl"
-        [ -n "${{ inputs.skos-namespace }}" ] && CMD="$CMD --namespace '${{ inputs.skos-namespace }}'"
-        [ -n "${{ inputs.skos-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.skos-prefix }}'"
-        [ -n "${{ inputs.skos-language }}" ] && CMD="$CMD --language '${{ inputs.skos-language }}'"
+        CMD="s2dm export rdf -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/rdf --namespace '${{ inputs.rdf-namespace }}'"
+        [ -n "${{ inputs.rdf-prefix }}" ] && CMD="$CMD --prefix '${{ inputs.rdf-prefix }}'"
+        [ -n "${{ inputs.rdf-language }}" ] && CMD="$CMD --language '${{ inputs.rdf-language }}'"
         eval "$CMD"
 
     - name: Generate VSpec
@@ -306,6 +305,7 @@ runs:
         s2dm diff graphql \
           -s ${{ github.workspace }}/.previous-release/graphql/schema.graphql \
           -v ${{ inputs.spec-path }} \
+          --node-modules-path ${{ github.workspace }}/${{ inputs.s2dm-path }}/node_modules \
           -o ${{ github.workspace }}/.artifacts/diff.json || true
 
         # Check if diff file exists and has changes
