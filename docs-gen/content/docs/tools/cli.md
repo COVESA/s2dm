@@ -1540,6 +1540,61 @@ s2dm export avro schema --help
 s2dm export avro protocol --help
 ```
 
+## Playground Commands
+
+The playground commands initialize and run the local S2DM GUI playground.
+
+### Init
+
+The `playground init` command installs playground dependencies and builds the frontend application.
+
+#### Usage
+
+```bash
+s2dm playground init
+```
+
+#### Behavior
+
+- Validates that the `playground/` directory exists.
+- Validates that `playground/package.json` exists.
+- Runs `npm install` in `playground/`.
+- Runs `npm run build` in `playground/`.
+
+#### Example
+
+```bash
+s2dm playground init
+```
+
+### Start
+
+The `playground start` command starts the local API and frontend servers, then opens the playground in your default browser.
+
+#### Usage
+
+```bash
+s2dm playground start
+```
+
+#### Behavior
+
+- Validates that the `playground/` directory exists.
+- Validates that `playground/node_modules/` exists (run `s2dm playground init` first).
+- Allocates free local ports for the API server and React dev server.
+- Starts FastAPI with `uvicorn s2dm.api.main:app --reload`.
+- Starts the React dev server with `npm run dev -- --port <port> --strictPort`.
+- Sets `VITE_API_BASE_URL` for the frontend process.
+- Opens the default browser at the selected React URL.
+- Streams logs for both servers until interrupted.
+- On `Ctrl+C`, terminates both processes gracefully.
+
+#### Example
+
+```bash
+s2dm playground start
+```
+
 ## Common Features
 
 ### Selection Query Filtering

@@ -23,6 +23,8 @@ dependencies = [
     "case-converter>=1.2.0",
     "inflect>=7.0.0",
     "requests>=2.32.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 requires-python = ">=3.11"
 
@@ -57,6 +59,7 @@ dev = [
     "hypothesis>=6.131.9",
     "types-pyyaml>=6.0.12.20250516",
     "gitlint>=0.20.0.dev48",
+    "httpx>=0.28.0",
 ]
 
 [tool.mypy]
