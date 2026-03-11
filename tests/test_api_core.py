@@ -8,7 +8,7 @@ from graphql import GraphQLError, GraphQLSyntaxError, Source
 from rdflib.plugin import PluginException
 
 from s2dm import __version__
-from s2dm.api.errors import ResponseError
+from s2dm.api.errors import ResponseError, format_error_list
 from s2dm.api.main import app
 from s2dm.api.services.response_service import execute_and_respond
 
@@ -96,6 +96,12 @@ class TestErrorHandling:
 
 class TestResponseServiceErrorTranslation:
     """Test shared translation of domain/library errors."""
+
+    def test_format_error_list_preserves_multiline_output(self) -> None:
+        """Validation errors are formatted as multiline messages."""
+        message = format_error_list("Schema validation failed", ["  - first", "  - second"])
+
+        assert message == "Schema validation failed:\n  - first\n  - second"
 
     def test_execute_and_respond_translates_plugin_exception(self) -> None:
         """Exporter/library exceptions are normalized into ResponseError."""

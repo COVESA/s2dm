@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from graphql import parse, print_schema, validate
 
 from s2dm.api.config import COMMON_RESPONSES
-from s2dm.api.errors import ResponseError
+from s2dm.api.errors import ResponseError, format_error_list
 from s2dm.api.models.base import ApiResponse
 from s2dm.api.models.query_validate import ValidateQueryRequest
 from s2dm.api.services.response_service import execute_and_respond
@@ -32,7 +32,7 @@ def validate_query(request: ValidateQueryRequest) -> ApiResponse:
 
         if validation_errors:
             error_messages = [error.message for error in validation_errors]
-            raise ResponseError(f"Query validation failed: {'; '.join(error_messages)}")
+            raise ResponseError(format_error_list("Query validation failed", error_messages))
 
         schema_content = print_schema(schema)
         return [schema_content]
