@@ -23,9 +23,13 @@ from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_sc
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.protobuf import translate_to_protobuf
-from s2dm.exporters.rdf_materializer import materialize_schema_to_rdf, write_rdf_artifacts
+from s2dm.exporters.rdf_materializer import (
+    extract_schema_for_rdf,
+    materialize_data_graph,
+    materialize_skos_graph,
+    write_rdf_artifacts,
+)
 from s2dm.exporters.shacl import translate_to_shacl
-from s2dm.exporters.skos import generate_skos_skeleton
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
@@ -290,12 +294,6 @@ def diff() -> None:
 @click.group()
 def export() -> None:
     """Export commands."""
-    pass
-
-
-@click.group()
-def generate() -> None:
-    """Generate commands."""
     pass
 
 
@@ -934,62 +932,16 @@ def protobuf(
     _ = output.write_text(result)
 
 
-# Export -> skos
+# Export -> rdf
 # ----------
-@generate.command
-@schema_option
-@output_option
-@click.option(
-    "--namespace",
-    default="https://example.org/vss#",
-    help="The namespace for the concept URIs",
-)
-@click.option(
-    "--prefix",
-    default="ns",
-    help="The prefix to use for the concept URIs",
-)
-@click.option(
-    "--language",
-    default="en",
-    callback=validate_language_tag,
-    help="BCP 47 language tag for prefLabels",
-    show_default=True,
-)
-def skos_skeleton(
-    schemas: list[Path],
-    output: Path,
-    namespace: str,
-    prefix: str,
-    language: str,
-) -> None:
-    """Generate SKOS skeleton RDF file from GraphQL schema."""
-    try:
-        with output.open("w") as output_stream:
-            generate_skos_skeleton(
-                schema_paths=schemas,
-                output_stream=output_stream,
-                namespace=namespace,
-                prefix=prefix,
-                language=language,
-                validate=True,
-            )
-    except ValueError as e:
-        raise click.ClickException(f"SKOS generation failed: {e}") from e
-    except OSError as e:
-        raise click.ClickException(f"Failed to write output file: {e}") from e
-
-
-# Generate -> schema-rdf
-# ----------
-@generate.command(name="schema-rdf")
+@export.command(name="rdf")
 @schema_option
 @click.option(
     "--output",
     "-o",
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     required=True,
-    help="Output directory for schema.nt and schema.ttl",
+    help="Output directory for skos.{nt,ttl} and data_graph.{nt,ttl}",
 )
 @click.option(
     "--namespace",
@@ -1008,27 +960,30 @@ def skos_skeleton(
     help="BCP 47 language tag for prefLabels",
     show_default=True,
 )
-def schema_rdf(
+def rdf(
     schemas: list[Path],
     output: Path,
     namespace: str,
     prefix: str,
     language: str,
 ) -> None:
-    """Materialize GraphQL schema as RDF triples with SKOS and s2dm ontology.
+    """Export GraphQL schema as RDF with separate SKOS and ontology data graphs.
 
-    Produces sorted n-triples (schema.nt) and Turtle (schema.ttl) in the output directory.
+    Produces two pairs of files in the output directory:
+      skos.nt / skos.ttl         -- SKOS concepts, collections, and labels
+      data_graph.nt / data_graph.ttl -- s2dm ontology instantiation
     """
     try:
         graphql_schema = load_schema(schemas)
-        graph = materialize_schema_to_rdf(
-            schema=graphql_schema,
-            namespace=namespace,
-            prefix=prefix,
-            language=language,
-        )
-        write_rdf_artifacts(graph, output, base_name="schema")
-        log.success(f"RDF artifacts written to {output}/schema.nt and {output}/schema.ttl")
+        extract = extract_schema_for_rdf(graphql_schema)
+
+        skos_graph = materialize_skos_graph(extract, namespace, prefix, language)
+        data_graph = materialize_data_graph(extract, namespace, prefix, language)
+
+        write_rdf_artifacts(skos_graph, output, base_name="skos")
+        write_rdf_artifacts(data_graph, output, base_name="data_graph")
+
+        log.success(f"RDF artifacts written to {output}/")
     except OSError as e:
         raise click.ClickException(f"Failed to write RDF artifacts: {e}") from e
 
@@ -1275,12 +1230,19 @@ def export_concept_uri(schemas: list[Path], output: Path | None, namespace: str,
     required=True,
     help="Version tag/identifier for metadata",
 )
+@click.option(
+    "--prefix",
+    type=str,
+    default=None,
+    help="Namespace prefix to prepend to variant IDs (e.g., 'ns' -> ns:Concept/v1.0)",
+)
 def export_id(
     schemas: list[Path],
     output: Path | None,
     previous_ids: Path | None,
     diff_file: Path | None,
     version_tag: str,
+    prefix: str | None,
 ) -> None:
     """Generate variant-based concept IDs for GraphQL schema fields and enums.
 
@@ -1327,6 +1289,7 @@ def export_id(
         output=output,
         previous_ids_path=previous_ids,
         diff_output=diff_output,
+        namespace_prefix=prefix,
     )
     result = exporter.run()
 
@@ -1776,7 +1739,6 @@ cli.add_command(diff)
 
 export.add_command(avro)
 cli.add_command(export)
-cli.add_command(generate)
 cli.add_command(playground)
 cli.add_command(registry)
 cli.add_command(similar)
