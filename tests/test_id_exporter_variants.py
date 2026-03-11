@@ -190,6 +190,7 @@ def run_exporter(
     output_path: Path,
     previous_ids_path: Path | None = None,
     diff_output: list[DiffChange] | None = None,
+    namespace_prefix: str | None = None,
 ) -> VariantIDFile:
     """Run IDExporter with standard parameters.
 
@@ -199,6 +200,7 @@ def run_exporter(
         output_path: Path to write IDs JSON file
         previous_ids_path: Optional path to previous IDs file
         diff_output: Optional diff output from graphql-inspector
+        namespace_prefix: Optional prefix prepended to variant IDs
 
     Returns:
         VariantIDFile result
@@ -209,6 +211,7 @@ def run_exporter(
         output=output_path,
         previous_ids_path=previous_ids_path,
         diff_output=diff_output,
+        namespace_prefix=namespace_prefix,
     )
     return exporter.run()
 
@@ -865,3 +868,58 @@ def test_change_types_produce_expected_criticality(
     expected_variant = (2, 0) if is_breaking else (1, 1)
 
     assert result.concepts["Window.position"].variant == expected_variant
+
+
+# ---------------------------------------------------------------------------
+# Namespace prefix tests
+# ---------------------------------------------------------------------------
+
+
+def test_namespace_prefix_added_to_ids(
+    temp_output_paths: dict[str, Path],
+    schema_builder: SchemaBuilder,
+) -> None:
+    """When namespace_prefix is set, IDs are prefixed with 'prefix:Concept/vM.m'."""
+    schema = schema_builder(SIMPLE_WINDOW_SCHEMA)
+    result = run_exporter(
+        schema=schema,
+        version_tag="v1.0.0",
+        output_path=temp_output_paths["ids"],
+        namespace_prefix="ns",
+    )
+
+    assert result.concepts["Window"].id == "ns:Window/v1.0"
+    assert result.concepts["Window.position"].id == "ns:Window.position/v1.0"
+
+
+def test_no_prefix_when_namespace_prefix_is_none(
+    temp_output_paths: dict[str, Path],
+    schema_builder: SchemaBuilder,
+) -> None:
+    """When namespace_prefix is None, IDs use the plain format."""
+    schema = schema_builder(SIMPLE_WINDOW_SCHEMA)
+    result = run_exporter(
+        schema=schema,
+        version_tag="v1.0.0",
+        output_path=temp_output_paths["ids"],
+    )
+
+    assert result.concepts["Window"].id == "Window/v1.0"
+    assert result.concepts["Window.position"].id == "Window.position/v1.0"
+
+
+def test_prefixed_ids_parse_variant_correctly(
+    temp_output_paths: dict[str, Path],
+    schema_builder: SchemaBuilder,
+) -> None:
+    """Prefixed IDs still expose correct (major, minor) via .variant property."""
+    schema = schema_builder(SIMPLE_WINDOW_SCHEMA)
+    result = run_exporter(
+        schema=schema,
+        version_tag="v1.0.0",
+        output_path=temp_output_paths["ids"],
+        namespace_prefix="vss",
+    )
+
+    assert result.concepts["Window"].variant == (1, 0)
+    assert result.concepts["Window.position"].variant == (1, 0)

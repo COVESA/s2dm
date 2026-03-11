@@ -1,13 +1,13 @@
-"""RDF materialization of GraphQL schemas using SKOS and s2dm ontology.
+"""RDF materialization of GraphQL schemas into separate SKOS and ontology graphs.
 
-This module materializes GraphQL SDL into RDF triples with:
-- SKOS skeleton (skos:Concept, skos:prefLabel, skos:definition)
-- s2dm ontology instantiation (ObjectType, InterfaceType, InputObjectType,
-  UnionType, EnumType, Field, EnumValue, hasField, hasOutputType,
-  hasEnumValue, hasUnionMember, usesTypeWrapperPattern)
+This module materializes GraphQL SDL into two separate RDF graphs:
+- SKOS graph: skos:Concept, skos:prefLabel, skos:definition, skos:note,
+  skos:Collection, skos:member
+- Data graph (ontology instantiation): s2dm:ObjectType, InterfaceType,
+  InputObjectType, UnionType, EnumType, Field, EnumValue, hasField,
+  hasOutputType, hasEnumValue, hasUnionMember, usesTypeWrapperPattern
 """
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
@@ -32,6 +32,19 @@ from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 
 # Built-in GraphQL scalars (use s2dm: namespace)
 BUILTIN_SCALARS = frozenset({"Int", "Float", "String", "Boolean", "ID"})
+
+# Template for skos:note on concepts whose definition was inherited from SDL
+_SKOS_NOTE_TEMPLATE = (
+    "Content of SKOS definition was inherited from the description of the "
+    "GraphQL SDL element {name} whose URI is {uri}."
+)
+
+# Collection label constants
+_COLLECTION_OBJECT_CONCEPTS = "ObjectConcepts"
+_COLLECTION_FIELD_CONCEPTS = "FieldConcepts"
+_COLLECTION_INTERFACE_CONCEPTS = "InterfaceConcepts"
+_COLLECTION_INPUT_CONCEPTS = "InputObjectConcepts"
+_COLLECTION_UNION_CONCEPTS = "UnionConcepts"
 
 
 @dataclass
@@ -221,163 +234,239 @@ def extract_schema_for_rdf(schema: GraphQLSchema) -> RdfSchemaExtract:
     return result
 
 
-# Type for optional directive-to-triples handler (for future extensibility).
-DirectiveTripleHandler = Callable[[Graph, RdfSchemaExtract, Namespace, str, str], None]
+# ---------------------------------------------------------------------------
+# Graph construction helpers
+# ---------------------------------------------------------------------------
 
 
-def _add_concept_header(
+def _create_bound_graph(namespace: str, prefix: str) -> tuple[Graph, Namespace]:
+    """Create an RDF graph with standard namespace bindings.
+
+    Args:
+        namespace: URI namespace for concept URIs.
+        prefix: Prefix for concept URIs (e.g., "ns").
+
+    Returns:
+        Tuple of (graph, concept_namespace).
+    """
+    graph = Graph()
+    concept_ns = Namespace(namespace)
+    graph.bind("skos", SKOS)
+    graph.bind("s2dm", S2DM)
+    graph.bind(prefix, concept_ns)
+    return graph, concept_ns
+
+
+def _add_skos_concept(
     graph: Graph,
     uri: Node,
     pref_label: str,
     description: str,
-    s2dm_type: Node,
     language: str,
 ) -> None:
-    """Add SKOS concept header triples (rdf:type, prefLabel, optional definition).
+    """Add SKOS concept triples: rdf:type, prefLabel, definition, note.
 
     Args:
-        graph: RDF graph to add triples to.
-        uri: Concept URI (rdflib term).
+        graph: SKOS RDF graph.
+        uri: Concept URI.
         pref_label: Value for skos:prefLabel.
-        description: Optional description for skos:definition.
-        s2dm_type: S2DM type term (e.g., S2DM.ObjectType).
-        language: BCP 47 language tag for prefLabel.
+        description: Description for skos:definition (empty string to skip).
+        language: BCP 47 language tag.
     """
     graph.add((uri, RDF.type, SKOS.Concept))
-    graph.add((uri, RDF.type, s2dm_type))
     graph.add((uri, SKOS.prefLabel, Literal(pref_label, lang=language)))
     if description.strip():
         graph.add((uri, SKOS.definition, Literal(description)))
+        note = _SKOS_NOTE_TEMPLATE.format(name=pref_label, uri=str(uri))
+        graph.add((uri, SKOS.note, Literal(note)))
 
 
-def materialize_schema_to_rdf(
-    schema: GraphQLSchema,
+def _add_collection(graph: Graph, namespace: Namespace, name: str, label: str, language: str) -> Node:
+    """Create a SKOS collection and return its URI.
+
+    Args:
+        graph: SKOS RDF graph.
+        namespace: Concept namespace.
+        name: Collection URI local name.
+        label: Human-readable label.
+        language: BCP 47 language tag.
+
+    Returns:
+        Collection URI node.
+    """
+    ref = namespace[name]
+    graph.add((ref, RDF.type, SKOS.Collection))
+    graph.add((ref, SKOS.prefLabel, Literal(label, lang=language)))
+    return ref
+
+
+# ---------------------------------------------------------------------------
+# SKOS graph materialization
+# ---------------------------------------------------------------------------
+
+
+def materialize_skos_graph(
+    extract: RdfSchemaExtract,
     namespace: str,
     prefix: str,
     language: str = "en",
-    directive_triple_handler: DirectiveTripleHandler | None = None,
 ) -> Graph:
-    """Materialize a GraphQL schema to RDF triples using SKOS and s2dm ontology.
+    """Materialize SKOS-only triples from an extracted schema.
 
-    Produces triples for:
-    - ObjectType (rdf:type skos:Concept, s2dm:ObjectType)
-    - Field (s2dm:hasField, s2dm:hasOutputType, s2dm:usesTypeWrapperPattern)
-    - EnumType (rdf:type skos:Concept, s2dm:EnumType)
-    - EnumValue (s2dm:hasEnumValue, rdf:type s2dm:EnumValue)
+    Produces:
+    - skos:Concept with prefLabel, definition, and note for every type and field
+    - skos:Collection groupings (ObjectConcepts, FieldConcepts, InterfaceConcepts,
+      InputObjectConcepts, UnionConcepts, and per-enum collections)
 
     Args:
-        schema: The GraphQL schema to materialize.
+        extract: Pre-extracted schema elements.
         namespace: URI namespace for concept URIs.
         prefix: Prefix for concept URIs (e.g., "ns").
         language: BCP 47 language tag for skos:prefLabel.
-        directive_triple_handler: Optional callback to add triples from custom
-            directives. Receives (graph, extract, concept_ns, prefix, language).
 
     Returns:
-        rdflib Graph with all triples.
+        rdflib Graph containing only SKOS triples.
     """
-    graph = Graph()
-    concept_ns = Namespace(namespace)
+    graph, concept_ns = _create_bound_graph(namespace, prefix)
 
-    # Bind namespaces
-    graph.bind("skos", SKOS)
-    graph.bind("s2dm", S2DM)
-    graph.bind(prefix, concept_ns)
+    # Top-level collections
+    object_coll = _add_collection(graph, concept_ns, _COLLECTION_OBJECT_CONCEPTS, "Object Concepts", language)
+    field_coll = _add_collection(graph, concept_ns, _COLLECTION_FIELD_CONCEPTS, "Field Concepts", language)
+    iface_coll = _add_collection(
+        graph,
+        concept_ns,
+        _COLLECTION_INTERFACE_CONCEPTS,
+        "Interface Concepts",
+        language,
+    )
+    input_coll = _add_collection(
+        graph,
+        concept_ns,
+        _COLLECTION_INPUT_CONCEPTS,
+        "Input Object Concepts",
+        language,
+    )
+    union_coll = _add_collection(graph, concept_ns, _COLLECTION_UNION_CONCEPTS, "Union Concepts", language)
 
-    extract = extract_schema_for_rdf(schema)
+    def _skos_field_container(container: RdfFieldContainerType, collection_ref: Node) -> None:
+        """Add SKOS concepts for a field-container type and its fields."""
+        type_uri = concept_ns[container.name]
+        _add_skos_concept(graph, type_uri, container.name, container.description, language)
+        graph.add((collection_ref, SKOS.member, type_uri))
 
-    def _materialize_field_container(
-        container_type: RdfFieldContainerType,
-        s2dm_type: Node,
-    ) -> None:
-        """Materialize ObjectType, InterfaceType, or InputObjectType and their fields."""
-        type_uri = concept_ns[container_type.name]
-        _add_concept_header(
-            graph,
-            type_uri,
-            container_type.name,
-            container_type.description,
-            s2dm_type,
-            language,
-        )
+        for fi in container.fields:
+            field_uri = concept_ns[fi.field_fqn]
+            _add_skos_concept(graph, field_uri, fi.field_fqn, "", language)
+            graph.add((field_coll, SKOS.member, field_uri))
 
-        for field_info in container_type.fields:
-            field_uri = concept_ns[field_info.field_fqn]
-            graph.add((type_uri, S2DM.hasField, field_uri))
-
-            _add_concept_header(
-                graph,
-                field_uri,
-                field_info.field_fqn,
-                "",
-                S2DM.Field,
-                language,
-            )
-
-            if field_info.output_type_name in BUILTIN_SCALARS:
-                output_uri = getattr(S2DM, field_info.output_type_name)
-            else:
-                output_uri = concept_ns[field_info.output_type_name]
-            graph.add((field_uri, S2DM.hasOutputType, output_uri))
-
-            wrapper_pattern = getattr(S2DM, field_info.type_wrapper_pattern)
-            graph.add((field_uri, S2DM.usesTypeWrapperPattern, wrapper_pattern))
-
-    # Materialize object types and fields
     for obj_type in extract.object_types:
-        _materialize_field_container(obj_type, S2DM.ObjectType)
+        _skos_field_container(obj_type, object_coll)
 
-    # Materialize interface types and fields
     for iface_type in extract.interface_types:
-        _materialize_field_container(iface_type, S2DM.InterfaceType)
+        _skos_field_container(iface_type, iface_coll)
 
-    # Materialize input object types and fields
     for input_type in extract.input_object_types:
-        _materialize_field_container(input_type, S2DM.InputObjectType)
+        _skos_field_container(input_type, input_coll)
 
-    # Materialize union types
     for union_type in extract.union_types:
         union_uri = concept_ns[union_type.name]
-        _add_concept_header(
-            graph,
-            union_uri,
-            union_type.name,
-            union_type.description,
-            S2DM.UnionType,
-            language,
-        )
-        for member_name in union_type.member_type_names:
-            member_uri = concept_ns[member_name]
-            graph.add((union_uri, S2DM.hasUnionMember, member_uri))
+        _add_skos_concept(graph, union_uri, union_type.name, union_type.description, language)
+        graph.add((union_coll, SKOS.member, union_uri))
 
-    # Materialize enum types and values
+    for enum_type in extract.enum_types:
+        # Per-enum collection
+        enum_coll = _add_collection(graph, concept_ns, enum_type.name, enum_type.name, language)
+        if enum_type.description.strip():
+            graph.add((concept_ns[enum_type.name], SKOS.definition, Literal(enum_type.description)))
+
+        for value_name in enum_type.values:
+            value_fqn = f"{enum_type.name}.{value_name}"
+            value_uri = concept_ns[value_fqn]
+            _add_skos_concept(graph, value_uri, value_fqn, "", language)
+            graph.add((enum_coll, SKOS.member, value_uri))
+            graph.add((field_coll, SKOS.member, value_uri))
+
+    return graph
+
+
+# ---------------------------------------------------------------------------
+# Data graph (ontology) materialization
+# ---------------------------------------------------------------------------
+
+
+def materialize_data_graph(
+    extract: RdfSchemaExtract,
+    namespace: str,
+    prefix: str,
+    language: str = "en",
+) -> Graph:
+    """Materialize s2dm ontology triples from an extracted schema.
+
+    Produces:
+    - rdf:type triples for s2dm types (ObjectType, Field, EnumType, etc.)
+    - Relationship triples (hasField, hasOutputType, usesTypeWrapperPattern,
+      hasEnumValue, hasUnionMember)
+
+    Args:
+        extract: Pre-extracted schema elements.
+        namespace: URI namespace for concept URIs.
+        prefix: Prefix for concept URIs (e.g., "ns").
+        language: BCP 47 language tag (used for labels on ontology instances).
+
+    Returns:
+        rdflib Graph containing only s2dm ontology triples.
+    """
+    graph, concept_ns = _create_bound_graph(namespace, prefix)
+
+    def _data_field_container(container: RdfFieldContainerType, s2dm_type: Node) -> None:
+        """Add ontology triples for a field-container type and its fields."""
+        type_uri = concept_ns[container.name]
+        graph.add((type_uri, RDF.type, s2dm_type))
+
+        for fi in container.fields:
+            field_uri = concept_ns[fi.field_fqn]
+            graph.add((type_uri, S2DM.hasField, field_uri))
+            graph.add((field_uri, RDF.type, S2DM.Field))
+
+            if fi.output_type_name in BUILTIN_SCALARS:
+                output_uri = getattr(S2DM, fi.output_type_name)
+            else:
+                output_uri = concept_ns[fi.output_type_name]
+            graph.add((field_uri, S2DM.hasOutputType, output_uri))
+
+            wrapper = getattr(S2DM, fi.type_wrapper_pattern)
+            graph.add((field_uri, S2DM.usesTypeWrapperPattern, wrapper))
+
+    for obj_type in extract.object_types:
+        _data_field_container(obj_type, S2DM.ObjectType)
+
+    for iface_type in extract.interface_types:
+        _data_field_container(iface_type, S2DM.InterfaceType)
+
+    for input_type in extract.input_object_types:
+        _data_field_container(input_type, S2DM.InputObjectType)
+
+    for union_type in extract.union_types:
+        union_uri = concept_ns[union_type.name]
+        graph.add((union_uri, RDF.type, S2DM.UnionType))
+        for member_name in union_type.member_type_names:
+            graph.add((union_uri, S2DM.hasUnionMember, concept_ns[member_name]))
+
     for enum_type in extract.enum_types:
         enum_uri = concept_ns[enum_type.name]
-        _add_concept_header(
-            graph,
-            enum_uri,
-            enum_type.name,
-            enum_type.description,
-            S2DM.EnumType,
-            language,
-        )
+        graph.add((enum_uri, RDF.type, S2DM.EnumType))
         for value_name in enum_type.values:
             value_fqn = f"{enum_type.name}.{value_name}"
             value_uri = concept_ns[value_fqn]
             graph.add((enum_uri, S2DM.hasEnumValue, value_uri))
-            _add_concept_header(
-                graph,
-                value_uri,
-                value_fqn,
-                "",
-                S2DM.EnumValue,
-                language,
-            )
-
-    if directive_triple_handler is not None:
-        directive_triple_handler(graph, extract, concept_ns, prefix, language)
+            graph.add((value_uri, RDF.type, S2DM.EnumValue))
 
     return graph
+
+
+# ---------------------------------------------------------------------------
+# Serialization and file output
+# ---------------------------------------------------------------------------
 
 
 def _sort_ntriples_lines(nt_str: str) -> str:

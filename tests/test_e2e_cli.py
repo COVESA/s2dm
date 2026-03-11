@@ -230,48 +230,14 @@ def test_export_protobuf_flattened_naming(
     assert 'optional bool Vehicle_adas_abs_isEngaged = 3 [(field_source) = "Vehicle_ADAS_ABS"];' in content
 
 
-def test_generate_skos_skeleton(
-    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
-) -> None:
-    out = tmp_outputs / "skos_skeleton.ttl"
+def test_export_rdf(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    """Export RDF produces separate SKOS and data graph files."""
+    out_dir = tmp_outputs / "rdf"
     result = runner.invoke(
         cli,
         [
-            "generate",
-            "skos-skeleton",
-            "-s",
-            str(spec_directory),
-            "-s",
-            str(TSD.SAMPLE1_1),
-            "-s",
-            str(TSD.SAMPLE1_2),
-            "-s",
-            str(units_directory),
-            "-o",
-            str(out),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert out.exists()
-    with open(out, encoding="utf-8") as f:
-        content = f.read()
-
-    assert "@prefix skos:" in content
-    assert "skos:Concept" in content
-    assert "skos:prefLabel" in content
-
-    assert "Vehicle" in content
-    assert "Vehicle_ADAS_ObstacleDetection" in content
-
-
-def test_generate_schema_rdf(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
-    """Generate RDF triples from GraphQL schema."""
-    out_dir = tmp_outputs / "schema_rdf"
-    result = runner.invoke(
-        cli,
-        [
-            "generate",
-            "schema-rdf",
+            "export",
+            "rdf",
             "-s",
             str(spec_directory),
             "-s",
@@ -287,18 +253,29 @@ def test_generate_schema_rdf(runner: CliRunner, tmp_outputs: Path, spec_director
         ],
     )
     assert result.exit_code == 0, result.output
-    nt_file = out_dir / "schema.nt"
-    ttl_file = out_dir / "schema.ttl"
-    assert nt_file.exists(), result.output
-    assert ttl_file.exists(), result.output
 
-    nt_content = nt_file.read_text()
-    assert "skos:Concept" in nt_content or "Concept" in nt_content
-    assert "hasField" in nt_content or "hasOutputType" in nt_content
+    # Verify all four output files exist
+    assert (out_dir / "skos.nt").exists(), result.output
+    assert (out_dir / "skos.ttl").exists(), result.output
+    assert (out_dir / "data_graph.nt").exists(), result.output
+    assert (out_dir / "data_graph.ttl").exists(), result.output
 
-    ttl_content = ttl_file.read_text()
-    assert "@prefix" in ttl_content
-    assert "Vehicle" in ttl_content
+    # SKOS file assertions
+    skos_ttl = (out_dir / "skos.ttl").read_text()
+    assert "@prefix skos:" in skos_ttl
+    assert "Vehicle" in skos_ttl
+
+    skos_nt = (out_dir / "skos.nt").read_text()
+    assert "Concept" in skos_nt
+    assert "prefLabel" in skos_nt or "skos" in skos_nt
+
+    # Data graph assertions
+    data_nt = (out_dir / "data_graph.nt").read_text()
+    assert "hasField" in data_nt or "hasOutputType" in data_nt
+
+    data_ttl = (out_dir / "data_graph.ttl").read_text()
+    assert "@prefix" in data_ttl
+    assert "Vehicle" in data_ttl
 
 
 @pytest.mark.parametrize(
@@ -779,12 +756,12 @@ def test_search_graphql(
 
 
 def test_search_skos(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
-    skos_file = tmp_outputs / "test_skos.ttl"
+    rdf_dir = tmp_outputs / "search_rdf"
     result = runner.invoke(
         cli,
         [
-            "generate",
-            "skos-skeleton",
+            "export",
+            "rdf",
             "-s",
             str(spec_directory),
             "-s",
@@ -794,10 +771,13 @@ def test_search_skos(runner: CliRunner, tmp_outputs: Path, spec_directory: Path,
             "-s",
             str(units_directory),
             "-o",
-            str(skos_file),
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
         ],
     )
     assert result.exit_code == 0, result.output
+    skos_file = rdf_dir / "skos.ttl"
     assert skos_file.exists()
 
     result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "Vehicle"])
