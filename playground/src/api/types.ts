@@ -3,12 +3,18 @@ type ContentInput = {
 	content: string;
 };
 
+type FileContentInput = {
+	type: "file_content";
+	filename: string;
+	content: string;
+};
+
 type UrlInput = {
 	type: "url";
 	url: string;
 };
 
-export type SchemaInput = ContentInput | UrlInput;
+export type SchemaInput = ContentInput | FileContentInput | UrlInput;
 export type QueryInput = ContentInput;
 
 type ResponseMetadata = {
@@ -61,6 +67,7 @@ export type SchemaProperty = {
 	required: boolean;
 	format?: string;
 	cliFlagName?: string;
+	docsUrl?: string;
 };
 
 export type ExporterCapability = {

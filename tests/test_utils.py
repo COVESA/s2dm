@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import Mock, patch
@@ -210,6 +211,44 @@ def test_prune_schema_with_nested_input_objects() -> None:
     assert "SpecsFilter" in pruned_schema.type_map
     assert "VehicleType" in pruned_schema.type_map
     assert "DateTime" in pruned_schema.type_map
+
+
+def test_prune_schema_keeps_directive_argument_list_input_object_definition() -> None:
+    schema_str = """
+    directive @metadata(metadata: [KeyValue]) on FIELD_DEFINITION
+
+    input KeyValue {
+      key: String
+      value: String
+    }
+
+    type Car {
+      id: ID!
+    }
+
+    type Query {
+      cars: [Car]! @metadata(metadata: [{key: "source", value: "test"}])
+      ignored: String
+    }
+    """
+
+    query_str = """
+    query Selection {
+      cars {
+        id
+      }
+    }
+    """
+
+    schema = build_schema(schema_str)
+    selection_query = parse(query_str)
+    pruned_schema = schema_loader_utils.prune_schema_using_query_selection(schema, selection_query)
+    pruned_schema_str = schema_loader_utils.print_schema_with_directives_preserved(pruned_schema)
+
+    assert re.search(
+        r"input KeyValue \{\n\s+key: String\n\s+value: String\n\}",
+        pruned_schema_str,
+    )
 
 
 # #########################################################

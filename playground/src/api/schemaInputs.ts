@@ -9,6 +9,15 @@ export function mapImportedFilesToSchemaInputs(
 			return { type: "url", url: importedFile.path };
 		}
 
-		return { type: "content", content: importedFile.content ?? "" };
+		const content = importedFile.content ?? "";
+		if (importedFile.name.trim()) {
+			return {
+				type: "file_content",
+				filename: importedFile.name,
+				content,
+			};
+		}
+
+		return { type: "content", content };
 	});
 }

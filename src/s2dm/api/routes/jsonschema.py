@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from s2dm.api.config import COMMON_RESPONSES
+from s2dm.api.errors import ResponseError
 from s2dm.api.models.base import ApiResponse
 from s2dm.api.models.jsonschema import JsonSchemaExportRequest
 from s2dm.api.services.response_service import execute_and_respond
@@ -32,7 +33,7 @@ def export_jsonschema(request: JsonSchemaExportRequest) -> ApiResponse:
 
         schema_errors = check_correct_schema(annotated_schema.schema)
         if schema_errors:
-            raise ValueError(f"Schema validation failed: {'; '.join(schema_errors)}")
+            raise ResponseError(f"Schema validation failed: {'; '.join(schema_errors)}")
 
         json_schema = translate_to_jsonschema(annotated_schema, request.root_type, request.strict)
         return [json_schema]

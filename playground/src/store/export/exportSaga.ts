@@ -15,6 +15,47 @@ import { selectSourceFiles } from "@/store/schema/schemaSlice";
 import { selectSelectionQuery } from "@/store/selection/selectionSlice";
 import type { ImportedFile } from "@/types/importedFile";
 
+function getExportErrorMessage(err: unknown): string {
+	if (err instanceof AxiosError) {
+		if (typeof err.response?.data?.message === "string") {
+			return err.response.data.message;
+		}
+
+		if (err.code === "ECONNABORTED") {
+			return "The API request timed out";
+		}
+
+		if (err.code === "ERR_NETWORK") {
+			return "Cannot reach the API server";
+		}
+	}
+
+	if (err instanceof Error) {
+		return err.message;
+	}
+
+	return String(err);
+}
+
+function isEmpty(value: unknown, propertyType: string): boolean {
+	if (value === null || value === undefined) {
+		return true;
+	}
+
+	if (propertyType === "string" || propertyType === "contentWrappable") {
+		return typeof value !== "string" || value.trim().length === 0;
+	}
+
+	if (
+		(propertyType === "integer" || propertyType === "number") &&
+		typeof value === "number"
+	) {
+		return Number.isNaN(value);
+	}
+
+	return false;
+}
+
 function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 	try {
 		const { endpoint } = action.payload;
@@ -37,11 +78,7 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 		}
 
 		for (const [key, property] of Object.entries(exporter.properties)) {
-			if (
-				property.required &&
-				(exporter.propertyValues[key] === null ||
-					exporter.propertyValues[key] === undefined)
-			) {
+			if (property.required && isEmpty(exporter.propertyValues[key], property.type)) {
 				missingRequired.push(property.title || key);
 			}
 		}
@@ -66,17 +103,21 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 		const transformedValues: Record<string, unknown> = {};
 		for (const [key, value] of Object.entries(exporter.propertyValues)) {
 			const property = exporter.properties[key];
-
-			if (
-				property?.type === "contentWrappable" &&
-				value !== null &&
-				value !== undefined &&
-				value !== ""
-			) {
-				transformedValues[key] = { type: "content", content: value };
-			} else {
-				transformedValues[key] = value;
+			if (!property || isEmpty(value, property.type)) {
+				continue;
 			}
+
+			if (property?.type === "contentWrappable") {
+				if (value !== null && value !== undefined) {
+					transformedValues[key] = {
+						type: "content",
+						content: typeof value === "string" ? value.trim() : String(value),
+					};
+					continue;
+				}
+			}
+
+			transformedValues[key] = value;
 		}
 
 		const requestPayload = {
@@ -96,16 +137,7 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 
 		yield put(exportSuccess({ endpoint, output, format }));
 	} catch (err) {
-		let errorMsg = "Export failed";
-
-		if (err instanceof AxiosError && err.response?.data?.message) {
-			errorMsg = err.response.data.message;
-		} else if (err instanceof Error) {
-			errorMsg = err.message;
-		} else {
-			errorMsg = String(err);
-		}
-
+		const errorMsg = getExportErrorMessage(err);
 		yield put(exportFailure({ endpoint: action.payload.endpoint, error: errorMsg }));
 	}
 }

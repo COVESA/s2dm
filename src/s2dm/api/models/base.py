@@ -24,9 +24,17 @@ class ContentInput(BaseModel):
     content: str = Field(description="Inline content as string")
 
 
+class FileContentInput(BaseModel):
+    """Input with file-backed content and original filename."""
+
+    type: Literal["file_content"] = Field(description="Input type discriminator")
+    filename: str = Field(description="Original filename provided by client")
+    content: str = Field(description="Inline file content as string")
+
+
 BaseInput = PathInput | ContentInput
 ConfigInput = BaseInput
-SchemaInput = BaseInput | UrlInput
+SchemaInput = BaseInput | FileContentInput | UrlInput
 
 
 class BaseExportRequest(BaseModel):
@@ -44,7 +52,11 @@ class BaseExportRequest(BaseModel):
     naming_config: ConfigInput | None = Field(
         default=None,
         description="Optional YAML naming configuration (path or inline content)",
-        json_schema_extra={"x-property-format": "yaml", "x-cli-flag": "--naming-config"},
+        json_schema_extra={
+            "x-property-format": "yaml",
+            "x-cli-flag": "--naming-config",
+            "x-docs-url": "https://covesa.github.io/s2dm/docs/tools/command-line-interface-cli/#naming-configuration",
+        },
     )
     root_type: str | None = Field(
         default=None,

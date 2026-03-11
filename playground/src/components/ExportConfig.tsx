@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { TextEditor } from "@/components/TextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
@@ -29,6 +30,46 @@ export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 		);
 	};
 
+	const renderDocsLink = (docsUrl?: string, iconOnly = false) => {
+		if (!docsUrl) {
+			return null;
+		}
+
+		return (
+			<a
+				href={docsUrl}
+				target="_blank"
+				rel="noreferrer"
+				className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+				title="Learn more"
+			>
+				{!iconOnly && <span>Learn more</span>}
+				<ExternalLink className="h-3.5 w-3.5" />
+			</a>
+		);
+	};
+
+	const renderFieldHeader = (propertyKey: string) => {
+		if (!exporter) {
+			return null;
+		}
+
+		const property = exporter.properties[propertyKey];
+
+		return (
+			<div className="flex items-center gap-2">
+				<FormLabel
+					htmlFor={propertyKey}
+					showRequired={property.required}
+					className="mb-1"
+				>
+					{property.title || propertyKey}
+				</FormLabel>
+				{renderDocsLink(property.docsUrl, true)}
+			</div>
+		);
+	};
+
 	const renderField = (propertyKey: string) => {
 		if (!exporter) {
 			return null;
@@ -43,24 +84,27 @@ export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 			return (
 				<div
 					key={propertyKey}
-					className="flex items-center space-x-2"
+					className="flex items-center justify-between gap-3"
 					title={property.description}
 				>
-					<Checkbox
-						id={propertyKey}
-						checked={
-							exporter.propertyValues[propertyKey] === true ||
-							exporter.propertyValues[propertyKey] === "true"
-						}
-						onCheckedChange={(checked) =>
-							handleValueChange(propertyKey, checked)
-						}
-					/>
-					<FormLabel htmlFor={propertyKey} showRequired={property.required}>
-						<span className="cursor-pointer">
-							{property.title || propertyKey}
-						</span>
-					</FormLabel>
+					<div className="flex items-center space-x-2">
+						<Checkbox
+							id={propertyKey}
+							checked={
+								exporter.propertyValues[propertyKey] === true ||
+								exporter.propertyValues[propertyKey] === "true"
+							}
+							onCheckedChange={(checked) =>
+								handleValueChange(propertyKey, checked)
+							}
+						/>
+						<FormLabel htmlFor={propertyKey} showRequired={property.required}>
+							<span className="cursor-pointer">
+								{property.title || propertyKey}
+							</span>
+						</FormLabel>
+					</div>
+					{renderDocsLink(property.docsUrl, true)}
 				</div>
 			);
 		}
@@ -68,31 +112,33 @@ export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 		if (property.type === "contentWrappable") {
 			const fileExtension = property.format || "txt";
 			const fileName = `${propertyKey}.${fileExtension}`;
+			const fieldTitle = property.title || propertyKey;
 
 			return (
-				<div key={propertyKey} className="space-y-2">
-					<FormLabel htmlFor={propertyKey} showRequired={property.required}>
-						{property.title || propertyKey}
-					</FormLabel>
+				<CollapsibleSection
+					key={propertyKey}
+					title={fieldTitle}
+					defaultCollapsed={true}
+					className="space-y-2"
+				>
+					{renderDocsLink(property.docsUrl)}
 					<div className="h-48 border rounded-md overflow-hidden">
 						<TextEditor
 							language={property.format || "plaintext"}
 							value={String(exporter.propertyValues[propertyKey] || "")}
 							onChange={(value) => handleValueChange(propertyKey, value)}
-							fullscreenTitle={property.title || propertyKey}
+							fullscreenTitle={fieldTitle}
 							fileName={fileName}
 						/>
 					</div>
-				</div>
+				</CollapsibleSection>
 			);
 		}
 
 		if (property.type === "string") {
 			return (
 				<div key={propertyKey} className="space-y-2">
-					<FormLabel htmlFor={propertyKey} showRequired={property.required}>
-						{property.title || propertyKey}
-					</FormLabel>
+					{renderFieldHeader(propertyKey)}
 					<Input
 						id={propertyKey}
 						value={String(exporter.propertyValues[propertyKey] || "")}
@@ -106,14 +152,19 @@ export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 		if (property.type === "integer" || property.type === "number") {
 			return (
 				<div key={propertyKey} className="space-y-2">
-					<FormLabel htmlFor={propertyKey} showRequired={property.required}>
-						{property.title || propertyKey}
-					</FormLabel>
+					{renderFieldHeader(propertyKey)}
 					<Input
 						id={propertyKey}
 						type="number"
 						value={String(exporter.propertyValues[propertyKey] ?? "")}
 						onChange={(e) => {
+							// Store cleared numeric inputs as null so the form state represents "no value"
+							// instead of NaN; exportSaga already omits null fields from API requests.
+							if (e.target.value.trim() === "") {
+								handleValueChange(propertyKey, null);
+								return;
+							}
+
 							const numValue =
 								property.type === "integer"
 									? Number.parseInt(e.target.value, 10)
@@ -164,34 +215,42 @@ export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 			}
 		}
 
-		const sortByRequired = (keys: string[]) => {
-			const required = keys.filter((key) => exporter.properties[key].required);
-			const optional = keys.filter((key) => !exporter.properties[key].required);
-			return [...required, ...optional];
+		const getSortedKeys = (required: boolean) => {
+			const filterByRequired = (keys: string[]) =>
+				keys.filter((key) => exporter.properties[key].required === required);
+
+			return [
+				...filterByRequired(contentWrappableKeys),
+				...filterByRequired(stringKeys),
+				...filterByRequired(numberKeys),
+				...filterByRequired(booleanKeys),
+			];
 		};
 
-		const sortedContentWrappableKeys = sortByRequired(contentWrappableKeys);
-		const sortedBooleanKeys = sortByRequired(booleanKeys);
-		const sortedStringKeys = sortByRequired(stringKeys);
-		const sortedNumberKeys = sortByRequired(numberKeys);
-
-		const allSortedKeys = [
-			...sortedContentWrappableKeys,
-			...sortedStringKeys,
-			...sortedNumberKeys,
-			...sortedBooleanKeys,
-		];
+		const requiredKeys = getSortedKeys(true);
+		const optionalKeys = getSortedKeys(false);
 
 		return (
 			<div className="space-y-4 py-3">
-				{allSortedKeys.map((key) => renderField(key))}
+				{requiredKeys.length > 0 && (
+					<div className="space-y-4 px-4">
+						{requiredKeys.map((key) => renderField(key))}
+					</div>
+				)}
+
+				{optionalKeys.length > 0 && (
+					<CollapsibleSection
+						title="Export configuration"
+						defaultCollapsed={true}
+					>
+						<div className="space-y-4 py-3">
+							{optionalKeys.map((key) => renderField(key))}
+						</div>
+					</CollapsibleSection>
+				)}
 			</div>
 		);
 	};
 
-	return (
-		<CollapsibleSection title="Export configuration">
-			{renderContent()}
-		</CollapsibleSection>
-	);
+	return renderContent();
 }

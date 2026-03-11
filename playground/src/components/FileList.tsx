@@ -16,7 +16,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-	CheckCircle,
 	FileText,
 	Folder,
 	GripVertical,
@@ -51,7 +50,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
-import { resetApp } from "@/store/app/appSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectSourceFiles, setSourceFiles } from "@/store/schema/schemaSlice";
 import { selectIsValidating } from "@/store/validation/validationSlice";
@@ -243,7 +241,7 @@ export function FileList({ onCompose }: FileListProps) {
 
 	const confirmClearAll = useCallback(() => {
 		setShowClearConfirm(false);
-		dispatch(resetApp());
+		dispatch(setSourceFiles([]));
 	}, [dispatch]);
 
 	const handleDragEnd = (event: DragEndEvent) => {
@@ -257,6 +255,18 @@ export function FileList({ onCompose }: FileListProps) {
 		}
 	};
 
+	let buttonContent: React.ReactNode;
+	if (isValidating) {
+		buttonContent = "Validating...";
+	} else {
+		buttonContent = (
+			<>
+				<Layers />
+				Compose and Validate
+			</>
+		);
+	}
+
 	const renderFileList = () => {
 		if (files.length === 0) {
 			return null;
@@ -268,28 +278,9 @@ export function FileList({ onCompose }: FileListProps) {
 			<SortableFileItem key={file.path} file={file} onRemove={handleRemove} />
 		));
 
-		let buttonContent: React.ReactNode;
-		if (isValidating) {
-			buttonContent = "Validating...";
-		} else if (files.length === 1) {
-			buttonContent = (
-				<>
-					<CheckCircle />
-					Validate
-				</>
-			);
-		} else {
-			buttonContent = (
-				<>
-					<Layers />
-					Compose and Validate
-				</>
-			);
-		}
-
 		return (
 			<CollapsibleSection title={fileCountText}>
-				<div className="overflow-y-auto max-h-100">
+				<div className="overflow-y-auto max-h-80">
 					<DndContext
 						sensors={sensors}
 						collisionDetection={closestCenter}
@@ -302,23 +293,6 @@ export function FileList({ onCompose }: FileListProps) {
 							<ul className="space-y-1 py-2">{fileItems}</ul>
 						</SortableContext>
 					</DndContext>
-				</div>
-				<div className="flex gap-2">
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex-1"
-						onClick={onCompose}
-						disabled={files.length === 0}
-						loading={isValidating}
-						title={
-							files.length === 1
-								? "Validate schema file"
-								: "Compose and validate schema files"
-						}
-					>
-						{buttonContent}
-					</Button>
 				</div>
 			</CollapsibleSection>
 		);
@@ -367,6 +341,24 @@ export function FileList({ onCompose }: FileListProps) {
 			)}
 
 			{renderFileList()}
+
+			{files.length > 0 && (
+				<div className="px-2 pt-2">
+					<Button
+						variant="outline"
+						size="sm"
+						className="w-full"
+						onClick={onCompose}
+						disabled={files.length === 0}
+						loading={isValidating}
+						title={
+							"Compose and validate schema files"
+						}
+					>
+						{buttonContent}
+					</Button>
+				</div>
+			)}
 
 			{files.length > 0 && (
 				<div className="px-2 pt-4 pb-2">

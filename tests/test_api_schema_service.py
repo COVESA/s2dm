@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from pydantic import AnyHttpUrl
 
-from s2dm.api.models.base import ContentInput, PathInput, UrlInput
+from s2dm.api.models.base import ContentInput, FileContentInput, PathInput, UrlInput
 from s2dm.api.services import schema_service
 from s2dm.exporters.utils import schema_loader
 
@@ -165,3 +165,36 @@ class TestProcessSchemaInputDispatch:
 
         path_mock.assert_called_once_with(schema_input, "schema", ".graphql")
         assert result == source_path
+
+    def test_file_content_input_converts_to_temp_path(self, tmp_path: Path) -> None:
+        """File content inputs are delegated to path_for_content with schema parameters."""
+        expected_path = tmp_path / "vehicle.graphql"
+        schema_input = FileContentInput(
+            type="file_content",
+            filename="vehicle.graphql",
+            content="type Query { ping: String }",
+        )
+
+        with patch("s2dm.api.services.schema_service.path_for_content", return_value=expected_path) as path_mock:
+            result = schema_service.process_schema_input(schema_input)
+
+        path_mock.assert_called_once_with(schema_input, "schema", ".graphql")
+        assert result == expected_path
+
+
+class TestPathForContent:
+    def test_file_content_preserves_filename(self) -> None:
+        """File content inputs preserve the provided filename in temp storage."""
+        schema_input = FileContentInput(
+            type="file_content",
+            filename="vehicle.graphql",
+            content="type Query { vehicle: String }",
+        )
+
+        result = schema_service.path_for_content(schema_input, "schema", ".graphql")
+
+        assert result.name == "vehicle.graphql"
+        assert result.read_text(encoding="utf-8") == "type Query { vehicle: String }"
+
+        result.unlink()
+        result.parent.rmdir()

@@ -1,6 +1,6 @@
 import { DocExplorer } from "@graphiql/plugin-doc-explorer";
 import { GraphiQLProvider, useGraphiQLActions } from "@graphiql/react";
-import { buildSchema, execute, parse } from "graphql";
+import { GraphQLError, buildSchema, execute, parse } from "graphql";
 import { Download } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pane } from "@/components/Pane";
@@ -125,7 +125,7 @@ export function ExplorePane({
 				console.error("Fetcher error:", error);
 				return {
 					errors: [
-						{ message: error instanceof Error ? error.message : String(error) },
+						new GraphQLError(error instanceof Error ? error.message : String(error)),
 					],
 				};
 			}

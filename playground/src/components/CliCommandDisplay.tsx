@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { selectExporterByEndpoint } from "@/store/capabilities/capabilitiesSlice";
@@ -95,9 +95,10 @@ export function CliCommandDisplay(props: CliCommandDisplayProps) {
 				href="https://covesa.github.io/s2dm/docs/tools/command-line-interface-cli/"
 				target="_blank"
 				rel="noopener noreferrer"
-				className="text-sm text-muted-foreground hover:text-foreground inline-block"
+				className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
 			>
-				Learn more about CLI commands →
+				<span>Learn more about CLI commands</span>
+				<ExternalLink className="h-3.5 w-3.5" />
 			</a>
 		</div>
 	);
