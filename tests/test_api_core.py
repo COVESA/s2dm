@@ -162,7 +162,8 @@ class TestExceptionHandlers:
 
         assert response.status_code == 422
         data = response.json()
-        assert data["error"] == "GraphQLSyntaxError"
+        assert data["error"] == "ValidationError"
+        assert "Syntax Error" in data["message"]
 
     def test_graphql_error_returns_422(self, test_client: TestClient) -> None:
         """GraphQLError is mapped to 422."""
@@ -173,7 +174,8 @@ class TestExceptionHandlers:
 
         assert response.status_code == 422
         data = response.json()
-        assert data["error"] == "GraphQLError"
+        assert data["error"] == "ValidationError"
+        assert "validation failed" in data["message"]
 
     def test_unhandled_exception_returns_500(self) -> None:
         """Unexpected exceptions are mapped to 500."""
