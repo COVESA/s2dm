@@ -203,6 +203,7 @@ avro_namespace_option = click.option(
 
 naming_config_option = click.option(
     "--naming-config",
+    "-n",
     type=click.Path(exists=True, path_type=Path),
     help="YAML file containing naming configuration",
 )
