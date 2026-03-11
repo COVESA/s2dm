@@ -57,6 +57,7 @@ class IDExporter:
         output: Path | None = None,
         previous_ids_path: Path | None = None,
         diff_output: list[DiffChange] | None = None,
+        namespace_prefix: str | None = None,
     ):
         """Initialize IDExporter with diff-based ID generation.
 
@@ -66,12 +67,14 @@ class IDExporter:
             previous_ids_path: Path to previous ID file for comparison (optional)
             diff_output: Structured diff output from graphql-inspector (optional)
             version_tag: Version tag/identifier for metadata (required)
+            namespace_prefix: Optional prefix prepended to IDs (e.g., "ns" -> "ns:Concept/v1.0")
         """
         self.schema = schema
         self.output = output
         self.previous_ids_path = previous_ids_path
         self.diff_output = diff_output
         self.version_tag = version_tag
+        self.namespace_prefix = namespace_prefix
 
     def iter_all_concept_names(self, named_types: list[GraphQLNamedType]) -> Generator[str, None, None]:
         """Iterate over all concept names for enums, object types, and object fields.
@@ -178,7 +181,9 @@ class IDExporter:
             return (major, minor + 1)
 
     def generate_variant_id(self, concept_name: str, major: int, minor: int) -> str:
-        """Generate variant-based ID in format: Concept/vM.m (semantic version).
+        """Generate variant-based ID in format: [prefix:]Concept/vM.m (semantic version).
+
+        When ``namespace_prefix`` is set, the ID is prefixed (e.g., "ns:Concept/v1.0").
 
         Args:
             concept_name: The fully qualified concept name
@@ -186,9 +191,12 @@ class IDExporter:
             minor: Minor version number
 
         Returns:
-            A variant ID string in the format: "Concept/vM.m" (e.g., "Concept/v1.0")
+            A variant ID string, optionally prefixed.
         """
-        return f"{concept_name}/v{major}.{minor}"
+        base = f"{concept_name}/v{major}.{minor}"
+        if self.namespace_prefix:
+            return f"{self.namespace_prefix}:{base}"
+        return base
 
     def run(self) -> VariantIDFile:
         """Generate variant-based IDs for GraphQL schema fields and enums.
