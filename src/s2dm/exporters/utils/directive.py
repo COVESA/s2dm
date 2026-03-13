@@ -14,6 +14,8 @@ from graphql import (
     GraphQLType,
     GraphQLUnionType,
     IntValueNode,
+    ListValueNode,
+    ObjectValueNode,
 )
 from graphql.language.printer import print_ast
 
@@ -37,6 +39,21 @@ def get_type_directive_location(graphql_type: GraphQLType) -> DirectiveLocation 
     return None
 
 
+def _parse_value_node(node: Any) -> Any:
+    """Recursively convert a GraphQL AST value node to a plain Python value."""
+    if isinstance(node, IntValueNode):
+        return int(node.value)
+    if isinstance(node, FloatValueNode):
+        return float(node.value)
+    if isinstance(node, ListValueNode):
+        return [_parse_value_node(v) for v in node.values]
+    if isinstance(node, ObjectValueNode):
+        return {f.name.value: _parse_value_node(f.value) for f in node.fields}
+    if hasattr(node, "value"):
+        return node.value
+    return node
+
+
 def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive_name: str) -> dict[str, Any]:
     """
     Extracts the arguments of a specified directive from a GraphQL element.
@@ -45,26 +62,14 @@ def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive
         directive_name: The name of the directive whose arguments are to be extracted.
     Returns:
         dict[str, Any]: A dictionary containing the directive arguments with proper type conversion.
+                        List and object argument values are recursively converted to plain Python
+                        lists and dicts.
     """
     if not has_given_directive(element, directive_name) or not element.ast_node:
         return {}
 
     directive = next(d for d in element.ast_node.directives if d.name.value == directive_name)
-    args: dict[str, Any] = {}
-
-    for arg in directive.arguments:
-        arg_name = arg.name.value
-        if hasattr(arg.value, "value"):
-            if isinstance(arg.value, IntValueNode):
-                args[arg_name] = int(arg.value.value)
-            elif isinstance(arg.value, FloatValueNode):
-                args[arg_name] = float(arg.value.value)
-            else:
-                args[arg_name] = arg.value.value
-        else:
-            args[arg_name] = arg.value
-
-    return args
+    return {arg.name.value: _parse_value_node(arg.value) for arg in directive.arguments}
 
 
 def has_given_directive(element: GraphQLObjectType | GraphQLField, directive_name: str) -> bool:

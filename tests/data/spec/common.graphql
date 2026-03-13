@@ -76,6 +76,7 @@ input InCabinArea3x3Input @reference(source: "common_types.graphql") {
   column: ThreeColumnsInCabinEnum
 }
 
+
 type Query {
   ping: String
 }
