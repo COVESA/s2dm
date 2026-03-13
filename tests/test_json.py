@@ -5,18 +5,9 @@ from pathlib import Path
 import pytest
 from graphql import build_schema
 
-from s2dm.exporters.json import JsonExporter, SCALAR_TO_DATATYPE
+from s2dm.exporters.json import JsonExporter
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.schema_loader import load_and_process_schema
-
-
-def test_scalar_to_datatype_mapping() -> None:
-    """Test that scalar to datatype mapping is complete."""
-    assert SCALAR_TO_DATATYPE["Int8"] == "int8"
-    assert SCALAR_TO_DATATYPE["UInt8"] == "uint8"
-    assert SCALAR_TO_DATATYPE["Float"] == "float"
-    assert SCALAR_TO_DATATYPE["Boolean"] == "boolean"
-    assert SCALAR_TO_DATATYPE["String"] == "string"
 
 
 def test_simple_scalar_field() -> None:
@@ -35,12 +26,12 @@ def test_simple_scalar_field() -> None:
 
     assert "Vehicle" in result
     vehicle = result["Vehicle"]
-    assert vehicle["type"] == "branch"
+    assert "type" not in vehicle  # No type in default mode
     assert "children" in vehicle
     assert "speed" in vehicle["children"]
 
     speed = vehicle["children"]["speed"]
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
     assert speed["description"] == "Vehicle speed in km/h"
     # No 'type' field without @vspec
 
@@ -84,7 +75,7 @@ def test_metadata_directive() -> None:
     # @metadata is ignored without @vspec
     assert "comment" not in speed
     assert "type" not in speed
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
 
 
 def test_enum_field() -> None:
@@ -108,7 +99,7 @@ def test_enum_field() -> None:
     result = exporter.export(root_type="Vehicle")
     gear = result["Vehicle"]["children"]["gear"]
 
-    assert gear["datatype"] == "string"
+    assert gear["datatype"] == "GearPosition"
     # No 'allowed' field without @vspec
     assert "allowed" not in gear
 
@@ -127,7 +118,7 @@ def test_array_type() -> None:
     result = exporter.export(root_type="Vehicle")
     seat_pos = result["Vehicle"]["children"]["seatPosCount"]
 
-    assert seat_pos["datatype"] == "int32[]"
+    assert seat_pos["datatype"] == "Int[]"
 
 
 def test_nested_object_types() -> None:
@@ -149,7 +140,7 @@ def test_nested_object_types() -> None:
     result = exporter.export(root_type="Vehicle")
     door = result["Vehicle"]["children"]["door"]
 
-    assert door["type"] == "branch"
+    assert "type" not in door  # No type in default mode
     assert "children" in door
     assert "isOpen" in door["children"]
     assert "isLocked" in door["children"]
@@ -220,7 +211,7 @@ def test_combined_directives() -> None:
     result = exporter.export(root_type="Vehicle")
     speed = result["Vehicle"]["children"]["speed"]
 
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
     assert speed["description"] == "Current speed"
     assert speed["min"] == 0.0
     assert speed["max"] == 250.0

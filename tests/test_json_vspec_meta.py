@@ -5,15 +5,12 @@ import textwrap
 from pathlib import Path
 from typing import Any
 
-import pytest
-import yaml
 from click.testing import CliRunner
 from graphql import build_schema
 
 from s2dm.cli import cli
 from s2dm.exporters.json import JsonExporter, export_to_json_tree, load_vspec_lookup
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
-
 
 # ---------------------------------------------------------------------------
 # load_vspec_lookup
@@ -186,6 +183,7 @@ type Vehicle {
 }
 """
     from graphql import build_schema as _build
+
     from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 
     schema = _build(schema_str)
@@ -266,8 +264,8 @@ def test_export_with_vspec_meta_partial_override(tmp_path: Path) -> None:
     assert speed["unit"] == "km/h"
     # @vspec(element:...) is still processed in vspec-meta mode
     assert speed["type"] == "sensor"
-    # Schema-intrinsic datatype is preserved
-    assert speed["datatype"] == "float"
+    # Datatype is preserved (raw scalar name, may be overwritten by YAML overlay)
+    assert speed["datatype"] == "Float"
 
 
 # ---------------------------------------------------------------------------

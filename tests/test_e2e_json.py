@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from s2dm.cli import cli
@@ -23,7 +22,7 @@ def test_json_export_cli_basic(tmp_path: Path, spec_directory: Path) -> None:
             str(spec_directory / "common.graphql"),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0, f"CLI failed with: {result.output}"
@@ -34,10 +33,9 @@ def test_json_export_cli_basic(tmp_path: Path, spec_directory: Path) -> None:
     assert isinstance(data, dict)
     assert len(data) > 0
 
-    # Check that at least one type was exported
+    # Check that at least one type was exported (no 'type' key in default mode)
     for type_name, type_data in data.items():
-        assert "type" in type_data
-        assert type_data["type"] == "branch"
+        assert "type" not in type_data  # No type in default mode
         if "children" in type_data:
             assert isinstance(type_data["children"], dict)
         break
@@ -74,7 +72,7 @@ def test_json_export_with_root_type(tmp_path: Path) -> None:
             "Vehicle",
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0
@@ -115,7 +113,7 @@ def test_json_export_with_directives(tmp_path: Path) -> None:
             str(schema_file),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0
@@ -125,7 +123,7 @@ def test_json_export_with_directives(tmp_path: Path) -> None:
     assert "children" in vehicle
 
     speed = vehicle["children"]["speed"]
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
     assert speed["min"] == 0.0
     assert speed["max"] == 250.0
     assert speed["description"] == "Vehicle speed in km/h"
@@ -167,14 +165,14 @@ def test_json_export_with_enum(tmp_path: Path) -> None:
             str(schema_file),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0
     data = json.loads(output_file.read_text())
 
     gear = data["Vehicle"]["children"]["gear"]
-    assert gear["datatype"] == "string"
+    assert gear["datatype"] == "GearPosition"
     # No allowed field without @vspec
     assert "allowed" not in gear
 
@@ -214,7 +212,7 @@ def test_json_export_nested_types(tmp_path: Path) -> None:
             str(schema_file),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0
@@ -224,14 +222,14 @@ def test_json_export_nested_types(tmp_path: Path) -> None:
     assert "door" in vehicle["children"]
 
     door = vehicle["children"]["door"]
-    assert door["type"] == "branch"
+    assert "type" not in door  # No type in default mode
     assert door["description"] == "Vehicle doors"
     assert "children" in door
     assert "isOpen" in door["children"]
     assert "isLocked" in door["children"]
 
     is_open = door["children"]["isOpen"]
-    assert is_open["datatype"] == "boolean"
+    assert is_open["datatype"] == "Boolean"
     assert is_open["description"] == "Is door open"
 
 
@@ -260,14 +258,14 @@ def test_json_export_array_types(tmp_path: Path) -> None:
             str(schema_file),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0
     data = json.loads(output_file.read_text())
 
     seat_pos = data["Vehicle"]["children"]["seatPosCount"]
-    assert seat_pos["datatype"] == "uint8[]"
+    assert seat_pos["datatype"] == "UInt8[]"
 
 
 def test_json_export_creates_parent_dirs(tmp_path: Path) -> None:
@@ -293,7 +291,7 @@ def test_json_export_creates_parent_dirs(tmp_path: Path) -> None:
             str(schema_file),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0
@@ -326,7 +324,7 @@ def test_json_export_invalid_root_type(tmp_path: Path) -> None:
             "NonExistent",
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code != 0
@@ -380,7 +378,7 @@ def test_json_export_with_selection_query(tmp_path: Path) -> None:
             str(query_file),
             "-o",
             str(output_file),
-        ]
+        ],
     )
 
     assert result.exit_code == 0

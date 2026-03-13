@@ -35,7 +35,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import yaml
-
 from graphql import (
     GraphQLEnumType,
     GraphQLField,
@@ -58,24 +57,6 @@ from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 from s2dm.exporters.utils.extraction import get_all_object_types
 from s2dm.exporters.utils.graphql_type import is_introspection_type
-
-# GraphQL scalar to datatype mapping for JSON output
-SCALAR_TO_DATATYPE: dict[str, str] = {
-    "Int": "int32",
-    "Int8": "int8",
-    "Int16": "int16",
-    "Int64": "int64",
-    "UInt8": "uint8",
-    "UInt16": "uint16",
-    "UInt32": "uint32",
-    "UInt64": "uint64",
-    "Float": "float",
-    "Boolean": "boolean",
-    "String": "string",
-    "ID": "string",
-    # Additional types that might appear
-    "Double": "double",
-}
 
 
 def load_vspec_lookup(path: Path) -> dict[str, Any]:
@@ -160,10 +141,10 @@ class JsonExporter:
         visited.add(gql_type.name)
 
         # Build base branch node
-        node: dict[str, Any] = {
-            "children": {},
-            "type": "branch",
-        }
+        node: dict[str, Any] = {"children": {}}
+        # "type": "branch" is only included in vspec-meta mode
+        if self.vspec_lookup is not None:
+            node["type"] = "branch"
 
         # Add description if present
         if gql_type.description:
@@ -177,6 +158,18 @@ class JsonExporter:
 
         # Process all fields
         for field_name, field in gql_type.fields.items():
+            # Handle @instanceTag fields — they encode instance structure, not data children
+            field_named_type = get_named_type(field.type)
+            if is_object_type(field_named_type) and has_given_directive(
+                cast(GraphQLObjectType, field_named_type), "instanceTag"
+            ):
+                # In default mode: derive instances from enum dimensions inside the tag
+                if self.vspec_lookup is None:
+                    dimensions = self._extract_instances_from_instance_tag(cast(GraphQLObjectType, field_named_type))
+                    if dimensions:
+                        node["instances"] = dimensions
+                continue
+
             # Resolve output key and FQN from @vspec(fqn:...) — only in vspec-meta mode
             output_key = field_name
             fqn: str | None = None
@@ -191,6 +184,26 @@ class JsonExporter:
             node["children"][output_key] = child_node
 
         return node
+
+    def _extract_instances_from_instance_tag(self, instance_tag_type: GraphQLObjectType) -> list[list[str]]:
+        """Extract instance dimensions from an @instanceTag type's enum fields.
+
+        Each enum-typed field in the instanceTag type represents one dimension;
+        its values (in definition order) form the list for that dimension.
+
+        Args:
+            instance_tag_type: The GraphQL ObjectType carrying the @instanceTag directive.
+
+        Returns:
+            List of dimensions, each a list of enum value name strings.
+        """
+        dimensions: list[list[str]] = []
+        for _, field in instance_tag_type.fields.items():
+            field_type = get_named_type(field.type)
+            if is_enum_type(field_type):
+                enum_type = cast(GraphQLEnumType, field_type)
+                dimensions.append(list(enum_type.values.keys()))
+        return dimensions
 
     def _apply_vspec_lookup(self, node: dict[str, Any], fqn: str) -> None:
         """Overlay node properties from the vspec_lookup YAML using the given FQN.
@@ -238,11 +251,10 @@ class JsonExporter:
         if is_object_type(field_type):
             obj_type = cast(GraphQLObjectType, field_type)
 
-            # Skip @instanceTag types themselves (they're not branches)
+            # Skip @instanceTag types — guarded upstream, but kept as safety net
             if has_given_directive(obj_type, "instanceTag"):
-                # This shouldn't normally appear as a field, but handle it just in case
                 log.warning(f"Skipping @instanceTag type '{obj_type.name}' as field")
-                return {"type": "branch", "children": {}}
+                return {"children": {}}
 
             # Build branch node recursively
             branch_node = self._build_branch_node(obj_type, visited)
@@ -251,10 +263,14 @@ class JsonExporter:
             if field.description:
                 branch_node["description"] = field.description.strip()
 
-            # Check for instances metadata (from annotated schema)
+            # Check for instances metadata (from annotated schema — default mode)
             field_meta = self.annotated_schema.field_metadata.get((parent_type.name, field_name))
             if field_meta and field_meta.instances:
                 branch_node["instances"] = field_meta.instances
+
+            # Apply YAML overlay for branch node (sets instances, type, comment, etc.)
+            if fqn and self.vspec_lookup is not None:
+                self._apply_vspec_lookup(branch_node, fqn)
 
             return branch_node
 
@@ -309,13 +325,12 @@ class JsonExporter:
         # Determine datatype (always included)
         if is_scalar_type(named_type):
             scalar = cast(GraphQLScalarType, named_type)
-            datatype = SCALAR_TO_DATATYPE.get(scalar.name, "string")
+            datatype = scalar.name
             if is_list:
                 datatype += "[]"
             node["datatype"] = datatype
         elif is_enum_type(named_type):
-            enum_type = cast(GraphQLEnumType, named_type)
-            datatype = "string"
+            datatype = named_type.name
             if is_list:
                 datatype += "[]"
             node["datatype"] = datatype

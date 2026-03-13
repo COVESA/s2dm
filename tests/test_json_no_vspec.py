@@ -33,7 +33,7 @@ def test_no_vspec_basic_fields() -> None:
     assert "description" in speed
     assert speed["description"] == "Current vehicle speed"
     assert "datatype" in speed
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
 
     # Should NOT have: type, comment, allowed, default
     assert "type" not in speed
@@ -61,7 +61,7 @@ def test_no_vspec_with_range() -> None:
 
     # Should have: description, datatype, min, max
     assert speed["description"] == "Vehicle speed in km/h"
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
     assert speed["min"] == 0.0
     assert speed["max"] == 250.0
 
@@ -92,7 +92,7 @@ def test_no_vspec_with_unit() -> None:
 
     # Should have: description, datatype, unit
     assert speed["description"] == "Vehicle speed"
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
     assert speed["unit"] == "KILOMETER_PER_HOUR"
 
     # Should NOT have: type, comment
@@ -124,7 +124,7 @@ def test_no_vspec_enum_field() -> None:
 
     # Should have: description, datatype
     assert gear["description"] == "Current gear position"
-    assert gear["datatype"] == "string"
+    assert gear["datatype"] == "GearPosition"
 
     # Should NOT have: allowed, type
     assert "allowed" not in gear
@@ -150,7 +150,7 @@ def test_no_vspec_with_metadata_directive() -> None:
 
     # Should have: description, datatype
     assert speed["description"] == "Vehicle speed"
-    assert speed["datatype"] == "float"
+    assert speed["datatype"] == "Float"
 
     # Should NOT have: comment, type (even though @metadata provides them)
     assert "comment" not in speed
@@ -185,18 +185,15 @@ def test_no_vspec_complete_example() -> None:
     temperature = result["Vehicle"]["children"]["temperature"]
     assert temperature == {
         "description": "Exterior temperature",
-        "datatype": "float",
+        "datatype": "Float",
         "min": -50.0,
         "max": 50.0,
-        "unit": "CELSIUS"
+        "unit": "CELSIUS",
     }
 
     # Check vin field
     vin = result["Vehicle"]["children"]["vin"]
-    assert vin == {
-        "description": "Vehicle identification number",
-        "datatype": "string"
-    }
+    assert vin == {"description": "Vehicle identification number", "datatype": "String"}
 
 
 def test_no_vspec_branch_nodes() -> None:
@@ -220,13 +217,104 @@ def test_no_vspec_branch_nodes() -> None:
 
     # Check branch node
     door = result["Vehicle"]["children"]["door"]
-    assert door["type"] == "branch"  # Branch type is always included
+    assert "type" not in door  # No type in default mode
     assert door["description"] == "Vehicle door"
     assert "children" in door
 
     # Check leaf node within branch
     is_open = door["children"]["isOpen"]
-    assert is_open == {
-        "description": "Is door open",
-        "datatype": "boolean"
+    assert is_open == {"description": "Is door open", "datatype": "Boolean"}
+
+
+def test_instance_tag_produces_instances_in_default_mode() -> None:
+    """Test that @instanceTag fields are excluded as children but produce 'instances' on the parent."""
+    schema_str = """
+    directive @instanceTag on OBJECT
+    directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+    enum RowEnum {
+        ROW1
+        ROW2
     }
+
+    enum SideEnum {
+        DRIVER_SIDE
+        PASSENGER_SIDE
+    }
+
+    type DoorTag @instanceTag {
+        row: RowEnum
+        side: SideEnum
+    }
+
+    type Door {
+        \"\"\"Is door open\"\"\"
+        isOpen: Boolean
+    }
+
+    type Cabin {
+        \"\"\"All doors\"\"\"
+        doors: Door
+        instanceTag: DoorTag
+    }
+
+    type Vehicle {
+        cabin: Cabin
+    }
+    """
+    schema = build_schema(schema_str)
+    annotated = AnnotatedSchema(schema=schema, field_metadata={}, type_metadata={})
+    exporter = JsonExporter(schema, annotated)
+
+    result = exporter.export(root_type="Vehicle")
+
+    cabin = result["Vehicle"]["children"]["cabin"]
+
+    # @instanceTag field must NOT appear as a child
+    assert "instanceTag" not in cabin["children"]
+
+    # instances derived from enum dimensions in the @instanceTag type
+    assert cabin["instances"] == [
+        ["ROW1", "ROW2"],
+        ["DRIVER_SIDE", "PASSENGER_SIDE"],
+    ]
+
+
+def test_instance_tag_single_dimension() -> None:
+    """Test that a single-dimension @instanceTag produces a one-element instances list."""
+    schema_str = """
+    directive @instanceTag on OBJECT
+
+    enum SideEnum {
+        LEFT
+        RIGHT
+    }
+
+    type MirrorTag @instanceTag {
+        side: SideEnum
+    }
+
+    type Mirror {
+        \"\"\"Is folded\"\"\"
+        isFolded: Boolean
+    }
+
+    type Body {
+        \"\"\"All mirrors\"\"\"
+        mirrors: Mirror
+        instanceTag: MirrorTag
+    }
+
+    type Vehicle {
+        body: Body
+    }
+    """
+    schema = build_schema(schema_str)
+    annotated = AnnotatedSchema(schema=schema, field_metadata={}, type_metadata={})
+    exporter = JsonExporter(schema, annotated)
+
+    result = exporter.export(root_type="Vehicle")
+
+    body = result["Vehicle"]["children"]["body"]
+    assert "instanceTag" not in body["children"]
+    assert body["instances"] == [["LEFT", "RIGHT"]]
