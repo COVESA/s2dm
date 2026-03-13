@@ -23,6 +23,7 @@ from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_sc
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.mongodb import translate_to_mongodb
+from s2dm.exporters.mongodb.mongodb import load_properties_config, wrap_validator
 from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
@@ -799,17 +800,28 @@ def jsonschema(
     "-o",
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     required=True,
-    help="Output directory. Default mode writes output.json; --modular writes one file per type.",
+    help="Output directory. Writes one JSON file per type.",
 )
 @root_type_option
 @naming_config_option
 @expanded_instances_option
 @click.option(
-    "--modular",
-    "-m",
+    "--validator",
+    "-v",
     is_flag=True,
     default=False,
-    help="Write one JSON file per type instead of a single output.json",
+    help='Wrap each schema in a MongoDB validator envelope: {"$jsonSchema": ...}.',
+)
+@click.option(
+    "--properties-config",
+    "-pc",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    default=None,
+    help=(
+        "YAML file listing object keys that should have additionalProperties: false. "
+        "Each entry is either a bare type name (e.g. 'Address') or a 'Parent.field' path "
+        "(e.g. 'ChargingStation.address')."
+    ),
 )
 def mongodb(
     schemas: list[Path],
@@ -818,9 +830,15 @@ def mongodb(
     root_type: str | None,
     naming_config: Path | None,
     expanded_instances: bool,
-    modular: bool,
+    validator: bool,
+    properties_config: Path | None,
 ) -> None:
-    """Generate MongoDB BSON Schema validators from a given GraphQL schema."""
+    """Generate MongoDB BSON Schema validators from a given GraphQL schema.
+
+    Writes one JSON file per type. Use --root-type to emit a single type only.
+    Pass --validator to wrap each schema in {"$jsonSchema": ...} for use with db.createCollection().
+    Pass --properties-config to restrict which objects disallow extra fields.
+    """
     annotated_schema, _, _ = load_and_process_schema(
         schema_paths=schemas,
         naming_config_path=naming_config,
@@ -830,18 +848,27 @@ def mongodb(
     )
     assert_correct_schema(annotated_schema.schema)
 
-    result = translate_to_mongodb(annotated_schema)
+    add_props_false = load_properties_config(properties_config) if properties_config else None
+    try:
+        result = translate_to_mongodb(annotated_schema, add_props_false)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
     output.mkdir(parents=True, exist_ok=True)
 
-    if modular:
-        for type_name, validator in result.items():
-            file_path = output / f"{type_name}.json"
-            _ = file_path.write_text(json.dumps(validator, indent=2))
-        log.info(f"Wrote {len(result)} validator file(s) to {output}")
+    if root_type:
+        # Root-type mode: emit only the root type as a bare schema in {RootType}.json
+        if root_type not in result:
+            raise click.ClickException(f"Root type '{root_type}' not found in exported types.")
+        schema = wrap_validator(result[root_type]) if validator else result[root_type]
+        out_file = output / f"{root_type}.json"
+        _ = out_file.write_text(json.dumps(schema, indent=2))
+        log.info(f"Wrote root type '{root_type}' validator to {out_file}")
     else:
-        out_file = output / "output.json"
-        _ = out_file.write_text(json.dumps(result, indent=2))
-        log.info(f"Wrote all validators to {out_file}")
+        for type_name, bare in result.items():
+            schema = wrap_validator(bare) if validator else bare
+            file_path = output / f"{type_name}.json"
+            _ = file_path.write_text(json.dumps(schema, indent=2))
+        log.info(f"Wrote {len(result)} validator file(s) to {output}")
 
 
 # Export -> avro
