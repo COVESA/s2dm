@@ -14,7 +14,10 @@ from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
+from s2dm.exporters.json import export_to_json_tree
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.mongodb import translate_to_mongodb
+from s2dm.exporters.mongodb.mongodb import load_properties_config, wrap_validator
 from s2dm.exporters.protobuf import translate_to_protobuf
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.spec_history import SpecHistoryExporter
@@ -590,6 +593,135 @@ def jsonschema(
 
     result = translate_to_jsonschema(annotated_schema, root_type, strict)
     _ = output.write_text(result)
+
+
+# Export -> json tree
+# ----------
+@export.command(name="json")
+@schema_option
+@selection_query_option()
+@output_option
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+@click.option(
+    "--vspec-meta",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    default=None,
+    help="YAML file with FQN-indexed VSS metadata overlay (unit, type, comment, etc.).",
+)
+def json_tree(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    vspec_meta: Path | None,
+) -> None:
+    """Export GraphQL schema to a hierarchical JSON tree structure."""
+    try:
+        annotated_schema, _, _ = load_and_process_schema(
+            schema_paths=schemas,
+            naming_config_path=naming_config,
+            selection_query_path=selection_query,
+            root_type=root_type,
+            expanded_instances=expanded_instances,
+        )
+        assert_correct_schema(annotated_schema.schema)
+
+        result = export_to_json_tree(
+            annotated_schema=annotated_schema,
+            root_type=root_type,
+            vspec_lookup_path=vspec_meta,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    _ = output.write_text(json.dumps(result, indent=2))
+    log.info(f"Exported JSON tree to {output}")
+
+
+# Export -> mongodb
+# ----------
+@export.command
+@schema_option
+@selection_query_option()
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output directory. Writes one JSON file per type.",
+)
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+@click.option(
+    "--validator",
+    "-v",
+    is_flag=True,
+    default=False,
+    help='Wrap each schema in a MongoDB validator envelope: {"$jsonSchema": ...}.',
+)
+@click.option(
+    "--properties-config",
+    "-pc",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    default=None,
+    help=(
+        "YAML file listing object keys that should have additionalProperties: false. "
+        "Each entry is either a bare type name (e.g. 'Address') or a 'Parent.field' path "
+        "(e.g. 'ChargingStation.address')."
+    ),
+)
+def mongodb(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    validator: bool,
+    properties_config: Path | None,
+) -> None:
+    """Generate MongoDB BSON Schema validators from a given GraphQL schema.
+
+    Writes one JSON file per type. Use --root-type to emit a single type only.
+    Pass --validator to wrap each schema in {"$jsonSchema": ...} for use with db.createCollection().
+    Pass --properties-config to restrict which objects disallow extra fields.
+    """
+    annotated_schema, _, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+    assert_correct_schema(annotated_schema.schema)
+
+    add_props_false = load_properties_config(properties_config) if properties_config else None
+    try:
+        result = translate_to_mongodb(annotated_schema, add_props_false)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    output.mkdir(parents=True, exist_ok=True)
+
+    if root_type:
+        # Root-type mode: emit only the root type as a bare schema in {RootType}.json
+        if root_type not in result:
+            raise click.ClickException(f"Root type '{root_type}' not found in exported types.")
+        schema = wrap_validator(result[root_type]) if validator else result[root_type]
+        out_file = output / f"{root_type}.json"
+        _ = out_file.write_text(json.dumps(schema, indent=2))
+        log.info(f"Wrote root type '{root_type}' validator to {out_file}")
+    else:
+        for type_name, bare in result.items():
+            schema = wrap_validator(bare) if validator else bare
+            file_path = output / f"{type_name}.json"
+            _ = file_path.write_text(json.dumps(schema, indent=2))
+        log.info(f"Wrote {len(result)} validator file(s) to {output}")
 
 
 # Export -> avro

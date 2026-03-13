@@ -148,6 +148,216 @@ s2dm compose -s schema.graphql --expanded-instances -o output.graphql
 
 ## Export Commands
 
+### JSON Tree
+
+The `export json` command translates a GraphQL schema into a **hierarchical JSON tree** — a nested structure of branches and leaf signals. It is the primary S2DM output format and serves as the canonical human-readable representation of your domain model.
+
+#### Key Features
+
+- **Branch / leaf hierarchy**: Object types become branch nodes with a `children` map; scalar and enum fields become leaf nodes
+- **Schema-intrinsic fields by default**: Only information encoded in the GraphQL schema itself is written — `description`, `datatype`, `min`, `max`, `unit`, `deprecated`
+- **Raw datatype names**: Scalar and enum names are used as-is (e.g. `Float`, `Boolean`, `UInt8`, `GearPosition`)
+- **Instance dimensions from `@instanceTag`**: When a field references an `@instanceTag` type, it is excluded as a child and its enum dimensions are written as an `instances` array on the parent branch instead
+- **VSS metadata overlay** (`--vspec-meta`): Activates an optional YAML-based overlay that adds `type`, `comment`, `allowed`, `instances`, and other VSS-compatible keys — keyed by fully-qualified signal name (FQN)
+- **Root Type Filtering**: Use `--root-type` to export only one branch and its descendants
+- **Selection Query**: Use `--selection-query` to narrow the export to a specific set of fields
+- **Naming Configuration**: Use `--naming-config` to rename types and fields during export
+
+#### Usage
+
+```bash
+s2dm export json -s <schema_path> -o <output_file>
+```
+
+#### Options
+
+- `-s, --schema PATH`: GraphQL schema file or directory (required, can be specified multiple times)
+- `-o, --output FILE`: Output JSON file path (required)
+- `-r, --root-type TEXT`: Export only this type and its descendants (optional)
+- `-q, --selection-query PATH`: GraphQL query file to filter exported fields (optional)
+- `-n, --naming-config PATH`: YAML naming configuration for transforming names during export (optional)
+- `-e, --expanded-instances`: Unfold `@instanceTag` arrays into nested types before exporting (optional)
+- `--vspec-meta PATH`: YAML file with FQN-indexed VSS metadata overlay (optional — activates vspec-meta mode)
+
+#### Default Mode
+
+By default, only schema-intrinsic information is included. No `@vspec` annotations are processed and no `"type"` key is added to branch nodes.
+
+Given this schema:
+
+```graphql
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+directive @instanceTag on OBJECT
+
+enum SideEnum { LEFT  RIGHT }
+
+type MirrorTag @instanceTag {
+  side: SideEnum
+}
+
+type Mirror {
+  """Mirror pan as a percent."""
+  pan: Float @range(min: -100, max: 100)
+}
+
+type Body {
+  """All mirrors."""
+  mirrors: Mirror
+  instanceTag: MirrorTag
+}
+
+type Vehicle {
+  body: Body
+}
+```
+
+Running:
+
+```bash
+s2dm export json -s schema.graphql -o output.json -r Vehicle
+```
+
+Produces:
+
+```json
+{
+  "Vehicle": {
+    "children": {
+      "body": {
+        "children": {
+          "mirrors": {
+            "children": {
+              "pan": {
+                "description": "Mirror pan as a percent.",
+                "datatype": "Float",
+                "min": -100,
+                "max": 100
+              }
+            },
+            "description": "All mirrors.",
+            "instances": [
+              ["LEFT", "RIGHT"]
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Key behaviours to note:
+
+- `instanceTag` does **not** appear as a child of `mirrors`
+- Instead, the enum values of `SideEnum` are extracted and written as `"instances"` on `mirrors`
+- Multi-dimensional tags produce one list per enum field (e.g. a `row` + `side` tag produces `[["ROW1","ROW2"], ["LEFT","RIGHT"]]`)
+
+#### VSS Metadata Overlay (`--vspec-meta`)
+
+Passing `--vspec-meta` activates vspec-meta mode. A flat YAML file keyed by dot-separated FQN is merged on top of each matching node. This enables producing VSS-compatible output without encoding VSS-specific information directly in the GraphQL schema.
+
+```bash
+s2dm export json -s schema.graphql -o output.json -r Vehicle --vspec-meta vspec_lookup.yaml
+```
+
+The YAML file maps FQNs to dictionaries of keys to overlay:
+
+```yaml
+Vehicle.Body.Mirrors:
+  type: branch
+  instances: ["DriverSide", "PassengerSide"]
+  comment: Inherited from VSS 5.0
+
+Vehicle.Body.Mirrors.Pan:
+  type: sensor
+  unit: percent
+```
+
+In vspec-meta mode the following additional behaviour is enabled:
+
+- `"type": "branch"` is added to every branch node (before the YAML overlay is applied, so the overlay can override it)
+- Fields with `@vspec(fqn: ...)` have their output key renamed to the last segment of the FQN
+- Enum fields annotated with `@vspec` gain an `"allowed"` list from the enum values
+- All YAML keys for a matching FQN entry are merged into the node, with the YAML taking precedence
+
+#### Output Structure
+
+Both modes share the same structural convention:
+
+```json
+{
+  "<RootTypeName>": {
+    "description": "...",
+    "children": {
+      "<fieldName>": {
+        "description": "...",
+        "datatype": "<ScalarOrEnumName>",
+        "unit": "...",
+        "min": 0,
+        "max": 100,
+        "deprecated": "..."
+      },
+      "<branchFieldName>": {
+        "children": { ... },
+        "description": "...",
+        "instances": [["VAL1", "VAL2"], ...]
+      }
+    }
+  }
+}
+```
+
+Leaf node keys (written when the corresponding information is present in the schema):
+
+| Key | Source |
+|-----|--------|
+| `description` | GraphQL field docstring |
+| `datatype` | Scalar or enum type name (`Float`, `UInt8`, `GearPosition`, `String[]`, …) |
+| `min` | `@range(min: …)` directive |
+| `max` | `@range(max: …)` directive |
+| `unit` | Field argument `unit` default value |
+| `deprecated` | GraphQL `@deprecated` reason |
+
+Branch node keys:
+
+| Key | Source |
+|-----|--------|
+| `children` | Object type fields |
+| `description` | GraphQL field docstring |
+| `instances` | Enum dimensions of the `@instanceTag` type (default mode) or YAML overlay (vspec-meta mode) |
+| `type` | vspec-meta mode only — `"branch"` or overridden by YAML entry |
+| `comment` | vspec-meta mode only — from YAML entry |
+
+#### Examples
+
+##### Export a Root Type
+
+```bash
+s2dm export json -s schema.graphql -o vehicle.json -r Vehicle
+```
+
+##### Export with VSS Metadata Overlay
+
+```bash
+s2dm export json \
+  -s schema.graphql \
+  -o vehicle_vss.json \
+  -r Vehicle \
+  --vspec-meta vspec_lookup.yaml
+```
+
+##### Filter to a Subset of Fields
+
+```bash
+s2dm export json -s schema.graphql -o adas.json -q adas_query.graphql
+```
+
+For help:
+
+```bash
+s2dm export json --help
+```
+
 ### JSON Schema
 
 This exporter translates the given GraphQL schema to [JSON Schema](https://json-schema.org/) format.
@@ -1538,6 +1748,169 @@ You can call the help for usage reference:
 ```bash
 s2dm export avro schema --help
 s2dm export avro protocol --help
+```
+
+### MongoDB BSON Validators
+
+This exporter generates [MongoDB collection validators](https://www.mongodb.com/docs/manual/core/schema-validation/) from your S2DM schema. Each object type in your schema becomes a separate JSON file that MongoDB can use to validate documents as they are inserted or updated.
+
+> In other words: once you export and register the validator, MongoDB will reject any document that does not match the shape defined in your GraphQL schema.
+
+#### Usage
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators
+```
+
+This writes one file per object type into `./validators/`. For example, a schema with `ChargingStation` and `Address` types produces `ChargingStation.json` and `Address.json`.
+
+#### Example
+
+Given this schema:
+
+```graphql
+type ChargingStation {
+  id:         ID!
+  name:       String!
+  maxPowerKw: Float!
+  connectors: [ConnectorKind!]!
+  address:    Address
+}
+
+type Address {
+  street: String
+  city:   String
+}
+
+enum ConnectorKind { TYPE_A TYPE_B TYPE_C }
+```
+
+The exporter produces `ChargingStation.json`:
+
+```json
+{
+  "bsonType": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id":         { "bsonType": "objectId" },
+    "name":       { "bsonType": "string" },
+    "maxPowerKw": { "bsonType": "double" },
+    "connectors": {
+      "bsonType": "array",
+      "items": { "bsonType": "string", "enum": ["TYPE_A", "TYPE_B", "TYPE_C"] }
+    },
+    "address": {
+      "bsonType": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "street": { "bsonType": ["string", "null"] },
+        "city":   { "bsonType": ["string", "null"] }
+      }
+    }
+  },
+  "required": ["id", "name", "maxPowerKw", "connectors"]
+}
+```
+
+Key things to notice:
+
+- `Address` is embedded directly inside `ChargingStation` — MongoDB validators work this way by design, there are no cross-collection references
+- `ConnectorKind` is embedded as an allowed-values list
+- Optional fields (no `!`) do not appear in `required` and accept `null`
+- `additionalProperties: true` means extra fields beyond those in the schema are allowed by default
+
+#### Restricting Extra Fields (`--properties-config`)
+
+By default, documents may contain fields not defined in your schema. Use `--properties-config` to nominate specific types or embedded objects that should reject unknown fields.
+
+Create a YAML file listing which objects should be strict:
+
+```yaml
+# strict.yaml
+- ChargingStation           # the top-level ChargingStation collection
+- ChargingStation.address   # only the embedded address inside ChargingStation
+```
+
+Then pass it to the exporter:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators \
+  --properties-config strict.yaml
+```
+
+Each listed entry will have `additionalProperties: false` in its output. The two forms can be mixed freely:
+
+- `TypeName` — applies to the top-level validator for that type
+- `TypeName.fieldName` — applies only to the embedded object at that field; the standalone `TypeName` validator is not affected
+
+If a name in the config does not match any type or field in your schema, the command exits with an error before writing anything.
+
+#### Registering with MongoDB (`--validator`)
+
+By default the output files contain the bare schema content. To produce files ready for direct use with `db.createCollection()`, add `--validator`:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators \
+  --validator
+```
+
+Each file is then wrapped so you can pass it directly:
+
+```js
+const schema = require("./validators/ChargingStation.json");
+db.createCollection("ChargingStation", { validator: schema });
+```
+
+Without `--validator`, the files contain the inner schema only — useful for version control, schema registries, or tooling that adds the envelope itself.
+
+#### Filtering to a Single Type (`--root-type`)
+
+Use `--root-type` to export only one type and have all dependent types inlined into it. This is useful when you need a single self-contained validator file:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators \
+  --root-type ChargingStation
+```
+
+Only `ChargingStation.json` is written; `Address.json` is not created separately.
+
+#### GeoJSON Fields
+
+If your schema uses geographic coordinates, include the GeoJSON spec file and annotate fields with `@geoType`:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema tests/data/spec/geojson.graphql \
+  --schema my_schema.graphql \
+  --output ./validators
+```
+
+```graphql
+type ChargingStation {
+  """Geographical location of the station"""
+  location: GeoJSON! @geoType(shape: POINT)
+}
+```
+
+The validator for `location` will enforce that the stored value is a valid GeoJSON Point object. Supported shapes: `POINT`, `MULTIPOINT`, `LINESTRING`, `MULTILINESTRING`, `POLYGON`, `MULTIPOLYGON`.
+
+#### All Options
+
+```bash
+s2dm export mongodb --help
 ```
 
 ## Common Features
