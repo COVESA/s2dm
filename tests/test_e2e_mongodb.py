@@ -183,10 +183,10 @@ class TestMongoDBE2E:
         assert '"$comment"' not in json.dumps(validators)
 
     # ------------------------------------------------------------------
-    # CLI — default mode (single output.json)
+    # CLI — default mode (one file per type)
     # ------------------------------------------------------------------
 
-    def test_cli_default_mode_creates_output_json(self, tmp_path: Path, spec_directory: Path) -> None:
+    def test_cli_default_mode_creates_per_type_files(self, tmp_path: Path, spec_directory: Path) -> None:
         runner = CliRunner()
         result = runner.invoke(
             cli,
@@ -202,11 +202,45 @@ class TestMongoDBE2E:
             ],
         )
         assert result.exit_code == 0, result.output
-        out_file = tmp_path / "out" / "output.json"
-        assert out_file.exists()
-        data = json.loads(out_file.read_text())
-        assert "TestTypeA" in data
-        assert "TestTypeB" in data
+        assert (tmp_path / "out" / "TestTypeA.json").exists()
+        assert (tmp_path / "out" / "TestTypeB.json").exists()
+
+    def test_cli_default_mode_no_output_json(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+            ],
+        )
+        assert not (tmp_path / "out" / "output.json").exists()
+
+    def test_cli_default_mode_each_file_has_bare_bson_schema(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+            ],
+        )
+        for type_name in ("TestTypeA", "TestTypeB"):
+            data = json.loads((tmp_path / "out" / f"{type_name}.json").read_text())
+            assert "$jsonSchema" not in data, f"Unexpected $jsonSchema wrapper in {type_name}.json"
+            assert data["bsonType"] == "object"
 
     def test_cli_default_mode_no_ref(self, tmp_path: Path, spec_directory: Path) -> None:
         runner = CliRunner()
@@ -223,9 +257,10 @@ class TestMongoDBE2E:
                 str(tmp_path / "out"),
             ],
         )
-        assert "$ref" not in (tmp_path / "out" / "output.json").read_text()
+        for type_name in ("TestTypeA", "TestTypeB"):
+            assert "$ref" not in (tmp_path / "out" / f"{type_name}.json").read_text()
 
-    def test_cli_default_mode_no_modular_single_files(self, tmp_path: Path, spec_directory: Path) -> None:
+    def test_cli_default_mode_no_enum_files(self, tmp_path: Path, spec_directory: Path) -> None:
         runner = CliRunner()
         runner.invoke(
             cli,
@@ -240,13 +275,14 @@ class TestMongoDBE2E:
                 str(tmp_path / "out"),
             ],
         )
-        assert not (tmp_path / "out" / "TestTypeA.json").exists()
+        assert not (tmp_path / "out" / "AnEnumA.json").exists()
+        assert not (tmp_path / "out" / "AnEnumB.json").exists()
 
     # ------------------------------------------------------------------
-    # CLI — modular mode (one file per type)
+    # CLI — root-type mode (-r)
     # ------------------------------------------------------------------
 
-    def test_cli_modular_creates_per_type_files(self, tmp_path: Path, spec_directory: Path) -> None:
+    def test_cli_root_type_creates_named_file(self, tmp_path: Path, spec_directory: Path) -> None:
         runner = CliRunner()
         result = runner.invoke(
             cli,
@@ -259,32 +295,15 @@ class TestMongoDBE2E:
                 str(MONGODB_TEST_SCHEMA),
                 "--output",
                 str(tmp_path / "out"),
-                "--modular",
+                "--root-type",
+                "TestTypeA",
             ],
         )
         assert result.exit_code == 0, result.output
         assert (tmp_path / "out" / "TestTypeA.json").exists()
-        assert (tmp_path / "out" / "TestTypeB.json").exists()
-
-    def test_cli_modular_no_output_json(self, tmp_path: Path, spec_directory: Path) -> None:
-        runner = CliRunner()
-        runner.invoke(
-            cli,
-            [
-                "export",
-                "mongodb",
-                "--schema",
-                str(spec_directory),
-                "--schema",
-                str(MONGODB_TEST_SCHEMA),
-                "--output",
-                str(tmp_path / "out"),
-                "--modular",
-            ],
-        )
         assert not (tmp_path / "out" / "output.json").exists()
 
-    def test_cli_modular_each_file_has_bare_bson_schema(self, tmp_path: Path, spec_directory: Path) -> None:
+    def test_cli_root_type_content_is_bare_schema(self, tmp_path: Path, spec_directory: Path) -> None:
         runner = CliRunner()
         runner.invoke(
             cli,
@@ -297,32 +316,120 @@ class TestMongoDBE2E:
                 str(MONGODB_TEST_SCHEMA),
                 "--output",
                 str(tmp_path / "out"),
-                "--modular",
+                "--root-type",
+                "TestTypeA",
+            ],
+        )
+        data = json.loads((tmp_path / "out" / "TestTypeA.json").read_text())
+        # bare schema — no {"TestTypeA": {...}} wrapper
+        assert "TestTypeA" not in data
+        assert data["bsonType"] == "object"
+
+    def test_cli_root_type_dependent_types_not_written(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--root-type",
+                "TestTypeA",
+            ],
+        )
+        # TestTypeB is a dependency that should only be inlined, not a standalone file
+        assert not (tmp_path / "out" / "TestTypeB.json").exists()
+
+    def test_cli_root_type_invalid_raises_error(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--root-type",
+                "NonExistentType",
+            ],
+        )
+        assert result.exit_code != 0
+
+    # ------------------------------------------------------------------
+    # CLI — --validator flag (adds $jsonSchema envelope)
+    # ------------------------------------------------------------------
+
+    def test_cli_validator_flag_default_mode(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--validator",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        for type_name in ("TestTypeA", "TestTypeB"):
+            data = json.loads((tmp_path / "out" / f"{type_name}.json").read_text())
+            assert "$jsonSchema" in data
+            assert data["$jsonSchema"]["bsonType"] == "object"
+
+    def test_cli_validator_flag_root_type(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--root-type",
+                "TestTypeA",
+                "--validator",
+            ],
+        )
+        data = json.loads((tmp_path / "out" / "TestTypeA.json").read_text())
+        assert "$jsonSchema" in data
+        assert data["$jsonSchema"]["bsonType"] == "object"
+
+    def test_cli_no_validator_flag_default_is_bare(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
             ],
         )
         for type_name in ("TestTypeA", "TestTypeB"):
             data = json.loads((tmp_path / "out" / f"{type_name}.json").read_text())
-            assert "$jsonSchema" not in data, f"Unexpected $jsonSchema wrapper in {type_name}.json"
-            assert data["bsonType"] == "object"
-
-    def test_cli_modular_no_enum_files(self, tmp_path: Path, spec_directory: Path) -> None:
-        runner = CliRunner()
-        runner.invoke(
-            cli,
-            [
-                "export",
-                "mongodb",
-                "--schema",
-                str(spec_directory),
-                "--schema",
-                str(MONGODB_TEST_SCHEMA),
-                "--output",
-                str(tmp_path / "out"),
-                "--modular",
-            ],
-        )
-        assert not (tmp_path / "out" / "AnEnumA.json").exists()
-        assert not (tmp_path / "out" / "AnEnumB.json").exists()
+            assert "$jsonSchema" not in json.dumps(data)
 
     # ------------------------------------------------------------------
     # GeoJSON
@@ -359,3 +466,97 @@ class TestMongoDBE2E:
     def test_geo_fields_have_no_ref(self, validators: dict[str, dict[str, Any]]) -> None:
         geo_props = {k: v for k, v in validators["TestTypeA"]["properties"].items() if "geo" in k.lower() or "Geo" in k}
         assert "$ref" not in json.dumps(geo_props)
+
+    # ------------------------------------------------------------------
+    # CLI — --properties-config flag
+    # ------------------------------------------------------------------
+
+    def test_cli_properties_config_top_level(self, tmp_path: Path, spec_directory: Path) -> None:
+        cfg = tmp_path / "props.yaml"
+        cfg.write_text("- TestTypeA\n")
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--properties-config",
+                str(cfg),
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads((tmp_path / "out" / "TestTypeA.json").read_text())
+        assert data["additionalProperties"] is False
+
+    def test_cli_properties_config_inline_path(self, tmp_path: Path, spec_directory: Path) -> None:
+        cfg = tmp_path / "props.yaml"
+        cfg.write_text("- TestTypeA.testFieldNested\n")
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--properties-config",
+                str(cfg),
+            ],
+        )
+        data = json.loads((tmp_path / "out" / "TestTypeA.json").read_text())
+        nested = data["properties"]["testFieldNested"]
+        assert nested["additionalProperties"] is False
+        # Inline TestTypeB top-level should default to true
+        data_b = json.loads((tmp_path / "out" / "TestTypeB.json").read_text())
+        assert data_b["additionalProperties"] is True
+
+    def test_cli_properties_config_unknown_type_exits_nonzero(self, tmp_path: Path, spec_directory: Path) -> None:
+        cfg = tmp_path / "props.yaml"
+        cfg.write_text("- NonExistentType\n")
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+                "--properties-config",
+                str(cfg),
+            ],
+        )
+        assert result.exit_code != 0
+        assert "NonExistentType" in result.output
+
+    def test_cli_no_properties_config_no_additional_properties(self, tmp_path: Path, spec_directory: Path) -> None:
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "export",
+                "mongodb",
+                "--schema",
+                str(spec_directory),
+                "--schema",
+                str(MONGODB_TEST_SCHEMA),
+                "--output",
+                str(tmp_path / "out"),
+            ],
+        )
+        for type_name in ("TestTypeA", "TestTypeB"):
+            data = json.loads((tmp_path / "out" / f"{type_name}.json").read_text())
+            assert data["additionalProperties"] is True

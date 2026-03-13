@@ -1,6 +1,7 @@
 """Unit tests for the MongoDB BSON Schema exporter."""
 
 import json
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
@@ -503,3 +504,172 @@ class TestGeoJSON:
     def test_no_ref_in_geojson_output(self) -> None:
         result = self._transform("type TestTypeA { geo: GeoJSON! @geoType(shape: POINT) }")
         assert "$ref" not in json.dumps(result)
+
+
+# ---------------------------------------------------------------------------
+# additionalProperties config
+# ---------------------------------------------------------------------------
+
+_NESTED_SCHEMA = """
+    type Query { q: String }
+    type Parent { child: Child nested: Nested }
+    type Child { name: String }
+    type Nested { value: Int }
+"""
+
+
+class TestAdditionalPropertiesConfig:
+    """Tests for --properties-config / additional_props_false behaviour."""
+
+    def _transform_with_cfg(self, schema_str: str, cfg: frozenset[str]) -> dict[str, dict[str, Any]]:
+        from graphql import build_schema
+
+        return MongoDBTransformer(build_schema(schema_str), cfg).transform()
+
+    def test_no_config_no_additional_properties_key(self) -> None:
+        result = self._transform_with_cfg(_NESTED_SCHEMA, frozenset())
+        assert result["Parent"]["additionalProperties"] is True
+        assert result["Child"]["additionalProperties"] is True
+
+    def test_bare_type_name_sets_top_level(self) -> None:
+        result = self._transform_with_cfg(_NESTED_SCHEMA, frozenset({"Parent"}))
+        assert result["Parent"]["additionalProperties"] is False
+        # child top-level entry is not in config → defaults to true
+        assert result["Child"]["additionalProperties"] is True
+
+    def test_bare_type_name_child_unaffected(self) -> None:
+        """Top-level Child not listed → additionalProperties: true even when inlined in Parent."""
+        result = self._transform_with_cfg(_NESTED_SCHEMA, frozenset({"Parent"}))
+        child_inline = cast(dict[str, Any], result["Parent"]["properties"]["child"])
+        assert child_inline["additionalProperties"] is True
+
+    def test_dot_path_applies_to_inline_object(self) -> None:
+        result = self._transform_with_cfg(_NESTED_SCHEMA, frozenset({"Parent.child"}))
+        child_inline = cast(dict[str, Any], result["Parent"]["properties"]["child"])
+        assert child_inline["additionalProperties"] is False
+
+    def test_dot_path_does_not_affect_top_level_child(self) -> None:
+        """Parent.child config → only the inline occurrence is affected; Child top-level gets true."""
+        result = self._transform_with_cfg(_NESTED_SCHEMA, frozenset({"Parent.child"}))
+        # Child appears as top-level too; it gets true (default)
+        assert result["Child"]["additionalProperties"] is True
+
+    def test_multiple_keys_independent(self) -> None:
+        result = self._transform_with_cfg(_NESTED_SCHEMA, frozenset({"Child", "Parent.nested"}))
+        # Child top-level gets additionalProperties: false
+        assert result["Child"]["additionalProperties"] is False
+        # Parent.nested inline gets it
+        nested_inline = cast(dict[str, Any], result["Parent"]["properties"]["nested"])
+        assert nested_inline["additionalProperties"] is False
+        # Parent itself gets true (default)
+        assert result["Parent"]["additionalProperties"] is True
+
+    def test_nullable_inline_also_gets_flag(self) -> None:
+        """Nullable nested objects are inlined via _get_type_schema which must propagate key."""
+        schema_str = """
+            type Query { q: String }
+            type Parent { child: Child }
+            type Child { x: String }
+        """
+        result = self._transform_with_cfg(schema_str, frozenset({"Parent.child"}))
+        child_inline = cast(dict[str, Any], result["Parent"]["properties"]["child"])
+        assert child_inline["additionalProperties"] is False
+        # bsonType must still be ["object", "null"] because field is nullable
+        assert "null" in child_inline["bsonType"]
+
+
+class TestLoadPropertiesConfig:
+    """Tests for load_properties_config()."""
+
+    def test_loads_bare_type_names(self, tmp_path: Path) -> None:
+        from s2dm.exporters.mongodb.mongodb import load_properties_config
+
+        f = tmp_path / "cfg.yaml"
+        f.write_text("- Address\n- ChargingStation\n")
+        result = load_properties_config(f)
+        assert result == frozenset({"Address", "ChargingStation"})
+
+    def test_loads_dot_paths(self, tmp_path: Path) -> None:
+        from s2dm.exporters.mongodb.mongodb import load_properties_config
+
+        f = tmp_path / "cfg.yaml"
+        f.write_text("- Address.street\n- ChargingStation.address\n")
+        result = load_properties_config(f)
+        assert result == frozenset({"Address.street", "ChargingStation.address"})
+
+    def test_mixed_entries(self, tmp_path: Path) -> None:
+        from s2dm.exporters.mongodb.mongodb import load_properties_config
+
+        f = tmp_path / "cfg.yaml"
+        f.write_text("- Address\n- ChargingStation.address\n")
+        result = load_properties_config(f)
+        assert result == frozenset({"Address", "ChargingStation.address"})
+
+    def test_rejects_non_list_file(self, tmp_path: Path) -> None:
+        from s2dm.exporters.mongodb.mongodb import load_properties_config
+
+        f = tmp_path / "cfg.yaml"
+        f.write_text("key: value\n")
+        with pytest.raises(ValueError, match="must be a YAML sequence"):
+            load_properties_config(f)
+
+    def test_rejects_invalid_path_format(self, tmp_path: Path) -> None:
+        from s2dm.exporters.mongodb.mongodb import load_properties_config
+
+        f = tmp_path / "cfg.yaml"
+        f.write_text("- a.b.c\n")
+        with pytest.raises(ValueError, match="Invalid properties-config entry"):
+            load_properties_config(f)
+
+    def test_rejects_non_string_entry(self, tmp_path: Path) -> None:
+        from s2dm.exporters.mongodb.mongodb import load_properties_config
+
+        f = tmp_path / "cfg.yaml"
+        f.write_text("- 42\n")
+        with pytest.raises(ValueError, match="must be strings"):
+            load_properties_config(f)
+
+
+class TestPropertiesConfigValidation:
+    """Tests for schema-level validation of properties-config entries."""
+
+    def _validate(self, schema_str: str, cfg: frozenset[str]) -> None:
+        from graphql import build_schema
+
+        MongoDBTransformer(build_schema(schema_str), cfg).transform()
+
+    _SCHEMA = """
+        type Query { q: String }
+        type Parent { child: Child }
+        type Child { name: String }
+        enum Status { ACTIVE INACTIVE }
+    """
+
+    def test_valid_bare_type_passes(self) -> None:
+        self._validate(self._SCHEMA, frozenset({"Parent"}))
+
+    def test_valid_dot_path_passes(self) -> None:
+        self._validate(self._SCHEMA, frozenset({"Parent.child"}))
+
+    def test_unknown_type_raises(self) -> None:
+        with pytest.raises(ValueError, match="'NonExistent': type 'NonExistent' does not exist"):
+            self._validate(self._SCHEMA, frozenset({"NonExistent"}))
+
+    def test_unknown_field_raises(self) -> None:
+        with pytest.raises(ValueError, match="'Parent' has no field 'missing'"):
+            self._validate(self._SCHEMA, frozenset({"Parent.missing"}))
+
+    def test_non_object_type_raises(self) -> None:
+        with pytest.raises(ValueError, match="'Status' is not an object or interface type"):
+            self._validate(self._SCHEMA, frozenset({"Status"}))
+
+    def test_multiple_errors_reported_together(self) -> None:
+        with pytest.raises(ValueError) as exc_info:
+            self._validate(self._SCHEMA, frozenset({"NonExistent", "Parent.missing"}))
+        msg = str(exc_info.value)
+        assert "NonExistent" in msg
+        assert "Parent.missing" in msg
+
+    def test_empty_config_skips_validation(self) -> None:
+        """Empty config must not raise even if called with an otherwise valid schema."""
+        self._validate(self._SCHEMA, frozenset())
