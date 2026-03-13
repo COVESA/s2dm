@@ -14,6 +14,7 @@ from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
+from s2dm.exporters.json import export_to_json_tree
 from s2dm.exporters.jsonschema import translate_to_jsonschema
 from s2dm.exporters.mongodb import translate_to_mongodb
 from s2dm.exporters.mongodb.mongodb import load_properties_config, wrap_validator
@@ -592,6 +593,54 @@ def jsonschema(
 
     result = translate_to_jsonschema(annotated_schema, root_type, strict)
     _ = output.write_text(result)
+
+
+# Export -> json tree
+# ----------
+@export.command(name="json")
+@schema_option
+@selection_query_option()
+@output_option
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+@click.option(
+    "--vspec-meta",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    default=None,
+    help="YAML file with FQN-indexed VSS metadata overlay (unit, type, comment, etc.).",
+)
+def json_tree(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    vspec_meta: Path | None,
+) -> None:
+    """Export GraphQL schema to a hierarchical JSON tree structure."""
+    try:
+        annotated_schema, _, _ = load_and_process_schema(
+            schema_paths=schemas,
+            naming_config_path=naming_config,
+            selection_query_path=selection_query,
+            root_type=root_type,
+            expanded_instances=expanded_instances,
+        )
+        assert_correct_schema(annotated_schema.schema)
+
+        result = export_to_json_tree(
+            annotated_schema=annotated_schema,
+            root_type=root_type,
+            vspec_lookup_path=vspec_meta,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    _ = output.write_text(json.dumps(result, indent=2))
+    log.info(f"Exported JSON tree to {output}")
 
 
 # Export -> mongodb
