@@ -12,8 +12,9 @@ db.createCollection("MyType", {
 })
 ```
 
-**Default mode** writes all types to a single `output.json` dict keyed by type name.
-**Modular mode** (`--modular`) writes one `TypeName.json` per type.
+**Default mode** writes one `TypeName.json` per type.
+**Root-type mode** (`--root-type Name`) writes only `Name.json` with no outer key wrapper.
+**Validator envelope** (`--validator / -v`) wraps every output schema in `{"$jsonSchema": ...}` for direct use with `db.createCollection()`.
 
 ## BSON Type Mapping
 
@@ -51,11 +52,38 @@ Supported shapes: `POINT`, `MULTIPOINT`, `LINESTRING`, `MULTILINESTRING`, `POLYG
 | `field: T!` | `"<type>"` | yes |
 | `field: T` | `["<type>", "null"]` | no |
 
+## `additionalProperties`
+
+Every emitted object schema always includes `additionalProperties`. By default it is `true`. Use `--properties-config` to set it to `false` for specific types or fields.
+
+### `--properties-config / -pc`
+
+Accepts a YAML file listing the object schemas that should have `additionalProperties: false`. Each entry is either:
+
+- A **bare type name** — applies to the top-level exported schema for that type:
+  ```yaml
+  - Address
+  ```
+- A **`Parent.field` path** — applies only to the inline occurrence of that field inside `Parent`, leaving the `Address` top-level schema unaffected:
+  ```yaml
+  - ChargingStation.address
+  ```
+
+Both forms can be combined freely:
+
+```yaml
+- Address
+- Address.street
+- ChargingStation.address
+```
+
+If any entry does not correspond to a type or field that exists in the schema, the exporter raises an error before writing any output.
+
 ## Directive Mapping
 
 | Directive | BSON output |
 |-----------|------------|
-| `@range(min, max)` on scalar field | `minimum` / `maximum` on the field ||
+| `@range(min, max)` on scalar field | `minimum` / `maximum` on the field |
 | `@range(min, max)` on list field | `minimum` / `maximum` inside `items` |
 | `@noDuplicates` | `uniqueItems: true` |
 | `@cardinality(min, max)` | `minItems` / `maxItems` |
@@ -88,11 +116,14 @@ MongoDB does not support `$ref`, so circular type references cannot be represent
 ```
 mongodb/
 ├── __init__.py      # Public API: translate_to_mongodb()
-├── mongodb.py       # Entry points: transform(), translate_to_mongodb(), to_json_string()
+├── mongodb.py       # Entry points: transform(), translate_to_mongodb(),
+│                    #   wrap_validator(), load_properties_config(), to_json_string()
 └── transformer.py   # MongoDBTransformer — all GraphQL → BSON logic
 ```
 
 `MongoDBTransformer.transform()` returns `dict[str, dict]`. Each value is a bare BSON schema built by recursive inlining — no `$ref`, no `$defs`. Circular reference detection is done via a `frozenset[str]` of type names currently being resolved.
+
+`load_properties_config(path)` parses the `--properties-config` YAML file and returns a `frozenset[str]` of keys. Validation against the schema happens inside `MongoDBTransformer._validate_properties_config()`, called at the start of `transform()`.
 
 ## MongoDB `$jsonSchema` restrictions
 

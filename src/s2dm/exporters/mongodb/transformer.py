@@ -199,13 +199,31 @@ class MongoDBTransformer:
     is also dropped — without ``--expanded-instances`` the tag structure has no
     representation in the output.
     Circular references raise ``ValueError``.
+
+    Parameters
+    ----------
+    graphql_schema:
+        The compiled GraphQL schema to export.
+    additional_props_false:
+        Set of keys for which ``additionalProperties: false`` should be emitted.
+        Each entry is either a bare type name (``"Address"``) or a
+        ``Parent.field`` path (``"ChargingStation.address"``).
+        When empty (the default) no ``additionalProperties`` key is emitted at all.
     """
 
-    def __init__(self, graphql_schema: GraphQLSchema) -> None:
+    def __init__(
+        self,
+        graphql_schema: GraphQLSchema,
+        additional_props_false: frozenset[str] | None = None,
+    ) -> None:
         self.graphql_schema = graphql_schema
+        self._additional_props_false: frozenset[str] = additional_props_false or frozenset()
 
     def transform(self) -> dict[str, dict[str, Any]]:
         """Return ``{type_name: bson_schema}`` for every exportable object/interface/union type."""
+        if self._additional_props_false:
+            self._validate_properties_config()
+
         result: dict[str, dict[str, Any]] = {}
 
         for type_def in get_all_named_types(self.graphql_schema):
@@ -220,17 +238,56 @@ class MongoDBTransformer:
                 if is_root_type(type_def.name):
                     log.debug(f"Skipping root type: {type_def.name}")
                     continue
-                result[type_def.name] = self._build_object_schema(obj, frozenset())
+                result[type_def.name] = self._build_object_schema(obj, frozenset(), type_key=type_def.name)
 
             elif is_interface_type(type_def):
                 iface = cast(GraphQLInterfaceType, type_def)
-                result[type_def.name] = self._build_interface_schema(iface, frozenset())
+                result[type_def.name] = self._build_interface_schema(iface, frozenset(), type_key=type_def.name)
 
             elif is_union_type(type_def):
                 union = cast(GraphQLUnionType, type_def)
                 result[type_def.name] = self._build_union_schema(union, frozenset())
 
         return result
+
+    def _validate_properties_config(self) -> None:
+        """Raise ``ValueError`` listing every entry in the properties config that does not
+        correspond to a known object/interface type (or field on one) in the schema.
+
+        Rules:
+        - ``"TypeName"`` → ``TypeName`` must be an object or interface type in the schema.
+        - ``"TypeName.fieldName"`` → ``TypeName`` must be an object/interface AND must have
+          a field named ``fieldName``.
+        """
+        errors: list[str] = []
+        for key in sorted(self._additional_props_false):
+            parts = key.split(".")
+            type_name = parts[0]
+            type_def = self.graphql_schema.type_map.get(type_name)
+
+            if type_def is None:
+                errors.append(f"  '{key}': type '{type_name}' does not exist in the schema.")
+                continue
+
+            if not (is_object_type(type_def) or is_interface_type(type_def)):
+                errors.append(
+                    f"  '{key}': '{type_name}' is not an object or interface type " f"(got {type(type_def).__name__})."
+                )
+                continue
+
+            if len(parts) == 2:
+                field_name = parts[1]
+                fields = (
+                    cast(GraphQLObjectType, type_def).fields
+                    if is_object_type(type_def)
+                    else cast(GraphQLInterfaceType, type_def).fields
+                )
+                if field_name not in fields:
+                    errors.append(f"  '{key}': type '{type_name}' has no field '{field_name}'.")
+
+        if errors:
+            log.error("Invalid properties-config entries:\n" + "\n".join(errors))
+            raise ValueError("Fix the file passed to '--properties-config' and try again.")
 
     # ------------------------------------------------------------------
     # Schema builders (return bare dicts, no $jsonSchema wrapper)
@@ -240,6 +297,7 @@ class MongoDBTransformer:
         self,
         object_type: GraphQLObjectType,
         resolving: frozenset[str],
+        type_key: str | None = None,
     ) -> dict[str, Any]:
         if object_type.name in resolving:
             chain = " -> ".join(sorted(resolving))
@@ -249,13 +307,13 @@ class MongoDBTransformer:
             )
         resolving = resolving | {object_type.name}
 
-        schema: dict[str, Any] = {
-            "bsonType": "object",
-            "additionalProperties": False,
-            "properties": {},
-        }
+        schema: dict[str, Any] = {"bsonType": "object", "properties": {}}
         if object_type.description:
             schema["description"] = object_type.description
+
+        # Emit additionalProperties: false when listed in config, true otherwise.
+        # type_key is either the bare type name (top-level) or "Parent.field" (inline).
+        schema["additionalProperties"] = not (type_key is not None and type_key in self._additional_props_false)
 
         required: list[str] = []
         for field_name, field in object_type.fields.items():
@@ -265,7 +323,9 @@ class MongoDBTransformer:
                 raise ValueError(f"Invalid schema: @instanceTag object found on non-instanceTag field '{field_name}'")
             if is_non_null_type(field.type):
                 required.append(field_name)
-            schema["properties"][field_name] = self._build_field_schema(field, resolving)
+            # Compute the inline key for this field: "ParentType.fieldName"
+            inline_key = f"{object_type.name}.{field_name}" if type_key is not None else None
+            schema["properties"][field_name] = self._build_field_schema(field, resolving, inline_key=inline_key)
 
         if required:
             schema["required"] = required
@@ -275,24 +335,24 @@ class MongoDBTransformer:
         self,
         interface_type: GraphQLInterfaceType,
         resolving: frozenset[str],
+        type_key: str | None = None,
     ) -> dict[str, Any]:
         if interface_type.name in resolving:
             raise ValueError(f"Circular reference detected involving interface '{interface_type.name}'.")
         resolving = resolving | {interface_type.name}
 
-        schema: dict[str, Any] = {
-            "bsonType": "object",
-            "additionalProperties": False,
-            "properties": {},
-        }
+        schema: dict[str, Any] = {"bsonType": "object", "properties": {}}
         if interface_type.description:
             schema["description"] = interface_type.description
+
+        schema["additionalProperties"] = not (type_key is not None and type_key in self._additional_props_false)
 
         required: list[str] = []
         for field_name, field in interface_type.fields.items():
             if is_non_null_type(field.type):
                 required.append(field_name)
-            schema["properties"][field_name] = self._build_field_schema(field, resolving)
+            inline_key = f"{interface_type.name}.{field_name}" if type_key is not None else None
+            schema["properties"][field_name] = self._build_field_schema(field, resolving, inline_key=inline_key)
 
         if required:
             schema["required"] = required
@@ -330,6 +390,7 @@ class MongoDBTransformer:
         self,
         field: GraphQLField,
         resolving: frozenset[str],
+        inline_key: str | None = None,
     ) -> dict[str, Any]:
         # --- GeoJSON scalar with @geoType directive → precise BSON shape ---
         # Must be checked before _get_type_schema because the shape context
@@ -342,7 +403,7 @@ class MongoDBTransformer:
                 schema["description"] = field.description
             return schema
 
-        schema = self._get_type_schema(field.type, nullable=True, resolving=resolving)
+        schema = self._get_type_schema(field.type, nullable=True, resolving=resolving, inline_key=inline_key)
 
         if field.description:
             schema["description"] = field.description
@@ -364,6 +425,7 @@ class MongoDBTransformer:
         field_type: GraphQLType,
         nullable: bool,
         resolving: frozenset[str],
+        inline_key: str | None = None,
     ) -> dict[str, Any]:
         # --- NonNull wrapper ---
         if is_non_null_type(field_type):
@@ -371,6 +433,7 @@ class MongoDBTransformer:
                 cast(GraphQLNonNull[Any], field_type).of_type,
                 nullable=False,
                 resolving=resolving,
+                inline_key=inline_key,
             )
 
         # --- List ---
@@ -406,7 +469,7 @@ class MongoDBTransformer:
         # --- Object — inline recursively ---
         if is_object_type(field_type):
             obj = cast(GraphQLObjectType, field_type)
-            inner = self._build_object_schema(obj, resolving)
+            inner = self._build_object_schema(obj, resolving, type_key=inline_key)
             if nullable:
                 inner = dict(inner)
                 inner["bsonType"] = [cast(str, inner.get("bsonType", "object")), "null"]
@@ -415,13 +478,13 @@ class MongoDBTransformer:
         # --- Interface — inline recursively ---
         if is_interface_type(field_type):
             iface = cast(GraphQLInterfaceType, field_type)
-            inner = self._build_interface_schema(iface, resolving)
+            inner = self._build_interface_schema(iface, resolving, type_key=inline_key)
             if nullable:
                 inner = dict(inner)
                 inner["bsonType"] = [cast(str, inner.get("bsonType", "object")), "null"]
             return inner
 
-        # --- Union — oneOf inline members ---
+        # --- Union --- oneOf inline members ---
         if is_union_type(field_type):
             union = cast(GraphQLUnionType, field_type)
             inner = self._build_union_schema(union, resolving)

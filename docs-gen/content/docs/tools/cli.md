@@ -1542,46 +1542,32 @@ s2dm export avro protocol --help
 
 ### MongoDB BSON Validators
 
-This exporter translates the given GraphQL schema into [MongoDB BSON validator schemas](https://www.mongodb.com/docs/manual/reference/operator/query/jsonSchema/), one schema per GraphQL object type. The output is designed to be used directly as a collection validator in MongoDB.
+This exporter generates [MongoDB collection validators](https://www.mongodb.com/docs/manual/core/schema-validation/) from your S2DM schema. Each object type in your schema becomes a separate JSON file that MongoDB can use to validate documents as they are inserted or updated.
 
-#### Key Features
-
-- **BSON-native types**: Uses `bsonType` instead of `type`, with BSON-specific values like `objectId`, `int`, `long`, `double`, and `bool`
-- **No `$ref`**: All nested types are fully inlined — MongoDB's `$jsonSchema` does not support `$ref`
-- **Enum inlining**: Enum types are inlined at the field level as `{ bsonType: "string", enum: [...] }` rather than emitted as top-level entries
-- **Nullability**: Nullable fields use `bsonType: ["<type>", "null"]`; non-null fields appear in the `required` array
-- **Directive support**: Converts S2DM directives like `@cardinality`, `@range`, `@noDuplicates`, and `@metadata` to supported MongoDB constraints
-- **GeoJSON support**: Use the `GeoJSON` scalar with `@geoType` to emit precise BSON geometry validators (requires passing `tests/data/spec/geojson.graphql` via `-s`)
-- **Two output modes**: Default mode writes all types to a single `output.json`; `--modular` writes one file per type
+> In other words: once you export and register the validator, MongoDB will reject any document that does not match the shape defined in your GraphQL schema.
 
 #### Usage
 
 ```bash
-# All types in one file
 s2dm export mongodb \
   --schema tests/data/spec/common.graphql \
   --schema my_schema.graphql \
-  --output ./out
-
-# One file per type
-s2dm export mongodb \
-  --schema tests/data/spec/common.graphql \
-  --schema my_schema.graphql \
-  --output ./out \
-  --modular
+  --output ./validators
 ```
 
-#### Example Transformation
+This writes one file per object type into `./validators/`. For example, a schema with `ChargingStation` and `Address` types produces `ChargingStation.json` and `Address.json`.
 
-Given this GraphQL schema:
+#### Example
+
+Given this schema:
 
 ```graphql
 type ChargingStation {
-  id:           ID!
-  name:         String!
-  maxPowerKw:   Float!
-  connectors:   [ConnectorKind!]!
-  address:      Address
+  id:         ID!
+  name:       String!
+  maxPowerKw: Float!
+  connectors: [ConnectorKind!]!
+  address:    Address
 }
 
 type Address {
@@ -1592,14 +1578,12 @@ type Address {
 enum ConnectorKind { TYPE_A TYPE_B TYPE_C }
 ```
 
-The MongoDB exporter produces (in `--modular` mode):
-
-`ChargingStation.json`:
+The exporter produces `ChargingStation.json`:
 
 ```json
 {
   "bsonType": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "id":         { "bsonType": "objectId" },
     "name":       { "bsonType": "string" },
@@ -1610,7 +1594,7 @@ The MongoDB exporter produces (in `--modular` mode):
     },
     "address": {
       "bsonType": ["object", "null"],
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
         "street": { "bsonType": ["string", "null"] },
         "city":   { "bsonType": ["string", "null"] }
@@ -1621,51 +1605,88 @@ The MongoDB exporter produces (in `--modular` mode):
 }
 ```
 
-Note how `Address` is inlined (no `$ref`), `ConnectorKind` is inlined as an enum, nullable fields have `bsonType: ["...", "null"]` and are absent from `required`.
+Key things to notice:
 
-#### GeoJSON Support
+- `Address` is embedded directly inside `ChargingStation` — MongoDB validators work this way by design, there are no cross-collection references
+- `ConnectorKind` is embedded as an allowed-values list
+- Optional fields (no `!`) do not appear in `required` and accept `null`
+- `additionalProperties: true` means extra fields beyond those in the schema are allowed by default
 
-To validate GeoJSON geometry fields with precise shape constraints, include the GeoJSON spec file and annotate fields with `@geoType`:
+#### Restricting Extra Fields (`--properties-config`)
+
+By default, documents may contain fields not defined in your schema. Use `--properties-config` to nominate specific types or embedded objects that should reject unknown fields.
+
+Create a YAML file listing which objects should be strict:
+
+```yaml
+# strict.yaml
+- ChargingStation           # the top-level ChargingStation collection
+- ChargingStation.address   # only the embedded address inside ChargingStation
+```
+
+Then pass it to the exporter:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators \
+  --properties-config strict.yaml
+```
+
+Each listed entry will have `additionalProperties: false` in its output. The two forms can be mixed freely:
+
+- `TypeName` — applies to the top-level validator for that type
+- `TypeName.fieldName` — applies only to the embedded object at that field; the standalone `TypeName` validator is not affected
+
+If a name in the config does not match any type or field in your schema, the command exits with an error before writing anything.
+
+#### Registering with MongoDB (`--validator`)
+
+By default the output files contain the bare schema content. To produce files ready for direct use with `db.createCollection()`, add `--validator`:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators \
+  --validator
+```
+
+Each file is then wrapped so you can pass it directly:
+
+```js
+const schema = require("./validators/ChargingStation.json");
+db.createCollection("ChargingStation", { validator: schema });
+```
+
+Without `--validator`, the files contain the inner schema only — useful for version control, schema registries, or tooling that adds the envelope itself.
+
+#### Filtering to a Single Type (`--root-type`)
+
+Use `--root-type` to export only one type and have all dependent types inlined into it. This is useful when you need a single self-contained validator file:
+
+```bash
+s2dm export mongodb \
+  --schema tests/data/spec/common.graphql \
+  --schema my_schema.graphql \
+  --output ./validators \
+  --root-type ChargingStation
+```
+
+Only `ChargingStation.json` is written; `Address.json` is not created separately.
+
+#### GeoJSON Fields
+
+If your schema uses geographic coordinates, include the GeoJSON spec file and annotate fields with `@geoType`:
 
 ```bash
 s2dm export mongodb \
   --schema tests/data/spec/common.graphql \
   --schema tests/data/spec/geojson.graphql \
   --schema my_schema.graphql \
-  --output ./out --modular
+  --output ./validators
 ```
-
-```graphql
-type ChargingStation {
-  location: GeoJSON! @geoType(shape: POINT)
-}
-```
-
-Produces:
-
-```json
-"location": {
-  "bsonType": "object",
-  "required": ["type", "coordinates"],
-  "properties": {
-    "type":        { "bsonType": "string", "enum": ["Point"] },
-    "coordinates": { "bsonType": "array", "items": { "bsonType": "double" }, "minItems": 2, "maxItems": 2 }
-  }
-}
-```
-
-Supported shapes: `POINT`, `MULTIPOINT`, `LINESTRING`, `MULTILINESTRING`, `POLYGON`, `MULTIPOLYGON`. A `GeoJSON` field without `@geoType` emits a permissive object requiring only `type` and `coordinates`.
-
-#### Directive Support
-
-| S2DM directive | MongoDB BSON output |
-|---|---|
-| `@range(min: 0, max: 100)` | `minimum: 0, maximum: 100` on the field (or inside `items` for list fields) |
-| `@noDuplicates` | `uniqueItems: true` |
-| `@cardinality(min: 1, max: 5)` | `minItems: 1, maxItems: 5` |
-| `@instanceTag` | type **and** its reference field on parent types are both excluded — see note below |
-
-GraphQL field and type [descriptions (docstrings)](https://spec.graphql.org/October2021/#sec-Descriptions) are emitted directly as `"description"` in the BSON output — no directive needed:
 
 ```graphql
 type ChargingStation {
@@ -1674,14 +1695,12 @@ type ChargingStation {
 }
 ```
 
-> **`@instanceTag` in this exporter:** without `--expanded-instances`, the exporter has no way to represent instance tag structures in MongoDB. Both the `@instanceTag` type itself *and* the `instanceTag` field on parent types are silently dropped from the output. If you need instance variants in your MongoDB schema, run with `--expanded-instances` so the schema loader unfolds the tag structure into concrete fields before the exporter runs.
+The validator for `location` will enforce that the stored value is a valid GeoJSON Point object. Supported shapes: `POINT`, `MULTIPOINT`, `LINESTRING`, `MULTILINESTRING`, `POLYGON`, `MULTIPOLYGON`.
 
-To use the generated schemas as collection validators:
+#### All Options
 
-```js
-db.createCollection("ChargingStation", {
-  validator: { $jsonSchema: <contents of ChargingStation.json> }
-})
+```bash
+s2dm export mongodb --help
 ```
 
 ## Common Features
