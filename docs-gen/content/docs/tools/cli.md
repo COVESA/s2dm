@@ -159,6 +159,7 @@ The `export json` command translates a GraphQL schema into a **hierarchical JSON
 - **Raw datatype names**: Scalar and enum names are used as-is (e.g. `Float`, `Boolean`, `UInt8`, `GearPosition`)
 - **Instance dimensions from `@instanceTag`**: When a field references an `@instanceTag` type, it is excluded as a child and its enum dimensions are written as an `instances` array on the parent branch instead
 - **VSS metadata overlay** (`--vspec-meta`): Activates an optional YAML-based overlay that adds `type`, `comment`, `allowed`, `instances`, and other VSS-compatible keys — keyed by fully-qualified signal name (FQN)
+- **VSS struct type handling** (`--vspec-meta`): Fields referencing `@vspec(element: STRUCT)` types are emitted as leaf nodes whose `datatype` is the struct's FQN, not expanded branches. Struct type definitions are rendered in a separate top-level `ComplexDataTypes` section built from the YAML
 - **Root Type Filtering**: Use `--root-type` to export only one branch and its descendants
 - **Selection Query**: Use `--selection-query` to narrow the export to a specific set of fields
 - **Naming Configuration**: Use `--naming-config` to rename types and fields during export
@@ -275,10 +276,12 @@ Vehicle.Body.Mirrors.Pan:
 
 In vspec-meta mode the following additional behaviour is enabled:
 
-- `"type": "branch"` is added to every branch node (before the YAML overlay is applied, so the overlay can override it)
+- `"type"` is added to every branch node — derived from `@vspec(element: ...)` on the GraphQL type itself (e.g. `branch`, `struct`), falling back to `"branch"` if absent. The YAML overlay can still override it.
 - Fields with `@vspec(fqn: ...)` have their output key renamed to the last segment of the FQN
 - Enum fields annotated with `@vspec` gain an `"allowed"` list from the enum values
 - All YAML keys for a matching FQN entry are merged into the node, with the YAML taking precedence
+- Fields referencing a `@vspec(element: STRUCT)` type are exported as **leaf nodes** whose `datatype` is the struct's FQN (e.g. `VehicleDataTypes.TestBranch1.NestedStruct`) rather than expanded branch nodes
+- If the YAML contains a `ComplexDataTypes` key, its FQN-indexed entries are assembled into a nested `ComplexDataTypes` section in the output (see [VSS Struct Types](#vss-struct-types-vspec-meta-only) below)
 
 #### Output Structure
 
@@ -325,8 +328,93 @@ Branch node keys:
 | `children` | Object type fields |
 | `description` | GraphQL field docstring |
 | `instances` | Enum dimensions of the `@instanceTag` type (default mode) or YAML overlay (vspec-meta mode) |
-| `type` | vspec-meta mode only — `"branch"` or overridden by YAML entry |
+| `type` | vspec-meta mode only — from `@vspec(element: ...)` on the type (e.g. `branch`, `struct`), or YAML overlay |
 | `comment` | vspec-meta mode only — from YAML entry |
+
+#### Examples
+
+#### VSS Struct Types (vspec-meta only)
+
+When a GraphQL schema contains `@vspec(element: STRUCT)` types (representing VSS struct datatypes), vspec-meta mode handles them differently from regular branch types:
+
+- **Fields referencing a struct type become leaf nodes** — the field is not expanded into a branch; instead it gets a `datatype` equal to the struct's FQN as recorded in `@vspec(fqn: ...)` on the struct type. A `[]` suffix is appended for list fields.
+- **Struct types are excluded from the main export** — they do not appear as top-level keys alongside signal branches.
+- **A `ComplexDataTypes` section is built from the YAML** — when the `--vspec-meta` YAML contains a `ComplexDataTypes` key, its FQN-indexed entries are assembled into a nested hierarchy and added to the output as `result["ComplexDataTypes"]`.
+
+Example YAML with a `ComplexDataTypes` section:
+
+```yaml
+A:
+  description: Branch A.
+  type: branch
+
+A.NestedStructSensor:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+  description: A rich sensor with user-defined data type.
+  type: sensor
+
+ComplexDataTypes:
+  VehicleDataTypes:
+    description: Top-level branch for vehicle data types.
+    type: branch
+  VehicleDataTypes.TestBranch1:
+    description: Test branch with structs and properties definitions
+    type: branch
+  VehicleDataTypes.TestBranch1.NestedStruct:
+    description: A struct - Nested
+    type: struct
+  VehicleDataTypes.TestBranch1.NestedStruct.x:
+    datatype: double
+    description: x property
+    min: -10
+    type: property
+```
+
+Produces:
+
+```json
+{
+  "A": {
+    "children": {
+      "NestedStructSensor": {
+        "description": "A rich sensor with user-defined data type.",
+        "datatype": "VehicleDataTypes.TestBranch1.NestedStruct",
+        "type": "sensor"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  },
+  "ComplexDataTypes": {
+    "VehicleDataTypes": {
+      "description": "Top-level branch for vehicle data types.",
+      "type": "branch",
+      "children": {
+        "TestBranch1": {
+          "description": "Test branch with structs and properties definitions",
+          "type": "branch",
+          "children": {
+            "NestedStruct": {
+              "description": "A struct - Nested",
+              "type": "struct",
+              "children": {
+                "x": {
+                  "datatype": "double",
+                  "description": "x property",
+                  "min": -10,
+                  "type": "property"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+> **Default mode (no `--vspec-meta`)**: `@vspec(element: STRUCT)` types are treated as plain branches and expanded inline. Fields referencing them are expanded as nested `children` rather than leaf nodes with a struct FQN datatype. Field names reflect the camelCase names in the GraphQL schema rather than the original VSS snake_case names.
 
 #### Examples
 
