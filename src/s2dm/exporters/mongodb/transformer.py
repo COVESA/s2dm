@@ -286,8 +286,9 @@ class MongoDBTransformer:
                     errors.append(f"  '{key}': type '{type_name}' has no field '{field_name}'.")
 
         if errors:
-            log.error("Invalid properties-config entries:\n" + "\n".join(errors))
-            raise ValueError("Fix the file passed to '--properties-config' and try again.")
+            detail = "Invalid properties-config entries:\n" + "\n".join(errors)
+            log.error(detail)
+            raise ValueError(detail + "\nFix the file passed to '--properties-config' and try again.")
 
     # ------------------------------------------------------------------
     # Schema builders (return bare dicts, no $jsonSchema wrapper)
