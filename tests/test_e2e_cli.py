@@ -270,13 +270,13 @@ def test_generate_skos_skeleton(
         ([TSD.NO_CHANGE_SCHEMA], [TSD.BASE_SCHEMA], "No version bump needed"),
         ([TSD.NON_BREAKING_SCHEMA], [TSD.BASE_SCHEMA], "Patch version bump needed"),
         ([TSD.DANGEROUS_SCHEMA], [TSD.BASE_SCHEMA], "Minor version bump needed"),
-        ([TSD.BREAKING_SCHEMA], [TSD.BASE_SCHEMA], "Detected breaking changes, major version bump needed"),
+        ([TSD.BREAKING_SCHEMA], [TSD.BASE_SCHEMA], "Breaking changes detected - major version bump needed"),
         # Keep original test cases for backward compatibility
         ([TSD.SAMPLE1_1, TSD.SAMPLE1_2], [TSD.SAMPLE1_1, TSD.SAMPLE1_2], "No version bump needed"),
         (
             [TSD.SAMPLE1_1, TSD.SAMPLE1_2],
             [TSD.SAMPLE2_1, TSD.SAMPLE2_2],
-            "Detected breaking changes, major version bump needed",
+            "Breaking changes detected - major version bump needed",
         ),
     ],
 )

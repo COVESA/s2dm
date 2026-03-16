@@ -255,7 +255,36 @@ runs:
       run: |
         git config --local user.email "s2dm-automation-action@covesa.global"
         git config --local user.name "S2DM Automation Action"
-        bump-my-version bump ${{ steps.version-check.outputs.VERSION_BUMP }} --config-file ./.bumpversion.toml
+
+        PREV_TAG="${{ steps.download-release.outputs.PREV_TAG }}"
+        if [ -n "$PREV_TAG" ]; then
+          CURRENT_VERSION="${PREV_TAG#v}"
+        else
+          CURRENT_VERSION="0.0.0"
+        fi
+
+        echo "Current version (from latest release): $CURRENT_VERSION"
+        echo "Bumping version to ${{ steps.version-check.outputs.VERSION_BUMP }}"
+
+        HEAD_BEFORE=$(git rev-parse HEAD)
+        bump-my-version bump ${{ steps.version-check.outputs.VERSION_BUMP }} \
+          --config-file ./.bumpversion.toml \
+          --current-version "$CURRENT_VERSION"
+        HEAD_AFTER=$(git rev-parse HEAD)
+
+        if [ "$HEAD_BEFORE" = "$HEAD_AFTER" ]; then
+          echo "ERROR: bump-my-version did not create a commit. HEAD is unchanged ($HEAD_BEFORE)."
+          echo "Check .bumpversion.toml configuration (commit = true) and working tree state."
+          exit 1
+        fi
+
+        NEW_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
+        if [ -z "$NEW_TAG" ]; then
+          echo "ERROR: bump-my-version did not create a tag on the new commit."
+          exit 1
+        fi
+
+        echo "Version bumped successfully: $CURRENT_VERSION -> ${NEW_TAG#v} (tag: $NEW_TAG)"
         git push origin ${{ github.ref_name }}
         git push origin --tags
 
@@ -271,6 +300,7 @@ runs:
     - name: Generate GraphQL diff
       if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
       id: generate-diff
+      working-directory: ${{ inputs.repository-path }}
       shell: bash
       run: |
         s2dm diff graphql \
@@ -297,6 +327,7 @@ runs:
 
     - name: Initialize registry
       if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE == 'true'
+      working-directory: ${{ inputs.repository-path }}
       shell: bash
       run: |
         LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}"
