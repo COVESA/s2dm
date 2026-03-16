@@ -34,7 +34,7 @@ def test_json_export_cli_basic(tmp_path: Path, spec_directory: Path) -> None:
     assert len(data) > 0
 
     # Check that at least one type was exported (no 'type' key in default mode)
-    for type_name, type_data in data.items():
+    for _type_name, type_data in data.items():
         assert "type" not in type_data  # No type in default mode
         if "children" in type_data:
             assert isinstance(type_data["children"], dict)

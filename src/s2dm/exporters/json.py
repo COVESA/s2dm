@@ -93,6 +93,15 @@ class JsonExporter:
         self.annotated_schema = annotated_schema
         self.expanded_instances = expanded_instances
         self.vspec_lookup = vspec_lookup
+        # Flat lookup: merges top-level FQN entries AND ComplexDataTypes sub-entries so that
+        # _apply_vspec_lookup can resolve any FQN regardless of where it lives in the YAML.
+        self._flat_lookup: dict[str, Any] = {}
+        if vspec_lookup is not None:
+            for _key, _val in vspec_lookup.items():
+                if _key == "ComplexDataTypes" and isinstance(_val, dict):
+                    self._flat_lookup.update(_val)
+                elif isinstance(_val, dict):
+                    self._flat_lookup[_key] = _val
 
     def export(self, root_type: str | None = None) -> dict[str, Any]:
         """Export schema to JSON tree structure.
@@ -115,12 +124,29 @@ class JsonExporter:
             visited: set[str] = set()
             return {root_type: self._build_branch_node(cast(GraphQLObjectType, gql_type), visited)}
         else:
-            # Multi-root export - all non-introspection object types
-            user_types = [t for t in get_all_object_types(self.schema) if not is_introspection_type(t.name)]
+            # Multi-root export - all non-introspection, non-operation object types
+            operation_type_names = {
+                t.name
+                for t in [self.schema.query_type, self.schema.mutation_type, self.schema.subscription_type]
+                if t is not None
+            }
+            user_types = [
+                t
+                for t in get_all_object_types(self.schema)
+                if not is_introspection_type(t.name)
+                and t.name not in operation_type_names
+                # In vspec-meta mode: STRUCT types are emitted via the ComplexDataTypes section
+                and not (self.vspec_lookup is not None and self._is_vspec_struct_type(t))
+            ]
             result: dict[str, Any] = {}
             for obj_type in user_types:
                 visited = set()
                 result[obj_type.name] = self._build_branch_node(obj_type, visited)
+            # In vspec-meta mode: build ComplexDataTypes section from YAML if present
+            if self.vspec_lookup is not None and "ComplexDataTypes" in self.vspec_lookup:
+                complex_entries = self.vspec_lookup["ComplexDataTypes"]
+                if isinstance(complex_entries, dict):
+                    result["ComplexDataTypes"] = self._build_fqn_tree(complex_entries)
             return result
 
     def _build_branch_node(self, gql_type: GraphQLObjectType, visited: set[str]) -> dict[str, Any]:
@@ -142,9 +168,15 @@ class JsonExporter:
 
         # Build base branch node
         node: dict[str, Any] = {"children": {}}
-        # "type": "branch" is only included in vspec-meta mode
+        # In vspec-meta mode, derive "type" from the type's own @vspec(element:...) if present,
+        # falling back to "branch".
         if self.vspec_lookup is not None:
-            node["type"] = "branch"
+            if has_given_directive(gql_type, "vspec"):
+                type_vspec_args = get_directive_arguments(gql_type, "vspec")
+                element = type_vspec_args.get("element")
+                node["type"] = str(element).lower() if element else "branch"
+            else:
+                node["type"] = "branch"
 
         # Add description if present
         if gql_type.description:
@@ -185,6 +217,114 @@ class JsonExporter:
 
         return node
 
+    def _build_struct_field_leaf_node(
+        self,
+        field: GraphQLField,
+        struct_type: GraphQLObjectType,
+    ) -> dict[str, Any]:
+        """Build a leaf node for a field whose underlying type is a @vspec STRUCT.
+
+        In VSS, a sensor/property with a struct datatype is a leaf — the struct
+        definition lives separately in the types tree, and the signal only carries
+        the FQN of the struct as its datatype.
+
+        Args:
+            field: The GraphQL field referencing the struct type.
+            struct_type: The @vspec(element: STRUCT) ObjectType being referenced.
+
+        Returns:
+            Leaf node dict with description, datatype (struct FQN), optional
+            min/max/unit/deprecated, and type from the field's @vspec element.
+        """
+        node: dict[str, Any] = {}
+
+        if field.description:
+            node["description"] = field.description.strip()
+
+        # Detect list wrapper (NonNull → List)
+        ft = field.type
+        if is_non_null_type(ft):
+            ft = cast("GraphQLNonNull[Any]", ft).of_type
+        is_list = is_list_type(ft)
+
+        # datatype = FQN of the struct type from @vspec(fqn:...) on the struct
+        struct_vspec_args = get_directive_arguments(struct_type, "vspec")
+        struct_fqn = struct_vspec_args.get("fqn")
+        if struct_fqn and isinstance(struct_fqn, str):
+            node["datatype"] = struct_fqn + ("[]" if is_list else "")
+
+        # @range from this field
+        if has_given_directive(field, "range"):
+            range_args = get_directive_arguments(field, "range")
+            if "min" in range_args and range_args["min"] is not None:
+                node["min"] = range_args["min"]
+            if "max" in range_args and range_args["max"] is not None:
+                node["max"] = range_args["max"]
+
+        # unit from field argument
+        if "unit" in field.args:
+            unit_arg = field.args["unit"]
+            if unit_arg.default_value is not None and unit_arg.default_value is not Undefined:
+                node["unit"] = str(unit_arg.default_value)
+
+        # deprecated
+        if field.deprecation_reason:
+            node["deprecated"] = field.deprecation_reason
+
+        # type from the field's own @vspec(element:...) (sensor, struct_property, etc.)
+        if has_given_directive(field, "vspec"):
+            vspec_args = get_directive_arguments(field, "vspec")
+            element = vspec_args.get("element")
+            if element:
+                node["type"] = str(element).lower()
+
+        return node
+
+    def _is_vspec_struct_type(self, obj_type: GraphQLObjectType) -> bool:
+        """Return True if this type carries @vspec(element: STRUCT)."""
+        if not has_given_directive(obj_type, "vspec"):
+            return False
+        return str(get_directive_arguments(obj_type, "vspec").get("element", "")).upper() == "STRUCT"
+
+    def _build_fqn_tree(self, fqn_entries: dict[str, Any]) -> dict[str, Any]:
+        """Build a nested tree from a flat dict of FQN-keyed metadata entries.
+
+        Used to produce the ComplexDataTypes output section entirely from YAML data
+        without consulting the GraphQL schema.
+
+        Args:
+            fqn_entries: Flat dict keyed by dot-separated FQN strings; values are
+                         metadata dicts (type, datatype, description, min, max, …).
+
+        Returns:
+            Nested dict representing the hierarchy implied by the FQN paths.
+        """
+        nodes: dict[str, dict[str, Any]] = {}
+
+        for fqn in sorted(fqn_entries.keys(), key=lambda k: k.count(".")):
+            metadata = fqn_entries[fqn]
+            node: dict[str, Any] = {k: v for k, v in metadata.items() if v is not None}
+
+            # Add children dict when any direct child exists in the entries
+            prefix = fqn + "."
+            if any(k.startswith(prefix) and k.count(".") == fqn.count(".") + 1 for k in fqn_entries):
+                node["children"] = {}
+
+            nodes[fqn] = node
+
+            # Attach to parent
+            parts = fqn.split(".")
+            if len(parts) > 1:
+                parent_fqn = ".".join(parts[:-1])
+                if parent_fqn in nodes:
+                    parent_node = nodes[parent_fqn]
+                    if "children" not in parent_node:
+                        parent_node["children"] = {}
+                    parent_node["children"][parts[-1]] = node
+
+        # Return only root-level nodes (FQNs with no dots)
+        return {fqn: nodes[fqn] for fqn in nodes if "." not in fqn}
+
     def _extract_instances_from_instance_tag(self, instance_tag_type: GraphQLObjectType) -> list[list[str]]:
         """Extract instance dimensions from an @instanceTag type's enum fields.
 
@@ -218,7 +358,7 @@ class JsonExporter:
         """
         if self.vspec_lookup is None:
             return
-        entry = self.vspec_lookup.get(fqn)
+        entry = self._flat_lookup.get(fqn)
         if not entry or not isinstance(entry, dict):
             return
         for key, value in entry.items():
@@ -255,6 +395,16 @@ class JsonExporter:
             if has_given_directive(obj_type, "instanceTag"):
                 log.warning(f"Skipping @instanceTag type '{obj_type.name}' as field")
                 return {"children": {}}
+
+            # In vspec-meta mode: fields referencing a @vspec(element: STRUCT) type are leaf
+            # nodes whose datatype is the struct's FQN, not expanded branch nodes.
+            if self.vspec_lookup is not None and has_given_directive(obj_type, "vspec"):
+                struct_vspec = get_directive_arguments(obj_type, "vspec")
+                if str(struct_vspec.get("element", "")).upper() == "STRUCT":
+                    leaf_node = self._build_struct_field_leaf_node(field, obj_type)
+                    if fqn:
+                        self._apply_vspec_lookup(leaf_node, fqn)
+                    return leaf_node
 
             # Build branch node recursively
             branch_node = self._build_branch_node(obj_type, visited)

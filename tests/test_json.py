@@ -167,11 +167,10 @@ def test_multi_root_export() -> None:
 
     result = exporter.export(root_type=None)
 
-    # Should export Vehicle and Building, but not Query (introspection types are filtered)
+    # Should export Vehicle and Building, but exclude operation types (Query)
     assert "Vehicle" in result
     assert "Building" in result
-    # Query is not an introspection type, so it should be included
-    assert "Query" in result
+    assert "Query" not in result
 
 
 def test_cycle_detection() -> None:
