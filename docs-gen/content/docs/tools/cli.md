@@ -1679,18 +1679,27 @@ The s2dm ontology maps GraphQL SDL elements to RDF as follows:
 
 ## Query Commands
 
-The `query` command group provides predefined SPARQL queries for traversing and analysing an RDF-materialized schema. Each command can either load a pre-generated RDF file or materialize on-the-fly from a GraphQL schema.
+The `query` command group provides predefined SPARQL queries for traversing and analysing an RDF-materialized schema. Each command can either load pre-generated RDF files or materialize on-the-fly from a GraphQL schema.
 
 ### Input Options (shared by all query commands)
 
-Provide **one** of the following:
+Provide **one** of the following for the RDF graph:
 
-- `--rdf PATH`: Path to a pre-generated `.nt` or `.ttl` file
+- `--rdf PATH`: Pre-generated RDF file, directory, or URL. Can be specified multiple times. Supported formats: `.nt`, `.ttl`, `.jsonld`. Directories are recursively scanned for matching files; URLs are downloaded to a temp file.
 - `-s, --schema PATH` + `--namespace URI`: Materialize from GraphQL schema on-the-fly
+
+Specify the query with **one** of:
+
+- `QUERY_NAME`: A predefined query from the builtin registry (see below)
+- `--query-file PATH` / `-q PATH`: Path to a custom `.sparql` file
 
 Additional option:
 
 - `--json`: Output results as JSON instead of a table
+
+### Builtin Query Registry
+
+Predefined queries are loaded from `*.sparql` files in the `sparql_queries/` directory within the s2dm package. Each file stem (e.g. `fields-outputting-enum`) becomes the query name. Run `s2dm query --help` to see the full list.
 
 ### fields-outputting-enum
 
@@ -1700,8 +1709,20 @@ Find all fields whose output type is an enum type.
 # From a pre-generated file (use data_graph.nt for ontology queries)
 s2dm query fields-outputting-enum --rdf output/data_graph.nt
 
-# From a GraphQL schema
+# From multiple RDF files (graphs are merged)
+s2dm query fields-outputting-enum --rdf output/data_graph.nt --rdf other/skos.nt
+
+# From a directory (all .nt, .ttl, .jsonld files inside are loaded)
+s2dm query fields-outputting-enum --rdf output/
+
+# From a URL
+s2dm query fields-outputting-enum --rdf https://example.org/ontology/data_graph.ttl
+
+# From a GraphQL schema (on-the-fly materialization)
 s2dm query fields-outputting-enum -s spec/ --namespace "https://example.org/#"
+
+# Custom SPARQL file
+s2dm query --query-file my_query.sparql --rdf output/data_graph.nt
 
 # JSON output
 s2dm query fields-outputting-enum --rdf output/data_graph.nt --json
@@ -1763,6 +1784,16 @@ s2dm query list-type-fields --rdf output/data_graph.nt --json
 ```
 
 ## Common Features
+
+### Path Resolution
+
+Commands that accept `-s, --schema` or `--rdf` use a unified path resolver that supports:
+
+- **Files**: A single file path (e.g. `schema.graphql`, `data_graph.nt`)
+- **Directories**: Recursively resolved to matching files (e.g. `spec/` → all `.graphql` files; `output/` → all `.nt`, `.ttl`, `.jsonld` for RDF)
+- **URLs**: HTTP/HTTPS URLs are downloaded to a temporary file. The file extension is inferred from the URL path when multiple formats are supported (e.g. `.ttl` vs `.nt` for RDF).
+
+Schema options accept `.graphql` files; RDF options accept `.nt`, `.ttl`, and `.jsonld`. Multiple paths can be specified; directories expand to a deduplicated, sorted file list.
 
 ### Selection Query Filtering
 
