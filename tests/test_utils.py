@@ -64,7 +64,7 @@ def test_download_schema_to_temp_failure() -> None:
         patch(
             "s2dm.exporters.utils.schema_loader.requests.get", side_effect=requests.RequestException("Network error")
         ),
-        pytest.raises(RuntimeError, match="Failed to download schema"),
+        pytest.raises(RuntimeError, match="(?i)Failed to download schema"),
     ):
         schema_loader_utils.download_schema_to_temp("https://example.com/schema.graphql")
 
@@ -76,7 +76,7 @@ def test_download_schema_to_temp_size_limit() -> None:
 
     with (
         patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response),
-        pytest.raises(RuntimeError, match="Schema file too large"),
+        pytest.raises(RuntimeError, match="(?i)Schema file too large"),
     ):
         schema_loader_utils.download_schema_to_temp("https://example.com/schema.graphql", max_size_mb=10)
 

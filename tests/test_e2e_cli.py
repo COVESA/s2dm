@@ -466,11 +466,49 @@ def test_query_no_source_shows_error(runner: CliRunner) -> None:
     assert result.exit_code != 0
 
 
+def test_query_no_query_name_or_file_shows_error(runner: CliRunner, tmp_outputs: Path, spec_directory: Path) -> None:
+    """Query without QUERY_NAME or --query-file shows usage error."""
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "-s",
+            str(spec_directory),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code != 0
+
+
+def test_query_both_query_name_and_file_shows_error(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Providing both QUERY_NAME and --query-file shows usage error."""
+    sparql_file = tmp_outputs / "custom.sparql"
+    sparql_file.parent.mkdir(parents=True, exist_ok=True)
+    sparql_file.write_text("SELECT * WHERE { ?s ?p ?o } LIMIT 1", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "fields-outputting-enum",
+            "--query-file",
+            str(sparql_file),
+            "-s",
+            str(spec_directory),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code != 0
+
+
 def test_query_both_sources_shows_error(
     runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
 ) -> None:
     """Query with both --rdf and --schema shows usage error."""
-    # First generate an RDF file to use as the --rdf argument
     rdf_dir = tmp_outputs / "query_both_src"
     runner.invoke(
         cli,
@@ -507,6 +545,144 @@ def test_query_both_sources_shows_error(
     )
     assert result.exit_code != 0
     assert "not both" in result.output.lower() or "Provide either" in result.output
+
+
+def test_query_multiple_rdf_files(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query merges results from multiple --rdf files."""
+    rdf_dir = tmp_outputs / "multi_rdf"
+
+    # Generate two separate RDF files from the same schema
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "data_graph.nt"
+    assert nt_file.exists()
+
+    # Pass the same file twice; results should be the same as passing once (deduplication)
+    out_file = tmp_outputs / "multi_rdf_result.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "object-types-with-fields",
+            "--rdf",
+            str(nt_file),
+            "--rdf",
+            str(nt_file),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+
+def test_query_rdf_directory(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    """Passing a directory to --rdf resolves all RDF files inside it."""
+    rdf_dir = tmp_outputs / "rdf_dir_query"
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    assert (rdf_dir / "data_graph.nt").exists()
+
+    out_file = tmp_outputs / "dir_query_result.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "object-types-with-fields",
+            "--rdf",
+            str(rdf_dir),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+
+def test_query_custom_query_file(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Custom --query-file executes and returns results."""
+    rdf_dir = tmp_outputs / "custom_query_rdf"
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "data_graph.nt"
+    assert nt_file.exists()
+
+    sparql_file = tmp_outputs / "my_query.sparql"
+    sparql_file.write_text(
+        "PREFIX s2dm: <https://covesa.global/models/s2dm#>\n" "SELECT ?type WHERE { ?type a s2dm:ObjectType } LIMIT 5",
+        encoding="utf-8",
+    )
+
+    out_file = tmp_outputs / "custom_query_result.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "--query-file",
+            str(sparql_file),
+            "--rdf",
+            str(nt_file),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
 
 
 @pytest.mark.parametrize(
