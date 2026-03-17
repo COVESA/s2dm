@@ -14,8 +14,9 @@ from graphql import (
     GraphQLString,
 )
 
+from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.utils.extraction import get_all_object_types, get_all_objects_with_directive
-from s2dm.exporters.utils.instance_tag import expand_instance_tag
+from s2dm.exporters.utils.instance_tag import expand_instance_tag, expand_instances_in_schema
 from s2dm.exporters.utils.naming import (
     apply_naming_to_schema,
     convert_enum_values,
@@ -32,7 +33,7 @@ from s2dm.exporters.utils.naming_config import (
     TypeNamingConfig,
     get_case_for_element,
 )
-from s2dm.exporters.utils.schema_loader import load_schema
+from s2dm.exporters.utils.schema_loader import load_schema, load_schema_with_source_map, process_schema
 
 
 class TestConvertName:
@@ -189,6 +190,44 @@ class TestApplyNamingToSchema:
         test_object_type = original_schema.type_map["TestObject"]
         assert isinstance(test_object_type, GraphQLObjectType)
         assert "TestField" in test_object_type.fields
+
+    def test_apply_naming_routes_instancetag_enums_to_instancetag_case(self) -> None:
+        """Enums inside @instanceTag types get instanceTag case; other enums get enumValue case."""
+        from graphql import build_schema as _build_schema
+
+        schema = _build_schema("""
+            directive @instanceTag on OBJECT
+            type Query { car: Car }
+            type Car { kind: CarKind }
+            enum TwoRows { front rear }
+            enum TwoSides { left right }
+            type DoorTag @instanceTag { row: TwoRows  side: TwoSides }
+            enum CarKind { sedan suv }
+        """)
+        naming_config = NamingConventionConfig(
+            enum_value=CaseFormat.MACRO_CASE,
+            instance_tag=CaseFormat.PASCAL_CASE,
+        )
+        apply_naming_to_schema(schema, naming_config)
+
+        # @instanceTag enums → PascalCase
+        two_rows = schema.get_type("TwoRows")
+        assert isinstance(two_rows, GraphQLEnumType)
+        assert "Front" in two_rows.values
+        assert "Rear" in two_rows.values
+        assert "front" not in two_rows.values
+
+        two_sides = schema.get_type("TwoSides")
+        assert isinstance(two_sides, GraphQLEnumType)
+        assert "Left" in two_sides.values
+        assert "Right" in two_sides.values
+
+        # Regular enum → MACRO_CASE
+        car_kind = schema.get_type("CarKind")
+        assert isinstance(car_kind, GraphQLEnumType)
+        assert "SEDAN" in car_kind.values
+        assert "SUV" in car_kind.values
+        assert "sedan" not in car_kind.values
 
 
 class TestConvertFieldNames:
@@ -360,6 +399,63 @@ class TestInstanceTagConversion:
 
         expected = ["ROW1.DRIVERSIDE", "ROW1.PASSENGERSIDE", "ROW2.DRIVERSIDE", "ROW2.PASSENGERSIDE"]
         assert set(result) == set(expected)
+
+    def test_expand_instances_in_schema_pipeline_applies_instance_tag_case(self, spec_directory: Path) -> None:
+        """Full pipeline: expand_instances_in_schema applies instanceTag case to resolved_names."""
+        schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
+        schema = load_schema([spec_directory, schema_path])
+
+        naming_config = NamingConventionConfig(
+            enum_value=CaseFormat.MACRO_CASE,
+            instance_tag=CaseFormat.PASCAL_CASE,
+        )
+
+        apply_naming_to_schema(schema, naming_config)
+        _, _, field_metadata = expand_instances_in_schema(schema, naming_config)
+
+        door_meta = field_metadata.get(("Vehicle", "Door"))
+        assert door_meta is not None
+        assert set(door_meta.resolved_names) == {
+            "Door.Row1.Driverside",
+            "Door.Row1.Passengerside",
+            "Door.Row2.Driverside",
+            "Door.Row2.Passengerside",
+        }
+
+    def test_shacl_instancetag_nodeshape_uses_instance_tag_case(self, spec_directory: Path) -> None:
+        """translate_to_shacl applies instanceTag naming to sh:in values inside @instanceTag NodeShapes."""
+        from rdflib import Namespace
+        from rdflib.collection import Collection
+        from rdflib.namespace import SH
+
+        schema_path = Path(__file__).parent / "test_expanded_instances" / "test_schema.graphql"
+        schema, source_map = load_schema_with_source_map([spec_directory, schema_path])
+
+        naming_config = NamingConventionConfig(
+            enum_value=CaseFormat.MACRO_CASE,
+            instance_tag=CaseFormat.PASCAL_CASE,
+        )
+
+        annotated = process_schema(schema, source_map, naming_config, expanded_instances=False)
+        graph = translate_to_shacl(
+            annotated,
+            "http://ex/shapes#",
+            "shapes",
+            "http://ex/model#",
+            "model",
+        )
+
+        shapes_ns = Namespace("http://ex/shapes#")
+        door_position_shape = shapes_ns["DoorPosition"]
+        sh_in_values: set[str] = set()
+        for _, _, prop_node in graph.triples((door_position_shape, SH.property, None)):
+            for _, _, in_list in graph.triples((prop_node, SH["in"], None)):
+                for val in Collection(graph, in_list):
+                    sh_in_values.add(str(val))
+
+        # DoorPosition has row: RowEnum (ROW1, ROW2) and side: SideEnum (DRIVERSIDE, PASSENGERSIDE)
+        # instanceTag: PascalCase -> Row1, Row2, Driverside, Passengerside
+        assert sh_in_values == {"Row1", "Row2", "Driverside", "Passengerside"}
 
 
 if __name__ == "__main__":

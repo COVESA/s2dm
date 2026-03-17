@@ -1775,6 +1775,50 @@ For validation, the schema is checked against the configuration:
 - `fuel_type_enum` fails (expected PascalCase)
 - `GASOLINE_TYPE` fails (expected PascalCase)
 
+#### How `instanceTag` Naming Works
+
+The `instanceTag` key gives enum values that are used inside an `@instanceTag` type their **own naming rule**, separate from the global `enumValue` rule.
+
+Think of it this way: an `@instanceTag` type acts as an identification label for multiple instances of an entity (for example, which specific seat or door you are referring to). The enum values inside it serve as identifiers in that labelling scheme, and you may want them to follow a different convention than ordinary enum values elsewhere in the schema.
+
+**The important rule to understand:** when you set `instanceTag` to a case format, that format is applied to the **enum type itself** — meaning every place that enum appears in the schema will use the new casing, not just inside the instance tag context. This is because the schema treats an enum as a single definition; its values cannot have two different names at the same time.
+
+For example, given:
+
+```graphql
+enum TwoRows { FRONT  REAR }
+
+type DoorTag @instanceTag {
+  row: TwoRows
+}
+
+type SomeOtherType {
+  preferredRow: TwoRows   # also uses TwoRows
+}
+```
+
+With `instanceTag: PascalCase`, `TwoRows` values become `Front` and `Rear` **everywhere** — including in `SomeOtherType.preferredRow`.
+
+**Practical recommendation:** If you want instance tag identifiers to follow a distinct case without affecting other parts of the schema, define dedicated enums that are used *exclusively* inside the `@instanceTag` type and nowhere else. That way, the `instanceTag` case change is isolated to those enums:
+
+```graphql
+# Used only inside @instanceTag — safe to give a different case
+enum DoorRowTag { FRONT  REAR }
+enum DoorSideTag { LEFT  RIGHT }
+
+type DoorTag @instanceTag {
+  row: DoorRowTag
+  side: DoorSideTag
+}
+
+# Uses its own separate enum — unaffected by instanceTag naming
+enum GeneralDirection { FRONT  REAR  LEFT  RIGHT }
+
+type Navigation {
+  heading: GeneralDirection
+}
+```
+
 #### Validation Rules
 
 The naming configuration system enforces several validation rules to ensure consistency and correctness:
