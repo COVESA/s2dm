@@ -375,7 +375,14 @@ def registry() -> None:
     pass
 
 
-@click.command()
+def _query_epilog() -> str:
+    """Build epilog string listing predefined SPARQL queries with aligned descriptions."""
+    items = sorted(SPARQL_QUERIES.items())
+    width = max(len(name) for name, _ in items) if items else 0
+    return "\n\nPredefined queries:\n\n" + "\n\n".join(f"  {name:<{width}}  {desc}" for name, (desc, _) in items)
+
+
+@click.command(epilog=_query_epilog())
 @click.argument(
     "query_name",
     type=click.Choice(sorted(SPARQL_QUERIES.keys()), case_sensitive=False),
@@ -436,11 +443,6 @@ def query(
     Provide a graph via --rdf (file, directory, or URL) or on-the-fly via
     -s/--schema + --namespace.  Specify the query with either a predefined
     QUERY_NAME argument or a custom --query-file.
-
-    Available predefined queries:
-      fields-outputting-enum    Find fields whose output type is an enum
-      object-types-with-fields  List object types and their fields
-      list-type-fields          Find fields using list-like wrappers
     """
     if query_name and query_file:
         raise click.UsageError("Provide either QUERY_NAME or --query-file, not both.")
@@ -1316,10 +1318,11 @@ def registry_init(
         schema=composed_schema,
         version_tag=version_tag,
         output=variant_ids_output,
+        namespace_prefix=concept_prefix,
     )
     id_result = id_exporter.run()
 
-    # Extract variant IDs dict (format: {"concept_name": "Concept/vN"})
+    # Extract variant IDs dict (format: {"concept_name": "[prefix:]Concept/vN"})
     variant_ids: dict[str, str] = {}
     for concept_name, variant_entry in id_result.concepts.items():
         variant_ids[concept_name] = variant_entry.id
@@ -1422,10 +1425,11 @@ def registry_update(
         output=variant_ids_output,
         previous_ids_path=previous_ids,
         diff_output=diff_output,
+        namespace_prefix=concept_prefix,
     )
     id_result = id_exporter.run()
 
-    # Extract variant IDs dict (format: {"concept_name": "Concept/vN"})
+    # Extract variant IDs dict (format: {"concept_name": "[prefix:]Concept/vN"})
     variant_ids: dict[str, str] = {}
     for concept_name, variant_entry in id_result.concepts.items():
         variant_ids[concept_name] = variant_entry.id

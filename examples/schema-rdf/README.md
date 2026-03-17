@@ -110,9 +110,23 @@ s2dm query object-types-with-fields --rdf output/data_graph.nt
 # Find fields using list wrappers (JSON output)
 s2dm query list-type-fields --rdf output/data_graph.nt --json
 
-# Or materialize on-the-fly from GraphQL
+# Multiple RDF files (graphs are merged)
+s2dm query fields-outputting-enum --rdf output/data_graph.nt --rdf output/skos.nt
+
+# From a directory (all .nt, .ttl, .jsonld files inside are loaded)
+s2dm query object-types-with-fields --rdf output/
+
+# From a URL
+s2dm query fields-outputting-enum --rdf https://example.org/ontology/data_graph.ttl
+
+# Custom SPARQL file
+s2dm query --query-file my_query.sparql --rdf output/data_graph.nt
+
+# Materialize on-the-fly from GraphQL
 s2dm query fields-outputting-enum -s sample.graphql --namespace "https://example.org/my-domain#"
 ```
+
+Predefined queries are loaded from the builtin `sparql_queries/` registry. Run `s2dm query --help` to list them.
 
 ### Using rdflib (Python)
 
