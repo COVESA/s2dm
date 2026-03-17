@@ -57,6 +57,7 @@ dev = [
     "hypothesis>=6.131.9",
     "types-pyyaml>=6.0.12.20250516",
     "gitlint>=0.20.0.dev48",
+    "notebook>=7.5.0a0",
 ]
 
 [tool.mypy]
