@@ -15,3 +15,6 @@
 
 ### Learn More:
 For detailed guidelines, tools, and contribution instructions, check out the documentation: [S2DM Documentation](https://covesa.github.io/s2dm)
+
+### Acknowledgements
+- Unit definitions are derived from the [QUDT (Quantities, Units, Dimensions and Types)](https://qudt.org/) reference model, © QUDT.org, licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).

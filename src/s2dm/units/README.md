@@ -77,6 +77,10 @@ Each generated enum follows this structure:
 
 ```graphql
 # Generated from QUDT units catalog version 3.1.5
+# Source data: QUDT Public Repository (https://github.com/qudt/qudt-public-repo)
+# © QUDT.org — Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)
+# License: https://creativecommons.org/licenses/by/4.0/
+# Changes: vocabulary terms transformed to GraphQL SDL enum format by S2DM (https://github.com/COVESA/s2dm)
 enum LengthUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Length") {
   """Meter | UCUM: m"""
   M @reference(uri: "http://qudt.org/vocab/unit/M")
