@@ -4,20 +4,20 @@ This example demonstrates how to materialize a GraphQL schema as RDF triples usi
 
 ## Overview
 
-The `schema-rdf` command transforms GraphQL SDL into RDF triples that include:
+The `export rdf` command transforms GraphQL SDL into RDF triples that include:
 
-- **SKOS skeleton**: `skos:Concept`, `skos:prefLabel`, `skos:definition`
-- **s2dm ontology**: Object types, fields, enum types, enum values, and type wrapper patterns
+- **SKOS graph**: `skos:Concept`, `skos:prefLabel`, `skos:definition`, `skos:Collection`, `skos:member`
+- **Data graph (s2dm ontology)**: Object types, fields, enum types, enum values, and type wrapper patterns
 
-Output formats:
+Output files (formats configurable via `--output-formats`, default: `nt,turtle`):
 
-- **schema.nt** – Sorted n-triples (deterministic, git-friendly diffs)
-- **schema.ttl** – Turtle (for consumption and release artifacts)
+- **skos.nt**, **skos.ttl** – SKOS concepts, collections, and labels
+- **data_graph.nt**, **data_graph.ttl** – s2dm ontology instantiation (for SPARQL schema traversal)
 
 ## Usage
 
 ```bash
-s2dm generate schema-rdf \
+s2dm export rdf \
   -s examples/schema-rdf/sample.graphql \
   -o examples/schema-rdf/output \
   --namespace "https://covesa.org/s2dm/mydomain#"
@@ -26,15 +26,16 @@ s2dm generate schema-rdf \
 ### Command Options
 
 - `-s, --schema` – GraphQL schema file, directory, or URL (required, multiple)
-- `-o, --output` – Output directory for schema.nt and schema.ttl (required)
+- `-o, --output` – Output directory for skos.* and data_graph.* artifacts (required)
 - `--namespace` – Namespace URI for concept URIs (required)
 - `--prefix` – Prefix for concept URIs (default: `ns`)
 - `--language` – BCP 47 language tag for prefLabels (default: `en`)
+- `--output-formats` – Comma-separated formats (default: `nt,turtle`). Supported: `nt`, `turtle` (or `ttl`), `json-ld` (or `jsonld`)
 
 ### Example with Custom Options
 
 ```bash
-s2dm generate schema-rdf \
+s2dm export rdf \
   -s examples/schema-rdf/sample.graphql \
   -o ./rdf-output \
   --namespace "https://covesa.org/ontology#" \
@@ -100,14 +101,14 @@ The generated RDF can be queried using SPARQL -- either via the s2dm CLI or any 
 ### Using the CLI
 
 ```bash
-# Find all fields that output an enum type
-s2dm query fields-outputting-enum --rdf output/schema.nt
+# Find all fields that output an enum type (use data_graph.nt for ontology queries)
+s2dm query fields-outputting-enum --rdf output/data_graph.nt
 
 # List all object types with their fields
-s2dm query object-types-with-fields --rdf output/schema.nt
+s2dm query object-types-with-fields --rdf output/data_graph.nt
 
 # Find fields using list wrappers (JSON output)
-s2dm query list-type-fields --rdf output/schema.nt --json
+s2dm query list-type-fields --rdf output/data_graph.nt --json
 
 # Or materialize on-the-fly from GraphQL
 s2dm query fields-outputting-enum -s sample.graphql --namespace "https://example.org/my-domain#"
@@ -119,7 +120,7 @@ s2dm query fields-outputting-enum -s sample.graphql --namespace "https://example
 from rdflib import Graph
 
 g = Graph()
-g.parse("output/schema.nt", format="nt")
+g.parse("output/data_graph.nt", format="nt")
 
 results = g.query("""
     PREFIX s2dm: <https://covesa.global/models/s2dm#>
