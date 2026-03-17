@@ -1596,15 +1596,13 @@ s2dm playground start
 ```
 
 
-## Generate Commands
+## Export RDF
 
-### Schema RDF
-
-The `generate schema-rdf` command materializes a GraphQL schema as RDF triples using the s2dm ontology. The generated RDF mirrors the schema's structure (types, fields, enums, unions, interfaces) as a semantic graph that can be queried with SPARQL.
+The `export rdf` command materializes a GraphQL schema as RDF triples using the s2dm ontology. It produces two separate graphs: a SKOS graph (concepts, collections, labels) and a data graph (ontology instantiation). Both can be queried with SPARQL.
 
 #### Usage
 ```bash
-s2dm generate schema-rdf -s <schema_path> -o <output_dir> --namespace <uri>
+s2dm export rdf -s <schema_path> -o <output_dir> --namespace <uri>
 ```
 
 #### Options
@@ -1616,12 +1614,21 @@ s2dm generate schema-rdf -s <schema_path> -o <output_dir> --namespace <uri>
 - `--language TEXT`: BCP 47 language tag for prefLabels (default: `en`)
 - `--output-formats TEXT`: Comma-separated output formats (default: `nt,turtle`). Supported: `json-ld` (or `jsonld`), `nt`, `turtle` (or `ttl`)
 
+#### Output Files
+
+Produces two pairs of files in the output directory (formats configurable via `--output-formats`):
+
+- **skos.{nt,ttl,...}** – SKOS concepts, collections, and prefLabels
+- **data_graph.{nt,ttl,...}** – s2dm ontology instantiation (ObjectType, Field, hasField, etc.)
+
+For SPARQL queries that traverse the schema structure, use `data_graph.nt` or `data_graph.ttl`.
+
 #### Examples
 
 Generate sorted n-triples and Turtle (default):
 
 ```bash
-s2dm generate schema-rdf \
+s2dm export rdf \
   -s spec/ \
   -o ./rdf-output \
   --namespace "https://covesa.org/s2dm/mydomain#"
@@ -1630,7 +1637,7 @@ s2dm generate schema-rdf \
 Generate all formats including JSON-LD (for releases):
 
 ```bash
-s2dm generate schema-rdf \
+s2dm export rdf \
   -s spec/ \
   -o ./rdf-output \
   --namespace "https://covesa.org/s2dm/mydomain#" \
@@ -1640,7 +1647,7 @@ s2dm generate schema-rdf \
 Generate only n-triples (for git):
 
 ```bash
-s2dm generate schema-rdf \
+s2dm export rdf \
   -s spec/ \
   -o ./rdf-output \
   --namespace "https://covesa.org/s2dm/mydomain#" \
@@ -1690,14 +1697,14 @@ Additional option:
 Find all fields whose output type is an enum type.
 
 ```bash
-# From a pre-generated file
-s2dm query fields-outputting-enum --rdf schema.nt
+# From a pre-generated file (use data_graph.nt for ontology queries)
+s2dm query fields-outputting-enum --rdf output/data_graph.nt
 
 # From a GraphQL schema
 s2dm query fields-outputting-enum -s spec/ --namespace "https://example.org/#"
 
 # JSON output
-s2dm query fields-outputting-enum --rdf schema.nt --json
+s2dm query fields-outputting-enum --rdf output/data_graph.nt --json
 ```
 
 **Example output:**
@@ -1718,7 +1725,7 @@ s2dm query fields-outputting-enum --rdf schema.nt --json
 List all object types and their fields.
 
 ```bash
-s2dm query object-types-with-fields --rdf schema.nt
+s2dm query object-types-with-fields --rdf output/data_graph.nt
 ```
 
 **Example output:**
@@ -1741,7 +1748,7 @@ s2dm query object-types-with-fields --rdf schema.nt
 Find all fields that use a list-like type wrapper pattern (`list`, `nonNullList`, `listOfNonNull`, `nonNullListOfNonNull`).
 
 ```bash
-s2dm query list-type-fields --rdf schema.nt --json
+s2dm query list-type-fields --rdf output/data_graph.nt --json
 ```
 
 **Example JSON output:**
