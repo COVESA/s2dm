@@ -240,6 +240,10 @@ def _emit_enum_sdl(quantity_kind_label: str, quantity_kind_iri: str, unit_rows: 
 
     lines = [
         f"# Generated from QUDT units catalog version {version}",
+        "# Source data: QUDT Public Repository (https://github.com/qudt/qudt-public-repo)",
+        "# © QUDT.org — Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)",
+        "# License: https://creativecommons.org/licenses/by/4.0/",
+        "# Changes: vocabulary terms transformed to GraphQL SDL enum format by S2DM (https://github.com/COVESA/s2dm)",
         f'enum {enum_type} @reference(uri: "{quantity_kind_iri}", versionTag: "{version}") {{',
     ]
 
