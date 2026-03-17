@@ -12,6 +12,7 @@ import webbrowser
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import urlparse
 
 import rich_click as click
 from graphql import DocumentNode, GraphQLSchema, parse
@@ -34,13 +35,12 @@ from s2dm.exporters.rdf_materializer import (
     write_rdf_artifacts,
 )
 from s2dm.exporters.shacl import translate_to_shacl
-from s2dm.exporters.sparql_queries import (
-    QUERIES as SPARQL_QUERIES,
-)
+from s2dm.exporters.sparql_queries import QUERIES as SPARQL_QUERIES
 from s2dm.exporters.sparql_queries import (
     format_results_as_table,
-    load_rdf_graph,
+    load_rdf_graphs,
     run_query,
+    run_query_from_file,
 )
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
@@ -53,14 +53,14 @@ from s2dm.exporters.utils.schema_loader import (
     build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
-    download_schema_to_temp,
+    download_url_to_temp,
     is_url,
     load_and_process_schema,
     load_schema,
     load_schema_with_source_map,
     print_schema_with_directives_preserved,
     process_schema,
-    resolve_graphql_files,
+    resolve_files_by_extensions,
 )
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.registry.concept_uris import create_concept_uri_model
@@ -90,30 +90,70 @@ def get_free_port() -> int:
         return port
 
 
-class SchemaResolverOption(click.Option):
+class _PathResolverOption(click.Option):
+    """Base click.Option that resolves paths, directories, and URLs into a file list.
+
+    Subclasses declare behaviour via class attributes only:
+
+    - *_url_suffix*: fallback file extension when a URL has no recognisable
+      extension (e.g. ``".graphql"``, ``".ttl"``).
+    - *_resource_label*: human-readable label used in log/error messages.
+    - *_max_size_mb*: download size cap in megabytes.
+    - *_file_extensions*: accepted file extensions for local-path resolution.
+
+    When *_file_extensions* contains more than one entry the suffix is inferred
+    from the URL path first; *_url_suffix* is only used as a fallback.
+    """
+
+    _url_suffix: str
+    _resource_label: str
+    _file_extensions: frozenset[str]
+    _max_size_mb: int = 10
+
+    def _suffix_for_url(self, url: str) -> str:
+        """Return the file suffix to use when downloading *url*.
+
+        When multiple extensions are valid, infer from the URL path so the
+        correct parser is selected (e.g. ``.nt`` vs ``.ttl``).  Falls back to
+        ``_url_suffix`` when the URL has no recognised extension or only one
+        extension is accepted.
+        """
+        if len(self._file_extensions) > 1:
+            inferred = Path(urlparse(url).path).suffix.lower()
+            if inferred in self._file_extensions:
+                return inferred
+        return self._url_suffix
+
     def process_value(self, ctx: click.Context, value: Any) -> list[Path] | None:
+        """Resolve each item to a Path, downloading URLs as needed."""
         value = super().process_value(ctx, value)
         if not value:
             return None
 
-        resolved_paths = []
-
+        raw_paths: list[Path] = []
         for item in value:
             item_str = str(item)
-
             if is_url(item_str):
                 try:
-                    temp_path = download_schema_to_temp(item_str)
-                    resolved_paths.append(temp_path)
+                    suffix = self._suffix_for_url(item_str)
+                    raw_paths.append(download_url_to_temp(item_str, suffix, self._resource_label, self._max_size_mb))
                 except RuntimeError as e:
                     raise click.BadParameter(str(e), ctx=ctx, param=self) from e
             else:
                 path = Path(item_str)
                 if not path.exists():
                     raise click.BadParameter(f"Path '{path}' does not exist.", ctx=ctx, param=self)
-                resolved_paths.append(path)
+                raw_paths.append(path)
 
-        return resolve_graphql_files(resolved_paths)
+        return resolve_files_by_extensions(raw_paths, self._file_extensions)
+
+
+class SchemaResolverOption(_PathResolverOption):
+    """Resolves GraphQL schema paths, directories, and URLs."""
+
+    _url_suffix = ".graphql"
+    _resource_label = "Schema"
+    _file_extensions = frozenset({".graphql"})
 
 
 schema_option = click.option(
@@ -126,6 +166,14 @@ schema_option = click.option(
     multiple=True,
     help="GraphQL schema file, directory, or URL. Can be specified multiple times.",
 )
+
+
+class RdfResolverOption(_PathResolverOption):
+    """Resolves RDF file paths, directories, and URLs."""
+
+    _url_suffix = ".ttl"
+    _resource_label = "RDF"
+    _file_extensions = frozenset(FORMAT_REGISTRY.values())
 
 
 def selection_query_option(required: bool = False) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -345,12 +393,20 @@ def registry() -> None:
 
 
 @click.command()
-@click.argument("query_name", type=click.Choice(sorted(SPARQL_QUERIES.keys()), case_sensitive=False))
+@click.argument(
+    "query_name",
+    type=click.Choice(sorted(SPARQL_QUERIES.keys()), case_sensitive=False),
+    required=False,
+    default=None,
+)
 @click.option(
     "--rdf",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    "rdfs",
+    type=str,
+    cls=RdfResolverOption,
     default=None,
-    help="Pre-generated RDF file (.nt or .ttl) to query",
+    multiple=True,
+    help="Pre-generated RDF file, directory, or URL. Can be specified multiple times.",
 )
 @click.option(
     "--schema",
@@ -368,6 +424,14 @@ def registry() -> None:
     help="Namespace URI for on-the-fly materialization (requires --schema)",
 )
 @click.option(
+    "--query-file",
+    "-q",
+    "query_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to a custom .sparql file to execute instead of a predefined query",
+)
+@click.option(
     "--json",
     "json_output",
     is_flag=True,
@@ -376,26 +440,40 @@ def registry() -> None:
 )
 @optional_output_option
 def query(
-    query_name: str,
-    rdf: Path | None,
+    query_name: str | None,
+    rdfs: list[Path] | None,
     schemas: list[Path] | None,
     namespace: str | None,
+    query_file: Path | None,
     json_output: bool,
     output: Path | None,
 ) -> None:
-    """Run a predefined SPARQL query against an RDF-materialized schema.
+    """Run a SPARQL query against an RDF-materialized schema.
 
-    Load a pre-generated RDF file (--rdf) or materialize on-the-fly
-    from a GraphQL schema (-s/--schema + --namespace).
+    Provide a graph via --rdf (file, directory, or URL) or on-the-fly via
+    -s/--schema + --namespace.  Specify the query with either a predefined
+    QUERY_NAME argument or a custom --query-file.
 
-    Available queries:
+    Available predefined queries:
       fields-outputting-enum    Find fields whose output type is an enum
       object-types-with-fields  List object types and their fields
       list-type-fields          Find fields using list-like wrappers
     """
-    graph = _resolve_graph(rdf, schemas, namespace)
-    results = run_query(graph, query_name)
-    _output_results(results, query_name, json_output=json_output, output=output)
+    if query_name and query_file:
+        raise click.UsageError("Provide either QUERY_NAME or --query-file, not both.")
+    if not query_name and not query_file:
+        raise click.UsageError("Provide either QUERY_NAME or --query-file.")
+
+    graph = _resolve_graph(rdfs, schemas, namespace)
+
+    if query_file:
+        results = run_query_from_file(graph, query_file)
+        display_name = query_file.stem
+    else:
+        results = run_query(graph, query_name)  # type: ignore[arg-type]
+        display_name = query_name  # type: ignore[assignment]
+
+    _output_results(results, display_name, json_output=json_output, output=output)
 
 
 @click.group()
@@ -1820,14 +1898,14 @@ def stats_graphql(schemas: list[Path]) -> None:
 
 
 def _resolve_graph(
-    rdf: Path | None,
+    rdfs: list[Path] | None,
     schemas: list[Path] | None,
     namespace: str | None,
 ) -> Graph:
-    """Resolve an RDF graph from either a file or on-the-fly materialization.
+    """Resolve an RDF graph from either pre-generated files or on-the-fly materialization.
 
     Args:
-        rdf: Path to a pre-generated RDF file.
+        rdfs: Resolved RDF file paths (from ``--rdf`` after resolution).
         schemas: GraphQL schema paths for on-the-fly materialization.
         namespace: Namespace URI (required with schemas).
 
@@ -1838,11 +1916,11 @@ def _resolve_graph(
         click.UsageError: If neither ``--rdf`` nor ``--schema + --namespace``
             are provided, or if both are provided.
     """
-    if rdf and schemas:
+    if rdfs and schemas:
         raise click.UsageError("Provide either --rdf or --schema/--namespace, not both.")
 
-    if rdf:
-        return load_rdf_graph(rdf)
+    if rdfs:
+        return load_rdf_graphs(rdfs)
 
     if schemas:
         if not namespace:

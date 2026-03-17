@@ -1,0 +1,9 @@
+# description: List all object types with their fields
+PREFIX s2dm: <https://covesa.global/models/s2dm#>
+
+SELECT ?objectType ?field
+WHERE {
+    ?objectType a s2dm:ObjectType ;
+                s2dm:hasField ?field .
+}
+ORDER BY ?objectType ?field

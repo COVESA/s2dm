@@ -1,0 +1,15 @@
+# description: Find all fields that use a list-like type wrapper pattern
+PREFIX s2dm: <https://covesa.global/models/s2dm#>
+
+SELECT ?field ?pattern
+WHERE {
+    ?field a s2dm:Field ;
+           s2dm:usesTypeWrapperPattern ?pattern .
+    FILTER(?pattern IN (
+        s2dm:list,
+        s2dm:nonNullList,
+        s2dm:listOfNonNull,
+        s2dm:nonNullListOfNonNull
+    ))
+}
+ORDER BY ?field
