@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import queue
+import re
 import socket
 import subprocess
 import sys
@@ -51,8 +52,8 @@ from s2dm.tools.diff_parser import DiffChange
 from s2dm.tools.graphql_inspector import GraphQLInspector, requires_graphql_inspector
 from s2dm.tools.validators import validate_language_tag
 from s2dm.units.sync import (
-    UNITS_META_FILENAME,
-    UNITS_META_VERSION_KEY,
+    UNITS_README_FILENAME,
+    UNITS_README_VERSION_PATTERN,
     UnitEnumError,
     get_latest_qudt_version,
     sync_qudt_units,
@@ -367,15 +368,19 @@ def units_check_version(directory: Path) -> None:
         directory: Directory containing generated QUDT unit enums (default: ~/.s2dm/units/qudt)
     """
 
-    meta_path = directory / UNITS_META_FILENAME
+    meta_path = directory / UNITS_README_FILENAME
     if not meta_path.exists():
-        log.warning("No metadata.json found. Run 's2dm units sync' first.")
+        log.warning("No README.md found. Run 's2dm units sync' first.")
         sys.exit(1)
 
     try:
-        local_version = json.loads(meta_path.read_text(encoding="utf-8"))[UNITS_META_VERSION_KEY]
-    except (json.JSONDecodeError, KeyError) as e:
-        log.error(f"Invalid metadata.json: {e}")
+        content = meta_path.read_text(encoding="utf-8")
+        match = re.search(UNITS_README_VERSION_PATTERN, content)
+        if not match:
+            raise ValueError("version anchor not found")
+        local_version = match.group(1)
+    except (OSError, ValueError) as e:
+        log.error(f"Could not parse QUDT version from README.md: {e}")
         sys.exit(1)
 
     latest = get_latest_qudt_version()

@@ -27,7 +27,7 @@ enum Vehicle_LowVoltageSystemState_Enum {
 """High-level vehicle data."""
 type Vehicle {
   id: ID!
-  averageSpeed(unit: VelocityUnitEnum = KILOM_PER_HR): Int
+  averageSpeed(unit: VelocityUnit = KILOM_PER_HR): Int
   isAutoPowerOptimize: Boolean
   lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
   adas: Vehicle_ADAS

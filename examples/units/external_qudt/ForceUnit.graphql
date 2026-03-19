@@ -1,0 +1,71 @@
+# Generated from QUDT units catalog version v3.1.6
+enum ForceUnit @reference(uri: "http://qudt.org/vocab/quantitykind/Force") {
+  """Centinewton | UCUM: cN"""
+  CENTIN @reference(uri: "http://qudt.org/vocab/unit/CentiN")
+
+  """Decinewton | UCUM: dN"""
+  DECIN @reference(uri: "http://qudt.org/vocab/unit/DeciN")
+
+  """Dyne | UCUM: dyn"""
+  DYN @reference(uri: "http://qudt.org/vocab/unit/DYN")
+
+  """Giganewton | UCUM: GN"""
+  GIGAN @reference(uri: "http://qudt.org/vocab/unit/GigaN")
+
+  """Gram Force | UCUM: gf"""
+  GM_F @reference(uri: "http://qudt.org/vocab/unit/GM_F")
+
+  """Kilo Gram Force | UCUM: kgf"""
+  KILOGM_F @reference(uri: "http://qudt.org/vocab/unit/KiloGM_F")
+
+  """Kilogram Meter per Square Second | UCUM: kg.m.s-2"""
+  KILOGM_M_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloGM-M-PER-SEC2")
+
+  """Kilo Pound Force | UCUM: k[lbf_av]"""
+  KILOLB_F @reference(uri: "http://qudt.org/vocab/unit/KiloLB_F")
+
+  """Kilonewton | UCUM: kN"""
+  KILON @reference(uri: "http://qudt.org/vocab/unit/KiloN")
+
+  """Kilopond"""
+  KILOPOND @reference(uri: "http://qudt.org/vocab/unit/KiloPOND")
+
+  """Kip | UCUM: k[lbf_av]"""
+  KIP_F @reference(uri: "http://qudt.org/vocab/unit/KIP_F")
+
+  """Pound Force | UCUM: [lbf_av]"""
+  LB_F @reference(uri: "http://qudt.org/vocab/unit/LB_F")
+
+  """Mega Pound Force | UCUM: M[lbf_av]"""
+  MEGALB_F @reference(uri: "http://qudt.org/vocab/unit/MegaLB_F")
+
+  """Meganewton | UCUM: MN"""
+  MEGAN @reference(uri: "http://qudt.org/vocab/unit/MegaN")
+
+  """Micronewton | UCUM: uN"""
+  MICRON @reference(uri: "http://qudt.org/vocab/unit/MicroN")
+
+  """Millinewton | UCUM: mN"""
+  MILLIN @reference(uri: "http://qudt.org/vocab/unit/MilliN")
+
+  """Newton | UCUM: N"""
+  N @reference(uri: "http://qudt.org/vocab/unit/N")
+
+  """Nanonewton | UCUM: nN"""
+  NANON @reference(uri: "http://qudt.org/vocab/unit/NanoN")
+
+  """Imperial Ounce Force | UCUM: [ozf_av]"""
+  OZ_F @reference(uri: "http://qudt.org/vocab/unit/OZ_F")
+
+  """Poundal | UCUM: [lb_av].[ft_i].s-2"""
+  PDL @reference(uri: "http://qudt.org/vocab/unit/PDL")
+
+  """Planck Force"""
+  PLANCKFORCE @reference(uri: "http://qudt.org/vocab/unit/PlanckForce")
+
+  """Pond"""
+  POND @reference(uri: "http://qudt.org/vocab/unit/POND")
+
+  """Ton Force (us Short) | UCUM: [stonf_av]"""
+  TON_F_US @reference(uri: "http://qudt.org/vocab/unit/TON_F_US")
+}

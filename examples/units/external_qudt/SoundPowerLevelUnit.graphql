@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version v3.1.6
+enum SoundPowerLevelUnit @reference(uri: "http://qudt.org/vocab/quantitykind/SoundPowerLevel") {
+  """Bel | UCUM: B"""
+  B @reference(uri: "http://qudt.org/vocab/unit/B")
+
+  """Decibel | UCUM: dB"""
+  DECIB @reference(uri: "http://qudt.org/vocab/unit/DeciB")
+
+  """Decibel with A-weighting"""
+  DECIB_A @reference(uri: "http://qudt.org/vocab/unit/DeciB_A")
+
+  """Decibel Isotropic"""
+  DECIB_ISO @reference(uri: "http://qudt.org/vocab/unit/DeciB_ISO")
+
+  """Decibel Referred to 1mw"""
+  DECIB_M @reference(uri: "http://qudt.org/vocab/unit/DeciB_M")
+
+  """Decibel with Z-weighting"""
+  DECIB_Z @reference(uri: "http://qudt.org/vocab/unit/DeciB_Z")
+}

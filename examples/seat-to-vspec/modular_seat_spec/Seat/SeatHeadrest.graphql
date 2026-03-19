@@ -3,12 +3,12 @@ type Headrest {
   """
   Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.
   """
-  angle(unit: AngleUnitEnum = DEG): Float @metadata(vssType: "actuator")
+  angle(unit: AngleUnit = DEG): Float @metadata(vssType: "actuator")
 
   """
   Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
   """
-  height(unit: LengthUnitEnum = MILLIM): UInt8 @metadata(vssType: "actuator")
+  height(unit: LengthUnit = MILLIM): UInt8 @metadata(vssType: "actuator")
 
   """
   Head rest backward switch engaged.

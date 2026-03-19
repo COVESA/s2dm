@@ -3,10 +3,10 @@ type Vehicle {
     vin: ID!
 
     """Maximum vertical weight on the tow ball of a trailer."""
-    maxTowBallWeight(unit: MassUnitEnum = KILOGM): UInt16
+    maxTowBallWeight(unit: MassUnit = KILOGM): UInt16
 
     """Maximum weight of trailer."""
-    maxTowWeight(unit: MassUnitEnum = KILOGM): UInt16
+    maxTowWeight(unit: MassUnit = KILOGM): UInt16
 
     """List of trailers attached to the vehicle."""
     trailers: [VehicleTrailer]

@@ -100,7 +100,7 @@ class MockFieldData:
 
     @property
     def unit_enum_name(self) -> str:
-        return f"{self.unit.capitalize()}UnitEnum"
+        return f"{self.unit.capitalize()}Unit"
 
     @property
     def unit_default_value(self) -> str:
@@ -114,7 +114,7 @@ class MockFieldData:
     def non_enum_field_data(cls, faker: Faker) -> "MockFieldData":
         """Generates a random non-enum field data with a random values
         e.g.
-        length(unit: LengthUnitEnum = MILLIMETER): Int
+        length(unit: LengthUnit = MILLIMETER): Int
         """
         name = faker.unique.word().lower()
         data_type = faker.random_element(SCALAR_TYPES)
@@ -197,9 +197,9 @@ QUDT_QK_BASE = "http://qudt.org/vocab/quantitykind"
 
 # Standard test paths for units sync
 STANDARD_UNIT_PATHS = [
-    "velocity/VelocityUnitEnum.graphql",
-    "mass/MassUnitEnum.graphql",
-    "length/LengthUnitEnum.graphql",
+    "velocity/VelocityUnit.graphql",
+    "mass/MassUnit.graphql",
+    "length/LengthUnit.graphql",
 ]
 
 

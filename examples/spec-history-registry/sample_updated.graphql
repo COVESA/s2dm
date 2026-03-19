@@ -1,11 +1,11 @@
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
 
-enum LengthUnitEnum {
+enum LengthUnit {
   M
   CENTIM
 }
 
-enum VelocityUnitEnum {
+enum VelocityUnit {
   KILOM_PER_HR
   MILES_PER_HR
 }
@@ -38,7 +38,7 @@ enum Vehicle_LowVoltageSystemState_Enum {
 """High-level vehicle data."""
 type Vehicle {
   id: ID!
-  averageSpeed(unit: VelocityUnitEnum = KILOM_PER_HR): Int
+  averageSpeed(unit: VelocityUnit = KILOM_PER_HR): Int
   isAutoPowerOptimize: Boolean
   lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
   adas: Vehicle_ADAS
@@ -64,7 +64,7 @@ type Vehicle_ADAS_ABS {
 """Signals form Obstacle Sensor System."""
 type Vehicle_ADAS_ObstacleDetection {
   id: ID!
-  distance(unit: LengthUnitEnum = CENTIM): Int @range(min: 0, max: 10000)
+  distance(unit: LengthUnit = CENTIM): Int @range(min: 0, max: 10000)
   isEnabled: Boolean
   warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
 }

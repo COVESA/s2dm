@@ -1,0 +1,104 @@
+# Generated from QUDT units catalog version v3.1.6
+enum ElectricChargeUnit @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricCharge") {
+  """Attocoulomb | UCUM: aC"""
+  ATTOC @reference(uri: "http://qudt.org/vocab/unit/AttoC")
+
+  """Ampere Hour | UCUM: A.h"""
+  A_HR @reference(uri: "http://qudt.org/vocab/unit/A-HR")
+
+  """Ampere Second | UCUM: A.s"""
+  A_SEC @reference(uri: "http://qudt.org/vocab/unit/A-SEC")
+
+  """Coulomb | UCUM: C"""
+  C @reference(uri: "http://qudt.org/vocab/unit/C")
+
+  """Centicoulomb | UCUM: cC"""
+  CENTIC @reference(uri: "http://qudt.org/vocab/unit/CentiC")
+
+  """Abcoulomb | UCUM: 10.C"""
+  C_AB @reference(uri: "http://qudt.org/vocab/unit/C_Ab")
+
+  """Statcoulomb"""
+  C_STAT @reference(uri: "http://qudt.org/vocab/unit/C_Stat")
+
+  """Decacoulomb | UCUM: daC"""
+  DECAC @reference(uri: "http://qudt.org/vocab/unit/DecaC")
+
+  """Decicoulomb | UCUM: dC"""
+  DECIC @reference(uri: "http://qudt.org/vocab/unit/DeciC")
+
+  """Elementary Charge | UCUM: [e]"""
+  E @reference(uri: "http://qudt.org/vocab/unit/E")
+
+  """Elementary Charge | UCUM: [e]"""
+  ELEMENTARYCHARGE @reference(uri: "http://qudt.org/vocab/unit/ElementaryCharge")
+
+  """Exacoulomb | UCUM: EC"""
+  EXAC @reference(uri: "http://qudt.org/vocab/unit/ExaC")
+
+  """Faraday"""
+  F @reference(uri: "http://qudt.org/vocab/unit/F")
+
+  """Femtocoulomb | UCUM: fC"""
+  FEMTOC @reference(uri: "http://qudt.org/vocab/unit/FemtoC")
+
+  """Franklin"""
+  FR @reference(uri: "http://qudt.org/vocab/unit/FR")
+
+  """Gigacoulomb | UCUM: GC"""
+  GIGAC @reference(uri: "http://qudt.org/vocab/unit/GigaC")
+
+  """Hectocoulomb | UCUM: hC"""
+  HECTOC @reference(uri: "http://qudt.org/vocab/unit/HectoC")
+
+  """Kiloampere Hour | UCUM: kA.h"""
+  KILOA_HR @reference(uri: "http://qudt.org/vocab/unit/KiloA-HR")
+
+  """Kilocoulomb | UCUM: kC"""
+  KILOC @reference(uri: "http://qudt.org/vocab/unit/KiloC")
+
+  """Kilojoule per Kilovolt | UCUM: kJ.kV-1"""
+  KILOJ_PER_KILOV @reference(uri: "http://qudt.org/vocab/unit/KiloJ-PER-KiloV")
+
+  """Megacoulomb | UCUM: MC"""
+  MEGAC @reference(uri: "http://qudt.org/vocab/unit/MegaC")
+
+  """Microcoulomb | UCUM: uC"""
+  MICROC @reference(uri: "http://qudt.org/vocab/unit/MicroC")
+
+  """Milliampere Hour | UCUM: mA.h"""
+  MILLIA_HR @reference(uri: "http://qudt.org/vocab/unit/MilliA-HR")
+
+  """Milliampere Second | UCUM: mA.s"""
+  MILLIA_SEC @reference(uri: "http://qudt.org/vocab/unit/MilliA-SEC")
+
+  """Millicoulomb | UCUM: mC"""
+  MILLIC @reference(uri: "http://qudt.org/vocab/unit/MilliC")
+
+  """Nanocoulomb | UCUM: nC"""
+  NANOC @reference(uri: "http://qudt.org/vocab/unit/NanoC")
+
+  """Petacoulomb | UCUM: PC"""
+  PETAC @reference(uri: "http://qudt.org/vocab/unit/PetaC")
+
+  """Picocoulomb | UCUM: pC"""
+  PICOC @reference(uri: "http://qudt.org/vocab/unit/PicoC")
+
+  """Planck Charge"""
+  PLANCKCHARGE @reference(uri: "http://qudt.org/vocab/unit/PlanckCharge")
+
+  """Teracoulomb | UCUM: TC"""
+  TERAC @reference(uri: "http://qudt.org/vocab/unit/TeraC")
+
+  """Yoctocoulomb | UCUM: yC"""
+  YOCTOC @reference(uri: "http://qudt.org/vocab/unit/YoctoC")
+
+  """Yottacoulomb | UCUM: YC"""
+  YOTTAC @reference(uri: "http://qudt.org/vocab/unit/YottaC")
+
+  """Zeptocoulomb | UCUM: zC"""
+  ZEPTOC @reference(uri: "http://qudt.org/vocab/unit/ZeptoC")
+
+  """Zettacoulomb | UCUM: ZC"""
+  ZETTAC @reference(uri: "http://qudt.org/vocab/unit/ZettaC")
+}

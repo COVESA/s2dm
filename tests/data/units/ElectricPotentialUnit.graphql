@@ -1,0 +1,47 @@
+# Generated from QUDT units catalog version v3.1.6
+enum ElectricPotentialUnit @reference(uri: "http://qudt.org/vocab/quantitykind/ElectricPotential") {
+  """Exavolt | UCUM: EV"""
+  EXAV @reference(uri: "http://qudt.org/vocab/unit/ExaV")
+
+  """Femtovolt | UCUM: fV"""
+  FEMTOV @reference(uri: "http://qudt.org/vocab/unit/FemtoV")
+
+  """Gigavolt | UCUM: GV"""
+  GIGAV @reference(uri: "http://qudt.org/vocab/unit/GigaV")
+
+  """Kilovolt | UCUM: kV"""
+  KILOV @reference(uri: "http://qudt.org/vocab/unit/KiloV")
+
+  """Megavolt | UCUM: MV"""
+  MEGAV @reference(uri: "http://qudt.org/vocab/unit/MegaV")
+
+  """Microvolt | UCUM: uV"""
+  MICROV @reference(uri: "http://qudt.org/vocab/unit/MicroV")
+
+  """Millivolt | UCUM: mV"""
+  MILLIV @reference(uri: "http://qudt.org/vocab/unit/MilliV")
+
+  """Nanovolt | UCUM: nV"""
+  NANOV @reference(uri: "http://qudt.org/vocab/unit/NanoV")
+
+  """Petavolt | UCUM: PV"""
+  PETAV @reference(uri: "http://qudt.org/vocab/unit/PetaV")
+
+  """Picovolt | UCUM: pV"""
+  PICOV @reference(uri: "http://qudt.org/vocab/unit/PicoV")
+
+  """Planck Volt"""
+  PLANCKVOLT @reference(uri: "http://qudt.org/vocab/unit/PlanckVolt")
+
+  """Teravolt | UCUM: TV"""
+  TERAV @reference(uri: "http://qudt.org/vocab/unit/TeraV")
+
+  """Volt | UCUM: V"""
+  V @reference(uri: "http://qudt.org/vocab/unit/V")
+
+  """Abvolt | UCUM: 10.nV"""
+  V_AB @reference(uri: "http://qudt.org/vocab/unit/V_Ab")
+
+  """Statvolt"""
+  V_STAT @reference(uri: "http://qudt.org/vocab/unit/V_Stat")
+}
