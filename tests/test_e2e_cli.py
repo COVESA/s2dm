@@ -842,7 +842,7 @@ def test_compose_graphql(runner: CliRunner, tmp_outputs: Path, spec_directory: P
     assert "type Vehicle" in composed_content
     assert "type Vehicle_ADAS" in composed_content
     assert "type Vehicle_ADAS_ObstacleDetection" in composed_content
-    assert "enum AccelerationUnitEnum" in composed_content
+    assert "enum AccelerationUnit" in composed_content
     assert "directive @range" in composed_content
 
     assert "Successfully composed schema" in normalize_whitespace(result.output)
@@ -1125,7 +1125,7 @@ def test_compose_with_valid_selection_query_prunes_schema(
     assert "type Vehicle_ADAS" in composed_content
     assert "type Vehicle_ADAS_ABS" in composed_content
     assert "enum Vehicle_LowVoltageSystemState_Enum" in composed_content
-    assert "enum VelocityUnitEnum" in composed_content
+    assert "enum VelocityUnit" in composed_content
 
     assert "type Person" not in composed_content
     assert "type Vehicle_Body" not in composed_content

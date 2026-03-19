@@ -1,0 +1,167 @@
+# Generated from QUDT units catalog version 3.1.5
+enum MassUnit @reference(uri: "http://qudt.org/vocab/quantitykind/Mass") {
+  """Atomic Mass Unit | UCUM: u"""
+  AMU @reference(uri: "http://qudt.org/vocab/unit/AMU")
+
+  """Carat | UCUM: [car_m]"""
+  CARAT @reference(uri: "http://qudt.org/vocab/unit/CARAT")
+
+  """Centigram | UCUM: cg"""
+  CENTIGM @reference(uri: "http://qudt.org/vocab/unit/CentiGM")
+
+  """Long Hundred Weight | UCUM: [lcwt_av]"""
+  CWT_LONG @reference(uri: "http://qudt.org/vocab/unit/CWT_LONG")
+
+  """Hundred Weight - Short | UCUM: [scwt_av]"""
+  CWT_SHORT @reference(uri: "http://qudt.org/vocab/unit/CWT_SHORT")
+
+  """Decagram | UCUM: dag"""
+  DECAGM @reference(uri: "http://qudt.org/vocab/unit/DecaGM")
+
+  """Decigram | UCUM: dg"""
+  DECIGM @reference(uri: "http://qudt.org/vocab/unit/DeciGM")
+
+  """Decitonne"""
+  DECITONNE @reference(uri: "http://qudt.org/vocab/unit/DeciTONNE")
+
+  """Deci Metric Ton | UCUM: dt"""
+  DECITON_METRIC @reference(uri: "http://qudt.org/vocab/unit/DeciTON_Metric")
+
+  """Dram (UK) | UCUM: [dr_ap]"""
+  DRAM_UK @reference(uri: "http://qudt.org/vocab/unit/DRAM_UK")
+
+  """Dram (US) | UCUM: [dr_av]"""
+  DRAM_US @reference(uri: "http://qudt.org/vocab/unit/DRAM_US")
+
+  """Penny Weight | UCUM: [pwt_tr]"""
+  DWT @reference(uri: "http://qudt.org/vocab/unit/DWT")
+
+  """Earth Mass"""
+  EARTHMASS @reference(uri: "http://qudt.org/vocab/unit/EarthMass")
+
+  """Femtogram"""
+  FEMTOGM @reference(uri: "http://qudt.org/vocab/unit/FemtoGM")
+
+  """Gram | UCUM: g"""
+  GM @reference(uri: "http://qudt.org/vocab/unit/GM")
+
+  """Grain | UCUM: [gr]"""
+  GRAIN @reference(uri: "http://qudt.org/vocab/unit/GRAIN")
+
+  """Hectogram | UCUM: hg"""
+  HECTOGM @reference(uri: "http://qudt.org/vocab/unit/HectoGM")
+
+  """Hundredweight (UK) | UCUM: [lcwt_av]"""
+  HUNDREDWEIGHT_UK @reference(uri: "http://qudt.org/vocab/unit/Hundredweight_UK")
+
+  """Hundredweight (US) | UCUM: [scwt_av]"""
+  HUNDREDWEIGHT_US @reference(uri: "http://qudt.org/vocab/unit/Hundredweight_US")
+
+  """Kilogram | UCUM: kg"""
+  KILOGM @reference(uri: "http://qudt.org/vocab/unit/KiloGM")
+
+  """Kilo Pound Mass"""
+  KILOLB @reference(uri: "http://qudt.org/vocab/unit/KiloLB")
+
+  """Kilotonne"""
+  KILOTONNE @reference(uri: "http://qudt.org/vocab/unit/KiloTONNE")
+
+  """Kilo Metric Ton | UCUM: kt"""
+  KILOTON_METRIC @reference(uri: "http://qudt.org/vocab/unit/KiloTON_Metric")
+
+  """Pound Mass | UCUM: [lb_av]"""
+  LB @reference(uri: "http://qudt.org/vocab/unit/LB")
+
+  """Pound Mass | UCUM: [lb_av]"""
+  LB_M @reference(uri: "http://qudt.org/vocab/unit/LB_M")
+
+  """Pound Troy | UCUM: [lb_tr]"""
+  LB_T @reference(uri: "http://qudt.org/vocab/unit/LB_T")
+
+  """Lunar Mass"""
+  LUNARMASS @reference(uri: "http://qudt.org/vocab/unit/LunarMass")
+
+  """Megagram | UCUM: Mg"""
+  MEGAGM @reference(uri: "http://qudt.org/vocab/unit/MegaGM")
+
+  """Megaton"""
+  MEGATON @reference(uri: "http://qudt.org/vocab/unit/MegaTON")
+
+  """Megatonne"""
+  MEGATONNE @reference(uri: "http://qudt.org/vocab/unit/MegaTONNE")
+
+  """Microgram | UCUM: ug"""
+  MICROGM @reference(uri: "http://qudt.org/vocab/unit/MicroGM")
+
+  """Milligram | UCUM: mg"""
+  MILLIGM @reference(uri: "http://qudt.org/vocab/unit/MilliGM")
+
+  """Momme (pearl)"""
+  MOMME_PEARL @reference(uri: "http://qudt.org/vocab/unit/MOMME_Pearl")
+
+  """Momme (textile)"""
+  MOMME_TEXTILE @reference(uri: "http://qudt.org/vocab/unit/MOMME_Textile")
+
+  """Nanogram | UCUM: ng"""
+  NANOGM @reference(uri: "http://qudt.org/vocab/unit/NanoGM")
+
+  """Ounce Mass | UCUM: [oz_av]"""
+  OZ @reference(uri: "http://qudt.org/vocab/unit/OZ")
+
+  """Ounce Mass | UCUM: [oz_av]"""
+  OZ_M @reference(uri: "http://qudt.org/vocab/unit/OZ_M")
+
+  """Ounce Troy | UCUM: [oz_tr]"""
+  OZ_TROY @reference(uri: "http://qudt.org/vocab/unit/OZ_TROY")
+
+  """Pennyweight | UCUM: [pwt_tr]"""
+  PENNYWEIGHT @reference(uri: "http://qudt.org/vocab/unit/PENNYWEIGHT")
+
+  """Pfund"""
+  PFUND @reference(uri: "http://qudt.org/vocab/unit/PFUND")
+
+  """Picogram | UCUM: pg"""
+  PICOGM @reference(uri: "http://qudt.org/vocab/unit/PicoGM")
+
+  """Planck Mass"""
+  PLANCKMASS @reference(uri: "http://qudt.org/vocab/unit/PlanckMass")
+
+  """Quarter (UK) | UCUM: 28.[lb_av]"""
+  QUARTER_UK @reference(uri: "http://qudt.org/vocab/unit/Quarter_UK")
+
+  """Slug"""
+  SLUG @reference(uri: "http://qudt.org/vocab/unit/SLUG")
+
+  """Solar Mass"""
+  SOLARMASS @reference(uri: "http://qudt.org/vocab/unit/SolarMass")
+
+  """Stone (UK) | UCUM: [stone_av]"""
+  STONE_UK @reference(uri: "http://qudt.org/vocab/unit/Stone_UK")
+
+  """Ton | UCUM: ston_av"""
+  TON @reference(uri: "http://qudt.org/vocab/unit/TON")
+
+  """Tonne | UCUM: t"""
+  TONNE @reference(uri: "http://qudt.org/vocab/unit/TONNE")
+
+  """Assay Ton"""
+  TON_ASSAY @reference(uri: "http://qudt.org/vocab/unit/TON_Assay")
+
+  """Long Ton | UCUM: [lton_av]"""
+  TON_LONG @reference(uri: "http://qudt.org/vocab/unit/TON_LONG")
+
+  """Metric Ton | UCUM: t"""
+  TON_METRIC @reference(uri: "http://qudt.org/vocab/unit/TON_Metric")
+
+  """Short Ton | UCUM: [ston_av]"""
+  TON_SHORT @reference(uri: "http://qudt.org/vocab/unit/TON_SHORT")
+
+  """Ton (UK) | UCUM: [lton_av]"""
+  TON_UK @reference(uri: "http://qudt.org/vocab/unit/TON_UK")
+
+  """Ton (US) | UCUM: [ston_av]"""
+  TON_US @reference(uri: "http://qudt.org/vocab/unit/TON_US")
+
+  """Unified Atomic Mass Unit | UCUM: u"""
+  U @reference(uri: "http://qudt.org/vocab/unit/U")
+}

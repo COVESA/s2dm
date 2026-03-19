@@ -1,0 +1,20 @@
+# Generated from QUDT units catalog version v3.1.6
+enum RotationalVelocityUnit @reference(uri: "http://qudt.org/vocab/quantitykind/RotationalVelocity") {
+  """Cycles per Second"""
+  CYC_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/CYC-PER-SEC")
+
+  """Hertz | UCUM: Hz"""
+  HZ @reference(uri: "http://qudt.org/vocab/unit/HZ")
+
+  """Reciprocal Second | UCUM: s-1"""
+  PER_SEC @reference(uri: "http://qudt.org/vocab/unit/PER-SEC")
+
+  """Revolution per Hour"""
+  REV_PER_HR @reference(uri: "http://qudt.org/vocab/unit/REV-PER-HR")
+
+  """Revolution per Minute | UCUM: {#}.min-1"""
+  REV_PER_MIN @reference(uri: "http://qudt.org/vocab/unit/REV-PER-MIN")
+
+  """Revolution per Second"""
+  REV_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/REV-PER-SEC")
+}

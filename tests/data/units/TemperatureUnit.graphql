@@ -1,0 +1,29 @@
+# Generated from QUDT units catalog version 3.1.5
+enum TemperatureUnit @reference(uri: "http://qudt.org/vocab/quantitykind/Temperature") {
+  """Decakelvin"""
+  DECAK @reference(uri: "http://qudt.org/vocab/unit/DecaK")
+
+  """Degree Celsius | UCUM: Cel"""
+  DEG_C @reference(uri: "http://qudt.org/vocab/unit/DEG_C")
+
+  """Degree Fahrenheit | UCUM: [degF]"""
+  DEG_F @reference(uri: "http://qudt.org/vocab/unit/DEG_F")
+
+  """Degree Rankine | UCUM: [degR]"""
+  DEG_R @reference(uri: "http://qudt.org/vocab/unit/DEG_R")
+
+  """Kelvin | UCUM: K"""
+  K @reference(uri: "http://qudt.org/vocab/unit/K")
+
+  """Megakelvin"""
+  MEGAK @reference(uri: "http://qudt.org/vocab/unit/MegaK")
+
+  """Milli Degree Celsius | UCUM: mCel"""
+  MILLIDEG_C @reference(uri: "http://qudt.org/vocab/unit/MilliDEG_C")
+
+  """Millikelvin"""
+  MILLIK @reference(uri: "http://qudt.org/vocab/unit/MilliK")
+
+  """Plancktemperature"""
+  PLANCKTEMPERATURE @reference(uri: "http://qudt.org/vocab/unit/PlanckTemperature")
+}

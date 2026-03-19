@@ -135,8 +135,8 @@ def test_sync_qudt_units(
         assert units_root.exists(), "Normal run should create directories"
 
         # Check metadata file exists
-        metadata_file = units_root / "metadata.json"
-        assert metadata_file.exists(), "Normal run should create metadata.json"
+        metadata_file = units_root / "README.md"
+        assert metadata_file.exists(), "Normal run should create README.md"
 
         # Check that at least one enum file exists and has expected content
         enum_files = list(units_root.rglob("*.graphql"))
@@ -145,7 +145,7 @@ def test_sync_qudt_units(
         # Verify content of first enum file
         first_enum = enum_files[0]
         content = first_enum.read_text()
-        assert "enum" in content and "UnitEnum" in content
+        assert "enum" in content and "Unit" in content
 
 
 def test_sync_qudt_units_path_generation(
@@ -161,7 +161,7 @@ def test_sync_qudt_units_path_generation(
     result_paths = sync_qudt_units(units_root, MOCK_QUDT_VERSION, dry_run=True)
 
     # Should generate path based on quantity kind
-    expected_path = units_root / "LengthUnitEnum.graphql"
+    expected_path = units_root / "LengthUnit.graphql"
     assert expected_path in result_paths
 
 

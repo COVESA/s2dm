@@ -24,46 +24,46 @@ from s2dm.exporters.utils.schema_loader import load_schema_with_naming, process_
 
 UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the mapping directly from dynamic_units
     # Using the QUDT unit names
-    # LengthUnitEnum
+    # LengthUnit
     "MILLIM": "mm",
     "CENTIM": "cm",
     "M": "m",
     "METER": "m",
     "KILOM": "km",
     "IN": "inch",
-    # VelocityUnitEnum
+    # VelocityUnit
     "KILOM_PER_HR": "km/h",
     "M_PER_SEC": "m/s",
-    # AccelerationUnitEnum
+    # AccelerationUnit
     "M_PER_SEC2": "m/s^2",
     "CENTIM_PER_SEC2": "cm/s^2",
-    # VolumeUnitEnum
+    # VolumeUnit
     "MILLIL": "ml",
     "L": "l",  # Liter
     "CENTIM3": "cm^3",
-    # TemperatureUnitEnum
+    # TemperatureUnit
     "DEG_C": "celsius",
-    # AngleUnitEnum
+    # AngleUnit
     "DEG": "degrees",
-    # AngularVelocityUnitEnum
+    # AngularVelocityUnit
     "DEG_PER_SEC": "degrees/s",
     "RAD_PER_SEC": "rad/s",
-    # PowerUnitEnum
+    # PowerUnit
     "HP": "PS",  # Horsepower
-    # ElectricPowerUnitEnum
+    # ElectricPowerUnit
     "W": "W",  # Watt
     "KILOW": "kW",  # Kilowatt
-    # MassUnitEnum
+    # MassUnit
     "GM": "g",  # Gram
     "KILOGM": "kg",  # Kilogram
     "LB": "lbs",  # Pound
-    # ElectricPotentialUnitEnum
+    # ElectricPotentialUnit
     "V": "V",  # Volt
-    # DisplacementCurrentUnitEnum
+    # DisplacementCurrentUnit
     "AMPERE": "A",
-    # ElectricChargeUnitEnum
+    # ElectricChargeUnit
     "A_HR": "Ah",  # Ampere Hour
-    # TimeUnitEnum
+    # TimeUnit
     "MILLISEC": "ms",  # Millisecond
     "SEC": "s",  # Second
     "MIN": "min",  # Minute
@@ -72,36 +72,36 @@ UNITS_DICT = {  # TODO: move to a separate file or use the vss tools to get the 
     "WK": "weeks",  # Week
     "MO": "months",  # Month
     "YR": "years",  # Year
-    # ForcePerAreaUnitEnum
+    # ForcePerAreaUnit
     "MILLIBAR": "mbar",
     "PA": "Pa",  # Pascal
     "KILOPA": "kPa",  # Kilopascal
     "PSI": "psi",  # Pound per square inch
-    # MassFlowRateUnitEnum
+    # MassFlowRateUnit
     "GRAMS_PER_SECOND": "g/s",
-    # MassPerLengthUnitEnum
+    # MassPerLengthUnit
     "GM_PER_KILOM": "g/km",
-    # VolumeFlowRateUnitEnum
+    # VolumeFlowRateUnit
     "L_PER_HR": "l/h",
-    # ForceUnitEnum
+    # ForceUnit
     "N": "N",  # Newton
     "KILON": "kN",
-    # TorqueUnitEnum
+    # TorqueUnit
     "N_M": "Nm",  # Newton meter
-    # RotationalVelocityUnitEnum
+    # RotationalVelocityUnit
     "REV_PER_MIN": "rpm",
     "HZ": "Hz",  # Hertz
-    # HeartRateUnitEnum
+    # HeartRateUnit
     "BEAT_PER_MIN": "bpm",
-    # DimensionlessRatioUnitEnum
+    # DimensionlessRatioUnit
     "PERCENT": "percent",
-    # UnknownUnitEnum
+    # UnknownUnit
     "DECIB_MILLIW": "dBm",
-    # SoundPowerLevelUnitEnum
+    # SoundPowerLevelUnit
     "DECIB": "dB",
-    # ResistanceUnitEnum
+    # ResistanceUnit
     "OHM": "Ohm",
-    # LuminousFluxPerAreaUnitEnum
+    # LuminousFluxPerAreaUnit
     "LUX": "lx",
     # Custom units
     "KILOWATT_HOURS": "kWh",

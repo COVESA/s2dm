@@ -1,0 +1,11 @@
+# Generated from QUDT units catalog version v3.1.6
+enum LuminousFluxPerAreaUnit @reference(uri: "http://qudt.org/vocab/quantitykind/LuminousFluxPerArea") {
+  """Foot Candle"""
+  FC @reference(uri: "http://qudt.org/vocab/unit/FC")
+
+  """Lux | UCUM: lx"""
+  LUX @reference(uri: "http://qudt.org/vocab/unit/LUX")
+
+  """Phot | UCUM: ph"""
+  PHOT @reference(uri: "http://qudt.org/vocab/unit/PHOT")
+}

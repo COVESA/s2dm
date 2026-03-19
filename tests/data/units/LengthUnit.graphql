@@ -1,0 +1,116 @@
+# Generated from QUDT units catalog version 3.1.5
+enum LengthUnit @reference(uri: "http://qudt.org/vocab/quantitykind/Length") {
+  """Angstrom | UCUM: Ao"""
+  ANGSTROM @reference(uri: "http://qudt.org/vocab/unit/ANGSTROM")
+
+  """Astronomical-unit | UCUM: AU"""
+  AU @reference(uri: "http://qudt.org/vocab/unit/AU")
+
+  """British Thermal Unit (international Definition) per Pound Force | UCUM: [Btu_IT].[lbf_av]-1"""
+  BTU_IT_PER_LB_F @reference(uri: "http://qudt.org/vocab/unit/BTU_IT-PER-LB_F")
+
+  """Centimeter | UCUM: cm"""
+  CENTIM @reference(uri: "http://qudt.org/vocab/unit/CentiM")
+
+  """Chain | UCUM: [ch_br]"""
+  CH @reference(uri: "http://qudt.org/vocab/unit/CH")
+
+  """Chain (based on U.s. Survey Foot)"""
+  CHAIN_US @reference(uri: "http://qudt.org/vocab/unit/CHAIN_US")
+
+  """Decameter | UCUM: dam"""
+  DECAM @reference(uri: "http://qudt.org/vocab/unit/DecaM")
+
+  """Decimeter | UCUM: dm"""
+  DECIM @reference(uri: "http://qudt.org/vocab/unit/DeciM")
+
+  """Fathom | UCUM: [fth_i]"""
+  FATH @reference(uri: "http://qudt.org/vocab/unit/FATH")
+
+  """Femtometer | UCUM: fm"""
+  FEMTOM @reference(uri: "http://qudt.org/vocab/unit/FemtoM")
+
+  """Fermi"""
+  FM @reference(uri: "http://qudt.org/vocab/unit/FM")
+
+  """Foot | UCUM: [ft_i]"""
+  FT @reference(uri: "http://qudt.org/vocab/unit/FT")
+
+  """Us Survey Foot | UCUM: [ft_us]"""
+  FT_US @reference(uri: "http://qudt.org/vocab/unit/FT_US")
+
+  """Furlong | UCUM: [fur_us]"""
+  FUR @reference(uri: "http://qudt.org/vocab/unit/FUR")
+
+  """French Gauge | UCUM: [Ch]"""
+  GAUGE_FR @reference(uri: "http://qudt.org/vocab/unit/GAUGE_FR")
+
+  """Charrière Gauge"""
+  GA_CHARRIERE @reference(uri: "http://qudt.org/vocab/unit/GA_Charriere")
+
+  """Hectometer | UCUM: hm"""
+  HECTOM @reference(uri: "http://qudt.org/vocab/unit/HectoM")
+
+  """Inch | UCUM: [in_i]"""
+  IN @reference(uri: "http://qudt.org/vocab/unit/IN")
+
+  """Kilometer | UCUM: km"""
+  KILOM @reference(uri: "http://qudt.org/vocab/unit/KiloM")
+
+  """Light Year | UCUM: [ly]"""
+  LY @reference(uri: "http://qudt.org/vocab/unit/LY")
+
+  """Meter | UCUM: m"""
+  M @reference(uri: "http://qudt.org/vocab/unit/M")
+
+  """International Mile | UCUM: [mi_i]"""
+  MI @reference(uri: "http://qudt.org/vocab/unit/MI")
+
+  """Microinch | UCUM: u[in_i]"""
+  MICROIN @reference(uri: "http://qudt.org/vocab/unit/MicroIN")
+
+  """Micrometer | UCUM: um"""
+  MICROM @reference(uri: "http://qudt.org/vocab/unit/MicroM")
+
+  """Mil Length | UCUM: [mil_i]"""
+  MILLENGTH @reference(uri: "http://qudt.org/vocab/unit/MilLength")
+
+  """Milliinch | UCUM: m[in_i]"""
+  MILLIIN @reference(uri: "http://qudt.org/vocab/unit/MilliIN")
+
+  """Millimeter | UCUM: mm"""
+  MILLIM @reference(uri: "http://qudt.org/vocab/unit/MilliM")
+
+  """Nautical Mile | UCUM: [nmi_i]"""
+  MI_N @reference(uri: "http://qudt.org/vocab/unit/MI_N")
+
+  """Mile Us Statute | UCUM: [mi_us]"""
+  MI_US @reference(uri: "http://qudt.org/vocab/unit/MI_US")
+
+  """Nanometer | UCUM: nm"""
+  NANOM @reference(uri: "http://qudt.org/vocab/unit/NanoM")
+
+  """Parsec | UCUM: pc"""
+  PARSEC @reference(uri: "http://qudt.org/vocab/unit/PARSEC")
+
+  """Pica | UCUM: [pca]"""
+  PCA @reference(uri: "http://qudt.org/vocab/unit/PCA")
+
+  """Picometer | UCUM: pm"""
+  PICOM @reference(uri: "http://qudt.org/vocab/unit/PicoM")
+
+  """Planck Length"""
+  PLANCKLENGTH @reference(uri: "http://qudt.org/vocab/unit/PlanckLength")
+
+  """Point | UCUM: [pnt]"""
+  PT @reference(uri: "http://qudt.org/vocab/unit/PT")
+
+  """Rod | UCUM: [rd_br]"""
+  ROD @reference(uri: "http://qudt.org/vocab/unit/ROD")
+
+  """Yard | UCUM: [yd_i]"""
+  YD @reference(uri: "http://qudt.org/vocab/unit/YD")
+
+  """Inch"""
+  ZOLL @reference(uri: "http://qudt.org/vocab/unit/ZOLL")
+}

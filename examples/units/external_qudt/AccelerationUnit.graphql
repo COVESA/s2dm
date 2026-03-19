@@ -1,0 +1,50 @@
+# Generated from QUDT units catalog version v3.1.6
+enum AccelerationUnit @reference(uri: "http://qudt.org/vocab/quantitykind/Acceleration") {
+  """Centimeter per Square Second | UCUM: cm.s-2"""
+  CENTIM_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/CentiM-PER-SEC2")
+
+  """Foot per Square Second | UCUM: [ft_i].s-2"""
+  FT_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/FT-PER-SEC2")
+
+  """Gravity | UCUM: [g]"""
+  G @reference(uri: "http://qudt.org/vocab/unit/G")
+
+  """Galileo | UCUM: Gal"""
+  GALILEO @reference(uri: "http://qudt.org/vocab/unit/GALILEO")
+
+  """Inch per Square Second | UCUM: [in_i].s-2"""
+  IN_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/IN-PER-SEC2")
+
+  """Kilometer per Square Second | UCUM: km.s-2"""
+  KILOM_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/KiloM-PER-SEC2")
+
+  """Kilopascal Square Meter per Gram | UCUM: kPa.m2.g-1"""
+  KILOPA_M2_PER_GM @reference(uri: "http://qudt.org/vocab/unit/KiloPA-M2-PER-GM")
+
+  """Knot per Second | UCUM: [kn_i].s-1"""
+  KN_PER_SEC @reference(uri: "http://qudt.org/vocab/unit/KN-PER-SEC")
+
+  """Microgravity | UCUM: u[g]"""
+  MICROG @reference(uri: "http://qudt.org/vocab/unit/MicroG")
+
+  """Micrometer per Square Second | UCUM: um.s-2"""
+  MICROM_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/MicroM-PER-SEC2")
+
+  """Milligravity | UCUM: m[g]"""
+  MILLIG @reference(uri: "http://qudt.org/vocab/unit/MilliG")
+
+  """Milligalileo | UCUM: mGal"""
+  MILLIGALILEO @reference(uri: "http://qudt.org/vocab/unit/MilliGALILEO")
+
+  """Millimeter per Square Second | UCUM: mm.s-2"""
+  MILLIM_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/MilliM-PER-SEC2")
+
+  """Mile Us Statute per Square Second | UCUM: [mi_us].s-2"""
+  MI_US_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/MI_US-PER-SEC2")
+
+  """Meter per Square Second | UCUM: m.s-2"""
+  M_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/M-PER-SEC2")
+
+  """Yard per Square Second | UCUM: [yd_i].s-2"""
+  YD_PER_SEC2 @reference(uri: "http://qudt.org/vocab/unit/YD-PER-SEC2")
+}

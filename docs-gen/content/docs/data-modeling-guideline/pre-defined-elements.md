@@ -9,7 +9,7 @@ chapter: false
 ### Units
 Units are represented as enum values. For example:
 ```graphql
-enum VelocityUnitEnum {
+enum VelocityUnit {
   KILOMETER_PER_HOUR
   METERS_PER_SECOND
 }

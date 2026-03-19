@@ -49,8 +49,8 @@ s2dm units sync --dry-run
 - `--dry-run` (optional): Show how many enum files would be generated without creating them
 
 **Output:**
-- Creates `<QuantityKindUnitEnum>.graphql` files in `~/.s2dm/units/qudt` (e.g., `LengthUnitEnum.graphql`)
-- Generates `metadata.json` with version information
+- Creates `<QuantityKind>Unit.graphql` files in `~/.s2dm/units/qudt` (e.g., `LengthUnit.graphql`)
+- Generates `README.md` with version and attribution information
 - Reports number of enum files generated
 
 ### `s2dm units check-version`
@@ -72,23 +72,27 @@ Each generated enum follows this structure:
 
 ```graphql
 # Generated from QUDT units catalog version 3.1.5
-enum LengthUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Length", versionTag: "3.1.5") {
+# Source data: QUDT Public Repository (https://github.com/qudt/qudt-public-repo)
+# © QUDT.org — Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)
+# License: https://creativecommons.org/licenses/by/4.0/
+# Changes: vocabulary terms transformed to GraphQL SDL enum format by S2DM (https://github.com/COVESA/s2dm)
+enum LengthUnit @reference(uri: "http://qudt.org/vocab/quantitykind/Length") {
   """Meter | UCUM: m"""
-  M @reference(uri: "http://qudt.org/vocab/unit/M", versionTag: "3.1.5")
+  M @reference(uri: "http://qudt.org/vocab/unit/M")
 
   """Kilometer | UCUM: km"""
-  KILOM @reference(uri: "http://qudt.org/vocab/unit/KiloM", versionTag: "3.1.5")
+  KILOM @reference(uri: "http://qudt.org/vocab/unit/KiloM")
 
   """Centimeter | UCUM: cm"""
-  CENTIM @reference(uri: "http://qudt.org/vocab/unit/CentiM", versionTag: "3.1.5")
+  CENTIM @reference(uri: "http://qudt.org/vocab/unit/CentiM")
   ...
 }
 ```
 
 **Key Elements:**
-- **Enum name**: `<QuantityKind>UnitEnum` in PascalCase
-- **@reference on enum**: Links to QUDT quantity kind IRI with version tag
-- **@reference on values**: Links to QUDT unit IRI with version tag
+- **Enum name**: `<QuantityKind>Unit` in PascalCase
+- **@reference on enum**: Links to QUDT quantity kind IRI
+- **@reference on values**: Links to QUDT unit IRI
 - **Triple-quote docstrings**: Include human-readable label and UCUM code
 - **Value names**: Use QUDT URI segments converted to SCREAMING_SNAKE_CASE
 
@@ -98,9 +102,9 @@ QUDT units are stored in the `S2DM_HOME` directory:
 
 ```
 ~/.s2dm/units/qudt/                   # QUDT units (generated, read-only)
-├── metadata.json                     # Version metadata
-├── LengthUnitEnum.graphql            # Length units
-├── VelocityUnitEnum.graphql          # Velocity units
+├── README.md                         # Version and attribution
+├── LengthUnit.graphql                # Length units
+├── VelocityUnit.graphql              # Velocity units
 └── ... (500+ more unit enums)
 ```
 
@@ -108,8 +112,8 @@ If you need custom units specific to your domain, create them in your project di
 
 ```
 units/custom/                         # Custom units (manual, in your project)
-├── MyDomainUnitEnum.graphql          # Custom domain units
-└── SpecialUnitEnum.graphql           # Special use case units
+├── MyDomainUnit.graphql              # Custom domain units
+└── SpecialUnit.graphql               # Special use case units
 ```
 
 ## Workflow Example
@@ -123,8 +127,8 @@ units/custom/                         # Custom units (manual, in your project)
 2. **Use Units in Schema Development**: Reference generated enums
    ```graphql
    type Vehicle {
-     speed(unit: VelocityUnitEnum = KM_PER_HR): Float
-     acceleration(unit: AccelerationUnitEnum = M_PER_SEC2): Float
+     speed(unit: VelocityUnit = KM_PER_HR): Float
+     acceleration(unit: AccelerationUnit = M_PER_SEC2): Float
    }
    ```
 
