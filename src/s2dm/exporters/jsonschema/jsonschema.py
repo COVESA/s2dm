@@ -3,7 +3,7 @@ import json
 from graphql import GraphQLSchema
 
 from s2dm import log
-from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
+from s2dm.exporters.utils.annotated_schema import AnnotatedSchema, TypeMetadata
 
 from .transformer import JsonSchemaTransformer
 
@@ -12,6 +12,7 @@ def transform(
     graphql_schema: GraphQLSchema,
     root_type: str | None = None,
     strict: bool = False,
+    type_metadata: dict[str, TypeMetadata] | None = None,
 ) -> str:
     """
     Transform a GraphQL schema object to JSON Schema format.
@@ -20,13 +21,14 @@ def transform(
         graphql_schema: The GraphQL schema object to transform
         strict: Enforce strict field nullability translation from GraphQL to JSON Schema
         root_type: Optional root type name for the JSON schema
+        type_metadata: Optional metadata about types produced by instance tag expansion
 
     Returns:
         str: JSON Schema representation as a string
     """
     log.info(f"Transforming GraphQL schema to JSON Schema with {len(graphql_schema.type_map)} types")
 
-    transformer = JsonSchemaTransformer(graphql_schema, root_type, strict)
+    transformer = JsonSchemaTransformer(graphql_schema, root_type, strict, type_metadata)
     json_schema = transformer.transform()
 
     json_schema_str = json.dumps(json_schema, indent=2)
@@ -52,4 +54,4 @@ def translate_to_jsonschema(
     Returns:
         str: JSON Schema representation as a string
     """
-    return transform(annotated_schema.schema, root_type, strict)
+    return transform(annotated_schema.schema, root_type, strict, annotated_schema.type_metadata)
