@@ -11,6 +11,7 @@ from graphql import (
     GraphQLSchema,
     GraphQLType,
     GraphQLUnionType,
+    get_named_type,
     is_enum_type,
     is_interface_type,
     is_list_type,
@@ -21,9 +22,11 @@ from graphql import (
 )
 
 from s2dm import log
+from s2dm.exporters.utils.annotated_schema import TypeMetadata
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 from s2dm.exporters.utils.extraction import get_all_named_types
 from s2dm.exporters.utils.field import get_cardinality
+from s2dm.exporters.utils.graphql_type import is_root_type
 from s2dm.exporters.utils.instance_tag import (
     is_instance_tag_field,
     is_valid_instance_tag_field,
@@ -58,10 +61,31 @@ class JsonSchemaTransformer:
         graphql_schema: GraphQLSchema,
         root_type: str | None = None,
         strict: bool = False,
+        type_metadata: dict[str, TypeMetadata] | None = None,
     ):
         self.graphql_schema = graphql_schema
         self.root_type = root_type
         self.strict = strict
+        self._type_metadata: dict[str, TypeMetadata] = type_metadata or {}
+
+    def _is_intermediate(self, type_name: str) -> bool:
+        """Indicates whether a type was generated as an intermediate expansion type."""
+        meta = self._type_metadata.get(type_name)
+        return meta is not None and meta.is_intermediate_type
+
+    def _referenced_enum_names(self) -> set[str]:
+        """Collect enum names referenced by emittable (non-intermediate, non-root) types."""
+        referenced: set[str] = set()
+        for type_obj in self.graphql_schema.type_map.values():
+            if not hasattr(type_obj, "fields"):
+                continue
+            if is_root_type(type_obj.name) or self._is_intermediate(type_obj.name):
+                continue
+            for field in type_obj.fields.values():
+                named = get_named_type(field.type)
+                if isinstance(named, GraphQLEnumType):
+                    referenced.add(named.name)
+        return referenced
 
     def transform(self) -> dict[str, Any]:
         """
@@ -97,7 +121,20 @@ class JsonSchemaTransformer:
             )
 
         all_types = get_all_named_types(self.graphql_schema)
-        user_defined_types = [graphql_type for graphql_type in all_types if not is_scalar_type(graphql_type)]
+        # When instance expansion was used, filter enums only referenced by removed @instanceTag types
+        referenced_enums = self._referenced_enum_names() if self._type_metadata else None
+        user_defined_types = [
+            graphql_type
+            for graphql_type in all_types
+            if not is_scalar_type(graphql_type)
+            and not is_root_type(graphql_type.name)
+            and not self._is_intermediate(graphql_type.name)
+            and not (
+                referenced_enums is not None
+                and is_enum_type(graphql_type)
+                and graphql_type.name not in referenced_enums
+            )
+        ]
 
         log.info(f"Found {len(user_defined_types)} user-defined types to transform")
 
@@ -182,6 +219,16 @@ class JsonSchemaTransformer:
                         f"Invalid schema: instanceTag object found on non-instanceTag named field '{field_name}'"
                     )
 
+            target_type_name = get_named_type(field.type).name
+            if self._is_intermediate(target_type_name):
+                # Inline the expansion structure; never add to required (matches previous output)
+                intermediate_type = cast(GraphQLObjectType, self.graphql_schema.type_map[target_type_name])
+                inline = self._inline_intermediate_type(intermediate_type)
+                if field.description:
+                    inline["description"] = field.description
+                definition["properties"][field_name] = inline
+                continue
+
             if is_non_null_type(field.type):
                 required_fields.append(field_name)
 
@@ -190,6 +237,37 @@ class JsonSchemaTransformer:
 
         if required_fields:
             definition["required"] = required_fields
+
+        return definition
+
+    def _inline_intermediate_type(self, intermediate_type: GraphQLObjectType) -> dict[str, Any]:
+        """
+        Recursively build an inline JSON Schema object for an intermediate expansion type.
+
+        Intermediate types are not emitted as named $defs; instead they are embedded directly
+        in the parent property to produce the same nested object structure as before v0.6.1.
+        No 'required' array is added (matches previous output).
+        """
+        definition: dict[str, Any] = {
+            "additionalProperties": False,
+            "properties": {},
+            "type": "object",
+        }
+
+        for field_name, field in intermediate_type.fields.items():
+            nullable = not is_non_null_type(field.type)
+            named = cast(GraphQLObjectType, get_named_type(field.type))
+
+            if self._is_intermediate(named.name):
+                child_type = cast(GraphQLObjectType, self.graphql_schema.type_map[named.name])
+                definition["properties"][field_name] = self._inline_intermediate_type(child_type)
+            else:
+                # Leaf reference to the real base type
+                leaf_ref: dict[str, Any] = {"$ref": f"#/$defs/{named.name}"}
+                if nullable and self.strict:
+                    definition["properties"][field_name] = {"oneOf": [leaf_ref, {"type": "null"}]}
+                else:
+                    definition["properties"][field_name] = leaf_ref
 
         return definition
 

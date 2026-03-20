@@ -48,7 +48,7 @@ class TestJsonSchemaE2E:
         assert "UnrelatedType" not in schema["$defs"]
 
     def test_instance_tag_expansion(self, test_schema_path: list[Path]) -> None:
-        """Test expanded instances for seats with 3-level nesting."""
+        """Test expanded instances for seats with 3-level nesting are inlined in parent property."""
         root_type = "Cabin"
         annotated_schema, _, _ = load_and_process_schema(
             schema_paths=test_schema_path,
@@ -60,19 +60,23 @@ class TestJsonSchemaE2E:
         result = translate_to_jsonschema(annotated_schema, root_type=root_type)
         schema = json.loads(result)
 
+        # Intermediate types must NOT appear as named $defs
+        assert "Seat_Row" not in schema["$defs"]
+        assert "Seat_Position" not in schema["$defs"]
+
+        # The expanded structure is inlined directly in the parent property
         cabin_def = schema["$defs"]["Cabin"]
         seat_property = cabin_def["properties"]["Seat"]
-        assert seat_property["$ref"] == "#/$defs/Seat_Row"
+        assert seat_property["type"] == "object"
+        assert seat_property["additionalProperties"] is False
+        assert set(seat_property["properties"].keys()) == {"ROW1", "ROW2", "ROW3"}
 
-        seat_row_def = schema["$defs"]["Seat_Row"]
-        assert seat_row_def["properties"]["ROW1"]["$ref"] == "#/$defs/Seat_Position"
-        assert seat_row_def["properties"]["ROW2"]["$ref"] == "#/$defs/Seat_Position"
-        assert seat_row_def["properties"]["ROW3"]["$ref"] == "#/$defs/Seat_Position"
-
-        seat_position_def = schema["$defs"]["Seat_Position"]
-        assert seat_position_def["properties"]["LEFT"]["$ref"] == "#/$defs/Seat"
-        assert seat_position_def["properties"]["CENTER"]["$ref"] == "#/$defs/Seat"
-        assert seat_position_def["properties"]["RIGHT"]["$ref"] == "#/$defs/Seat"
+        row1 = seat_property["properties"]["ROW1"]
+        assert row1["type"] == "object"
+        assert set(row1["properties"].keys()) == {"LEFT", "CENTER", "RIGHT"}
+        assert row1["properties"]["LEFT"]["$ref"] == "#/$defs/Seat"
+        assert row1["properties"]["CENTER"]["$ref"] == "#/$defs/Seat"
+        assert row1["properties"]["RIGHT"]["$ref"] == "#/$defs/Seat"
 
         seat_def = schema["$defs"]["Seat"]
         assert "isOccupied" in seat_def["properties"]
@@ -151,9 +155,20 @@ class TestJsonSchemaE2E:
             result = translate_to_jsonschema(annotated_schema, root_type=root_type)
             schema = json.loads(result)
 
+            # The expanded Door structure is inlined (no named intermediate $defs)
             doors_def = schema["$defs"]["TestObject"]["properties"]["Door"]
-            assert doors_def["$ref"] == "#/$defs/Door_Row"
+            assert doors_def["type"] == "object"
+            assert doors_def["additionalProperties"] is False
+            assert set(doors_def["properties"].keys()) == {"ROW1", "ROW2"}
 
+            row1 = doors_def["properties"]["ROW1"]
+            assert row1["type"] == "object"
+            assert set(row1["properties"].keys()) == {"DRIVERSIDE", "PASSENGERSIDE"}
+            assert row1["properties"]["DRIVERSIDE"]["$ref"] == "#/$defs/Door"
+
+            assert "Door_Row" not in schema["$defs"]
+
+            # Regular arrays remain unaffected
             items_def = schema["$defs"]["TestObject"]["properties"]["regularItems"]
             assert items_def["type"] == "array"
             assert "items" in items_def
@@ -162,7 +177,7 @@ class TestJsonSchemaE2E:
             temp_path.unlink()
 
     def test_expanded_instances_with_strict_mode(self, test_schema_path: list[Path]) -> None:
-        """Test that expanded instances work correctly with strict mode."""
+        """Test that expanded instances are inlined correctly with strict mode."""
         root_type = "Cabin"
         annotated_schema, _, _ = load_and_process_schema(
             schema_paths=test_schema_path,
@@ -174,16 +189,23 @@ class TestJsonSchemaE2E:
         result = translate_to_jsonschema(annotated_schema, root_type=root_type, strict=True)
         schema = json.loads(result)
 
+        # Intermediate types must NOT appear as named $defs
+        assert "Door_Row" not in schema["$defs"]
+        assert "Door_Side" not in schema["$defs"]
+
+        # The expansion is inlined in the parent property
         cabin_def = schema["$defs"]["Cabin"]
         door_property = cabin_def["properties"]["Door"]
-        assert door_property["$ref"] == "#/$defs/Door_Row"
+        assert door_property["type"] == "object"
+        assert door_property["additionalProperties"] is False
+        assert set(door_property["properties"].keys()) == {"ROW1", "ROW2"}
 
-        door_row_def = schema["$defs"]["Door_Row"]
-        assert door_row_def["properties"]["ROW1"]["$ref"] == "#/$defs/Door_Side"
-        assert door_row_def["properties"]["ROW2"]["$ref"] == "#/$defs/Door_Side"
+        row1 = door_property["properties"]["ROW1"]
+        assert row1["type"] == "object"
+        assert set(row1["properties"].keys()) == {"DRIVERSIDE", "PASSENGERSIDE"}
 
-        door_side_def = schema["$defs"]["Door_Side"]
-        driverside_field = door_side_def["properties"]["DRIVERSIDE"]
+        # In strict mode, nullable leaf references use oneOf with null
+        driverside_field = row1["properties"]["DRIVERSIDE"]
         assert "oneOf" in driverside_field
         refs = [item.get("$ref") for item in driverside_field["oneOf"] if "$ref" in item]
         assert "#/$defs/Door" in refs
@@ -221,8 +243,8 @@ class TestJsonSchemaE2E:
         assert "doors" not in schema_expanded["$defs"]["Cabin"]["properties"]
         assert "seats" not in schema_expanded["$defs"]["Cabin"]["properties"]
 
-    def test_nested_instances_use_refs_not_inline_expansion(self, spec_directory: Path) -> None:
-        """Test that nested expanded instances use $ref instead of copying object properties inline."""
+    def test_nested_instances_use_inline_expansion(self, spec_directory: Path) -> None:
+        """Test that nested expanded instances are inlined at each level without named intermediate $defs."""
         nested_schema_path = Path(__file__).parent / "test_expanded_instances" / "test_nested_schema.graphql"
 
         root_type = "Chassis"
@@ -236,22 +258,29 @@ class TestJsonSchemaE2E:
         result = translate_to_jsonschema(annotated_schema, root_type=root_type)
         schema = json.loads(result)
 
+        # Intermediate types must NOT appear as named $defs
+        assert "Axle_Row" not in schema["$defs"]
+        assert "Wheel_Position" not in schema["$defs"]
+
+        # Chassis.Axle is inlined
         chassis_def = schema["$defs"]["Chassis"]
         axle_prop = chassis_def["properties"]["Axle"]
-        assert axle_prop["$ref"] == "#/$defs/Axle_Row"
+        assert axle_prop["type"] == "object"
+        assert axle_prop["additionalProperties"] is False
+        assert set(axle_prop["properties"].keys()) == {"ROW1", "ROW2"}
+        assert axle_prop["properties"]["ROW1"]["$ref"] == "#/$defs/Axle"
+        assert axle_prop["properties"]["ROW2"]["$ref"] == "#/$defs/Axle"
 
-        axle_row_def = schema["$defs"]["Axle_Row"]
-        assert axle_row_def["properties"]["ROW1"]["$ref"] == "#/$defs/Axle"
-        assert axle_row_def["properties"]["ROW2"]["$ref"] == "#/$defs/Axle"
-
+        # Axle.Wheel is also inlined
         axle_def = schema["$defs"]["Axle"]
         wheel_prop = axle_def["properties"]["Wheel"]
-        assert wheel_prop["$ref"] == "#/$defs/Wheel_Position"
+        assert wheel_prop["type"] == "object"
+        assert wheel_prop["additionalProperties"] is False
+        assert set(wheel_prop["properties"].keys()) == {"LEFT", "RIGHT"}
+        assert wheel_prop["properties"]["LEFT"]["$ref"] == "#/$defs/Wheel"
+        assert wheel_prop["properties"]["RIGHT"]["$ref"] == "#/$defs/Wheel"
 
-        wheel_position_def = schema["$defs"]["Wheel_Position"]
-        assert wheel_position_def["properties"]["LEFT"]["$ref"] == "#/$defs/Wheel"
-        assert wheel_position_def["properties"]["RIGHT"]["$ref"] == "#/$defs/Wheel"
-
+        # Field names are singular
         assert "Wheel" in axle_def["properties"]
         assert "Wheels" not in axle_def["properties"]
         assert "Axle" in chassis_def["properties"]
