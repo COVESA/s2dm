@@ -1,0 +1,21 @@
+"""GeoJSON geometry scalar (RFC 7946 — https://www.rfc-editor.org/rfc/rfc7946).
+Use with @geoType to constrain the geometry type in MongoDB BSON validators.
+Without @geoType, exports as a permissive object requiring 'type' and 'coordinates' fields.
+"""
+scalar GeoJSON
+
+"""GeoJSON geometry types (RFC 7946 §1.4)."""
+enum GeoJSONShape {
+  POINT
+  MULTIPOINT
+  LINESTRING
+  MULTILINESTRING
+  POLYGON
+  MULTIPOLYGON
+}
+
+"""Specifies the GeoJSON geometry type for a GeoJSON scalar field.
+Enables precise BSON schema generation in the MongoDB exporter.
+If omitted on a GeoJSON field, a permissive object schema is emitted.
+"""
+directive @geoType(shape: GeoJSONShape!) on FIELD_DEFINITION

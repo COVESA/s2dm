@@ -1,7 +1,6 @@
 from typing import cast
 
 from graphql import GraphQLNamedType, GraphQLObjectType, is_named_type
-from graphql.language.ast import ListValueNode, ObjectValueNode, StringValueNode
 
 from s2dm import log
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
@@ -19,26 +18,16 @@ def get_namespace_from_metadata(object_type: GraphQLObjectType, global_namespace
     """Extract namespace from @vspec metadata key-value pairs, fallback to global."""
     metadata = get_argument_content(object_type, VSPEC_DIRECTIVE, "metadata")
 
-    if not metadata or not isinstance(metadata, ListValueNode):
+    if not metadata or not isinstance(metadata, list):
         return global_namespace
 
-    for item in metadata.values:
-        if not isinstance(item, ObjectValueNode):
+    for item in metadata:
+        if not isinstance(item, dict):
             continue
-
-        key_field = None
-        value_field = None
-        for field in item.fields:
-            if not isinstance(field.value, StringValueNode):
-                continue
-
-            if field.name.value == "key":
-                key_field = field.value.value
-            elif field.name.value == "value":
-                value_field = field.value.value
-
-        if key_field == "namespace" and value_field:
-            return value_field
+        key = item.get("key")
+        value = item.get("value")
+        if key == "namespace" and value:
+            return str(value)
 
     return global_namespace
 
