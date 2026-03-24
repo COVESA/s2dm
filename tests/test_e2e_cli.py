@@ -28,18 +28,23 @@ def tmp_outputs(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return tmp_path_factory.mktemp("e2e_outputs")
 
 
+# ``diff graphql`` structured output requires @graphql-inspector/core in repo node_modules.
+_E2E_NODE_MODULES = Path(__file__).resolve().parents[1] / "node_modules"
+
+
 class ExpectedIds:
     """Expected spec history IDs for the test cases.
 
-    The IDs are variant-based IDs in the format Concept/vN.
+    The IDs are variant-based IDs in the format prefix:Concept/vN (e.g. ns:Field/v1.0)
+    when ``--concept-prefix`` is set (default ``ns`` in registry init/update).
     - Initial IDs are v1.0 (from schema1-1/schema1-2)
     - Updated IDs are v2.0 (from schema2-1/schema2-2, after BREAKING changes)
     """
 
-    VEHICLE_AVG_SPEED_ID = "Vehicle.averageSpeed/v1.0"  # schema1-1.graphql (Float)
-    NEW_VEHICLE_AVG_SPEED_ID = "Vehicle.averageSpeed/v2.0"  # schema2-1.graphql (Int - changed from Float, BREAKING)
-    PERSON_HEIGHT_ID = "Person.height/v1.0"  # schema1-2.graphql (Float)
-    NEW_PERSON_HEIGHT_ID = "Person.height/v2.0"  # schema2-2.graphql (Int - changed from Float, BREAKING)
+    VEHICLE_AVG_SPEED_ID = "ns:Vehicle.averageSpeed/v1.0"  # schema1-1.graphql (Float)
+    NEW_VEHICLE_AVG_SPEED_ID = "ns:Vehicle.averageSpeed/v2.0"  # schema2-1.graphql (Int - changed from Float, BREAKING)
+    PERSON_HEIGHT_ID = "ns:Person.height/v1.0"  # schema1-2.graphql (Float)
+    NEW_PERSON_HEIGHT_ID = "ns:Person.height/v2.0"  # schema2-2.graphql (Int - changed from Float, BREAKING)
 
 
 def contains_value(obj: dict[str, Any] | list[Any] | str, target: str) -> bool:
@@ -992,7 +997,7 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
         if found_vehicle and found_person:
             break
     assert found_vehicle, (
-        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id'
+        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id '
         + f'"{ExpectedIds.VEHICLE_AVG_SPEED_ID}" not found.'
     )
     assert (
@@ -1031,27 +1036,30 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: P
 
     # Generate diff between old and new schemas
     diff_file = tmp_outputs / "diff.json"
-    diff_result = runner.invoke(
-        cli,
-        [
-            "diff",
-            "graphql",
-            "-s",
-            str(TSD.SAMPLE1_1),
-            "-s",
-            str(TSD.SAMPLE1_2),
-            "-s",
-            str(units_directory),
-            "--val-schema",
-            str(TSD.SAMPLE2_1),
-            "--val-schema",
-            str(TSD.SAMPLE2_2),
-            "--val-schema",
-            str(units_directory),
-            "-o",
-            str(diff_file),
-        ],
-    )
+    diff_cmd = [
+        "diff",
+        "graphql",
+        "-s",
+        str(spec_directory),
+        "-s",
+        str(TSD.SAMPLE1_1),
+        "-s",
+        str(TSD.SAMPLE1_2),
+        "-s",
+        str(units_directory),
+        "--val-schema",
+        str(spec_directory),
+        "--val-schema",
+        str(TSD.SAMPLE2_1),
+        "--val-schema",
+        str(TSD.SAMPLE2_2),
+        "--val-schema",
+        str(units_directory),
+    ]
+    if _E2E_NODE_MODULES.is_dir():
+        diff_cmd.extend(["--node-modules-path", str(_E2E_NODE_MODULES)])
+    diff_cmd.extend(["-o", str(diff_file)])
+    diff_result = runner.invoke(cli, diff_cmd)
     # diff_graphql exits with code 1 if breaking changes detected, 0 otherwise
     assert diff_result.exit_code in (0, 1), f"diff graphql failed: {diff_result.output}"
     assert diff_file.exists(), f"Diff file {diff_file} was not created. Output: {diff_result.output}"
