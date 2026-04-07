@@ -35,7 +35,7 @@ from linkml_runtime.utils.schema_as_dict import schema_as_dict
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.directive import get_argument_content, get_directive_arguments, has_given_directive
 from s2dm.exporters.utils.field import FieldCase, get_cardinality, get_field_case
-from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type
+from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_id_type, is_root_type
 
 SCALAR_RANGE_MAP: Mapping[str, str] = {
     "String": "string",
@@ -97,11 +97,14 @@ class LinkmlTransformer:
 
     def _build_classes(self) -> dict[str, ClassDefinition]:
         class_definitions: dict[str, ClassDefinition] = {}
+        tree_root_class_names = self._get_tree_root_class_names()
 
         for type_name in self.annotated_schema.schema.type_map:
             named_type = self.annotated_schema.schema.type_map[type_name]
-            if not isinstance(named_type, GraphQLObjectType | GraphQLInputObjectType | GraphQLInterfaceType) or (
-                self._is_intermediate_type(named_type.name)
+            if (
+                not isinstance(named_type, GraphQLObjectType | GraphQLInterfaceType)
+                or is_root_type(named_type.name)
+                or self._is_intermediate_type(named_type.name)
             ):
                 continue
 
@@ -125,11 +128,26 @@ class LinkmlTransformer:
                 if interface_names:
                     class_definition.is_a = interface_names[0]
                     class_definition.mixins = interface_names[1:]
+                if named_type.name in tree_root_class_names:
+                    class_definition.tree_root = True
 
             self._apply_metadata_annotations_from_source(class_definition, named_type)
             class_definitions[named_type.name] = class_definition
 
         return class_definitions
+
+    def _get_tree_root_class_names(self) -> set[str]:
+        query_type = self.annotated_schema.schema.query_type
+        if query_type is None:
+            return set()
+
+        tree_root_class_names: set[str] = set()
+        for field in query_type.fields.values():
+            named_type = get_named_type(field.type)
+            if isinstance(named_type, GraphQLObjectType) and not self._is_intermediate_type(named_type.name):
+                tree_root_class_names.add(named_type.name)
+
+        return tree_root_class_names
 
     def _build_enums(self) -> dict[str, EnumDefinition]:
         enum_definitions: dict[str, EnumDefinition] = {}
@@ -199,6 +217,8 @@ class LinkmlTransformer:
 
         if required:
             slot_definition.required = True
+        if is_id_type(named_type.name):
+            slot_definition.identifier = True
         if multivalued:
             slot_definition.multivalued = True
         if list_item_required and multivalued:

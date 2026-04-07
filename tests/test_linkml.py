@@ -18,6 +18,7 @@ LINKML_DEFAULT_PREFIX_URL = "https://covesa.global/s2dm"
 def _transform_to_schema_dict(
     schema_str: str,
     naming_config: NamingConventionConfig | None = None,
+    root_type: str | None = None,
 ) -> dict[str, Any]:
     graphql_schema = build_schema(schema_str)
     annotated_schema = process_schema(
@@ -25,7 +26,7 @@ def _transform_to_schema_dict(
         source_map={},
         naming_config=naming_config,
         query_document=None,
-        root_type=None,
+        root_type=root_type,
         expanded_instances=False,
     )
     result = translate_to_linkml(
@@ -53,9 +54,27 @@ class TestBasicTransformation:
         assert schema["default_prefix"] == LINKML_DEFAULT_PREFIX
         assert schema["prefixes"][LINKML_DEFAULT_PREFIX] == LINKML_DEFAULT_PREFIX_URL
         assert "linkml:types" in schema["imports"]
-        assert "Query" in schema["classes"]
+        assert "Query" not in schema["classes"]
         assert "Vehicle" in schema["classes"]
-        assert schema["classes"]["Query"]["attributes"]["vehicle"]["range"] == "Vehicle"
+
+    def test_root_operation_types_are_excluded(self) -> None:
+        """Test that GraphQL root operation types are not emitted as LinkML classes."""
+        schema_str = """
+            type Query { vehicle: Vehicle }
+            type Mutation { updateVehicle: Vehicle }
+            type Subscription { vehicleUpdated: Vehicle }
+
+            type Vehicle {
+                vehicleKey: ID!
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str)
+
+        assert "Query" not in schema["classes"]
+        assert "Mutation" not in schema["classes"]
+        assert "Subscription" not in schema["classes"]
+        assert "Vehicle" in schema["classes"]
 
     def test_object_type_transformation(self) -> None:
         """Test that GraphQL object types are correctly transformed."""
@@ -83,6 +102,82 @@ class TestBasicTransformation:
         assert vehicle["attributes"]["make"]["required"] is True
         assert "required" not in vehicle["attributes"]["model"]
         assert vehicle["attributes"]["year"]["range"] == "integer"
+
+    def test_query_object_types_are_marked_as_tree_roots(self) -> None:
+        """Test that object types returned directly from Query are marked as tree roots."""
+        schema_str = """
+            type Query {
+                vehicle: Vehicle
+                garage: Garage
+                status: String
+            }
+
+            type Vehicle {
+                id: ID!
+                wheel: Wheel
+            }
+
+            type Garage {
+                id: ID!
+            }
+
+            type Wheel {
+                diameter: Int
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str)
+
+        assert schema["classes"]["Vehicle"]["tree_root"] is True
+        assert schema["classes"]["Garage"]["tree_root"] is True
+        assert "tree_root" not in schema["classes"]["Wheel"]
+
+    def test_root_type_filtered_object_is_marked_as_tree_root(self) -> None:
+        """Test that root_type filtering leaves only the selected object type as tree root."""
+        schema_str = """
+            type Query {
+                vehicle: Vehicle
+                garage: Garage
+            }
+
+            type Vehicle {
+                id: ID!
+                wheel: Wheel
+            }
+
+            type Garage {
+                id: ID!
+            }
+
+            type Wheel {
+                diameter: Int
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str, root_type="Vehicle")
+
+        assert schema["classes"]["Vehicle"]["tree_root"] is True
+        assert "Garage" not in schema["classes"]
+        assert "tree_root" not in schema["classes"]["Wheel"]
+
+    def test_id_typed_fields_are_marked_as_identifiers(self) -> None:
+        """Test that GraphQL ID fields are marked as LinkML identifiers."""
+        schema_str = """
+            type Query { vehicle: Vehicle }
+
+            type Vehicle {
+                vehicleKey: ID!
+                externalRef: String!
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str)
+        vehicle_attributes = schema["classes"]["Vehicle"]["attributes"]
+
+        assert vehicle_attributes["vehicleKey"]["range"] == "string"
+        assert vehicle_attributes["vehicleKey"]["required"] is True
+        assert vehicle_attributes["vehicleKey"]["identifier"] is True
+        assert "identifier" not in vehicle_attributes["externalRef"]
 
 
 class TestGraphQLTypeHandling:
@@ -263,8 +358,8 @@ class TestUnitMapping:
         assert unit["exact_mappings"] == ["http://qudt.org/vocab/unit/KiloM-PER-HR"]
         assert unit["has_quantity_kind"] == "http://qudt.org/vocab/quantitykind/Velocity"
 
-    def test_input_types_and_fields_use_same_directive_mapping(self) -> None:
-        """Test that input types and input fields get the same directive mappings as output types."""
+    def test_input_types_are_excluded_from_linkml_classes(self) -> None:
+        """Test that GraphQL input object types are not emitted as LinkML classes."""
         schema_str = """
             directive @range(min: Float, max: Float) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
             directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
@@ -294,23 +389,8 @@ class TestUnitMapping:
         """
 
         schema = _transform_to_schema_dict(schema_str)
-        vehicle_filter = schema["classes"]["VehicleFilter"]
-        tags_slot = vehicle_filter["attributes"]["tags"]
-        confidence_slot = vehicle_filter["attributes"]["confidence"]
         base_entity = schema["classes"]["BaseEntity"]
 
-        assert vehicle_filter["annotations"]["s2dm_metadata_comment"] == "Filter input"
-        assert vehicle_filter["annotations"]["s2dm_metadata_vssType"] == "input"
-
-        assert tags_slot["multivalued"] is True
-        assert tags_slot["minimum_cardinality"] == 1
-        assert tags_slot["maximum_cardinality"] == 3
-        assert tags_slot["list_elements_unique"] is True
-        assert tags_slot["annotations"]["s2dm_metadata_comment"] == "Input tags"
-        assert tags_slot["annotations"]["s2dm_metadata_vssType"] == "attribute"
-
-        assert confidence_slot["minimum_value"] == 0.1
-        assert confidence_slot["maximum_value"] == 0.9
-
+        assert "VehicleFilter" not in schema["classes"]
         assert base_entity["annotations"]["s2dm_metadata_comment"] == "Base interface"
         assert base_entity["annotations"]["s2dm_metadata_vssType"] == "interface"
