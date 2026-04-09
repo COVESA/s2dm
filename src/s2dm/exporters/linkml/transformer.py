@@ -157,14 +157,23 @@ class LinkmlTransformer:
             if not isinstance(named_type, GraphQLEnumType) or self._is_intermediate_type(named_type.name):
                 continue
 
+            permissible_values: dict[str, PermissibleValue] = {}
+            for enum_value_name, enum_value in named_type.values.items():
+                permissible_value = PermissibleValue(text=enum_value_name)
+                meaning = get_argument_content(enum_value, "reference", "uri")
+                if meaning:
+                    permissible_value.meaning = meaning
+                permissible_values[enum_value_name] = permissible_value
+
             enum_definition = EnumDefinition(
                 name=named_type.name,
-                permissible_values={
-                    enum_value_name: PermissibleValue(text=enum_value_name) for enum_value_name in named_type.values
-                },
+                permissible_values=permissible_values,
             )
             if named_type.description:
                 enum_definition.description = named_type.description
+            enum_uri = get_argument_content(named_type, "reference", "uri")
+            if enum_uri:
+                enum_definition.exact_mappings = [enum_uri]
             enum_definitions[named_type.name] = enum_definition
 
         return enum_definitions

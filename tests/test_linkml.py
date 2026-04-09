@@ -325,10 +325,13 @@ class TestUnitMapping:
 
         schema = _transform_to_schema_dict(schema_str)
         unit = schema["classes"]["Vehicle"]["attributes"]["transmittanceDensity"]["unit"]
+        unit_enum = schema["enums"]["TransmittanceDensityUnitEnum"]
 
         assert unit["symbol"] == "UNITLESS"
         assert unit["exact_mappings"] == ["http://qudt.org/vocab/unit/UNITLESS"]
         assert unit["has_quantity_kind"] == "http://qudt.org/vocab/quantitykind/TransmittanceDensity"
+        assert unit_enum["exact_mappings"] == ["http://qudt.org/vocab/quantitykind/TransmittanceDensity"]
+        assert unit_enum["permissible_values"]["UNITLESS"]["meaning"] == "http://qudt.org/vocab/unit/UNITLESS"
 
     def test_qudt_unit_reference_mapping_with_enum_value_renaming(self) -> None:
         """Test QUDT unit mapping when enum value naming conversion changes enum keys."""
@@ -353,10 +356,39 @@ class TestUnitMapping:
 
         schema = _transform_to_schema_dict(schema_str, naming_config=naming_config)
         unit = schema["classes"]["Vehicle"]["attributes"]["speed"]["unit"]
+        unit_enum = schema["enums"]["VelocityUnitEnum"]
 
         assert unit["symbol"] == "kilom_per_hr"
         assert unit["exact_mappings"] == ["http://qudt.org/vocab/unit/KiloM-PER-HR"]
         assert unit["has_quantity_kind"] == "http://qudt.org/vocab/quantitykind/Velocity"
+        assert unit_enum["exact_mappings"] == ["http://qudt.org/vocab/quantitykind/Velocity"]
+        assert unit_enum["permissible_values"]["kilom_per_hr"]["meaning"] == "http://qudt.org/vocab/unit/KiloM-PER-HR"
+
+    def test_unit_enum_value_without_uri_omits_value_mapping(self) -> None:
+        """Test that unit enum values without a reference URI omit exact and meaning mappings."""
+        schema_str = """
+            directive @reference(uri: String, versionTag: String) on ENUM | ENUM_VALUE
+
+            type Query { vehicle: Vehicle }
+
+            enum VelocityUnitEnum @reference(uri: "http://qudt.org/vocab/quantitykind/Velocity", versionTag: "v3.1.8") {
+                KILOM_PER_HR
+            }
+
+            type Vehicle {
+                speed(unit: VelocityUnitEnum = KILOM_PER_HR): Float
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str)
+        unit = schema["classes"]["Vehicle"]["attributes"]["speed"]["unit"]
+        unit_enum = schema["enums"]["VelocityUnitEnum"]
+
+        assert unit["symbol"] == "KILOM_PER_HR"
+        assert "exact_mappings" not in unit
+        assert unit["has_quantity_kind"] == "http://qudt.org/vocab/quantitykind/Velocity"
+        assert unit_enum["exact_mappings"] == ["http://qudt.org/vocab/quantitykind/Velocity"]
+        assert "meaning" not in unit_enum["permissible_values"]["KILOM_PER_HR"]
 
     def test_input_types_are_excluded_from_linkml_classes(self) -> None:
         """Test that GraphQL input object types are not emitted as LinkML classes."""
