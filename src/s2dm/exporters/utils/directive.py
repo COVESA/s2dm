@@ -5,7 +5,9 @@ from graphql import (
     DirectiveLocation,
     FloatValueNode,
     GraphQLEnumType,
+    GraphQLEnumValue,
     GraphQLField,
+    GraphQLInputField,
     GraphQLInputObjectType,
     GraphQLInterfaceType,
     GraphQLObjectType,
@@ -18,6 +20,16 @@ from graphql import (
 from graphql.language.printer import print_ast
 
 GRAPHQL_TYPE_DEFINITION_PATTERN = r"^(type|interface|input|enum|union|scalar)\s+(\w+)"
+
+DirectiveElement = (
+    GraphQLField
+    | GraphQLInputField
+    | GraphQLObjectType
+    | GraphQLInterfaceType
+    | GraphQLInputObjectType
+    | GraphQLEnumType
+    | GraphQLEnumValue
+)
 
 
 def get_type_directive_location(graphql_type: GraphQLType) -> DirectiveLocation | None:
@@ -37,7 +49,7 @@ def get_type_directive_location(graphql_type: GraphQLType) -> DirectiveLocation 
     return None
 
 
-def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive_name: str) -> dict[str, Any]:
+def get_directive_arguments(element: DirectiveElement, directive_name: str) -> dict[str, Any]:
     """
     Extracts the arguments of a specified directive from a GraphQL element.
     Args:
@@ -54,20 +66,21 @@ def get_directive_arguments(element: GraphQLField | GraphQLObjectType, directive
 
     for arg in directive.arguments:
         arg_name = arg.name.value
-        if hasattr(arg.value, "value"):
-            if isinstance(arg.value, IntValueNode):
-                args[arg_name] = int(arg.value.value)
-            elif isinstance(arg.value, FloatValueNode):
-                args[arg_name] = float(arg.value.value)
-            else:
-                args[arg_name] = arg.value.value
+        value_node: Any = arg.value
+        raw_value = getattr(value_node, "value", None)
+        if isinstance(value_node, IntValueNode):
+            args[arg_name] = int(value_node.value)
+        elif isinstance(value_node, FloatValueNode):
+            args[arg_name] = float(value_node.value)
+        elif raw_value is not None:
+            args[arg_name] = raw_value
         else:
-            args[arg_name] = arg.value
+            args[arg_name] = value_node
 
     return args
 
 
-def has_given_directive(element: GraphQLObjectType | GraphQLField, directive_name: str) -> bool:
+def has_given_directive(element: DirectiveElement, directive_name: str) -> bool:
     """Check whether a GraphQL element (field, object type) has a particular specified directive."""
     if element.ast_node and element.ast_node.directives:
         for directive in element.ast_node.directives:
@@ -76,9 +89,7 @@ def has_given_directive(element: GraphQLObjectType | GraphQLField, directive_nam
     return False
 
 
-def get_argument_content(
-    element: GraphQLObjectType | GraphQLField, directive_name: str, argument_name: str
-) -> Any | None:
+def get_argument_content(element: DirectiveElement, directive_name: str, argument_name: str) -> Any | None:
     """
     Extracts the comment from a GraphQL element (field or named type).
 
@@ -155,7 +166,7 @@ def build_directive_map(schema: GraphQLSchema) -> dict[str | tuple[str, str], li
                 directive_map[type_name] = directive_strings
 
         # Directives on fields
-        if hasattr(type_obj, "fields"):
+        if isinstance(type_obj, GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType):
             for field_name, field in type_obj.fields.items():
                 if has_directives(field):
                     directive_strings = get_directive_strings(field)

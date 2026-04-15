@@ -519,6 +519,141 @@ You can call the help for usage reference:
 s2dm export jsonschema --help
 ```
 
+### LinkML
+
+This exporter translates the given GraphQL schema to [LinkML](https://linkml.io/linkml/) schema format (`.yaml`).
+
+#### Key Features
+
+- **Complete GraphQL Type Support**: Handles scalars, objects, input objects, enums, unions, interfaces, and list fields
+- **Selection Query**: Use `--selection-query` to filter exported types and fields
+- **Root Type Filtering**: Use `--root-type` to export one type and its transitive dependencies
+- **Naming Configuration**: Use `--naming-config` to transform names before export
+- **Expanded Instance Tags**: Use `--expanded-instances` to replace instance-tag arrays with singular attributes annotated with resolved instance names
+- **Explicit Schema Metadata**: Requires LinkML schema identity and namespace inputs (`--id`, `--name`, `--default-prefix`, `--default-prefix-url`)
+
+#### Usage
+
+```bash
+s2dm export linkml \
+  --schema schema.graphql \
+  --output schema.yaml \
+  --id https://covesa.global/s2dm \
+  --name VehicleSchema \
+  --default-prefix s2dm \
+  --default-prefix-url https://covesa.global/s2dm
+```
+
+#### Required Options
+
+- `--schema, -s`: GraphQL schema file, directory, or URL (repeatable)
+- `--output, -o`: Output file path (`.yaml`)
+- `--id, -i`: LinkML schema identifier
+- `--name, -n`: LinkML schema name
+- `--default-prefix`: LinkML default prefix label
+- `--default-prefix-url`: Namespace URI for `--default-prefix`
+
+#### Example Transformation
+
+Consider the following GraphQL schema:
+
+```graphql
+type Query {
+  vehicle: Vehicle
+}
+
+enum FuelType {
+  GASOLINE
+  ELECTRIC
+}
+
+type Vehicle {
+  id: ID!
+  make: String!
+  year: Int
+  fuelType: FuelType
+}
+```
+
+The LinkML exporter produces:
+
+```yaml
+name: VehicleSchema
+id: https://covesa.global/s2dm
+imports:
+  - linkml:types
+prefixes:
+  linkml: https://w3id.org/linkml/
+  s2dm: https://covesa.global/s2dm
+default_prefix: s2dm
+default_range: string
+enums:
+  FuelType:
+    permissible_values:
+      ELECTRIC: {}
+      GASOLINE: {}
+classes:
+  Vehicle:
+    attributes:
+      id:
+        range: string
+        required: true
+      make:
+        range: string
+        required: true
+      year:
+        range: integer
+      fuelType:
+        range: FuelType
+```
+
+#### Type Mappings
+
+GraphQL scalar types are mapped to LinkML ranges as follows:
+
+| GraphQL Type | LinkML Range |
+| -------------- | -------------- |
+| `String` | `string` |
+| `Int` | `integer` |
+| `Float` | `float` |
+| `Boolean` | `boolean` |
+| `ID` | `string` |
+| `Int8` | `integer` |
+| `UInt8` | `integer` |
+| `Int16` | `integer` |
+| `UInt16` | `integer` |
+| `UInt32` | `integer` |
+| `Int64` | `integer` |
+| `UInt64` | `integer` |
+
+Additional type behavior:
+
+- **Enums**: Converted to LinkML enums with `permissible_values`
+- **Lists**: Converted to `multivalued: true`
+- **Non-null fields**: Converted to `required: true`
+- **Input objects**: Exported as LinkML classes with attributes
+- **Unions**: Converted to `any_of` ranges
+- **Interfaces**: Converted to abstract classes; implementing types map to `is_a`/`mixins`
+- **Custom scalars**: Exported as LinkML types with `base: string`
+
+The exporter skips GraphQL root/introspection types and intermediate expansion types.
+
+#### Directive Support
+
+S2DM directives are converted to LinkML constraints and annotations:
+
+- `@range(min, max)` on output/input fields -> `minimum_value`, `maximum_value`
+- `@cardinality(min, max)` on output/input fields -> `minimum_cardinality`, `maximum_cardinality`
+- `@noDuplicates` on list fields -> `list_elements_unique: true`
+- List item non-null (`[Type!]` / `[Type!]!`) -> `annotations.s2dm_list_item_required: "true"`
+- `@metadata(...)` on object/interface/input object types and output/input fields -> LinkML annotations (`s2dm_metadata_*` keys)
+
+You can call the help for usage reference:
+
+```bash
+s2dm export linkml --help
+```
+
 ### Protocol Buffers (Protobuf)
 
 This exporter translates the given GraphQL schema to [Protocol Buffers](https://protobuf.dev/) (`.proto`) format.
@@ -1595,7 +1730,205 @@ s2dm playground start
 s2dm playground start
 ```
 
+
+## Export RDF
+
+The `export rdf` command materializes a GraphQL schema as RDF triples using the s2dm ontology. It produces two separate graphs: a SKOS graph (concepts, collections, labels) and a data graph (ontology instantiation). Both can be queried with SPARQL.
+
+#### Usage
+```bash
+s2dm export rdf -s <schema_path> -o <output_dir> --namespace <uri>
+```
+
+#### Options
+
+- `-s, --schema PATH`: GraphQL schema file, directory, or URL (required, can be specified multiple times)
+- `-o, --output DIR`: Output directory for RDF artifacts (required)
+- `--namespace URI`: Namespace URI for concept URIs (required)
+- `--prefix TEXT`: Prefix for concept URIs (default: `ns`)
+- `--language TEXT`: BCP 47 language tag for prefLabels (default: `en`)
+- `--output-formats TEXT`: Comma-separated output formats (default: `nt,turtle`). Supported: `json-ld` (or `jsonld`), `nt`, `turtle` (or `ttl`)
+
+#### Output Files
+
+Produces two pairs of files in the output directory (formats configurable via `--output-formats`):
+
+- **skos.{nt,ttl,...}** – SKOS concepts, collections, and prefLabels
+- **data_graph.{nt,ttl,...}** – s2dm ontology instantiation (ObjectType, Field, hasField, etc.)
+
+For SPARQL queries that traverse the schema structure, use `data_graph.nt` or `data_graph.ttl`.
+
+#### Examples
+
+Generate sorted n-triples and Turtle (default):
+
+```bash
+s2dm export rdf \
+  -s spec/ \
+  -o ./rdf-output \
+  --namespace "https://covesa.org/s2dm/mydomain#"
+```
+
+Generate all formats including JSON-LD (for releases):
+
+```bash
+s2dm export rdf \
+  -s spec/ \
+  -o ./rdf-output \
+  --namespace "https://covesa.org/s2dm/mydomain#" \
+  --output-formats nt,turtle,json-ld
+```
+
+Generate only n-triples (for git):
+
+```bash
+s2dm export rdf \
+  -s spec/ \
+  -o ./rdf-output \
+  --namespace "https://covesa.org/s2dm/mydomain#" \
+  --output-formats nt
+```
+
+#### Output Formats
+
+| Format | Alias | Extension | Description |
+|--------|-------|-----------|-------------|
+| `nt` | | `.nt` | Sorted n-triples (deterministic, git-friendly diffs) |
+| `turtle` | `ttl` | `.ttl` | Turtle (human-readable, for consumption) |
+| `json-ld` | `jsonld` | `.jsonld` | JSON-LD (for web and linked data tooling) |
+
+The `nt` format is special-cased to produce lexicographically sorted lines, ensuring deterministic output suitable for version control.
+
+#### Ontology Mapping
+
+The s2dm ontology maps GraphQL SDL elements to RDF as follows:
+
+- **Object types**: `rdf:type skos:Concept, s2dm:ObjectType`
+- **Fields**: `rdf:type skos:Concept, s2dm:Field` with `s2dm:hasOutputType` and `s2dm:usesTypeWrapperPattern`
+- **Enum types**: `rdf:type skos:Concept, s2dm:EnumType` with `s2dm:hasEnumValue`
+- **Enum values**: `rdf:type skos:Concept, s2dm:EnumValue`
+- **Interface types**: `rdf:type skos:Concept, s2dm:InterfaceType`
+- **Input object types**: `rdf:type skos:Concept, s2dm:InputObjectType`
+- **Union types**: `rdf:type skos:Concept, s2dm:UnionType` with `s2dm:hasUnionMember`
+- **Built-in scalars**: `s2dm:Int`, `s2dm:Float`, `s2dm:String`, `s2dm:Boolean`, `s2dm:ID`
+
+## Query Commands
+
+The `query` command group provides predefined SPARQL queries for traversing and analysing an RDF-materialized schema. Each command can either load pre-generated RDF files or materialize on-the-fly from a GraphQL schema.
+
+### Input Options (shared by all query commands)
+
+Provide **one** of the following for the RDF graph:
+
+- `--rdf PATH`: Pre-generated RDF file, directory, or URL. Can be specified multiple times. Supported formats: `.nt`, `.ttl`, `.jsonld`. Directories are recursively scanned for matching files; URLs are downloaded to a temp file.
+- `-s, --schema PATH` + `--namespace URI`: Materialize from GraphQL schema on-the-fly
+
+Specify the query with **one** of:
+
+- `QUERY_NAME`: A predefined query from the builtin registry (see below)
+- `--query-file PATH` / `-q PATH`: Path to a custom `.sparql` file
+
+Additional option:
+
+- `--json`: Output results as JSON instead of a table
+
+### Builtin Query Registry
+
+Predefined queries are loaded from `*.sparql` files in the `sparql_queries/` directory within the s2dm package. Each file stem (e.g. `fields-outputting-enum`) becomes the query name. Run `s2dm query --help` to see the full list.
+
+### fields-outputting-enum
+
+Find all fields whose output type is an enum type.
+
+```bash
+# From a pre-generated file (use data_graph.nt for ontology queries)
+s2dm query fields-outputting-enum --rdf output/data_graph.nt
+
+# From multiple RDF files (graphs are merged)
+s2dm query fields-outputting-enum --rdf output/data_graph.nt --rdf other/skos.nt
+
+# From a directory (all .nt, .ttl, .jsonld files inside are loaded)
+s2dm query fields-outputting-enum --rdf output/
+
+# From a URL
+s2dm query fields-outputting-enum --rdf https://example.org/ontology/data_graph.ttl
+
+# From a GraphQL schema (on-the-fly materialization)
+s2dm query fields-outputting-enum -s spec/ --namespace "https://example.org/#"
+
+# Custom SPARQL file
+s2dm query --query-file my_query.sparql --rdf output/data_graph.nt
+
+# JSON output
+s2dm query fields-outputting-enum --rdf output/data_graph.nt --json
+```
+
+**Example output:**
+
+```
+             fields-outputting-enum
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ field                 ┃ enumType              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Cabin.kind            │ CabinKindEnum         │
+│ InCabinArea2x2.column │ TwoColumnsInCabinEnum │
+│ InCabinArea2x2.row    │ TwoRowsInCabinEnum    │
+└───────────────────────┴───────────────────────┘
+```
+
+### object-types-with-fields
+
+List all object types and their fields.
+
+```bash
+s2dm query object-types-with-fields --rdf output/data_graph.nt
+```
+
+**Example output:**
+
+```
+         object-types-with-fields
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ objectType     ┃ field                 ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Cabin          │ Cabin.doors           │
+│ Cabin          │ Cabin.kind            │
+│ Door           │ Door.isOpen           │
+│ Door           │ Door.window           │
+│ Window         │ Window.isTinted       │
+└────────────────┴───────────────────────┘
+```
+
+### list-type-fields
+
+Find all fields that use a list-like type wrapper pattern (`list`, `nonNullList`, `listOfNonNull`, `nonNullListOfNonNull`).
+
+```bash
+s2dm query list-type-fields --rdf output/data_graph.nt --json
+```
+
+**Example JSON output:**
+
+```json
+[
+  {
+    "field": "https://example.org/my-domain#Cabin.doors",
+    "pattern": "https://covesa.global/models/s2dm#list"
+  }
+]
+```
+
 ## Common Features
+
+### Path Resolution
+
+Commands that accept `-s, --schema` or `--rdf` use a unified path resolver that supports:
+
+- **Files**: A single file path (e.g. `schema.graphql`, `data_graph.nt`)
+- **Directories**: Recursively resolved to matching files (e.g. `spec/` → all `.graphql` files; `output/` → all `.nt`, `.ttl`, `.jsonld` for RDF)
+- **URLs**: HTTP/HTTPS URLs are downloaded to a temporary file. The file extension is inferred from the URL path when multiple formats are supported (e.g. `.ttl` vs `.nt` for RDF).
+
+Schema options accept `.graphql` files; RDF options accept `.nt`, `.ttl`, and `.jsonld`. Multiple paths can be specified; directories expand to a deduplicated, sorted file list.
 
 ### Selection Query Filtering
 
@@ -1688,6 +2021,7 @@ Commands that support `--naming-config`:
 - `check constraints` - naming validation
 - `compose` - naming transformation
 - `export jsonschema` - naming transformation
+- `export linkml` - naming transformation
 - `export protobuf` - naming transformation
 - `export shacl` - naming transformation
 - `export vspec` - naming transformation

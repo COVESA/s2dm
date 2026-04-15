@@ -25,8 +25,12 @@ class VariantEntry(BaseModel):
     def _parse_semantic_version_from_id(id_str: str) -> tuple[int, int]:
         """Parse semantic version (major, minor) from ID string.
 
+        Supports both plain and prefixed formats:
+        - "Vehicle.speed/v1.0"
+        - "ns:Vehicle.speed/v1.0"
+
         Args:
-            id_str: ID string in format "Concept/vM.m" (e.g., "Vehicle.speed/v1.0")
+            id_str: ID string in format "[prefix:]Concept/vM.m"
 
         Returns:
             Tuple of (major, minor) version numbers
@@ -35,10 +39,9 @@ class VariantEntry(BaseModel):
             ValueError: If ID format is invalid
         """
         if "/v" not in id_str:
-            raise ValueError(f"Invalid ID format: {id_str}. Expected format: Concept/vM.m")
+            raise ValueError(f"Invalid ID format: {id_str}. Expected format: [prefix:]Concept/vM.m")
         try:
             variant_part = id_str.split("/v")[-1]
-            # Match semantic version pattern (M.m where M and m are integers)
             match = re.match(r"^(\d+)\.(\d+)$", variant_part)
             if not match:
                 raise ValueError(f"Invalid semantic version format: {variant_part}. Expected format: M.m")
@@ -51,7 +54,7 @@ class VariantEntry(BaseModel):
     @field_validator("id")
     @classmethod
     def validate_id_format(cls, v: str) -> str:
-        """Validate that ID follows the format Concept/vM.m."""
+        """Validate that ID follows the format [prefix:]Concept/vM.m."""
         cls._parse_semantic_version_from_id(v)
         return v
 

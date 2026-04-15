@@ -1,0 +1,10 @@
+# description: Find all fields whose output type is an enum type
+PREFIX s2dm: <https://covesa.global/models/s2dm#>
+
+SELECT ?field ?enumType
+WHERE {
+    ?field a s2dm:Field ;
+           s2dm:hasOutputType ?enumType .
+    ?enumType a s2dm:EnumType .
+}
+ORDER BY ?field
