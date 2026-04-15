@@ -52,7 +52,7 @@ from s2dm.exporters.utils.directive import (
     get_type_directive_location,
     has_given_directive,
 )
-from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
+from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_introspection_type
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
@@ -74,6 +74,47 @@ def is_url(value: str) -> bool:
         return False
 
 
+def download_url_to_temp(url: str, suffix: str, resource_label: str, max_size_mb: int = 10) -> Path:
+    """Download a remote text file to a named temporary file.
+
+    Args:
+        url: HTTP/HTTPS URL to download.
+        suffix: File extension for the temp file (e.g. ``.graphql``, ``.ttl``).
+        resource_label: Human-readable label used in log and error messages (e.g. ``"schema"``).
+        max_size_mb: Maximum allowed file size in megabytes.
+
+    Returns:
+        Path to the downloaded temporary file.
+
+    Raises:
+        RuntimeError: If the download fails or the file exceeds the size limit.
+    """
+    max_size_bytes = max_size_mb * 1024 * 1024
+
+    try:
+        log.info(f"Downloading {resource_label} from {url}")
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+
+        content_length = response.headers.get("content-length")
+        if content_length and int(content_length) > max_size_bytes:
+            raise RuntimeError(
+                f"{resource_label} file too large: "
+                f"{int(content_length) / 1024 / 1024:.1f} MB (max {max_size_mb} MB)"
+            )
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False, encoding="utf-8") as tmp:
+            tmp.write(response.text)
+            tmp.flush()
+            tmp_path = Path(tmp.name)
+
+        log.debug(f"{resource_label} downloaded to temporary file: {tmp_path}")
+        return tmp_path
+
+    except requests.RequestException as e:
+        raise RuntimeError(f"Failed to download {resource_label} from {url}: {e}") from e
+
+
 def download_schema_to_temp(url: str, max_size_mb: int = 10) -> Path:
     """Download schema from URL to a temporary file.
 
@@ -87,29 +128,7 @@ def download_schema_to_temp(url: str, max_size_mb: int = 10) -> Path:
     Raises:
         RuntimeError: If download fails or file exceeds size limit
     """
-    max_size_bytes = max_size_mb * 1024 * 1024
-
-    try:
-        log.info(f"Downloading schema from {url}")
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
-
-        content_length = response.headers.get("content-length")
-        if content_length and int(content_length) > max_size_bytes:
-            raise RuntimeError(
-                f"Schema file too large: {int(content_length) / 1024 / 1024:.1f} MB (max {max_size_mb} MB)"
-            )
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".graphql", delete=False, encoding="utf-8") as temp_file:
-            temp_file.write(response.text)
-            temp_file.flush()
-            temp_path = Path(temp_file.name)
-
-        log.debug(f"Schema downloaded to temporary file: {temp_path}")
-        return temp_path
-
-    except requests.RequestException as e:
-        raise RuntimeError(f"Failed to download schema from {url}: {e}") from e
+    return download_url_to_temp(url, suffix=".graphql", resource_label="Schema", max_size_mb=max_size_mb)
 
 
 def _extract_type_names_from_content(content: str) -> list[str]:
@@ -120,25 +139,31 @@ def _extract_type_names_from_content(content: str) -> list[str]:
     return type_names
 
 
-def resolve_graphql_files(paths: list[Path]) -> list[Path]:
-    """Resolve a list of paths (files and directories) into a flat list of unique GraphQL files.
+def resolve_files_by_extensions(paths: list[Path], extensions: frozenset[str]) -> list[Path]:
+    """Resolve paths and directories into a flat, deduplicated, sorted list of matching files.
+
+    For each entry:
+    - If a file whose suffix is in *extensions*, include it directly.
+    - If a directory, recurse with ``rglob`` for each extension.
 
     Args:
-        paths: List of file or directory paths
+        paths: List of file or directory Paths.
+        extensions: Set of file suffixes to match (e.g. ``frozenset({".graphql"})``).
 
     Returns:
-        Flat list of unique GraphQL file paths (deduplicated and sorted)
+        Deduplicated, sorted list of matching file Paths.
     """
-    resolved_files: set[Path] = set()
+    resolved: set[Path] = set()
 
     for path in paths:
         if path.is_file():
-            resolved_files.add(path)
+            if path.suffix.lower() in extensions:
+                resolved.add(path)
         elif path.is_dir():
-            for file in path.rglob("*.graphql"):
-                resolved_files.add(file)
+            for ext in extensions:
+                resolved.update(path.rglob(f"*{ext}"))
 
-    return list(resolved_files)
+    return sorted(resolved)
 
 
 def build_schema_str_with_optional_source_map(
@@ -800,6 +825,16 @@ def build_annotated_schema(
     return AnnotatedSchema(schema=schema, type_metadata=type_metadata, field_metadata=field_metadata)
 
 
+def remove_introspection_types(schema: GraphQLSchema) -> GraphQLSchema:
+    """Remove GraphQL introspection types from the schema type map."""
+    introspection_types = [type_name for type_name in schema.type_map if is_introspection_type(type_name)]
+
+    for type_name in introspection_types:
+        del schema.type_map[type_name]
+
+    return schema
+
+
 def process_schema(
     schema: GraphQLSchema,
     source_map: dict[str, str],
@@ -835,6 +870,8 @@ def process_schema(
 
     if expanded_instances:
         schema, expansion_type_meta, expansion_field_meta = expand_instances_in_schema(schema, naming_config)
+
+    schema = remove_introspection_types(schema)
 
     return build_annotated_schema(schema, source_map, expansion_type_meta, expansion_field_meta)
 

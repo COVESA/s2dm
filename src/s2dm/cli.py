@@ -12,9 +12,11 @@ import webbrowser
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import urlparse
 
 import rich_click as click
 from graphql import DocumentNode, GraphQLSchema, parse
+from rdflib import Graph
 from rich.traceback import install
 
 from s2dm import __version__, log
@@ -22,8 +24,25 @@ from s2dm.concept.services import iter_all_concepts
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
+from s2dm.exporters.linkml import translate_to_linkml
 from s2dm.exporters.protobuf import translate_to_protobuf
+from s2dm.exporters.rdf_materializer import (
+    FORMAT_ALIASES,
+    FORMAT_REGISTRY,
+    extract_schema_for_rdf,
+    materialize_data_graph,
+    materialize_schema_to_rdf,
+    materialize_skos_graph,
+    write_rdf_artifacts,
+)
 from s2dm.exporters.shacl import translate_to_shacl
+from s2dm.exporters.sparql_queries import QUERIES as SPARQL_QUERIES
+from s2dm.exporters.sparql_queries import (
+    format_results_as_table,
+    load_rdf_graphs,
+    run_query,
+    run_query_from_file,
+)
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
@@ -35,14 +54,14 @@ from s2dm.exporters.utils.schema_loader import (
     build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
-    download_schema_to_temp,
+    download_url_to_temp,
     is_url,
     load_and_process_schema,
     load_schema,
     load_schema_with_source_map,
     print_schema_with_directives_preserved,
     process_schema,
-    resolve_graphql_files,
+    resolve_files_by_extensions,
 )
 from s2dm.exporters.vspec import translate_to_vspec
 from s2dm.registry.concept_uris import create_concept_uri_model
@@ -50,7 +69,7 @@ from s2dm.registry.search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchServ
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.diff_parser import DiffChange
 from s2dm.tools.graphql_inspector import GraphQLInspector, requires_graphql_inspector
-from s2dm.tools.validators import validate_language_tag
+from s2dm.tools.validators import validate_language_tag, validate_linkml_uri
 from s2dm.units.sync import (
     UNITS_README_FILENAME,
     UNITS_README_VERSION_PATTERN,
@@ -72,30 +91,70 @@ def get_free_port() -> int:
         return port
 
 
-class SchemaResolverOption(click.Option):
+class _PathResolverOption(click.Option):
+    """Base click.Option that resolves paths, directories, and URLs into a file list.
+
+    Subclasses declare behaviour via class attributes only:
+
+    - *_url_suffix*: fallback file extension when a URL has no recognisable
+      extension (e.g. ``".graphql"``, ``".ttl"``).
+    - *_resource_label*: human-readable label used in log/error messages.
+    - *_max_size_mb*: download size cap in megabytes.
+    - *_file_extensions*: accepted file extensions for local-path resolution.
+
+    When *_file_extensions* contains more than one entry the suffix is inferred
+    from the URL path first; *_url_suffix* is only used as a fallback.
+    """
+
+    _url_suffix: str
+    _resource_label: str
+    _file_extensions: frozenset[str]
+    _max_size_mb: int = 10
+
+    def _suffix_for_url(self, url: str) -> str:
+        """Return the file suffix to use when downloading *url*.
+
+        When multiple extensions are valid, infer from the URL path so the
+        correct parser is selected (e.g. ``.nt`` vs ``.ttl``).  Falls back to
+        ``_url_suffix`` when the URL has no recognised extension or only one
+        extension is accepted.
+        """
+        if len(self._file_extensions) > 1:
+            inferred = Path(urlparse(url).path).suffix.lower()
+            if inferred in self._file_extensions:
+                return inferred
+        return self._url_suffix
+
     def process_value(self, ctx: click.Context, value: Any) -> list[Path] | None:
+        """Resolve each item to a Path, downloading URLs as needed."""
         value = super().process_value(ctx, value)
         if not value:
             return None
 
-        resolved_paths = []
-
+        raw_paths: list[Path] = []
         for item in value:
             item_str = str(item)
-
             if is_url(item_str):
                 try:
-                    temp_path = download_schema_to_temp(item_str)
-                    resolved_paths.append(temp_path)
+                    suffix = self._suffix_for_url(item_str)
+                    raw_paths.append(download_url_to_temp(item_str, suffix, self._resource_label, self._max_size_mb))
                 except RuntimeError as e:
                     raise click.BadParameter(str(e), ctx=ctx, param=self) from e
             else:
                 path = Path(item_str)
                 if not path.exists():
                     raise click.BadParameter(f"Path '{path}' does not exist.", ctx=ctx, param=self)
-                resolved_paths.append(path)
+                raw_paths.append(path)
 
-        return resolve_graphql_files(resolved_paths)
+        return resolve_files_by_extensions(raw_paths, self._file_extensions)
+
+
+class SchemaResolverOption(_PathResolverOption):
+    """Resolves GraphQL schema paths, directories, and URLs."""
+
+    _url_suffix = ".graphql"
+    _resource_label = "Schema"
+    _file_extensions = frozenset({".graphql"})
 
 
 schema_option = click.option(
@@ -108,6 +167,14 @@ schema_option = click.option(
     multiple=True,
     help="GraphQL schema file, directory, or URL. Can be specified multiple times.",
 )
+
+
+class RdfResolverOption(_PathResolverOption):
+    """Resolves RDF file paths, directories, and URLs."""
+
+    _url_suffix = ".ttl"
+    _resource_label = "RDF"
+    _file_extensions = frozenset(FORMAT_REGISTRY.values())
 
 
 def selection_query_option(required: bool = False) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -165,6 +232,28 @@ def derive_variant_ids_path(base_dir: Path, version_tag: str) -> Path:
     return base_dir / filename
 
 
+def load_diff_changes(diff_file: Path | None) -> list[DiffChange] | None:
+    """Load and validate a structured diff JSON file.
+
+    Args:
+        diff_file: Path to the JSON diff file, or None.
+
+    Returns:
+        List of DiffChange objects, or None if *diff_file* is None.
+    """
+    if diff_file is None:
+        return None
+    try:
+        with open(diff_file, encoding="utf-8") as f:
+            json_data = json.load(f)
+            if not isinstance(json_data, list):
+                raise ValueError("Invalid diff file: expected a JSON array")
+            return [DiffChange.model_validate(change) for change in json_data]
+    except (json.JSONDecodeError, OSError, ValueError) as e:
+        log.error(f"Failed to load diff file from {diff_file}: {e}")
+        sys.exit(1)
+
+
 units_directory_option = click.option(
     "--directory",
     "-d",
@@ -207,6 +296,13 @@ naming_config_option = click.option(
     "-n",
     type=click.Path(exists=True, path_type=Path),
     help="YAML file containing naming configuration",
+)
+
+node_modules_path_option = click.option(
+    "--node-modules-path",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    default=None,
+    help="Path to node_modules directory containing graphql-inspector (auto-detected if not provided).",
 )
 
 
@@ -285,12 +381,6 @@ def export() -> None:
 
 
 @click.group()
-def generate() -> None:
-    """Generate commands."""
-    pass
-
-
-@click.group()
 def registry() -> None:
     """Registry commands for variant IDs and spec history tracking.
 
@@ -301,6 +391,92 @@ def registry() -> None:
     - Generating concept URIs (registry concept-uri)
     """
     pass
+
+
+def _query_epilog() -> str:
+    """Build epilog string listing predefined SPARQL queries with aligned descriptions."""
+    items = sorted(SPARQL_QUERIES.items())
+    width = max(len(name) for name, _ in items) if items else 0
+    return "\n\nPredefined queries:\n\n" + "\n\n".join(f"  {name:<{width}}  {desc}" for name, (desc, _) in items)
+
+
+@click.command(epilog=_query_epilog())
+@click.argument(
+    "query_name",
+    type=click.Choice(sorted(SPARQL_QUERIES.keys()), case_sensitive=False),
+    required=False,
+    default=None,
+)
+@click.option(
+    "--rdf",
+    "rdfs",
+    type=str,
+    cls=RdfResolverOption,
+    default=None,
+    multiple=True,
+    help="Pre-generated RDF file, directory, or URL. Can be specified multiple times.",
+)
+@click.option(
+    "--schema",
+    "-s",
+    "schemas",
+    type=str,
+    cls=SchemaResolverOption,
+    default=None,
+    multiple=True,
+    help="GraphQL schema file/dir (used with --namespace for on-the-fly materialization)",
+)
+@click.option(
+    "--namespace",
+    default=None,
+    help="Namespace URI for on-the-fly materialization (requires --schema)",
+)
+@click.option(
+    "--query-file",
+    "-q",
+    "query_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to a custom .sparql file to execute instead of a predefined query",
+)
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    default=False,
+    help="Output results as JSON instead of a table",
+)
+@optional_output_option
+def query(
+    query_name: str | None,
+    rdfs: list[Path] | None,
+    schemas: list[Path] | None,
+    namespace: str | None,
+    query_file: Path | None,
+    json_output: bool,
+    output: Path | None,
+) -> None:
+    """Run a SPARQL query against an RDF-materialized schema.
+
+    Provide a graph via --rdf (file, directory, or URL) or on-the-fly via
+    -s/--schema + --namespace.  Specify the query with either a predefined
+    QUERY_NAME argument or a custom --query-file.
+    """
+    if query_name and query_file:
+        raise click.UsageError("Provide either QUERY_NAME or --query-file, not both.")
+    if not query_name and not query_file:
+        raise click.UsageError("Provide either QUERY_NAME or --query-file.")
+
+    graph = _resolve_graph(rdfs, schemas, namespace)
+
+    if query_file:
+        results = run_query_from_file(graph, query_file)
+        display_name = query_file.stem
+    else:
+        results = run_query(graph, query_name)  # type: ignore[arg-type]
+        display_name = query_name  # type: ignore[assignment]
+
+    _output_results(results, display_name, json_output=json_output, output=output)
 
 
 @click.group()
@@ -755,6 +931,65 @@ def vspec(
     _ = output.write_text(result)
 
 
+# Export -> linkml
+# ----------
+@export.command
+@schema_option
+@selection_query_option()
+@output_option
+@root_type_option
+@naming_config_option
+@expanded_instances_option
+@click.option(
+    "--id",
+    "-i",
+    "schema_id",
+    type=str,
+    callback=validate_linkml_uri,
+    required=True,
+    help="LinkML schema id",
+)
+@click.option("--name", "-n", "schema_name", type=str, required=True, help="LinkML schema name")
+@click.option("--default-prefix", type=str, required=True, help="LinkML default prefix")
+@click.option(
+    "--default-prefix-url",
+    type=str,
+    callback=validate_linkml_uri,
+    required=True,
+    help="LinkML default prefix URL",
+)
+def linkml(
+    schemas: list[Path],
+    selection_query: Path | None,
+    output: Path,
+    root_type: str | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    schema_id: str,
+    schema_name: str,
+    default_prefix: str,
+    default_prefix_url: str,
+) -> None:
+    """Generate LinkML schema from a given GraphQL schema."""
+    annotated_schema, _, _ = load_and_process_schema(
+        schema_paths=schemas,
+        naming_config_path=naming_config,
+        selection_query_path=selection_query,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+    assert_correct_schema(annotated_schema.schema)
+
+    result = translate_to_linkml(
+        annotated_schema,
+        schema_id,
+        schema_name,
+        default_prefix,
+        default_prefix_url,
+    )
+    _ = output.write_text(result)
+
+
 # Export -> json schema
 # ----------
 @export.command
@@ -925,15 +1160,21 @@ def protobuf(
     _ = output.write_text(result)
 
 
-# Export -> skos
+# Export -> rdf
 # ----------
-@generate.command
+@export.command(name="rdf")
 @schema_option
-@output_option
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
+    required=True,
+    help="Output directory for RDF artifacts (skos and data_graph in selected formats)",
+)
 @click.option(
     "--namespace",
-    default="https://example.org/vss#",
-    help="The namespace for the concept URIs",
+    required=True,
+    help="Namespace URI for concept URIs (e.g. https://covesa.org/s2dm/mydomain#)",
 )
 @click.option(
     "--prefix",
@@ -947,30 +1188,47 @@ def protobuf(
     help="BCP 47 language tag for prefLabels",
     show_default=True,
 )
-def skos_skeleton(
+@click.option(
+    "--output-formats",
+    default="nt,turtle",
+    help=f"Comma-separated output formats. Supported: {', '.join(sorted(set(FORMAT_REGISTRY) | set(FORMAT_ALIASES)))}",
+    show_default=True,
+)
+def rdf(
     schemas: list[Path],
     output: Path,
     namespace: str,
     prefix: str,
     language: str,
+    output_formats: str,
 ) -> None:
-    """Generate SKOS skeleton RDF file from GraphQL schema."""
-    from s2dm.exporters.skos import generate_skos_skeleton
+    """Export GraphQL schema as RDF with separate SKOS and ontology data graphs.
+
+    Produces two pairs of files in the output directory (formats configurable
+    via --output-formats, default: nt, turtle):
+      skos.{nt,ttl}         -- SKOS concepts, collections, and labels
+      data_graph.{nt,ttl}   -- s2dm ontology instantiation
+    """
+    formats = [f.strip() for f in output_formats.split(",") if f.strip()]
 
     try:
-        with output.open("w") as output_stream:
-            generate_skos_skeleton(
-                schema_paths=schemas,
-                output_stream=output_stream,
-                namespace=namespace,
-                prefix=prefix,
-                language=language,
-                validate=True,
-            )
+        graphql_schema = load_schema(schemas)
+        extract = extract_schema_for_rdf(graphql_schema)
+
+        skos_graph = materialize_skos_graph(extract, namespace, prefix, language)
+        data_graph = materialize_data_graph(extract, namespace, prefix, language)
+
+        skos_written = write_rdf_artifacts(skos_graph, output, base_name="skos", formats=formats)
+        data_written = write_rdf_artifacts(data_graph, output, base_name="data_graph", formats=formats)
+
+        written = skos_written + data_written
     except ValueError as e:
-        raise click.ClickException(f"SKOS generation failed: {e}") from e
+        raise click.ClickException(str(e)) from e
     except OSError as e:
-        raise click.ClickException(f"Failed to write output file: {e}") from e
+        raise click.ClickException(f"Failed to write RDF artifacts: {e}") from e
+
+    file_list = ", ".join(str(p) for p in written)
+    log.success(f"RDF artifacts written: {file_list}")
 
 
 # Check -> version bump
@@ -992,6 +1250,7 @@ def skos_skeleton(
     default=False,
     help="Output the version bump type for pipeline usage",
 )
+@node_modules_path_option
 @requires_graphql_inspector
 def version_bump(
     schemas: list[Path], previous: list[Path], output_type: bool, inspector_path: Path | None = None
@@ -1085,6 +1344,7 @@ def check_constraints(schemas: list[Path], naming_config: Path | None) -> None:
 @validate.command(name="graphql")
 @schema_option
 @output_option
+@node_modules_path_option
 @requires_graphql_inspector
 def validate_graphql(schemas: list[Path], output: Path, inspector_path: Path | None = None) -> None:
     """Validates the given GraphQL schema and returns the whole introspection file if valid graphql schema provided."""
@@ -1111,6 +1371,7 @@ def validate_graphql(schemas: list[Path], output: Path, inspector_path: Path | N
     multiple=True,
     help=("GraphQL schema file, directory, or URL to validate against. Can be specified multiple times."),
 )
+@node_modules_path_option
 @requires_graphql_inspector
 def diff_graphql(
     schemas: list[Path], val_schemas: list[Path], output: Path | None, inspector_path: Path | None = None
@@ -1212,12 +1473,19 @@ def export_concept_uri(schemas: list[Path], output: Path | None, namespace: str,
     required=True,
     help="Version tag/identifier for metadata",
 )
+@click.option(
+    "--prefix",
+    type=str,
+    default=None,
+    help="Namespace prefix to prepend to variant IDs (e.g., 'ns' -> ns:Concept/v1.0)",
+)
 def export_id(
     schemas: list[Path],
     output: Path | None,
     previous_ids: Path | None,
     diff_file: Path | None,
     version_tag: str,
+    prefix: str | None,
 ) -> None:
     """Generate variant-based concept IDs for GraphQL schema fields and enums.
 
@@ -1245,18 +1513,7 @@ def export_id(
     if output:
         output = apply_version_tag_suffix(output, version_tag)
 
-    # Load diff output if provided
-    diff_output: list[DiffChange] | None = None
-    if diff_file:
-        try:
-            with open(diff_file, encoding="utf-8") as f:
-                json_data = json.load(f)
-                if not isinstance(json_data, list):
-                    raise ValueError("Invalid diff file: expected a JSON array")
-                diff_output = [DiffChange.model_validate(change) for change in json_data]
-        except (json.JSONDecodeError, OSError, ValueError) as e:
-            log.error(f"Failed to load diff file from {diff_file}: {e}")
-            sys.exit(1)
+    diff_output = load_diff_changes(diff_file)
 
     exporter = IDExporter(
         schema=composed_schema,
@@ -1264,6 +1521,7 @@ def export_id(
         output=output,
         previous_ids_path=previous_ids,
         diff_output=diff_output,
+        namespace_prefix=prefix,
     )
     result = exporter.run()
 
@@ -1316,10 +1574,11 @@ def registry_init(
         schema=composed_schema,
         version_tag=version_tag,
         output=variant_ids_output,
+        namespace_prefix=concept_prefix,
     )
     id_result = id_exporter.run()
 
-    # Extract variant IDs dict (format: {"concept_name": "Concept/vN"})
+    # Extract variant IDs dict (format: {"concept_name": "[prefix:]Concept/vN"})
     variant_ids: dict[str, str] = {}
     for concept_name, variant_entry in id_result.concepts.items():
         variant_ids[concept_name] = variant_entry.id
@@ -1408,18 +1667,7 @@ def registry_update(
     output = apply_version_tag_suffix(output, version_tag)
     ensure_output_parent(output)
 
-    # Load diff output if provided
-    diff_output: list[DiffChange] | None = None
-    if diff_file:
-        try:
-            with open(diff_file, encoding="utf-8") as f:
-                json_data = json.load(f)
-                if not isinstance(json_data, list):
-                    raise ValueError("Invalid diff file: expected a JSON array")
-                diff_output = [DiffChange.model_validate(change) for change in json_data]
-        except (json.JSONDecodeError, OSError, ValueError) as e:
-            log.error(f"Failed to load diff file from {diff_file}: {e}")
-            sys.exit(1)
+    diff_output = load_diff_changes(diff_file)
 
     composed_schema_str = build_schema_str(schemas)
     composed_schema = build_schema_with_query(composed_schema_str)
@@ -1433,10 +1681,11 @@ def registry_update(
         output=variant_ids_output,
         previous_ids_path=previous_ids,
         diff_output=diff_output,
+        namespace_prefix=concept_prefix,
     )
     id_result = id_exporter.run()
 
-    # Extract variant IDs dict (format: {"concept_name": "Concept/vN"})
+    # Extract variant IDs dict (format: {"concept_name": "[prefix:]Concept/vN"})
     variant_ids: dict[str, str] = {}
     for concept_name, variant_entry in id_result.concepts.items():
         variant_ids[concept_name] = variant_entry.id
@@ -1645,6 +1894,7 @@ def search_skos(ttl_file: Path, term: str, case_insensitive: bool, limit: str) -
     required=False,
     help="Output file, only .json allowed here",
 )
+@node_modules_path_option
 @requires_graphql_inspector
 def similar_graphql(schemas: list[Path], keyword: str, output: Path | None, inspector_path: Path | None = None) -> None:
     """Search a type (and only types) in the provided grahql schema. Provide '-k all' for all similarities across the
@@ -1706,14 +1956,83 @@ def stats_graphql(schemas: list[Path]) -> None:
     log.print_dict(type_counts)
 
 
+# ---------------------------------------------------------------------------
+# Query commands (SPARQL-based schema traversal)
+# ---------------------------------------------------------------------------
+
+
+def _resolve_graph(
+    rdfs: list[Path] | None,
+    schemas: list[Path] | None,
+    namespace: str | None,
+) -> Graph:
+    """Resolve an RDF graph from either pre-generated files or on-the-fly materialization.
+
+    Args:
+        rdfs: Resolved RDF file paths (from ``--rdf`` after resolution).
+        schemas: GraphQL schema paths for on-the-fly materialization.
+        namespace: Namespace URI (required with schemas).
+
+    Returns:
+        Loaded or materialized rdflib Graph.
+
+    Raises:
+        click.UsageError: If neither ``--rdf`` nor ``--schema + --namespace``
+            are provided, or if both are provided.
+    """
+    if rdfs and schemas:
+        raise click.UsageError("Provide either --rdf or --schema/--namespace, not both.")
+
+    if rdfs:
+        return load_rdf_graphs(rdfs)
+
+    if schemas:
+        if not namespace:
+            raise click.UsageError("--namespace is required when using --schema.")
+        graphql_schema = load_schema(schemas)
+        return materialize_schema_to_rdf(schema=graphql_schema, namespace=namespace, prefix="ns")
+
+    raise click.UsageError("Provide --rdf or --schema with --namespace.")
+
+
+def _output_results(
+    results: list[dict[str, str]],
+    query_name: str,
+    json_output: bool,
+    output: Path | None = None,
+) -> None:
+    """Print query results as a table or write JSON to a file.
+
+    Args:
+        results: Query result rows.
+        query_name: Name of the query (for table title).
+        json_output: If True, output JSON to stdout (or to *output* file).
+        output: Optional file path to write JSON results to.
+    """
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(results, indent=2), encoding="utf-8")
+        log.success(f"Query results written to {output}")
+        return
+
+    if json_output:
+        click.echo(json.dumps(results, indent=2))
+        return
+
+    compact = format_results_as_table(results)
+    log.print_table(compact, title=query_name)
+    if compact:
+        log.info(f"{len(compact)} result(s).")
+
+
 cli.add_command(check)
 cli.add_command(compose)
 cli.add_command(diff)
 
 export.add_command(avro)
 cli.add_command(export)
-cli.add_command(generate)
 cli.add_command(playground)
+cli.add_command(query)
 cli.add_command(registry)
 cli.add_command(similar)
 cli.add_command(search)

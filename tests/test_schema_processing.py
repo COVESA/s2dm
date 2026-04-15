@@ -150,3 +150,8 @@ class TestLoadAndProcessSchema:
 
         assert "CABIN" not in annotated_schema.schema.type_map
         assert "SEAT" not in annotated_schema.schema.type_map
+
+    def test_load_removes_introspection_types(self, schema_path: list[Path]) -> None:
+        annotated_schema, _, _ = load_and_process_schema(schema_path, None, None, None, False)
+
+        assert not any(type_name.startswith("__") for type_name in annotated_schema.schema.type_map)

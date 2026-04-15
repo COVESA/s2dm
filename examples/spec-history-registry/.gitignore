@@ -6,4 +6,5 @@
 !README.md
 !sample.graphql
 !sample_updated.graphql
+!example_spec_registry_workflow.sh
 # no longer track a YAML units file

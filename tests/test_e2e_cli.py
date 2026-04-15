@@ -1,14 +1,21 @@
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
+from click.exceptions import MissingParameter
 from click.testing import CliRunner
+from linkml_runtime.loaders import yaml_loader
 
 from s2dm.cli import cli
 from s2dm.tools.string import normalize_whitespace
 from tests.conftest import TestSchemaData as TSD
+
+LINKML_SCHEMA_ID = "https://covesa.global/s2dm"
+LINKML_SCHEMA_NAME = "TestSchema"
+LINKML_DEFAULT_PREFIX = "s2dm"
+LINKML_DEFAULT_PREFIX_URL = "https://covesa.global/s2dm"
 
 
 @pytest.fixture(scope="session")
@@ -28,18 +35,23 @@ def tmp_outputs(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return tmp_path_factory.mktemp("e2e_outputs")
 
 
+# ``diff graphql`` structured output requires @graphql-inspector/core in repo node_modules.
+_E2E_NODE_MODULES = Path(__file__).resolve().parents[1] / "node_modules"
+
+
 class ExpectedIds:
     """Expected spec history IDs for the test cases.
 
-    The IDs are variant-based IDs in the format Concept/vN.
+    The IDs are variant-based IDs in the format prefix:Concept/vN (e.g. ns:Field/v1.0)
+    when ``--concept-prefix`` is set (default ``ns`` in registry init/update).
     - Initial IDs are v1.0 (from schema1-1/schema1-2)
     - Updated IDs are v2.0 (from schema2-1/schema2-2, after BREAKING changes)
     """
 
-    VEHICLE_AVG_SPEED_ID = "Vehicle.averageSpeed/v1.0"  # schema1-1.graphql (Float)
-    NEW_VEHICLE_AVG_SPEED_ID = "Vehicle.averageSpeed/v2.0"  # schema2-1.graphql (Int - changed from Float, BREAKING)
-    PERSON_HEIGHT_ID = "Person.height/v1.0"  # schema1-2.graphql (Float)
-    NEW_PERSON_HEIGHT_ID = "Person.height/v2.0"  # schema2-2.graphql (Int - changed from Float, BREAKING)
+    VEHICLE_AVG_SPEED_ID = "ns:Vehicle.averageSpeed/v1.0"  # schema1-1.graphql (Float)
+    NEW_VEHICLE_AVG_SPEED_ID = "ns:Vehicle.averageSpeed/v2.0"  # schema2-1.graphql (Int - changed from Float, BREAKING)
+    PERSON_HEIGHT_ID = "ns:Person.height/v1.0"  # schema1-2.graphql (Float)
+    NEW_PERSON_HEIGHT_ID = "ns:Person.height/v2.0"  # schema2-2.graphql (Int - changed from Float, BREAKING)
 
 
 def contains_value(obj: dict[str, Any] | list[Any] | str, target: str) -> bool:
@@ -145,6 +157,257 @@ def test_export_jsonschema(runner: CliRunner, tmp_outputs: Path, spec_directory:
     assert '"Vehicle_ADAS_ObstacleDetection"' in content
 
 
+def test_export_linkml(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    out = tmp_outputs / "linkml.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        color=False,
+    )
+    assert result.exit_code == 0, result.output
+    assert out.exists()
+
+    schema = cast(dict[str, Any], yaml_loader.load_as_dict(str(out)))
+
+    assert schema["id"] == LINKML_SCHEMA_ID
+    assert schema["name"] == LINKML_SCHEMA_NAME
+    assert "classes" in schema
+    assert "enums" in schema
+    assert "Vehicle" in schema["classes"]
+    assert "Vehicle_ADAS_ObstacleDetection" in schema["classes"]
+
+
+def test_export_linkml_missing_id_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_id.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "schema_id"
+    assert result.exception.format_message() == "Missing option '--id' / '-i'."
+
+
+def test_export_linkml_missing_name_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_name.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "schema_name"
+    assert result.exception.format_message() == "Missing option '--name' / '-n'."
+
+
+def test_export_linkml_missing_default_prefix_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_default_prefix.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "default_prefix"
+    assert result.exception.format_message() == "Missing option '--default-prefix'."
+
+
+def test_export_linkml_missing_default_prefix_url_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_missing_default_prefix_url.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+        ],
+        standalone_mode=False,
+    )
+
+    assert isinstance(result.exception, MissingParameter)
+    assert result.exception.param is not None
+    assert result.exception.param.name == "default_prefix_url"
+    assert result.exception.format_message() == "Missing option '--default-prefix-url'."
+
+
+def test_export_linkml_invalid_id_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_invalid_id.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            "foo bar",
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            LINKML_DEFAULT_PREFIX_URL,
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "not a valid LinkML" in result.output
+    assert "URI value" in result.output
+
+
+def test_export_linkml_invalid_default_prefix_url_fails(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    out = tmp_outputs / "linkml_invalid_default_prefix_url.yaml"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "linkml",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out),
+            "-i",
+            LINKML_SCHEMA_ID,
+            "-n",
+            LINKML_SCHEMA_NAME,
+            "--default-prefix",
+            LINKML_DEFAULT_PREFIX,
+            "--default-prefix-url",
+            "foo bar",
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "not a valid LinkML" in result.output
+    assert "URI value" in result.output
+
+
 def test_export_protobuf(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
     out = tmp_outputs / "schema.proto"
     result = runner.invoke(
@@ -230,15 +493,14 @@ def test_export_protobuf_flattened_naming(
     assert 'optional bool Vehicle_adas_abs_isEngaged = 3 [(field_source) = "Vehicle_ADAS_ABS"];' in content
 
 
-def test_generate_skos_skeleton(
-    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
-) -> None:
-    out = tmp_outputs / "skos_skeleton.ttl"
+def test_export_rdf(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    """Export RDF produces separate SKOS and data graph files."""
+    out_dir = tmp_outputs / "rdf"
     result = runner.invoke(
         cli,
         [
-            "generate",
-            "skos-skeleton",
+            "export",
+            "rdf",
             "-s",
             str(spec_directory),
             "-s",
@@ -248,20 +510,442 @@ def test_generate_skos_skeleton(
             "-s",
             str(units_directory),
             "-o",
-            str(out),
+            str(out_dir),
+            "--namespace",
+            "https://example.org/vss#",
         ],
     )
     assert result.exit_code == 0, result.output
-    assert out.exists()
-    with open(out, encoding="utf-8") as f:
-        content = f.read()
 
-    assert "@prefix skos:" in content
-    assert "skos:Concept" in content
-    assert "skos:prefLabel" in content
+    # Verify all four output files exist
+    assert (out_dir / "skos.nt").exists(), result.output
+    assert (out_dir / "skos.ttl").exists(), result.output
+    assert (out_dir / "data_graph.nt").exists(), result.output
+    assert (out_dir / "data_graph.ttl").exists(), result.output
 
-    assert "Vehicle" in content
-    assert "Vehicle_ADAS_ObstacleDetection" in content
+    # SKOS file assertions
+    skos_ttl = (out_dir / "skos.ttl").read_text()
+    assert "@prefix skos:" in skos_ttl
+    assert "Vehicle" in skos_ttl
+
+    skos_nt = (out_dir / "skos.nt").read_text()
+    assert "Concept" in skos_nt
+    assert "prefLabel" in skos_nt or "skos" in skos_nt
+
+    # Data graph assertions
+    data_nt = (out_dir / "data_graph.nt").read_text()
+    assert "hasField" in data_nt or "hasOutputType" in data_nt
+
+    data_ttl = (out_dir / "data_graph.ttl").read_text()
+    assert "@prefix" in data_ttl
+    assert "Vehicle" in data_ttl
+
+
+def test_generate_schema_rdf_all_formats(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Generate RDF triples in all formats including JSON-LD."""
+    out_dir = tmp_outputs / "schema_rdf_all"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt,ttl,jsonld",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert (out_dir / "skos.nt").exists()
+    assert (out_dir / "skos.ttl").exists()
+    assert (out_dir / "skos.jsonld").exists()
+    assert (out_dir / "data_graph.nt").exists()
+    assert (out_dir / "data_graph.ttl").exists()
+    assert (out_dir / "data_graph.jsonld").exists()
+
+    import json
+
+    jsonld_content = (out_dir / "data_graph.jsonld").read_text()
+    data = json.loads(jsonld_content)
+    assert isinstance(data, list | dict)
+    assert "Vehicle" in jsonld_content
+
+
+def test_generate_schema_rdf_invalid_format(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Invalid output format shows error."""
+    out_dir = tmp_outputs / "schema_rdf_bad"
+    result = runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(out_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "rdfxml",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "Unknown RDF format" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Query command E2E tests
+# ---------------------------------------------------------------------------
+
+
+def test_query_fields_outputting_enum_from_schema(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query fields-outputting-enum via on-the-fly materialization, output to file."""
+    out_file = tmp_outputs / "query_enum_fields.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "fields-outputting-enum",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "--namespace",
+            "https://example.org/vss#",
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+    assert all("field" in row and "enumType" in row for row in data)
+
+
+def test_query_object_types_with_fields_from_rdf(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query object-types-with-fields from a pre-generated .nt file, output to file."""
+    # First generate the RDF (include sample schemas that contain Vehicle)
+    rdf_dir = tmp_outputs / "query_rdf"
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(TSD.SAMPLE1_1),
+            "-s",
+            str(TSD.SAMPLE1_2),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "data_graph.nt"
+    assert nt_file.exists()
+
+    # Then query it
+    out_file = tmp_outputs / "query_obj_types.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "object-types-with-fields",
+            "--rdf",
+            str(nt_file),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+    type_names = {row["objectType"] for row in data}
+    assert any("Vehicle" in t for t in type_names)
+
+
+def test_query_list_type_fields_from_schema(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query list-type-fields via on-the-fly materialization, output to file."""
+    out_file = tmp_outputs / "query_list_fields.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "list-type-fields",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "--namespace",
+            "https://example.org/vss#",
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+
+
+def test_query_no_source_shows_error(runner: CliRunner) -> None:
+    """Query without --rdf or --schema shows usage error."""
+    result = runner.invoke(
+        cli,
+        ["query", "fields-outputting-enum"],
+    )
+    assert result.exit_code != 0
+
+
+def test_query_no_query_name_or_file_shows_error(runner: CliRunner, tmp_outputs: Path, spec_directory: Path) -> None:
+    """Query without QUERY_NAME or --query-file shows usage error."""
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "-s",
+            str(spec_directory),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code != 0
+
+
+def test_query_both_query_name_and_file_shows_error(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Providing both QUERY_NAME and --query-file shows usage error."""
+    sparql_file = tmp_outputs / "custom.sparql"
+    sparql_file.parent.mkdir(parents=True, exist_ok=True)
+    sparql_file.write_text("SELECT * WHERE { ?s ?p ?o } LIMIT 1", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "fields-outputting-enum",
+            "--query-file",
+            str(sparql_file),
+            "-s",
+            str(spec_directory),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code != 0
+
+
+def test_query_both_sources_shows_error(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query with both --rdf and --schema shows usage error."""
+    rdf_dir = tmp_outputs / "query_both_src"
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "data_graph.nt"
+    assert nt_file.exists()
+
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "fields-outputting-enum",
+            "--rdf",
+            str(nt_file),
+            "-s",
+            str(spec_directory),
+            "--namespace",
+            "https://example.org/vss#",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "not both" in result.output.lower() or "Provide either" in result.output
+
+
+def test_query_multiple_rdf_files(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Query merges results from multiple --rdf files."""
+    rdf_dir = tmp_outputs / "multi_rdf"
+
+    # Generate two separate RDF files from the same schema
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "data_graph.nt"
+    assert nt_file.exists()
+
+    # Pass the same file twice; results should be the same as passing once (deduplication)
+    out_file = tmp_outputs / "multi_rdf_result.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "object-types-with-fields",
+            "--rdf",
+            str(nt_file),
+            "--rdf",
+            str(nt_file),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+
+def test_query_rdf_directory(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
+    """Passing a directory to --rdf resolves all RDF files inside it."""
+    rdf_dir = tmp_outputs / "rdf_dir_query"
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    assert (rdf_dir / "data_graph.nt").exists()
+
+    out_file = tmp_outputs / "dir_query_result.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "object-types-with-fields",
+            "--rdf",
+            str(rdf_dir),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+
+def test_query_custom_query_file(
+    runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
+) -> None:
+    """Custom --query-file executes and returns results."""
+    rdf_dir = tmp_outputs / "custom_query_rdf"
+    runner.invoke(
+        cli,
+        [
+            "export",
+            "rdf",
+            "-s",
+            str(spec_directory),
+            "-s",
+            str(units_directory),
+            "-o",
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
+            "--output-formats",
+            "nt",
+        ],
+    )
+    nt_file = rdf_dir / "data_graph.nt"
+    assert nt_file.exists()
+
+    sparql_file = tmp_outputs / "my_query.sparql"
+    sparql_file.write_text(
+        "PREFIX s2dm: <https://covesa.global/models/s2dm#>\n" "SELECT ?type WHERE { ?type a s2dm:ObjectType } LIMIT 5",
+        encoding="utf-8",
+    )
+
+    out_file = tmp_outputs / "custom_query_result.json"
+    result = runner.invoke(
+        cli,
+        [
+            "query",
+            "--query-file",
+            str(sparql_file),
+            "--rdf",
+            str(nt_file),
+            "-o",
+            str(out_file),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out_file.read_text())
+    assert isinstance(data, list)
+    assert len(data) > 0
 
 
 @pytest.mark.parametrize(
@@ -571,7 +1255,7 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
         if found_vehicle and found_person:
             break
     assert found_vehicle, (
-        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id'
+        'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id '
         + f'"{ExpectedIds.VEHICLE_AVG_SPEED_ID}" not found.'
     )
     assert (
@@ -610,27 +1294,30 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: P
 
     # Generate diff between old and new schemas
     diff_file = tmp_outputs / "diff.json"
-    diff_result = runner.invoke(
-        cli,
-        [
-            "diff",
-            "graphql",
-            "-s",
-            str(TSD.SAMPLE1_1),
-            "-s",
-            str(TSD.SAMPLE1_2),
-            "-s",
-            str(units_directory),
-            "--val-schema",
-            str(TSD.SAMPLE2_1),
-            "--val-schema",
-            str(TSD.SAMPLE2_2),
-            "--val-schema",
-            str(units_directory),
-            "-o",
-            str(diff_file),
-        ],
-    )
+    diff_cmd = [
+        "diff",
+        "graphql",
+        "-s",
+        str(spec_directory),
+        "-s",
+        str(TSD.SAMPLE1_1),
+        "-s",
+        str(TSD.SAMPLE1_2),
+        "-s",
+        str(units_directory),
+        "--val-schema",
+        str(spec_directory),
+        "--val-schema",
+        str(TSD.SAMPLE2_1),
+        "--val-schema",
+        str(TSD.SAMPLE2_2),
+        "--val-schema",
+        str(units_directory),
+    ]
+    if _E2E_NODE_MODULES.is_dir():
+        diff_cmd.extend(["--node-modules-path", str(_E2E_NODE_MODULES)])
+    diff_cmd.extend(["-o", str(diff_file)])
+    diff_result = runner.invoke(cli, diff_cmd)
     # diff_graphql exits with code 1 if breaking changes detected, 0 otherwise
     assert diff_result.exit_code in (0, 1), f"diff graphql failed: {diff_result.output}"
     assert diff_file.exists(), f"Diff file {diff_file} was not created. Output: {diff_result.output}"
@@ -742,12 +1429,12 @@ def test_search_graphql(
 
 
 def test_search_skos(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
-    skos_file = tmp_outputs / "test_skos.ttl"
+    rdf_dir = tmp_outputs / "search_rdf"
     result = runner.invoke(
         cli,
         [
-            "generate",
-            "skos-skeleton",
+            "export",
+            "rdf",
             "-s",
             str(spec_directory),
             "-s",
@@ -757,10 +1444,13 @@ def test_search_skos(runner: CliRunner, tmp_outputs: Path, spec_directory: Path,
             "-s",
             str(units_directory),
             "-o",
-            str(skos_file),
+            str(rdf_dir),
+            "--namespace",
+            "https://example.org/vss#",
         ],
     )
     assert result.exit_code == 0, result.output
+    skos_file = rdf_dir / "skos.ttl"
     assert skos_file.exists()
 
     result = runner.invoke(cli, ["search", "skos", "-f", str(skos_file), "-t", "Vehicle"])

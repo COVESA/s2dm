@@ -216,11 +216,10 @@ jobs:
           echo " Git commit and tag"
           echo " Push to repository"
           echo " GitHub release creation"
-          echo " Publish to test PyPI"
+          echo " Publish to PyPI"
 
-      - name: publish to test-pypi
+      - name: publish to pypi
         if: steps.version.outputs.bump != 'none' && (github.event.inputs.dry_run != 'true')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          password: ${{ secrets.PYPI_API_TOKEN }}
