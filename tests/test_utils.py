@@ -22,6 +22,7 @@ from s2dm.exporters.utils import field as field_utils
 from s2dm.exporters.utils import instance_tag as instance_tag_utils
 from s2dm.exporters.utils import schema as schema_utils
 from s2dm.exporters.utils import schema_loader as schema_loader_utils
+from s2dm.utils import url as url_utils
 
 # #########################################################
 # Schema loader utils
@@ -42,7 +43,7 @@ from s2dm.exporters.utils import schema_loader as schema_loader_utils
     ],
 )
 def test_is_url(value: str, expected: bool, description: str) -> None:
-    assert schema_loader_utils.is_url(value) == expected, description
+    assert url_utils.is_url(value) == expected, description
 
 
 def test_download_schema_to_temp_success() -> None:
