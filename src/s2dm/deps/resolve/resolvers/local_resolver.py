@@ -21,18 +21,15 @@ class LocalResolver(Resolver):
             raise ValueError(f"Dependency source directory does not exist: {source_directory}")
         if not source_directory.is_dir():
             raise ValueError(f"Dependency source must be a directory: {source_directory}")
-        
+
         artifact_path = source_directory / dependency.artifact
         if not artifact_path.exists():
             raise ValueError(f"Dependency artifact not found: {artifact_path}")
         if not artifact_path.is_file():
             raise ValueError(f"Dependency artifact must be a file: {artifact_path}")
-        
+
         source = self._resolve_artifact(
             dependency=dependency,
             artifact_path=artifact_path,
         )
-        return ResolvedDependencySource(
-            source=source,
-            resolved_path=str(artifact_path.absolute())
-        )
+        return ResolvedDependencySource(source=source, resolved_path=str(artifact_path.absolute()))

@@ -17,11 +17,11 @@ class ResolverFactory:
             raise ValueError(f"Resolver already registered: {resolver_class.__name__}")
         cls._registered_resolvers.append(resolver_class)
         return resolver_class
-    
+
     @classmethod
     def get_registered_resolvers(cls) -> tuple[type[Resolver], ...]:
         return tuple(cls._registered_resolvers)
-    
+
     @classmethod
     def create_resolver(cls, dependency: DependencyEntry) -> Resolver:
         """Create the matching resolver for the given dependency."""

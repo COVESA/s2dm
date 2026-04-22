@@ -32,11 +32,10 @@ class Resolver(ABC):
             return self._resolve_direct_dependency(artifact_path)
         return self._resolve_bundled_dependency(artifact_path)
 
-
     def _is_direct_dependency(self, dependency: DependencyEntry) -> bool:
         artifact_name = dependency.artifact
         return artifact_name.endswith(".graphql") or artifact_name.endswith(".gql")
-    
+
     def _resolve_direct_dependency(
         self,
         artifact_path: Path,
@@ -46,12 +45,11 @@ class Resolver(ABC):
             raise ValueError(f"Dependency metadata file not found: {metadata_path}")
         if not metadata_path.is_file():
             raise ValueError(f"Dependency metadata path must be a file: {metadata_path}")
-        
+
         return DependencySource(
             schema_path=artifact_path,
             metadata_path=metadata_path,
         )
-
 
     def _resolve_bundled_dependency(
         self,
@@ -62,7 +60,7 @@ class Resolver(ABC):
 
         schema_path = extraction_directory / SCHEMA_FILENAME
         metadata_path = extraction_directory / METADATA_FILENAME
-        
+
         self._require_file(schema_path, artifact_path.name)
         self._require_file(metadata_path, artifact_path.name)
 
@@ -71,11 +69,9 @@ class Resolver(ABC):
             metadata_path=metadata_path,
         )
 
-
     def _require_file(self, path: Path, archive_name: str) -> None:
         if not path.is_file():
             raise ValueError(f"Dependency archive '{archive_name}' must contain {path.name}")
-
 
     def _extract_archive(self, archive_path: Path, extraction_directory: Path) -> None:
         extractor = ExtractorFactory.create_extractor(archive_path)

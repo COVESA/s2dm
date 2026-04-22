@@ -9,6 +9,7 @@ class DependencySource:
     schema_path: Path
     metadata_path: Path
 
+
 @dataclass(frozen=True)
 class ResolvedDependencySource:
     """Dependencies source files resolved paths."""

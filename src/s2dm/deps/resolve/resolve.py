@@ -24,7 +24,7 @@ def clean_resolved_dependencies(working_directory: Path) -> None:
     vendor_root = working_directory / VENDOR_DIRECTORY
     if vendor_root.exists():
         shutil.rmtree(vendor_root)
-        
+
 
 def resolve_dependencies(dependency_config: DependencyConfig, working_directory: Path) -> DependencyLockFile:
     """Resolve configured dependencies into the workspace vendor directory."""
@@ -49,15 +49,11 @@ def _resolve_dependency(
 
     metadata = DependencyMetadata.load(resolved_source.source.metadata_path)
     if dependency.name != metadata.name:
-        raise ValueError(
-            f"Dependency name mismatch for '{dependency.name}': metadata.yaml declares '{metadata.name}'"
-        )
+        raise ValueError(f"Dependency name mismatch for '{dependency.name}': metadata.yaml declares '{metadata.name}'")
 
     vendor_key = (metadata.name, metadata.version)
     if vendor_key in seen_vendor_targets:
-        raise ValueError(
-            f"Duplicate resolved dependency target '{metadata.name}/{metadata.version}' is not allowed"
-        )
+        raise ValueError(f"Duplicate resolved dependency target '{metadata.name}/{metadata.version}' is not allowed")
     seen_vendor_targets.add(vendor_key)
 
     target_directory = vendor_root / metadata.name / metadata.version

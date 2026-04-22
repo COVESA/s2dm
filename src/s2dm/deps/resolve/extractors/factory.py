@@ -5,7 +5,7 @@ from s2dm.deps.resolve.extractors.extractor import Extractor
 
 ExtractorClass = TypeVar("ExtractorClass", bound=type[Extractor])
 
- 
+
 class ExtractorFactory:
     _registered_extractors: list[type[Extractor]] = []
 
