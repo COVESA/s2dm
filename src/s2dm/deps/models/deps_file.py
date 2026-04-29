@@ -1,8 +1,8 @@
-import re
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import urlparse
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from s2dm.deps.models.common import (
     RequiredString,
@@ -11,10 +11,25 @@ from s2dm.deps.models.common import (
     validate_required_string,
 )
 
-REMOTE_REPOSITORY_PATTERN = re.compile(r"^[^/\s]+/[^/\s]+$")
 LocalDependencySource = Annotated[Path, create_absolute_path_validator("`source`")]
-RemoteDependencySource = Annotated[str, StringConstraints(pattern=REMOTE_REPOSITORY_PATTERN.pattern)]
+RemoteDependencySource = str
 DependencySource = LocalDependencySource | RemoteDependencySource
+
+
+def is_dependency_source_url(value: str) -> bool:
+    """Check whether a value is a supported dependency source URL."""
+    try:
+        parsed = urlparse(value)
+    except Exception:
+        return False
+
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return False
+    if parsed.query or parsed.fragment:
+        return False
+
+    path_segments = [path_segment for path_segment in parsed.path.split("/") if path_segment]
+    return len(path_segments) >= 2
 
 
 class DependencyEntry(BaseModel):
@@ -37,9 +52,9 @@ class DependencyEntry(BaseModel):
         source_path = Path(value)
         if source_path.is_absolute():
             return source_path
-        if REMOTE_REPOSITORY_PATTERN.fullmatch(value):
+        if is_dependency_source_url(value):
             return value
-        raise ValueError("Dependency source must be an absolute path or an exact remote '<owner>/<repo>' reference")
+        raise ValueError("Dependency source must be an absolute path or a valid repository URL")
 
 
 class DependencyConfig(BaseModel):

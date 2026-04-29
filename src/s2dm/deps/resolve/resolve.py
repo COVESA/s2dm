@@ -50,6 +50,10 @@ def _resolve_dependency(
     metadata = DependencyMetadata.load(resolved_source.source.metadata_path)
     if dependency.name != metadata.name:
         raise ValueError(f"Dependency name mismatch for '{dependency.name}': metadata.yaml declares '{metadata.name}'")
+    if dependency.version != metadata.version:
+        raise ValueError(
+            f"Dependency version mismatch for '{dependency.name}': metadata.yaml declares '{metadata.version}'"
+        )
 
     vendor_key = (metadata.name, metadata.version)
     if vendor_key in seen_vendor_targets:

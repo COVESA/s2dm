@@ -63,7 +63,6 @@ from s2dm.exporters.utils.schema_loader import (
     build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
-    download_url_to_temp,
     load_and_process_schema,
     load_schema,
     load_schema_with_source_map,
@@ -85,6 +84,7 @@ from s2dm.units.sync import (
     get_latest_qudt_version,
     sync_qudt_units,
 )
+from s2dm.utils.download import download_url_to_temp
 from s2dm.utils.url import is_url
 
 S2DM_HOME = Path.home() / ".s2dm"
@@ -163,7 +163,7 @@ class SchemaResolverOption(_PathResolverOption):
 
     _url_suffix = ".graphql"
     _resource_label = "Schema"
-    _file_extensions = frozenset({".graphql"})
+    _file_extensions = frozenset({".graphql", ".gql"})
 
 
 schema_option = click.option(
