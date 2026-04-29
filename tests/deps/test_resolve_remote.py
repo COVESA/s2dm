@@ -11,7 +11,13 @@ from s2dm.deps.resolve.common import (
     SCHEMA_FILENAME,
 )
 from s2dm.deps.resolve.resolve import resolve_dependencies
-from tests.deps.helpers import load_yaml_file, write_dependency_config
+from tests.deps.helpers import (
+    file_sha256,
+    load_yaml_file,
+    write_dependency_config,
+    write_dependency_lock,
+    write_metadata_file,
+)
 
 
 def test_resolve_dependencies_from_remote_release(
@@ -73,14 +79,11 @@ def test_resolve_dependencies_skips_remote_release_when_lock_and_vendor_exist(tm
     vendored_directory.mkdir(parents=True)
     vendored_schema_path = vendored_directory / SCHEMA_FILENAME
     vendored_schema_path.write_text("type Query { cached: String }\n", encoding="utf-8")
-    (vendored_directory / METADATA_FILENAME).write_text("name: stale\n", encoding="utf-8")
-    (workspace / DEPENDENCY_LOCK_FILENAME).write_text(
-        "dependencies:\n"
-        "  - name: B\n"
-        '    version: "5.1.0"\n'
-        '    resolved_path: "https://github.com/owner/repo/releases/download/5.1.0/schema.graphql"\n'
-        f'    integrity: "{"a" * 64}"\n',
-        encoding="utf-8",
+    write_metadata_file(vendored_directory / METADATA_FILENAME)
+    write_dependency_lock(
+        workspace / DEPENDENCY_LOCK_FILENAME,
+        resolved_path="https://github.com/owner/repo/releases/download/5.1.0/schema.graphql",
+        integrity=file_sha256(vendored_schema_path),
     )
 
     with patch("s2dm.utils.download.requests.get") as mock_get:

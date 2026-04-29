@@ -30,6 +30,9 @@ def resolve_dependencies(dependency_config: DependencyConfig, working_directory:
     """Resolve configured dependencies into the workspace vendor directory."""
     vendor_root = working_directory / VENDOR_DIRECTORY
     existing_lock_entries = _load_existing_lock_entries(working_directory / DEPENDENCY_LOCK_FILENAME)
+    expected_vendor_keys = {(dependency.name, dependency.version) for dependency in dependency_config.dependencies}
+    _remove_unreferenced_vendor_targets(vendor_root, expected_vendor_keys)
+
     seen_vendor_targets: set[tuple[str, str]] = set()
     lock_entries: list[ResolvedDependencyLockEntry] = []
 
@@ -58,23 +61,19 @@ def _resolve_dependency(
     vendored_metadata_path = target_directory / METADATA_FILENAME
 
     existing_lock_entry = existing_lock_entries.get(vendor_key)
-    if existing_lock_entry is not None and vendored_schema_path.is_file() and vendored_metadata_path.is_file():
-        log.info(
-            "Skipping dependency '%s' version '%s' because vendor target already exists",
-            dependency.name,
-            dependency.version,
-        )
-        return ResolvedDependencyLockEntry.model_validate(
-            {
-                "name": dependency.name,
-                "version": dependency.version,
-                "resolved_path": str(existing_lock_entry.resolved_path),
-                "integrity": _sha256_for_file(vendored_schema_path),
-            }
-        )
-
     if target_directory.exists():
-        _remove_existing_vendor_target(target_directory)
+        lock_entry = _resolve_cached_dependency(
+            dependency=dependency,
+            target_directory=target_directory,
+            schema_path=vendored_schema_path,
+            metadata_path=vendored_metadata_path,
+            existing_lock_entry=existing_lock_entry,
+        )
+        log.info(
+            f"Skipping dependency '{dependency.name}' version '{dependency.version}' "
+            "because vendor target already exists"
+        )
+        return lock_entry
 
     log.info(f"Resolving dependency '{dependency.name}' version '{dependency.version}'")
     resolved_source = _resolve_dependency_source(dependency)
@@ -107,6 +106,65 @@ def _resolve_dependency_source(dependency: DependencyEntry) -> ResolvedDependenc
     return resolver.resolve(dependency)
 
 
+def _resolve_cached_dependency(
+    dependency: DependencyEntry,
+    target_directory: Path,
+    schema_path: Path,
+    metadata_path: Path,
+    existing_lock_entry: ResolvedDependencyLockEntry | None,
+) -> ResolvedDependencyLockEntry:
+    if not target_directory.is_dir():
+        raise ValueError(f"Cached dependency target must be a directory: {target_directory}")
+    if not schema_path.is_file():
+        raise ValueError(f"Cached dependency '{dependency.name}/{dependency.version}' is missing {SCHEMA_FILENAME}")
+    if not metadata_path.is_file():
+        raise ValueError(f"Cached dependency '{dependency.name}/{dependency.version}' is missing {METADATA_FILENAME}")
+
+    metadata = DependencyMetadata.load(metadata_path)
+    if dependency.name != metadata.name:
+        raise ValueError(
+            f"Cached dependency '{dependency.name}/{dependency.version}' metadata.yaml declares name '{metadata.name}'"
+        )
+    if dependency.version != metadata.version:
+        raise ValueError(
+            f"Cached dependency '{dependency.name}/{dependency.version}' metadata.yaml declares version "
+            f"'{metadata.version}'"
+        )
+
+    expected_resolved_path = _build_expected_resolved_path(dependency)
+    schema_integrity = _sha256_for_file(schema_path)
+    if existing_lock_entry is None:
+        return ResolvedDependencyLockEntry.model_validate(
+            {
+                "name": dependency.name,
+                "version": dependency.version,
+                "resolved_path": expected_resolved_path,
+                "integrity": schema_integrity,
+            }
+        )
+
+    if existing_lock_entry.name != dependency.name:
+        raise ValueError(
+            f"Lock entry for cached dependency '{dependency.name}/{dependency.version}' declares name "
+            f"'{existing_lock_entry.name}'"
+        )
+    if existing_lock_entry.version != dependency.version:
+        raise ValueError(
+            f"Lock entry for cached dependency '{dependency.name}/{dependency.version}' declares version "
+            f"'{existing_lock_entry.version}'"
+        )
+    if str(existing_lock_entry.resolved_path) != expected_resolved_path:
+        raise ValueError(
+            f"Cached dependency '{dependency.name}/{dependency.version}' resolved_path does not match deps file"
+        )
+    if existing_lock_entry.integrity != schema_integrity:
+        raise ValueError(
+            f"Cached dependency '{dependency.name}/{dependency.version}' schema integrity does not match lock file"
+        )
+
+    return existing_lock_entry
+
+
 def _load_existing_lock_entries(lock_path: Path) -> dict[tuple[str, str], ResolvedDependencyLockEntry]:
     if not lock_path.exists():
         return {}
@@ -115,12 +173,35 @@ def _load_existing_lock_entries(lock_path: Path) -> dict[tuple[str, str], Resolv
     return {(dependency.name, dependency.version): dependency for dependency in lock_file.dependencies}
 
 
+def _remove_unreferenced_vendor_targets(vendor_root: Path, expected_vendor_keys: set[tuple[str, str]]) -> None:
+    if not vendor_root.exists():
+        return
+
+    for dependency_directory in vendor_root.iterdir():
+        if not dependency_directory.is_dir():
+            continue
+        for version_directory in dependency_directory.iterdir():
+            if not version_directory.is_dir():
+                continue
+            vendor_key = (dependency_directory.name, version_directory.name)
+            if vendor_key not in expected_vendor_keys:
+                _remove_existing_vendor_target(version_directory)
+        if not any(dependency_directory.iterdir()):
+            dependency_directory.rmdir()
+
+
 def _remove_existing_vendor_target(target_directory: Path) -> None:
     if target_directory.is_dir():
         shutil.rmtree(target_directory)
         return
 
     target_directory.unlink()
+
+
+def _build_expected_resolved_path(dependency: DependencyEntry) -> str:
+    if isinstance(dependency.source, Path):
+        return str((dependency.source / dependency.artifact).absolute())
+    return f"{dependency.source.rstrip('/')}/releases/download/{dependency.version}/{dependency.artifact}"
 
 
 def _sha256_for_file(path: Path) -> str:

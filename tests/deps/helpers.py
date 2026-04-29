@@ -1,3 +1,4 @@
+import hashlib
 import tarfile
 import zipfile
 from io import BytesIO
@@ -45,6 +46,31 @@ def write_dependency_config(
         ]
     }
     path.write_text(yaml.safe_dump(dependency_payload, sort_keys=False), encoding="utf-8")
+
+
+def write_dependency_lock(
+    path: Path,
+    *,
+    resolved_path: str,
+    integrity: str,
+    name: str = "B",
+    version: str = "5.1.0",
+) -> None:
+    lock_payload = {
+        "dependencies": [
+            {
+                "name": name,
+                "version": version,
+                "resolved_path": resolved_path,
+                "integrity": integrity,
+            }
+        ]
+    }
+    path.write_text(yaml.safe_dump(lock_payload, sort_keys=False), encoding="utf-8")
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def create_archive(

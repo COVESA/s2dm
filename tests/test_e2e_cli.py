@@ -1,9 +1,11 @@
+import hashlib
 import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import yaml
 from click.exceptions import MissingParameter
 from click.testing import CliRunner
 from linkml_runtime.loaders import yaml_loader
@@ -1953,7 +1955,7 @@ def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRu
         assert "name: stale" not in (stale_vendor_directory / "metadata.yaml").read_text(encoding="utf-8")
 
 
-def test_deps_resolve_overwrites_existing_vendor_target_without_lock_entry(runner: CliRunner) -> None:
+def test_deps_resolve_creates_lock_entry_from_existing_vendor_target(runner: CliRunner) -> None:
     with runner.isolated_filesystem():
         working_directory = Path.cwd()
         source_directory = working_directory / "source"
@@ -1986,4 +1988,11 @@ def test_deps_resolve_overwrites_existing_vendor_target_without_lock_entry(runne
         assert (working_directory / "s2dm.deps.lock").exists()
         assert (stale_vendor_directory / "schema.graphql").read_text(
             encoding="utf-8"
-        ) == "type Query { ping: String }\n"
+        ) == "type Query { stale: String }\n"
+
+        lock_data = yaml.safe_load((working_directory / "s2dm.deps.lock").read_text(encoding="utf-8"))
+        dependency = lock_data["dependencies"][0]
+        assert dependency["resolved_path"] == str((source_directory / "schema.graphql").resolve())
+        assert dependency["integrity"] == hashlib.sha256(
+            (stale_vendor_directory / "schema.graphql").read_bytes()
+        ).hexdigest()
