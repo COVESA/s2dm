@@ -224,9 +224,9 @@ Each release includes:
 6. **Version Bump**: Updates version using bump-my-version and creates git tag
 7. **Metadata Generation**: Copies repository metadata and adds the release tag as `version`
 8. **Release Creation**: Creates GitHub release with all generated artifacts including:
-    - Composed GraphQL schema
-    - Release metadata
-    - JSON Schema
+   - Composed GraphQL schema
+   - Release metadata
+   - JSON Schema
    - SHACL shapes
    - RDF export (SKOS + data graph in .nt and .ttl formats) when `rdf-namespace` is provided
    - VSpec
