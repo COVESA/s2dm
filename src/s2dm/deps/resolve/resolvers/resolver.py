@@ -58,16 +58,30 @@ class Resolver(ABC):
         extraction_directory = Path(tempfile.mkdtemp())
         self._extract_archive(artifact_path, extraction_directory)
 
-        schema_path = extraction_directory / SCHEMA_FILENAME
         metadata_path = extraction_directory / METADATA_FILENAME
+        schema_path = self._resolve_archive_schema_path(extraction_directory, artifact_path.name)
 
-        self._require_file(schema_path, artifact_path.name)
         self._require_file(metadata_path, artifact_path.name)
 
         return DependencySource(
             schema_path=schema_path,
             metadata_path=metadata_path,
         )
+
+    def _resolve_archive_schema_path(self, extraction_directory: Path, archive_name: str) -> Path:
+        schema_paths = [
+            schema_path for schema_path in extraction_directory.rglob(SCHEMA_FILENAME) if schema_path.is_file()
+        ]
+        expected_schema_message = f"Dependency archive '{archive_name}' must contain exactly one {SCHEMA_FILENAME}"
+
+        if len(schema_paths) == 1:
+            return schema_paths[0]
+
+        if not schema_paths:
+            raise ValueError(expected_schema_message)
+
+        schema_locations = ", ".join(str(schema_path.relative_to(extraction_directory)) for schema_path in schema_paths)
+        raise ValueError(f"{expected_schema_message}; found {len(schema_paths)}: {schema_locations}")
 
     def _require_file(self, path: Path, archive_name: str) -> None:
         if not path.is_file():

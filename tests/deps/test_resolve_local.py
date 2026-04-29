@@ -91,7 +91,7 @@ def test_resolve_dependencies_from_local_archive(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     archive_path = source_directory / artifact_name
-    create_archive(archive_path)
+    create_archive(archive_path, schema_name=f"graphql/{SCHEMA_FILENAME}")
 
     config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
     write_dependency_config(config_path, str(source_directory.resolve()), artifact_name)
@@ -101,6 +101,42 @@ def test_resolve_dependencies_from_local_archive(
     vendored_directory = workspace / ".s2dm" / "vendor" / "B" / "5.1.0"
     assert (vendored_directory / SCHEMA_FILENAME).exists()
     assert (vendored_directory / METADATA_FILENAME).exists()
+
+
+def test_resolve_dependencies_fails_for_archive_without_schema(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    archive_path = source_directory / "bundle.tar.gz"
+    create_archive(archive_path, schema_name=None)
+
+    config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
+    write_dependency_config(config_path, str(source_directory.resolve()), archive_path.name)
+
+    with pytest.raises(ValueError):
+        resolve_dependencies(DependencyConfig.load(config_path), workspace)
+
+
+def test_resolve_dependencies_fails_for_archive_with_multiple_schemas(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    archive_path = source_directory / "bundle.tar.gz"
+    create_archive(archive_path, schema_name=SCHEMA_FILENAME, extra_graphql_name=f"graphql/{SCHEMA_FILENAME}")
+
+    config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
+    write_dependency_config(config_path, str(source_directory.resolve()), archive_path.name)
+
+    with pytest.raises(ValueError):
+        resolve_dependencies(DependencyConfig.load(config_path), workspace)
 
 
 def test_resolve_dependencies_fails_for_non_fixed_schema_name(

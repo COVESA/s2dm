@@ -51,7 +51,7 @@ Each dependency entry contains:
 - `source`: Absolute local source directory or repository URL
 - `artifact`: Dependency artifact name, such as `schema.graphql`, `bundle.zip`, `bundle.tar`, `bundle.tar.gz`, or `bundle.tgz`
 
-For direct GraphQL dependencies, the artifact must be named `schema.graphql` and `metadata.yaml` must exist next to it. For archive dependencies, the archive must contain `schema.graphql` and `metadata.yaml` at its root.
+For direct GraphQL dependencies, the artifact must be named `schema.graphql` and `metadata.yaml` must exist next to it. For archive dependencies, the archive must contain `metadata.yaml` at its root and exactly one file named `schema.graphql` anywhere in the archive.
 
 Remote dependencies are downloaded from release assets using this URL pattern:
 

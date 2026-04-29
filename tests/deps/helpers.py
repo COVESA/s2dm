@@ -49,7 +49,7 @@ def write_dependency_config(
 
 def create_archive(
     archive_path: Path,
-    schema_name: str = SCHEMA_FILENAME,
+    schema_name: str | None = SCHEMA_FILENAME,
     extra_graphql_name: str | None = None,
 ) -> None:
     schema_content = "type Query { ping: String }\n"
@@ -57,7 +57,8 @@ def create_archive(
 
     if archive_path.name.endswith(".zip"):
         with zipfile.ZipFile(archive_path, mode="w") as zip_file:
-            zip_file.writestr(schema_name, schema_content)
+            if schema_name is not None:
+                zip_file.writestr(schema_name, schema_content)
             zip_file.writestr(METADATA_FILENAME, metadata_content)
             if extra_graphql_name is not None:
                 zip_file.writestr(extra_graphql_name, schema_content)
@@ -76,13 +77,14 @@ def _add_archive_members(
     tar_file: tarfile.TarFile,
     schema_content: str,
     metadata_content: str,
-    schema_name: str,
+    schema_name: str | None,
     extra_graphql_name: str | None,
 ) -> None:
-    schema_bytes = schema_content.encode("utf-8")
-    schema_info = tarfile.TarInfo(name=schema_name)
-    schema_info.size = len(schema_bytes)
-    tar_file.addfile(schema_info, BytesIO(schema_bytes))
+    if schema_name is not None:
+        schema_bytes = schema_content.encode("utf-8")
+        schema_info = tarfile.TarInfo(name=schema_name)
+        schema_info.size = len(schema_bytes)
+        tar_file.addfile(schema_info, BytesIO(schema_bytes))
 
     metadata_bytes = metadata_content.encode("utf-8")
     metadata_info = tarfile.TarInfo(name=METADATA_FILENAME)
