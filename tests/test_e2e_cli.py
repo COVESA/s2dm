@@ -1953,7 +1953,7 @@ def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRu
         assert "name: stale" not in (stale_vendor_directory / "metadata.yaml").read_text(encoding="utf-8")
 
 
-def test_deps_resolve_skips_existing_vendor_target(runner: CliRunner) -> None:
+def test_deps_resolve_overwrites_existing_vendor_target_without_lock_entry(runner: CliRunner) -> None:
     with runner.isolated_filesystem():
         working_directory = Path.cwd()
         source_directory = working_directory / "source"
@@ -1986,4 +1986,4 @@ def test_deps_resolve_skips_existing_vendor_target(runner: CliRunner) -> None:
         assert (working_directory / "s2dm.deps.lock").exists()
         assert (stale_vendor_directory / "schema.graphql").read_text(
             encoding="utf-8"
-        ) == "type Query { stale: String }\n"
+        ) == "type Query { ping: String }\n"

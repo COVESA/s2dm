@@ -55,6 +55,12 @@ class DependencyLockFile(BaseModel):
 
     dependencies: list[ResolvedDependencyLockEntry] = Field(default_factory=list)
 
+    @classmethod
+    def load(cls, path: Path) -> "DependencyLockFile":
+        """Load dependency lock data from disk."""
+        lock_data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        return cls.model_validate(lock_data)
+
     def save(self, path: Path) -> None:
         """Write the dependency lock file to disk."""
         path.parent.mkdir(parents=True, exist_ok=True)

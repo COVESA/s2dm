@@ -50,6 +50,36 @@ def test_resolve_dependencies_from_local_graphql(
     assert len(str(dependency["integrity"])) == 64
 
 
+def test_resolve_dependencies_overwrites_incomplete_vendor_target_with_lock(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / SCHEMA_FILENAME).write_text("type Query { ping: String }\n", encoding="utf-8")
+    write_metadata_file(source_directory / METADATA_FILENAME)
+
+    config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
+    write_dependency_config(config_path, str(source_directory.resolve()), SCHEMA_FILENAME)
+
+    vendored_directory = workspace / ".s2dm" / "vendor" / "B" / "5.1.0"
+    vendored_directory.mkdir(parents=True)
+    (vendored_directory / SCHEMA_FILENAME).write_text("type Query { stale: String }\n", encoding="utf-8")
+    (workspace / DEPENDENCY_LOCK_FILENAME).write_text(
+        "dependencies:\n"
+        "  - name: B\n"
+        '    version: "5.1.0"\n'
+        f'    resolved_path: "{(source_directory / SCHEMA_FILENAME).resolve()}"\n'
+        f'    integrity: "{"a" * 64}"\n',
+        encoding="utf-8",
+    )
+
+    resolve_dependencies(DependencyConfig.load(config_path), workspace)
+
+    assert (vendored_directory / SCHEMA_FILENAME).read_text(encoding="utf-8") == "type Query { ping: String }\n"
+    assert (vendored_directory / METADATA_FILENAME).exists()
+
+
 @pytest.mark.parametrize("artifact_name", ["bundle.zip", "bundle.tar", "bundle.tar.gz"])
 def test_resolve_dependencies_from_local_archive(
     tmp_path: Path,

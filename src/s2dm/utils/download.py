@@ -35,7 +35,7 @@ def download_url_to_path(
     max_size_bytes = max_size_mb * 1024 * 1024
 
     try:
-        log.info(f"Downloading {resource_label} from {url}")
+        log.debug(f"Downloading {resource_label} from {url}")
         response = requests.get(url, timeout=30)
         response.raise_for_status()
 

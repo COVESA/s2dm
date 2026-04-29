@@ -4,6 +4,111 @@ weight: 100
 chapter: false
 ---
 
+## Dependency Commands
+
+### Resolve
+
+The `deps resolve` command resolves dependencies from a dependency manifest, vendors the resolved schema and metadata into the workspace, and writes a lock file with integrity information.
+
+#### Usage
+
+```bash
+s2dm deps resolve [CONFIG_PATH]
+```
+
+#### Options
+
+- `CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
+- `--clean`: Remove the existing lock file and vendored dependencies before resolving
+
+#### Behavior
+
+- Reads dependency entries from the dependency manifest.
+- Resolves local dependencies from absolute source directories.
+- Resolves remote dependencies from repository release assets.
+- Validates that `metadata.yaml` matches the dependency name and version.
+- Vendors resolved files to `.s2dm/vendor/<name>/<version>/`.
+- Writes `s2dm.deps.lock` in the current working directory.
+- Skips resolving a dependency when `s2dm.deps.lock` contains a matching lock entry and the vendored `schema.graphql` and `metadata.yaml` files already exist.
+- Re-resolves and overwrites the vendor target when the lock entry is missing or the vendored files are incomplete.
+
+#### Dependency Manifest
+
+The default manifest file is `s2dm.deps.yaml`:
+
+```yaml
+dependencies:
+  - name: Dependency
+    version: "1.0.0"
+    source: "/absolute/path/to/dependency"
+    artifact: "schema.graphql"
+```
+
+Each dependency entry contains:
+
+- `name`: Dependency name, which must match `metadata.yaml`
+- `version`: Dependency version, which must match `metadata.yaml`
+- `source`: Absolute local source directory or repository URL
+- `artifact`: Dependency artifact name, such as `schema.graphql`, `bundle.zip`, `bundle.tar`, `bundle.tar.gz`, or `bundle.tgz`
+
+For direct GraphQL dependencies, the artifact must be named `schema.graphql` and `metadata.yaml` must exist next to it. For archive dependencies, the archive must contain `schema.graphql` and `metadata.yaml` at its root.
+
+Remote dependencies are downloaded from release assets using this URL pattern:
+
+```text
+<repository-url>/releases/download/<version>/<artifact>
+```
+
+For example, `source: "https://github.com/owner/repo"`, `version: "1.0.0"`, and `artifact: "schema.graphql"` resolves the schema from:
+
+```text
+https://github.com/owner/repo/releases/download/1.0.0/schema.graphql
+```
+
+#### Output Files
+
+- `.s2dm/vendor/<name>/<version>/schema.graphql`: Vendored dependency schema
+- `.s2dm/vendor/<name>/<version>/metadata.yaml`: Vendored dependency metadata
+- `s2dm.deps.lock`: Lock file containing resolved paths and schema integrity hashes
+
+#### Examples
+
+##### Resolve Default Manifest
+
+Resolve dependencies from `s2dm.deps.yaml` in the current working directory:
+
+```bash
+s2dm deps resolve
+```
+
+##### Resolve Explicit Manifest
+
+Resolve dependencies from a specific manifest path:
+
+```bash
+s2dm deps resolve path/to/s2dm.deps.yaml
+```
+
+##### Clean Resolve
+
+Remove existing vendored dependencies and the lock file before resolving:
+
+```bash
+s2dm deps resolve --clean
+```
+
+##### Remote Dependency
+
+Configure a dependency that is published as GitHub release assets:
+
+```yaml
+dependencies:
+  - name: Dependency
+    version: "1.0.0"
+    source: "https://github.com/owner/repo"
+    artifact: "schema.graphql"
+```
+
 ## Check Commands
 
 ### Constraints
