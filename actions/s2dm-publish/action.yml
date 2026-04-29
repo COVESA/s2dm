@@ -12,6 +12,11 @@ inputs:
     required: false
     default: "./spec"
 
+  metadata-path:
+    description: "Path to the repository metadata YAML file relative to the root of the repository"
+    required: false
+    default: "metadata.yaml"
+
   github-token:
     description: "GitHub token for creating releases"
     required: true
@@ -106,6 +111,11 @@ runs:
           exit 1
         fi
 
+        if [ ! -f "${{ inputs.metadata-path }}" ]; then
+          echo "ERROR: Metadata file '${{ inputs.metadata-path }}' not found"
+          exit 1
+        fi
+
         echo "Spec directory validated successfully"
 
     - name: Checkout S2DM repository
@@ -123,6 +133,23 @@ runs:
       uses: astral-sh/setup-uv@v4
       with:
         version: "latest"
+
+    - name: Install yq
+      shell: bash
+      run: |
+        YQ_DIRECTORY="${RUNNER_TEMP:-/tmp}/s2dm-yq"
+        YQ_BINARY="yq_linux_amd64"
+        case "$(uname -s)-$(uname -m)" in
+          Linux-x86_64) YQ_BINARY="yq_linux_amd64" ;;
+          Linux-aarch64) YQ_BINARY="yq_linux_arm64" ;;
+          Darwin-x86_64) YQ_BINARY="yq_darwin_amd64" ;;
+          Darwin-arm64) YQ_BINARY="yq_darwin_arm64" ;;
+          *) echo "ERROR: Unsupported platform for yq: $(uname -s)-$(uname -m)"; exit 1 ;;
+        esac
+        mkdir -p "$YQ_DIRECTORY"
+        curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/${YQ_BINARY}" -o "$YQ_DIRECTORY/yq"
+        chmod +x "$YQ_DIRECTORY/yq"
+        echo "$YQ_DIRECTORY" >> "$GITHUB_PATH"
 
     - name: Install S2DM dependencies
       working-directory: ${{ inputs.s2dm-path }}
@@ -301,6 +328,16 @@ runs:
       run: |
         LATEST_TAG=$(git describe --tags --abbrev=0)
         echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+    - name: Generate release metadata
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      working-directory: ${{ inputs.repository-path }}
+      shell: bash
+      run: |
+        yq -e '(.name != null and .name != "" and .id != null and .id != "" and (has("version") | not))' "${{ inputs.metadata-path }}" > /dev/null
+        LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}" \
+          yq '.version = strenv(LATEST_TAG)' "${{ inputs.metadata-path }}" \
+          > "${{ github.workspace }}/.artifacts/metadata.yaml"
 
     - name: Generate GraphQL diff
       if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
