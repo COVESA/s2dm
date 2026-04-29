@@ -1993,6 +1993,7 @@ def test_deps_resolve_creates_lock_entry_from_existing_vendor_target(runner: Cli
         lock_data = yaml.safe_load((working_directory / "s2dm.deps.lock").read_text(encoding="utf-8"))
         dependency = lock_data["dependencies"][0]
         assert dependency["resolved_path"] == str((source_directory / "schema.graphql").resolve())
-        assert dependency["integrity"] == hashlib.sha256(
-            (stale_vendor_directory / "schema.graphql").read_bytes()
-        ).hexdigest()
+        assert (
+            dependency["integrity"]
+            == hashlib.sha256((stale_vendor_directory / "schema.graphql").read_bytes()).hexdigest()
+        )
