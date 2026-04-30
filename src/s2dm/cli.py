@@ -15,12 +15,21 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 import rich_click as click
+import yaml
 from graphql import DocumentNode, GraphQLSchema, parse
+from pydantic import ValidationError
 from rdflib import Graph
 from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
+from s2dm.deps import (
+    DEFAULT_DEPS_CONFIG_FILENAME,
+    DEPENDENCY_LOCK_FILENAME,
+    clean_resolved_dependencies,
+    resolve_dependencies,
+)
+from s2dm.deps.models import DependencyConfig
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -54,8 +63,6 @@ from s2dm.exporters.utils.schema_loader import (
     build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
-    download_url_to_temp,
-    is_url,
     load_and_process_schema,
     load_schema,
     load_schema_with_source_map,
@@ -77,6 +84,8 @@ from s2dm.units.sync import (
     get_latest_qudt_version,
     sync_qudt_units,
 )
+from s2dm.utils.download import download_url_to_temp
+from s2dm.utils.url import is_url
 
 S2DM_HOME = Path.home() / ".s2dm"
 DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
@@ -154,7 +163,7 @@ class SchemaResolverOption(_PathResolverOption):
 
     _url_suffix = ".graphql"
     _resource_label = "Schema"
-    _file_extensions = frozenset({".graphql"})
+    _file_extensions = frozenset({".graphql", ".gql"})
 
 
 schema_option = click.option(
@@ -375,6 +384,12 @@ def diff() -> None:
 
 
 @click.group()
+def deps() -> None:
+    """Dependency commands."""
+    pass
+
+
+@click.group()
 def export() -> None:
     """Export commands."""
     pass
@@ -477,6 +492,38 @@ def query(
         display_name = query_name  # type: ignore[assignment]
 
     _output_results(results, display_name, json_output=json_output, output=output)
+
+
+@deps.command(name="resolve")
+@click.argument(
+    "config_path",
+    required=False,
+    type=click.Path(dir_okay=False, path_type=Path),
+)
+@click.option("--clean", is_flag=True, default=False, help="Remove the lock file and vendored dependencies first.")
+def deps_resolve(config_path: Path | None, clean: bool) -> None:
+    """Resolve dependencies from the configured dependency manifest."""
+    working_directory = Path.cwd()
+    resolved_config_path = config_path if config_path is not None else working_directory / DEFAULT_DEPS_CONFIG_FILENAME
+
+    try:
+        if clean:
+            with clean_resolved_dependencies(working_directory):
+                lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory)
+        else:
+            lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory)
+        log.success(f"Resolved dependencies and wrote lock file to {lock_path}")
+    except (OSError, RuntimeError, TypeError, ValueError, ValidationError, yaml.YAMLError) as error:
+        log.error(f"Dependency resolution failed: {error}")
+        sys.exit(1)
+
+
+def _resolve_dependencies_to_lock(resolved_config_path: Path, working_directory: Path) -> Path:
+    dependency_config = DependencyConfig.load(resolved_config_path)
+    lock_file = resolve_dependencies(dependency_config, working_directory)
+    lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
+    lock_file.save(lock_path)
+    return lock_path
 
 
 @click.group()
@@ -2027,6 +2074,7 @@ def _output_results(
 
 cli.add_command(check)
 cli.add_command(compose)
+cli.add_command(deps)
 cli.add_command(diff)
 
 export.add_command(avro)

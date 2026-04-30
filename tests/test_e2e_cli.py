@@ -1,9 +1,11 @@
+import hashlib
 import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import yaml
 from click.exceptions import MissingParameter
 from click.testing import CliRunner
 from linkml_runtime.loaders import yaml_loader
@@ -1538,6 +1540,27 @@ def test_compose_graphql(runner: CliRunner, tmp_outputs: Path, spec_directory: P
     assert "Successfully composed schema" in normalize_whitespace(result.output)
 
 
+def test_compose_graphql_accepts_gql_schema_file(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        schema_path = Path("schema.gql")
+        schema_path.write_text("type Query { ping: String }\n", encoding="utf-8")
+        output_path = Path("composed.graphql")
+
+        result = runner.invoke(
+            cli,
+            [
+                "compose",
+                "-s",
+                str(schema_path),
+                "-o",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert output_path.exists()
+
+
 def test_compose_graphql_with_root_type(
     runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
 ) -> None:
@@ -1869,3 +1892,146 @@ def test_units_sync_cli(
     assert (
         "Would generate" in normalize_whitespace(result.output) or "dry" in normalize_whitespace(result.output).lower()
     )
+
+
+def test_deps_resolve_uses_default_config_path_from_current_working_directory(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: B\nid: urn:test:B\nversion: 5.1.0\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: B\n"
+            '    version: "5.1.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (working_directory / ".s2dm" / "vendor" / "B" / "5.1.0" / "schema.graphql").exists()
+
+
+def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\npreferred_prefix: demo\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        stale_vendor_directory = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0"
+        stale_vendor_directory.mkdir(parents=True)
+        (stale_vendor_directory / "schema.graphql").write_text("type Query { stale: String }\n", encoding="utf-8")
+        (stale_vendor_directory / "metadata.yaml").write_text("name: stale\n", encoding="utf-8")
+        (working_directory / "s2dm.deps.lock").write_text("dependencies: []\n", encoding="utf-8")
+
+        result = runner.invoke(cli, ["deps", "resolve", "--clean"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (stale_vendor_directory / "schema.graphql").read_text(
+            encoding="utf-8"
+        ) == "type Query { ping: String }\n"
+        assert "name: stale" not in (stale_vendor_directory / "metadata.yaml").read_text(encoding="utf-8")
+        assert not list(working_directory.glob("s2dm.deps.lock.clean-backup.*"))
+        assert not list((working_directory / ".s2dm").glob("vendor.clean-backup.*"))
+
+
+def test_deps_resolve_clean_restores_existing_lock_and_vendor_state_on_failure(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        vendor_directory = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0"
+        vendor_directory.mkdir(parents=True)
+        (vendor_directory / "schema.graphql").write_text("type Query { cached: String }\n", encoding="utf-8")
+        (vendor_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        lock_path = working_directory / "s2dm.deps.lock"
+        lock_content = "dependencies: []\n"
+        lock_path.write_text(lock_content, encoding="utf-8")
+
+        result = runner.invoke(cli, ["deps", "resolve", "--clean"])
+
+        assert result.exit_code == 1, result.output
+        assert lock_path.read_text(encoding="utf-8") == lock_content
+        assert (vendor_directory / "schema.graphql").read_text(encoding="utf-8") == "type Query { cached: String }\n"
+        assert (vendor_directory / "metadata.yaml").exists()
+        assert not list(working_directory.glob("s2dm.deps.lock.clean-backup.*"))
+        assert not list((working_directory / ".s2dm").glob("vendor.clean-backup.*"))
+
+
+def test_deps_resolve_creates_lock_entry_from_existing_vendor_target(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\npreferred_prefix: demo\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        stale_vendor_directory = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0"
+        stale_vendor_directory.mkdir(parents=True)
+        (stale_vendor_directory / "schema.graphql").write_text("type Query { stale: String }\n", encoding="utf-8")
+        (stale_vendor_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\npreferred_prefix: demo\n",
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (stale_vendor_directory / "schema.graphql").read_text(
+            encoding="utf-8"
+        ) == "type Query { stale: String }\n"
+
+        lock_data = yaml.safe_load((working_directory / "s2dm.deps.lock").read_text(encoding="utf-8"))
+        dependency = lock_data["dependencies"][0]
+        assert dependency["resolved_path"] == str((source_directory / "schema.graphql").resolve())
+        assert (
+            dependency["integrity"]
+            == hashlib.sha256((stale_vendor_directory / "schema.graphql").read_bytes()).hexdigest()
+        )

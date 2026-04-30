@@ -12,6 +12,11 @@ inputs:
     required: false
     default: "./spec"
 
+  metadata-path:
+    description: "Path to the repository metadata YAML file relative to the root of the repository"
+    required: false
+    default: "metadata.yaml"
+
   github-token:
     description: "GitHub token for creating releases"
     required: true
@@ -106,6 +111,11 @@ runs:
           exit 1
         fi
 
+        if [ ! -f "${{ inputs.metadata-path }}" ]; then
+          echo "ERROR: Metadata file '${{ inputs.metadata-path }}' not found"
+          exit 1
+        fi
+
         echo "Spec directory validated successfully"
 
     - name: Checkout S2DM repository
@@ -123,6 +133,23 @@ runs:
       uses: astral-sh/setup-uv@v4
       with:
         version: "latest"
+
+    - name: Install yq
+      shell: bash
+      run: |
+        YQ_DIRECTORY="${RUNNER_TEMP:-/tmp}/s2dm-yq"
+        YQ_BINARY="yq_linux_amd64"
+        case "$(uname -s)-$(uname -m)" in
+          Linux-x86_64) YQ_BINARY="yq_linux_amd64" ;;
+          Linux-aarch64) YQ_BINARY="yq_linux_arm64" ;;
+          Darwin-x86_64) YQ_BINARY="yq_darwin_amd64" ;;
+          Darwin-arm64) YQ_BINARY="yq_darwin_arm64" ;;
+          *) echo "ERROR: Unsupported platform for yq: $(uname -s)-$(uname -m)"; exit 1 ;;
+        esac
+        mkdir -p "$YQ_DIRECTORY"
+        curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/${YQ_BINARY}" -o "$YQ_DIRECTORY/yq"
+        chmod +x "$YQ_DIRECTORY/yq"
+        echo "$YQ_DIRECTORY" >> "$GITHUB_PATH"
 
     - name: Install S2DM dependencies
       working-directory: ${{ inputs.s2dm-path }}
@@ -253,7 +280,7 @@ runs:
       run: |
         s2dm export vspec -s ${{ inputs.spec-path }} -o ${{ github.workspace }}/.artifacts/vspec/schema.vspec
 
-    - name: Bump version and push tags
+    - name: Bump version
       if: steps.version-check.outputs.CONTINUE == 'true'
       working-directory: ${{ inputs.repository-path }}
       shell: bash
@@ -263,18 +290,23 @@ runs:
 
         PREV_TAG="${{ steps.download-release.outputs.PREV_TAG }}"
         if [ -n "$PREV_TAG" ]; then
-          CURRENT_VERSION="${PREV_TAG#v}"
+          TAG_VERSION="${PREV_TAG#v}"
         else
-          CURRENT_VERSION="0.0.0"
+          TAG_VERSION="0.0.0"
         fi
 
-        echo "Current version (from latest release): $CURRENT_VERSION"
+        TOML_VERSION=$(bump-my-version show current_version --config-file ./.bumpversion.toml 2>/dev/null || echo "")
+        echo "Current version (from latest release tag): $TAG_VERSION"
+        echo "Current version (from .bumpversion.toml):  $TOML_VERSION"
+        if [ -n "$TOML_VERSION" ] && [ "$TAG_VERSION" != "$TOML_VERSION" ]; then
+          echo "::warning::Version drift: latest release tag is v$TAG_VERSION but .bumpversion.toml says $TOML_VERSION. Bump will be computed from .toml."
+        fi
+
         echo "Bumping version to ${{ steps.version-check.outputs.VERSION_BUMP }}"
 
         HEAD_BEFORE=$(git rev-parse HEAD)
         bump-my-version bump ${{ steps.version-check.outputs.VERSION_BUMP }} \
-          --config-file ./.bumpversion.toml \
-          --current-version "$CURRENT_VERSION"
+          --config-file ./.bumpversion.toml
         HEAD_AFTER=$(git rev-parse HEAD)
 
         if [ "$HEAD_BEFORE" = "$HEAD_AFTER" ]; then
@@ -289,9 +321,7 @@ runs:
           exit 1
         fi
 
-        echo "Version bumped successfully: $CURRENT_VERSION -> ${NEW_TAG#v} (tag: $NEW_TAG)"
-        git push origin ${{ github.ref_name }}
-        git push origin --tags
+        echo "Version bumped locally: ${NEW_TAG#v} (tag: $NEW_TAG). Push and release deferred to final step."
 
     - name: Get latest tag
       if: steps.version-check.outputs.CONTINUE == 'true'
@@ -301,6 +331,16 @@ runs:
       run: |
         LATEST_TAG=$(git describe --tags --abbrev=0)
         echo "LATEST_TAG=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+    - name: Generate release metadata
+      if: steps.version-check.outputs.CONTINUE == 'true'
+      working-directory: ${{ inputs.repository-path }}
+      shell: bash
+      run: |
+        yq -e '(.name != null and .name != "" and .id != null and .id != "" and (has("version") | not))' "${{ inputs.metadata-path }}" > /dev/null
+        LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}" \
+          yq '.version = strenv(LATEST_TAG)' "${{ inputs.metadata-path }}" \
+          > "${{ github.workspace }}/.artifacts/metadata.yaml"
 
     - name: Generate GraphQL diff
       if: steps.version-check.outputs.CONTINUE == 'true' && steps.version-check.outputs.IS_INITIAL_RELEASE != 'true'
@@ -400,7 +440,7 @@ runs:
           echo "No history directory found (this is normal for releases with no changes)"
         fi
 
-    - name: Create release
+    - name: Publish release
       if: steps.version-check.outputs.CONTINUE == 'true' && (steps.version-check.outputs.IS_INITIAL_RELEASE == 'true' || steps.generate-diff.outputs.HAS_CHANGES == 'true')
       working-directory: ${{ inputs.repository-path }}
       env:
@@ -409,7 +449,14 @@ runs:
       run: |
         LATEST_TAG="${{ steps.get-latest-tag.outputs.LATEST_TAG }}"
         tar -czf release.tar.gz -C ${{ github.workspace }}/.artifacts .
+
+        # Push the version-bump commit. The local tag created by bump-my-version
+        # is intentionally NOT pushed — gh release create below creates the
+        # remote tag together with the release in a single atomic operation.
+        git push origin ${{ github.ref_name }}
+
         gh release create "${LATEST_TAG}" \
+          --target "$(git rev-parse HEAD)" \
           --title "Release ${LATEST_TAG}" \
           --notes "This release contains the artifacts from the automated publishing workflow." \
           release.tar.gz
