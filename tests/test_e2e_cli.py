@@ -1987,9 +1987,7 @@ def test_deps_resolve_clean_restores_existing_lock_and_vendor_state_on_failure(r
 
         assert result.exit_code == 1, result.output
         assert lock_path.read_text(encoding="utf-8") == lock_content
-        assert (vendor_directory / "schema.graphql").read_text(
-            encoding="utf-8"
-        ) == "type Query { cached: String }\n"
+        assert (vendor_directory / "schema.graphql").read_text(encoding="utf-8") == "type Query { cached: String }\n"
         assert (vendor_directory / "metadata.yaml").exists()
         assert not list(working_directory.glob("s2dm.deps.lock.clean-backup.*"))
         assert not list((working_directory / ".s2dm").glob("vendor.clean-backup.*"))
