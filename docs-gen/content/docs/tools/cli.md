@@ -19,7 +19,7 @@ s2dm deps resolve [CONFIG_PATH]
 #### Options
 
 - `CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
-- `--clean`: Remove the existing lock file and vendored dependencies before resolving
+- `--clean`: Resolve from a clean dependency state while restoring the previous lock file and vendored dependencies if resolution fails
 
 #### Behavior
 
@@ -29,8 +29,11 @@ s2dm deps resolve [CONFIG_PATH]
 - Validates that `metadata.yaml` matches the dependency name and version.
 - Vendors resolved files to `.s2dm/vendor/<name>/<version>/`.
 - Writes `s2dm.deps.lock` in the current working directory.
-- Skips resolving a dependency when `s2dm.deps.lock` contains a matching lock entry and the vendored `schema.graphql` and `metadata.yaml` files already exist.
-- Re-resolves and overwrites the vendor target when the lock entry is missing or the vendored files are incomplete.
+- Skips resolving a dependency when the vendored files already exist and match the dependency manifest, metadata, lock entry, and schema integrity.
+- Creates a missing lock entry from an existing valid vendored dependency without re-downloading.
+- Fails when a referenced vendored dependency does not match the dependency manifest, metadata, lock entry, or schema integrity.
+- Removes vendored dependency targets that are no longer referenced by the dependency manifest.
+- With `--clean`, moves the existing lock file and vendored dependencies aside temporarily, deletes those backups after success, and restores them if resolution fails.
 
 #### Dependency Manifest
 
@@ -91,7 +94,7 @@ s2dm deps resolve path/to/s2dm.deps.yaml
 
 ##### Clean Resolve
 
-Remove existing vendored dependencies and the lock file before resolving:
+Resolve from a clean dependency state while preserving the previous lock file and vendored dependencies if resolution fails:
 
 ```bash
 s2dm deps resolve --clean

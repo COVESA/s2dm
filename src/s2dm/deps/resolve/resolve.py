@@ -1,6 +1,10 @@
 import hashlib
 import shutil
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
+from uuid import uuid4
 
 from s2dm import log
 from s2dm.deps.models import (
@@ -15,15 +19,73 @@ from s2dm.deps.resolve.common import DEPENDENCY_LOCK_FILENAME, METADATA_FILENAME
 from s2dm.deps.resolve.factory import ResolverFactory
 
 
-def clean_resolved_dependencies(working_directory: Path) -> None:
-    """Remove lock file and vendored dependencies from the workspace."""
-    lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
-    if lock_path.exists():
-        lock_path.unlink()
+@dataclass
+class CleanDependencyBackup:
+    """Temporary backup for a clean dependency resolution."""
 
+    lock_path: Path
+    vendor_root: Path
+    lock_backup_path: Path | None
+    vendor_backup_path: Path | None
+
+    def commit(self) -> None:
+        """Delete backups after a successful clean dependency resolution."""
+        if self.lock_backup_path is not None and self.lock_backup_path.exists():
+            self.lock_backup_path.unlink()
+        if self.vendor_backup_path is not None and self.vendor_backup_path.exists():
+            shutil.rmtree(self.vendor_backup_path)
+
+    def restore(self) -> None:
+        """Restore backups after a failed clean dependency resolution."""
+        _remove_path_if_exists(self.lock_path)
+        _remove_path_if_exists(self.vendor_root)
+
+        if self.lock_backup_path is not None and self.lock_backup_path.exists():
+            self.lock_backup_path.rename(self.lock_path)
+        if self.vendor_backup_path is not None and self.vendor_backup_path.exists():
+            self.vendor_root.parent.mkdir(parents=True, exist_ok=True)
+            self.vendor_backup_path.rename(self.vendor_root)
+
+
+@contextmanager
+def clean_resolved_dependencies(working_directory: Path) -> Iterator[None]:
+    """Temporarily remove lock file and vendored dependencies, restoring them on failure."""
+    backup = _begin_clean_resolved_dependencies(working_directory)
+    try:
+        yield
+    except BaseException as error:
+        try:
+            backup.restore()
+        except OSError as restore_error:
+            raise RuntimeError(
+                f"Dependency clean restore failed after resolution error: {error}; restore error: {restore_error}"
+            ) from restore_error
+        raise
+    else:
+        backup.commit()
+
+
+def _begin_clean_resolved_dependencies(working_directory: Path) -> CleanDependencyBackup:
+    lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
     vendor_root = working_directory / VENDOR_DIRECTORY
+    backup_suffix = uuid4().hex
+    lock_backup_path = None
+    vendor_backup_path = None
+
+    if lock_path.exists():
+        lock_backup_path = lock_path.with_name(f"{lock_path.name}.clean-backup.{backup_suffix}")
+        lock_path.rename(lock_backup_path)
+
     if vendor_root.exists():
-        shutil.rmtree(vendor_root)
+        vendor_backup_path = vendor_root.with_name(f"{vendor_root.name}.clean-backup.{backup_suffix}")
+        vendor_root.rename(vendor_backup_path)
+
+    return CleanDependencyBackup(
+        lock_path=lock_path,
+        vendor_root=vendor_root,
+        lock_backup_path=lock_backup_path,
+        vendor_backup_path=vendor_backup_path,
+    )
 
 
 def resolve_dependencies(dependency_config: DependencyConfig, working_directory: Path) -> DependencyLockFile:
@@ -191,11 +253,16 @@ def _remove_unreferenced_vendor_targets(vendor_root: Path, expected_vendor_keys:
 
 
 def _remove_existing_vendor_target(target_directory: Path) -> None:
-    if target_directory.is_dir():
-        shutil.rmtree(target_directory)
-        return
+    _remove_path_if_exists(target_directory)
 
-    target_directory.unlink()
+
+def _remove_path_if_exists(path: Path) -> None:
+    if not path.exists():
+        return
+    if path.is_dir():
+        shutil.rmtree(path)
+        return
+    path.unlink()
 
 
 def _build_expected_resolved_path(dependency: DependencyEntry) -> str:

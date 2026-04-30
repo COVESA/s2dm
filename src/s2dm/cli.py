@@ -508,15 +508,22 @@ def deps_resolve(config_path: Path | None, clean: bool) -> None:
 
     try:
         if clean:
-            clean_resolved_dependencies(working_directory)
-        dependency_config = DependencyConfig.load(resolved_config_path)
-        lock_file = resolve_dependencies(dependency_config, working_directory)
-        lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
-        lock_file.save(lock_path)
+            with clean_resolved_dependencies(working_directory):
+                lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory)
+        else:
+            lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory)
         log.success(f"Resolved dependencies and wrote lock file to {lock_path}")
     except (OSError, RuntimeError, TypeError, ValueError, ValidationError, yaml.YAMLError) as error:
         log.error(f"Dependency resolution failed: {error}")
         sys.exit(1)
+
+
+def _resolve_dependencies_to_lock(resolved_config_path: Path, working_directory: Path) -> Path:
+    dependency_config = DependencyConfig.load(resolved_config_path)
+    lock_file = resolve_dependencies(dependency_config, working_directory)
+    lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
+    lock_file.save(lock_path)
+    return lock_path
 
 
 @click.group()
