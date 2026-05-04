@@ -495,10 +495,11 @@ def query(
 
 
 @deps.command(name="resolve")
-@click.argument(
+@click.option(
+    "--config",
     "config_path",
-    required=False,
     type=click.Path(dir_okay=False, path_type=Path),
+    help="Dependency manifest file. Defaults to s2dm.deps.yaml in the current working directory.",
 )
 @click.option("--clean", is_flag=True, default=False, help="Remove the lock file and vendored dependencies first.")
 def deps_resolve(config_path: Path | None, clean: bool) -> None:

@@ -13,12 +13,12 @@ The `deps resolve` command resolves dependencies from a dependency manifest, ven
 #### Usage
 
 ```bash
-s2dm deps resolve [CONFIG_PATH]
+s2dm deps resolve [--config CONFIG_PATH]
 ```
 
 #### Options
 
-- `CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
+- `--config CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
 - `--clean`: Resolve from a clean dependency state while restoring the previous lock file and vendored dependencies if resolution fails
 
 #### Behavior
@@ -89,7 +89,7 @@ s2dm deps resolve
 Resolve dependencies from a specific manifest path:
 
 ```bash
-s2dm deps resolve path/to/s2dm.deps.yaml
+s2dm deps resolve --config path/to/s2dm.deps.yaml
 ```
 
 ##### Clean Resolve

@@ -1930,7 +1930,8 @@ def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRu
             "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\npreferred_prefix: demo\n",
             encoding="utf-8",
         )
-        (working_directory / "s2dm.deps.yaml").write_text(
+        config_path = working_directory / "custom.deps.yaml"
+        config_path.write_text(
             "dependencies:\n"
             "  - name: DemoDependency\n"
             '    version: "1.0.0"\n'
@@ -1945,7 +1946,7 @@ def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRu
         (stale_vendor_directory / "metadata.yaml").write_text("name: stale\n", encoding="utf-8")
         (working_directory / "s2dm.deps.lock").write_text("dependencies: []\n", encoding="utf-8")
 
-        result = runner.invoke(cli, ["deps", "resolve", "--clean"])
+        result = runner.invoke(cli, ["deps", "resolve", "--config", str(config_path), "--clean"])
 
         assert result.exit_code == 0, result.output
         assert (working_directory / "s2dm.deps.lock").exists()
