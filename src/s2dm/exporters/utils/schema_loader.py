@@ -2,9 +2,7 @@ import re
 import tempfile
 from pathlib import Path
 from typing import cast
-from urllib.parse import urlparse
 
-import requests
 from ariadne import load_schema_from_path
 from graphql import (
     DocumentNode,
@@ -56,63 +54,7 @@ from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
-
-
-def is_url(value: str) -> bool:
-    """Check if value is a valid HTTP/HTTPS URL.
-
-    Args:
-        value: String to check
-
-    Returns:
-        True if value is a valid HTTP/HTTPS URL, False otherwise
-    """
-    try:
-        parsed = urlparse(value)
-        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-    except Exception:
-        return False
-
-
-def download_url_to_temp(url: str, suffix: str, resource_label: str, max_size_mb: int = 10) -> Path:
-    """Download a remote text file to a named temporary file.
-
-    Args:
-        url: HTTP/HTTPS URL to download.
-        suffix: File extension for the temp file (e.g. ``.graphql``, ``.ttl``).
-        resource_label: Human-readable label used in log and error messages (e.g. ``"schema"``).
-        max_size_mb: Maximum allowed file size in megabytes.
-
-    Returns:
-        Path to the downloaded temporary file.
-
-    Raises:
-        RuntimeError: If the download fails or the file exceeds the size limit.
-    """
-    max_size_bytes = max_size_mb * 1024 * 1024
-
-    try:
-        log.info(f"Downloading {resource_label} from {url}")
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
-
-        content_length = response.headers.get("content-length")
-        if content_length and int(content_length) > max_size_bytes:
-            raise RuntimeError(
-                f"{resource_label} file too large: "
-                f"{int(content_length) / 1024 / 1024:.1f} MB (max {max_size_mb} MB)"
-            )
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False, encoding="utf-8") as tmp:
-            tmp.write(response.text)
-            tmp.flush()
-            tmp_path = Path(tmp.name)
-
-        log.debug(f"{resource_label} downloaded to temporary file: {tmp_path}")
-        return tmp_path
-
-    except requests.RequestException as e:
-        raise RuntimeError(f"Failed to download {resource_label} from {url}: {e}") from e
+from s2dm.utils.download import download_url_to_temp
 
 
 def download_schema_to_temp(url: str, max_size_mb: int = 10) -> Path:
