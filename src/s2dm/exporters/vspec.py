@@ -164,6 +164,30 @@ SCALAR_DATATYPE_MAP = {
 # }
 
 
+def _read_metadata_args(field: GraphQLField) -> dict[str, str]:
+    """Read the arguments of a field's @metadata directive into a dict.
+
+    Returns an empty dict if the field has no @metadata directive, no AST
+    node, or no directive arguments. Only string-valued arguments are
+    captured (the @metadata directive's arguments are all String-typed).
+    """
+    if not has_given_directive(field, "metadata"):
+        return {}
+    if not (field.ast_node and field.ast_node.directives):
+        return {}
+    metadata_directive = next(
+        (d for d in field.ast_node.directives if d.name.value == "metadata"),
+        None,
+    )
+    if not (metadata_directive and metadata_directive.arguments):
+        return {}
+    args: dict[str, str] = {}
+    for arg in metadata_directive.arguments:
+        if hasattr(arg.value, "value"):
+            args[arg.name.value] = arg.value.value
+    return args
+
+
 class CustomDumper(yaml.Dumper):
     """Custom YAML dumper to add extra line breaks at the top level."""
 
@@ -288,25 +312,13 @@ def process_field(
             if unit_arg is not None and unit_arg is not Undefined and unit_arg in UNITS_DICT:
                 field_dict["unit"] = UNITS_DICT[unit_arg]
 
-        if has_given_directive(field, "metadata"):
-            metadata_directive = None
-            if field.ast_node and field.ast_node.directives:
-                metadata_directive = next(
-                    (directive for directive in field.ast_node.directives if directive.name.value == "metadata"), None
-                )
-
-            metadata_args = {}
-            if metadata_directive and metadata_directive.arguments:
-                for arg in metadata_directive.arguments:
-                    if hasattr(arg.value, "value"):  # Ensure arg.value has the 'value' attribute
-                        metadata_args[arg.name.value] = arg.value.value
-
-            comment = metadata_args.get("comment")
-            vss_type = metadata_args.get("vssType")
-            if comment:
-                field_dict["comment"] = comment
-            if vss_type:
-                field_dict["type"] = vss_type
+        metadata_args = _read_metadata_args(field)
+        comment = metadata_args.get("comment")
+        vss_type = metadata_args.get("vssType")
+        if comment:
+            field_dict["comment"] = comment
+        if vss_type:
+            field_dict["type"] = vss_type
 
         return {concat_field_name: field_dict}
     elif isinstance(output_type, GraphQLObjectType):
@@ -340,13 +352,19 @@ def process_field(
 
         return {resolved_type_name: obj_dict}
     elif isinstance(output_type, GraphQLEnumType):
+        # GraphQL enums are always String at the schema level, but VSS allows
+        # any datatype for the corresponding `allowed:` values (e.g. ints for
+        # gear levels). Read the optional `vssDatatype` and `vssType` from
+        # the field's @metadata directive; fall back to "string"/"attribute"
+        # to preserve existing behaviour. (issue #8)
+        metadata_args = _read_metadata_args(field)
         field_dict = {
             "description": field.description if field.description else "",
-            "datatype": "string",  # TODO: Consider that VSS allows any datatype for enums.
+            "datatype": metadata_args.get("vssDatatype", "string"),
             "allowed": [value.value for value in field.type.values.values()]
             if isinstance(field.type, GraphQLEnumType)
             else [],
-            "type": "attribute",  # TODO: Get this from the @metadata directive.
+            "type": metadata_args.get("vssType", "attribute"),
         }
         return {concat_field_name: field_dict}
 
