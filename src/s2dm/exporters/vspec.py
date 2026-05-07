@@ -340,9 +340,25 @@ def process_field(
 
         return {resolved_type_name: obj_dict}
     elif isinstance(output_type, GraphQLEnumType):
+        # GraphQL enums are always String at the schema level, but VSS allows
+        # any datatype for the corresponding `allowed:` values (e.g. ints for
+        # gear levels). Read the optional `vssDatatype` argument from the
+        # field's @metadata directive; if absent, fall back to "string" to
+        # preserve existing behaviour. (issue #8)
+        enum_datatype = "string"
+        if has_given_directive(field, "metadata") and field.ast_node and field.ast_node.directives:
+            metadata_directive = next(
+                (directive for directive in field.ast_node.directives if directive.name.value == "metadata"),
+                None,
+            )
+            if metadata_directive and metadata_directive.arguments:
+                for arg in metadata_directive.arguments:
+                    if arg.name.value == "vssDatatype" and hasattr(arg.value, "value"):
+                        enum_datatype = arg.value.value
+
         field_dict = {
             "description": field.description if field.description else "",
-            "datatype": "string",  # TODO: Consider that VSS allows any datatype for enums.
+            "datatype": enum_datatype,
             "allowed": [value.value for value in field.type.values.values()]
             if isinstance(field.type, GraphQLEnumType)
             else [],
