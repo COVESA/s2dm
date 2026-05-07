@@ -285,8 +285,15 @@ def process_field(
         # TODO: Map the unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
         if "unit" in field.args:
             unit_arg = field.args["unit"].default_value
-            if unit_arg is not None and unit_arg is not Undefined and unit_arg in UNITS_DICT:
-                field_dict["unit"] = UNITS_DICT[unit_arg]
+            if unit_arg is not None and unit_arg is not Undefined:
+                if unit_arg in UNITS_DICT:
+                    field_dict["unit"] = UNITS_DICT[unit_arg]
+                else:
+                    log.warning(
+                        f"Unit '{unit_arg}' on field '{concat_field_name}' is not mapped in "
+                        f"UNITS_DICT; the unit will be omitted from the YAML output. Add the "
+                        f"unit to UNITS_DICT in s2dm/exporters/vspec.py to preserve it."
+                    )
 
         if has_given_directive(field, "metadata"):
             metadata_directive = None
