@@ -170,9 +170,29 @@ def get_cardinality(field: GraphQLField | GraphQLInputField) -> Cardinality | No
 
 
 def has_valid_cardinality(field: GraphQLField) -> bool:
-    """Check possible missmatch between GraphQL not null and custom @cardinality directive."""
-    # TODO: Add a check to avoid discrepancy between GraphQL not null and custom @cardinality directive.
-    return False  # Placeholder for future implementation
+    """Check whether a field's @cardinality directive is consistent with its GraphQL type.
+
+    `@cardinality(min, max)` describes the size of a *list*. On a non-list field the
+    cardinality is already fixed by the GraphQL type itself (`T` is 0..1, `T!` is 1..1),
+    and any `@cardinality` annotation is redundant or contradictory. This function
+    flags that misuse: it returns ``True`` when the field is either list-typed or has
+    no `@cardinality` directive, and ``False`` when `@cardinality` is applied to a
+    non-list field.
+
+    Args:
+        field: The GraphQL field to validate.
+
+    Returns:
+        bool: ``True`` if the field's cardinality declaration is consistent, else
+        ``False``.
+    """
+    if not has_given_directive(field, "cardinality"):
+        return True
+
+    t = field.type
+    if is_non_null_type(t):
+        t = t.of_type  # type: ignore[union-attr]
+    return is_list_type(t)
 
 
 def print_field_sdl(field: GraphQLField) -> str:

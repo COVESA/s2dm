@@ -1,6 +1,7 @@
 from graphql import GraphQLEnumType, GraphQLObjectType, GraphQLSchema, get_named_type
 
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
+from s2dm.exporters.utils.field import has_valid_cardinality
 from s2dm.exporters.utils.naming_config import NamingConventionConfig
 from s2dm.tools.naming_checker import check_naming_conventions
 
@@ -9,6 +10,24 @@ class ConstraintChecker:
     def __init__(self, schema: GraphQLSchema, naming_config: NamingConventionConfig | None = None):
         self.schema = schema
         self.naming_config = naming_config
+
+    def check_cardinality_on_list_only(self, objects: list[GraphQLObjectType]) -> list[str]:
+        """Flag @cardinality applied to non-list fields.
+
+        @cardinality(min, max) describes the size of a list. On a scalar field the
+        size is already fixed by the GraphQL type itself (T is 0..1, T! is 1..1),
+        so any @cardinality annotation is redundant or contradicts the GraphQL
+        non-null markers.
+        """
+        errors = []
+        for obj in objects:
+            for fname, field in obj.fields.items():
+                if has_given_directive(field, "cardinality") and not has_valid_cardinality(field):
+                    errors.append(
+                        f"[cardinality] {obj.name}.{fname} has @cardinality on a non-list "
+                        f"type ({field.type}); cardinality only applies to list-typed fields."
+                    )
+        return errors
 
     def check_min_leq_max(self, objects: list[GraphQLObjectType], directive: str) -> list[str]:
         errors = []
@@ -47,6 +66,7 @@ class ConstraintChecker:
 
         errors += self.check_min_leq_max(objects, "range")
         errors += self.check_min_leq_max(objects, "cardinality")
+        errors += self.check_cardinality_on_list_only(objects)
 
         if self.naming_config:
             errors += check_naming_conventions(self.schema, self.naming_config)
