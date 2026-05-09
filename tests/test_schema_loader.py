@@ -28,10 +28,7 @@ def test_load_schema_with_source_map_applies_schema_selection_resolver(tmp_path:
     )
     full_schema_path = tmp_path / "full.graphql"
     full_schema_path.write_text(
-        "type Extra {\n"
-        "  kept: String\n"
-        "  removed: String\n"
-        "}\n",
+        "type Extra {\n" "  kept: String\n" "  removed: String\n" "}\n",
         encoding="utf-8",
     )
     selection_document = parse("query Selection { vehicle { vin } }")

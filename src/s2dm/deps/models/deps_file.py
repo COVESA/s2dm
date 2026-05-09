@@ -86,9 +86,7 @@ class DependencyConfig(BaseModel):
         for dependency in self.dependencies:
             dependency_target = (dependency.name, dependency.version)
             if dependency_target in seen_dependency_targets:
-                raise ValueError(
-                    f"Duplicate dependency target '{dependency.name}/{dependency.version}' is not allowed"
-                )
+                raise ValueError(f"Duplicate dependency target '{dependency.name}/{dependency.version}' is not allowed")
             seen_dependency_targets.add(dependency_target)
         return self
 
