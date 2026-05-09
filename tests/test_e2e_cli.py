@@ -2036,3 +2036,107 @@ def test_deps_resolve_creates_lock_entry_from_existing_vendor_target(runner: Cli
             dependency["integrity"]
             == hashlib.sha256((stale_vendor_directory / "schema.graphql").read_bytes()).hexdigest()
         )
+
+
+def test_deps_build_applies_dependency_selection_and_preserves_vendor_schema(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        source_schema = (
+            "type Query { vehicle: Vehicle }\n"
+            "type Vehicle { vin: String model: String speed: Speed cabin: Cabin }\n"
+            "type Speed { value: Float unit: String }\n"
+            "type Cabin { seats: Int }\n"
+        )
+        (source_directory / "schema.graphql").write_text(source_schema, encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        selection_path = working_directory / "selection.graphql"
+        selection_path.write_text("query Selection { vehicle { vin speed { value } } }\n", encoding="utf-8")
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n'
+            f'    selection: "{selection_path.resolve()}"\n',
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+        build_result = runner.invoke(cli, ["deps", "build", "-o", str(output_path)])
+
+        assert resolve_result.exit_code == 0, resolve_result.output
+        assert build_result.exit_code == 0, build_result.output
+        composed_schema = output_path.read_text(encoding="utf-8")
+        assert "type Vehicle" in composed_schema
+        assert "vin: String" in composed_schema
+        assert "speed: Speed" in composed_schema
+        assert "value: Float" in composed_schema
+        assert "model: String" not in composed_schema
+        assert "unit: String" not in composed_schema
+        assert "type Cabin" not in composed_schema
+
+        vendored_schema_path = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0" / "schema.graphql"
+        assert vendored_schema_path.read_text(encoding="utf-8") == source_schema
+
+
+def test_deps_build_auto_prefixes_conflicting_dependency_types(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        alpha_source_directory = working_directory / "alpha-source"
+        bravo_source_directory = working_directory / "bravo-source"
+        alpha_source_directory.mkdir()
+        bravo_source_directory.mkdir()
+        alpha_schema = "type Query { sensor: Sensor }\ntype Sensor { value: Float unit: Unit }\nenum Unit { CELSIUS }\n"
+        bravo_schema = "type Query { sensor: Sensor }\ntype Sensor { status: String }\n"
+        (alpha_source_directory / "schema.graphql").write_text(alpha_schema, encoding="utf-8")
+        (alpha_source_directory / "metadata.yaml").write_text(
+            "name: AlphaDependency\nid: urn:test:alpha\nversion: 1.0.0\npreferred_prefix: alpha\n",
+            encoding="utf-8",
+        )
+        (bravo_source_directory / "schema.graphql").write_text(bravo_schema, encoding="utf-8")
+        (bravo_source_directory / "metadata.yaml").write_text(
+            "name: BravoDependency\nid: urn:test:bravo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: AlphaDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{alpha_source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n'
+            "  - name: BravoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{bravo_source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+        build_result = runner.invoke(cli, ["deps", "build", "--auto-prefix", "-o", str(output_path)])
+
+        assert resolve_result.exit_code == 0, resolve_result.output
+        assert build_result.exit_code == 0, build_result.output
+        composed_schema = output_path.read_text(encoding="utf-8")
+        assert "type alpha_Query" in composed_schema
+        assert "sensor: alpha_Sensor" in composed_schema
+        assert "type alpha_Sensor" in composed_schema
+        assert "type urn_test_bravo_Query" in composed_schema
+        assert "sensor: urn_test_bravo_Sensor" in composed_schema
+        assert "type urn_test_bravo_Sensor" in composed_schema
+        assert "enum Unit" in composed_schema
+
+        alpha_vendor_schema_path = (
+            working_directory / ".s2dm" / "vendor" / "AlphaDependency" / "1.0.0" / "schema.graphql"
+        )
+        bravo_vendor_schema_path = (
+            working_directory / ".s2dm" / "vendor" / "BravoDependency" / "1.0.0" / "schema.graphql"
+        )
+        assert alpha_vendor_schema_path.read_text(encoding="utf-8") == alpha_schema
+        assert bravo_vendor_schema_path.read_text(encoding="utf-8") == bravo_schema

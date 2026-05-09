@@ -1,5 +1,6 @@
 import re
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
@@ -56,6 +57,9 @@ from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, lo
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
 from s2dm.utils.download import download_url_to_temp
 
+SourceMapValueResolver = Callable[[Path, str], str]
+SchemaSelectionResolver = Callable[[Path], DocumentNode | None]
+
 
 def download_schema_to_temp(url: str, max_size_mb: int = 10) -> Path:
     """Download schema from URL to a temporary file.
@@ -108,8 +112,16 @@ def resolve_files_by_extensions(paths: list[Path], extensions: frozenset[str]) -
     return sorted(resolved)
 
 
+def _default_source_map_value_resolver(schema_path: Path, type_name: str) -> str:
+    """Return the source map value for standard file-based schema composition."""
+    return schema_path.name
+
+
 def build_schema_str_with_optional_source_map(
-    graphql_schema_paths: list[Path], with_source_map: bool, naming_config: NamingConventionConfig | None = None
+    graphql_schema_paths: list[Path],
+    naming_config: NamingConventionConfig | None = None,
+    source_map_value_resolver: SourceMapValueResolver | None = None,
+    schema_selection_resolver: SchemaSelectionResolver | None = None,
 ) -> tuple[str, dict[str, str]]:
     """Build a GraphQL schema from a file or folder, returning also a source map."""
     schema_str = ""
@@ -119,19 +131,23 @@ def build_schema_str_with_optional_source_map(
 
     for graphql_file in graphql_schema_paths:
         content = load_schema_from_path(graphql_file)
+        if schema_selection_resolver is not None:
+            selection_document = schema_selection_resolver(graphql_file)
+            if selection_document is not None:
+                content = select_schema_content(content, selection_document)
         schema_str += content + "\n"
-        if with_source_map:
+        if source_map_value_resolver is not None:
             type_names = _extract_type_names_from_content(content)
             for type_name in type_names:
                 transformed_name = convert_name(type_name, type_case) if type_case else type_name
-                source_map[transformed_name] = graphql_file.name
+                source_map[transformed_name] = source_map_value_resolver(graphql_file, type_name)
 
     return schema_str, source_map
 
 
 def build_schema_str(graphql_schema_paths: list[Path]) -> str:
     """Build a GraphQL schema from a file or folder."""
-    schema_str, _ = build_schema_str_with_optional_source_map(graphql_schema_paths, with_source_map=False)
+    schema_str, _ = build_schema_str_with_optional_source_map(graphql_schema_paths)
     return schema_str
 
 
@@ -154,14 +170,27 @@ def load_schema(graphql_schema_paths: Path | list[Path]) -> GraphQLSchema:
 
 
 def load_schema_with_source_map(
-    graphql_schema_paths: list[Path], naming_config: NamingConventionConfig | None = None
+    graphql_schema_paths: list[Path],
+    naming_config: NamingConventionConfig | None = None,
+    source_map_value_resolver: SourceMapValueResolver | None = None,
+    schema_selection_resolver: SchemaSelectionResolver | None = None,
 ) -> tuple[GraphQLSchema, dict[str, str]]:
     """Load and build a GraphQL schema from files or folders, returning schema and source map."""
     schema_str, source_map = build_schema_str_with_optional_source_map(
-        graphql_schema_paths, with_source_map=True, naming_config=naming_config
+        graphql_schema_paths,
+        naming_config=naming_config,
+        source_map_value_resolver=source_map_value_resolver or _default_source_map_value_resolver,
+        schema_selection_resolver=schema_selection_resolver,
     )
     schema = build_schema_with_query(schema_str)
     return schema, source_map
+
+
+def select_schema_content(schema_content: str, selection_document: DocumentNode) -> str:
+    """Return schema SDL pruned to the types referenced by a selection document."""
+    schema = build_schema_with_query(schema_content)
+    selected_schema = prune_schema_using_query_selection(schema, selection_document)
+    return print_schema_with_directives_preserved(selected_schema)
 
 
 def load_schema_with_naming(
@@ -286,7 +315,11 @@ def print_schema_with_directives_preserved(schema: GraphQLSchema, source_map: di
 
 def load_schema_as_str(graphql_schema_paths: list[Path], add_references: bool = False) -> str:
     """Load and build GraphQL schema but return as str."""
-    schema_str, source_map = build_schema_str_with_optional_source_map(graphql_schema_paths, add_references)
+    source_map_value_resolver = _default_source_map_value_resolver if add_references else None
+    schema_str, source_map = build_schema_str_with_optional_source_map(
+        graphql_schema_paths,
+        source_map_value_resolver=source_map_value_resolver,
+    )
     schema = build_schema_with_query(schema_str)
     return print_schema_with_directives_preserved(schema, source_map)
 

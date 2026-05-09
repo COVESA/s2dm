@@ -95,11 +95,10 @@ def resolve_dependencies(dependency_config: DependencyConfig, working_directory:
     expected_vendor_keys = {(dependency.name, dependency.version) for dependency in dependency_config.dependencies}
     _remove_unreferenced_vendor_targets(vendor_root, expected_vendor_keys)
 
-    seen_vendor_targets: set[tuple[str, str]] = set()
     lock_entries: list[ResolvedDependencyLockEntry] = []
 
     for dependency in dependency_config.dependencies:
-        lock_entry = _resolve_dependency(dependency, vendor_root, seen_vendor_targets, existing_lock_entries)
+        lock_entry = _resolve_dependency(dependency, vendor_root, existing_lock_entries)
         lock_entries.append(lock_entry)
 
     return DependencyLockFile(dependencies=lock_entries)
@@ -108,16 +107,9 @@ def resolve_dependencies(dependency_config: DependencyConfig, working_directory:
 def _resolve_dependency(
     dependency: DependencyEntry,
     vendor_root: Path,
-    seen_vendor_targets: set[tuple[str, str]],
     existing_lock_entries: dict[tuple[str, str], ResolvedDependencyLockEntry],
 ) -> ResolvedDependencyLockEntry:
     vendor_key = (dependency.name, dependency.version)
-    if vendor_key in seen_vendor_targets:
-        raise ValueError(
-            f"Duplicate resolved dependency target '{dependency.name}/{dependency.version}' is not allowed"
-        )
-    seen_vendor_targets.add(vendor_key)
-
     target_directory = vendor_root / dependency.name / dependency.version
     vendored_schema_path = target_directory / SCHEMA_FILENAME
     vendored_metadata_path = target_directory / METADATA_FILENAME

@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 import rich_click as click
 import yaml
-from graphql import DocumentNode, GraphQLSchema, parse
+from graphql import DocumentNode, GraphQLError, GraphQLSchema, parse
 from pydantic import ValidationError
 from rdflib import Graph
 from rich.traceback import install
@@ -30,6 +30,7 @@ from s2dm.deps import (
     resolve_dependencies,
 )
 from s2dm.deps.models import DependencyConfig
+from s2dm.deps.resolve.common import SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -194,6 +195,14 @@ def selection_query_option(required: bool = False) -> Callable[[Callable[..., An
         required=required,
         help="GraphQL query file to filter the passed schema",
     )
+
+
+deps_config_option = click.option(
+    "--config",
+    "config_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help="Dependency manifest file. Defaults to s2dm.deps.yaml in the current working directory.",
+)
 
 
 root_type_option = click.option(
@@ -495,17 +504,12 @@ def query(
 
 
 @deps.command(name="resolve")
-@click.option(
-    "--config",
-    "config_path",
-    type=click.Path(dir_okay=False, path_type=Path),
-    help="Dependency manifest file. Defaults to s2dm.deps.yaml in the current working directory.",
-)
+@deps_config_option
 @click.option("--clean", is_flag=True, default=False, help="Remove the lock file and vendored dependencies first.")
 def deps_resolve(config_path: Path | None, clean: bool) -> None:
     """Resolve dependencies from the configured dependency manifest."""
     working_directory = Path.cwd()
-    resolved_config_path = config_path if config_path is not None else working_directory / DEFAULT_DEPS_CONFIG_FILENAME
+    resolved_config_path = _resolve_deps_config_path(config_path, working_directory)
 
     try:
         if clean:
@@ -517,6 +521,55 @@ def deps_resolve(config_path: Path | None, clean: bool) -> None:
     except (OSError, RuntimeError, TypeError, ValueError, ValidationError, yaml.YAMLError) as error:
         log.error(f"Dependency resolution failed: {error}")
         sys.exit(1)
+
+
+@deps.command(name="build")
+@deps_config_option
+@output_option
+def deps_build(config_path: Path | None, output: Path) -> None:
+    """Compose all vendored dependency schemas into a single output file."""
+    working_directory = Path.cwd()
+    resolved_config_path = _resolve_deps_config_path(config_path, working_directory)
+    vendor_root = working_directory / VENDOR_DIRECTORY
+
+    try:
+        dependency_config = DependencyConfig.load(resolved_config_path)
+        schemas: list[Path] = []
+        selection_by_schema_path: dict[Path, DocumentNode] = {}
+
+        for dependency in dependency_config.dependencies:
+            schema_path = (vendor_root / dependency.name / dependency.version / SCHEMA_FILENAME).resolve()
+            if not schema_path.is_file():
+                raise ValueError(f"Vendored dependency schema not found: {schema_path}")
+            schemas.append(schema_path)
+
+            if dependency.selection is not None:
+                selection_by_schema_path[schema_path] = parse(dependency.selection.read_text(encoding="utf-8"))
+
+        if not schemas:
+            raise ValueError(f"No vendored dependency schemas found under {vendor_root}")
+
+        def resolve_schema_selection(schema_path: Path) -> DocumentNode | None:
+            return selection_by_schema_path.get(schema_path.resolve())
+
+        _compose_schemas(
+            schemas=schemas,
+            root_type=None,
+            selection_query=None,
+            naming_config=None,
+            output=output,
+            expanded_instances=False,
+            schema_selection_resolver=resolve_schema_selection,
+        )
+    except (OSError, RuntimeError, TypeError, ValueError, GraphQLError, ValidationError, yaml.YAMLError) as error:
+        log.error(f"Dependency build failed: {error}")
+        sys.exit(1)
+
+
+def _resolve_deps_config_path(config_path: Path | None, working_directory: Path) -> Path:
+    if config_path is not None:
+        return config_path
+    return working_directory / DEFAULT_DEPS_CONFIG_FILENAME
 
 
 def _resolve_dependencies_to_lock(resolved_config_path: Path, working_directory: Path) -> Path:
@@ -824,8 +877,32 @@ def compose(
     expanded_instances: bool,
 ) -> None:
     """Compose GraphQL schema files into a single output file."""
+    _compose_schemas(
+        schemas=schemas,
+        root_type=root_type,
+        selection_query=selection_query,
+        naming_config=naming_config,
+        output=output,
+        expanded_instances=expanded_instances,
+    )
+
+
+def _compose_schemas(
+    schemas: list[Path],
+    root_type: str | None,
+    selection_query: Path | None,
+    naming_config: Path | None,
+    output: Path,
+    expanded_instances: bool,
+    source_map_value_resolver: Callable[[Path, str], str] | None = None,
+    schema_selection_resolver: Callable[[Path], DocumentNode | None] | None = None,
+) -> None:
     try:
-        graphql_schema, source_map = load_schema_with_source_map(schemas)
+        graphql_schema, source_map = load_schema_with_source_map(
+            schemas,
+            source_map_value_resolver=source_map_value_resolver,
+            schema_selection_resolver=schema_selection_resolver,
+        )
         assert_correct_schema(graphql_schema)
 
         query_document = None
