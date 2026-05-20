@@ -15,6 +15,7 @@ from s2dm.deps.models import (
     ResolvedDependencyLockEntry,
     ResolvedDependencySource,
 )
+from s2dm.deps.naming import sanitize_prefix
 from s2dm.deps.resolve.common import DEPENDENCY_LOCK_FILENAME, METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.deps.resolve.factory import ResolverFactory
 
@@ -45,6 +46,16 @@ class CleanDependencyBackup:
         if self.vendor_backup_path is not None and self.vendor_backup_path.exists():
             self.vendor_root.parent.mkdir(parents=True, exist_ok=True)
             self.vendor_backup_path.rename(self.vendor_root)
+
+
+@dataclass(frozen=True)
+class PrefixCollision:
+    """A dependency whose sanitized prefix/id collides with one or more others."""
+
+    dependency: ResolvedDependencyLockEntry
+    sanitized_prefix: str
+    raw_source: str
+    conflicting_dependencies: tuple[ResolvedDependencyLockEntry, ...]
 
 
 @contextmanager
@@ -101,7 +112,56 @@ def resolve_dependencies(dependency_config: DependencyConfig, working_directory:
         lock_entry = _resolve_dependency(dependency, vendor_root, existing_lock_entries)
         lock_entries.append(lock_entry)
 
+    warn_on_prefix_collisions(lock_entries, vendor_root)
+
     return DependencyLockFile(dependencies=lock_entries)
+
+
+def get_prefix_collisions(
+    lock_entries: list[ResolvedDependencyLockEntry],
+    vendor_root: Path,
+) -> list[PrefixCollision]:
+    """Detect dependencies whose sanitized prefix/id matches another's."""
+    sanitized_per_entry: list[tuple[str, str]] = []
+    indices_by_sanitized: dict[str, list[int]] = {}
+
+    for index, entry in enumerate(lock_entries):
+        metadata_path = vendor_root / entry.name / entry.version / METADATA_FILENAME
+        metadata = DependencyMetadata.load(metadata_path)
+        raw_prefix = metadata.preferred_prefix or metadata.id
+        sanitized = sanitize_prefix(raw_prefix)
+        sanitized_per_entry.append((sanitized, raw_prefix))
+        indices_by_sanitized.setdefault(sanitized, []).append(index)
+
+    collisions: list[PrefixCollision] = []
+    for index, entry in enumerate(lock_entries):
+        sanitized, raw_prefix = sanitized_per_entry[index]
+        conflicting_dependencies = tuple(
+            lock_entries[other_index] for other_index in indices_by_sanitized[sanitized] if other_index != index
+        )
+        if conflicting_dependencies:
+            collisions.append(
+                PrefixCollision(
+                    dependency=entry,
+                    sanitized_prefix=sanitized,
+                    raw_source=raw_prefix,
+                    conflicting_dependencies=conflicting_dependencies,
+                )
+            )
+    return collisions
+
+
+def warn_on_prefix_collisions(lock_entries: list[ResolvedDependencyLockEntry], vendor_root: Path) -> None:
+    """Warn when multiple dependencies share the same sanitized prefix/id."""
+    prefix_collisions = get_prefix_collisions(lock_entries, vendor_root)
+    for collision in prefix_collisions:
+        quoted_conflicts = ", ".join(f"'{dep.name}@{dep.version}'" for dep in collision.conflicting_dependencies)
+        log.warning(
+            f"Dependency '{collision.dependency.name}@{collision.dependency.version}' "
+            f"resolves prefix '{collision.sanitized_prefix}' (from '{collision.raw_source}') "
+            f"which conflicts with: {quoted_conflicts}. "
+            f"This might cause issues when type names conflict resolution is applied."
+        )
 
 
 def _resolve_dependency(

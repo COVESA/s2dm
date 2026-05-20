@@ -13,13 +13,13 @@ def write_metadata_file(
     path: Path,
     *,
     name: str = "B",
-    metadata_id: str = "urn:test:B",
+    id: str = "urn:test:B",
     version: str = "5.1.0",
     preferred_prefix: str | None = None,
 ) -> None:
     metadata_payload: dict[str, str] = {
         "name": name,
-        "id": metadata_id,
+        "id": id,
         "version": version,
     }
     if preferred_prefix is not None:
