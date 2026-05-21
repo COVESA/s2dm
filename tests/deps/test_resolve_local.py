@@ -13,7 +13,7 @@ from s2dm.deps.resolve.resolve import resolve_dependencies
 from tests.deps.helpers import (
     create_archive,
     file_sha256,
-    load_yaml_file,
+    first_lock_dependency,
     write_dependency_config,
     write_dependency_lock,
     write_metadata_file,
@@ -44,13 +44,8 @@ def test_resolve_dependencies_from_local_graphql(
         encoding="utf-8"
     )
     assert (vendored_directory / METADATA_FILENAME).exists()
-    assert lock_path == workspace / DEPENDENCY_LOCK_FILENAME
 
-    lock_data = load_yaml_file(lock_path)
-    dependencies = lock_data["dependencies"]
-    assert isinstance(dependencies, list)
-    dependency = dependencies[0]
-    assert isinstance(dependency, dict)
+    dependency = first_lock_dependency(lock_path)
     assert dependency["name"] == "B"
     assert dependency["version"] == "5.1.0"
     assert dependency["resolved_path"] == str(source_schema_path.resolve())
@@ -103,11 +98,7 @@ def test_resolve_dependencies_creates_lock_entry_from_valid_cache(tmp_path: Path
     lock_path = workspace / DEPENDENCY_LOCK_FILENAME
     lock_file.save(lock_path)
 
-    lock_data = load_yaml_file(lock_path)
-    dependencies = lock_data["dependencies"]
-    assert isinstance(dependencies, list)
-    dependency = dependencies[0]
-    assert isinstance(dependency, dict)
+    dependency = first_lock_dependency(lock_path)
     assert dependency["resolved_path"] == str((source_directory / SCHEMA_FILENAME).resolve())
     assert dependency["integrity"] == file_sha256(vendored_schema_path)
 

@@ -29,8 +29,12 @@ from s2dm.deps import (
     clean_resolved_dependencies,
     resolve_dependencies,
 )
-from s2dm.deps.models import DependencyConfig
-from s2dm.deps.resolve.common import SCHEMA_FILENAME, VENDOR_DIRECTORY
+from s2dm.deps.compose import (
+    DependencySchemaBuilder,
+    DependencySchemaInput,
+)
+from s2dm.deps.models import DependencyConfig, DependencyMetadata
+from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -61,6 +65,7 @@ from s2dm.exporters.utils.naming_config import ValidationMode, load_naming_conve
 from s2dm.exporters.utils.schema import search_schema
 from s2dm.exporters.utils.schema_loader import (
     build_schema_str,
+    build_schema_str_with_optional_source_map,
     build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
@@ -86,6 +91,7 @@ from s2dm.units.sync import (
     sync_qudt_units,
 )
 from s2dm.utils.download import download_url_to_temp
+from s2dm.utils.file import temp_files_from_contents
 from s2dm.utils.url import is_url
 
 S2DM_HOME = Path.home() / ".s2dm"
@@ -525,8 +531,14 @@ def deps_resolve(config_path: Path | None, clean: bool) -> None:
 
 @deps.command(name="build")
 @deps_config_option
+@click.option(
+    "--auto-prefix",
+    is_flag=True,
+    default=False,
+    help="Prefix conflicting dependency types using preferred_prefix, falling back to metadata id.",
+)
 @output_option
-def deps_build(config_path: Path | None, output: Path) -> None:
+def deps_build(config_path: Path | None, auto_prefix: bool, output: Path) -> None:
     """Compose all vendored dependency schemas into a single output file."""
     working_directory = Path.cwd()
     resolved_config_path = _resolve_deps_config_path(config_path, working_directory)
@@ -536,21 +548,52 @@ def deps_build(config_path: Path | None, output: Path) -> None:
         dependency_config = DependencyConfig.load(resolved_config_path)
         schemas: list[Path] = []
         selection_by_schema_path: dict[Path, DocumentNode] = {}
+        selected_schema_contents: list[str] = []
+        dependency_schema_contents: list[DependencySchemaInput] = []
+
+        def resolve_schema_selection(schema_path: Path) -> DocumentNode | None:
+            return selection_by_schema_path.get(schema_path.resolve())
 
         for dependency in dependency_config.dependencies:
-            schema_path = (vendor_root / dependency.name / dependency.version / SCHEMA_FILENAME).resolve()
-            if not schema_path.is_file():
-                raise ValueError(f"Vendored dependency schema not found: {schema_path}")
-            schemas.append(schema_path)
+            dependency_vendor_directory = vendor_root / dependency.name / dependency.version
+            schema_path = (dependency_vendor_directory / SCHEMA_FILENAME).resolve()
 
             if dependency.selection is not None:
                 selection_by_schema_path[schema_path] = parse(dependency.selection.read_text(encoding="utf-8"))
 
-        if not schemas:
+            schema_content, _ = build_schema_str_with_optional_source_map(
+                [schema_path],
+                schema_selection_resolver=resolve_schema_selection,
+            )
+            selected_schema_contents.append(schema_content)
+
+            metadata_path = dependency_vendor_directory / METADATA_FILENAME
+            dependency_schema_contents.append(
+                DependencySchemaInput(
+                    schema_content=schema_content,
+                    metadata=DependencyMetadata.load(metadata_path),
+                )
+            )
+
+        if not selected_schema_contents:
             raise ValueError(f"No vendored dependency schemas found under {vendor_root}")
 
-        def resolve_schema_selection(schema_path: Path) -> DocumentNode | None:
-            return selection_by_schema_path.get(schema_path.resolve())
+        dependency_schema_builder = DependencySchemaBuilder(dependency_schema_contents)
+        type_name_conflicts = dependency_schema_builder.find_conflicts()
+        if type_name_conflicts:
+            log_conflict = log.info if auto_prefix else log.error
+            for conflict in type_name_conflicts:
+                dependency_labels = ", ".join(
+                    f"{dependency.name}@{dependency.version}" for dependency in conflict.dependencies_metadata
+                )
+                log_conflict(f"Multiple `{conflict.type_name}` types found in [{dependency_labels}]")
+            if not auto_prefix:
+                sys.exit(1)
+
+        if auto_prefix:
+            schemas = dependency_schema_builder.write_auto_prefixed_schema_files()
+        else:
+            schemas = temp_files_from_contents(selected_schema_contents)
 
         _compose_schemas(
             schemas=schemas,
@@ -559,11 +602,13 @@ def deps_build(config_path: Path | None, output: Path) -> None:
             naming_config=None,
             output=output,
             expanded_instances=False,
-            schema_selection_resolver=resolve_schema_selection,
         )
     except (OSError, RuntimeError, TypeError, ValueError, GraphQLError, ValidationError, yaml.YAMLError) as error:
         log.error(f"Dependency build failed: {error}")
         sys.exit(1)
+
+
+deps.add_command(deps_build, name="compose")
 
 
 def _resolve_deps_config_path(config_path: Path | None, working_directory: Path) -> Path:

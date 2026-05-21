@@ -13,7 +13,7 @@ from s2dm.deps.resolve.common import (
 from s2dm.deps.resolve.resolve import resolve_dependencies
 from tests.deps.helpers import (
     file_sha256,
-    load_yaml_file,
+    first_lock_dependency,
     write_dependency_config,
     write_dependency_lock,
     write_metadata_file,
@@ -60,11 +60,7 @@ def test_resolve_dependencies_from_remote_release(
     lock_path = workspace / DEPENDENCY_LOCK_FILENAME
     lock_file.save(lock_path)
 
-    lock_data = load_yaml_file(lock_path)
-    dependencies = lock_data["dependencies"]
-    assert isinstance(dependencies, list)
-    dependency = dependencies[0]
-    assert isinstance(dependency, dict)
+    dependency = first_lock_dependency(lock_path)
     assert dependency["resolved_path"] == "https://github.com/owner/repo/releases/download/5.1.0/schema.graphql"
 
 
@@ -93,10 +89,6 @@ def test_resolve_dependencies_skips_remote_release_when_lock_and_vendor_exist(tm
     lock_path = workspace / DEPENDENCY_LOCK_FILENAME
     lock_file.save(lock_path)
 
-    lock_data = load_yaml_file(lock_path)
-    dependencies = lock_data["dependencies"]
-    assert isinstance(dependencies, list)
-    dependency = dependencies[0]
-    assert isinstance(dependency, dict)
+    dependency = first_lock_dependency(lock_path)
     assert dependency["resolved_path"] == "https://github.com/owner/repo/releases/download/5.1.0/schema.graphql"
     assert vendored_schema_path.read_text(encoding="utf-8") == "type Query { cached: String }\n"

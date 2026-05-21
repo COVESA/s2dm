@@ -128,3 +128,12 @@ def load_yaml_file(path: Path) -> dict[str, object]:
     loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
     assert isinstance(loaded, dict)
     return loaded
+
+
+def first_lock_dependency(path: Path) -> dict[str, object]:
+    lock_data = load_yaml_file(path)
+    dependencies = lock_data["dependencies"]
+    assert isinstance(dependencies, list)
+    dependency = dependencies[0]
+    assert isinstance(dependency, dict)
+    return dependency
