@@ -2,7 +2,7 @@ import re
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import cast
+from typing import cast, overload
 
 from ariadne import load_schema_from_path
 from graphql import (
@@ -450,11 +450,19 @@ def check_enum_defaults(schema: GraphQLSchema) -> list[str]:
     return errors
 
 
-def check_correct_schema(schema: GraphQLSchema) -> list[str]:
+@overload
+def check_correct_schema(schema: GraphQLSchema) -> list[str]: ...
+
+
+@overload
+def check_correct_schema(schema: Path) -> list[str]: ...
+
+
+def check_correct_schema(schema: GraphQLSchema | Path) -> list[str]:
     """Assert that the schema conforms to GraphQL specification and has valid enum defaults.
 
     Args:
-        schema: The GraphQL schema to validate
+        schema: The GraphQL schema or schema file path to validate
 
     Returns:
         list[str]: List of error messages if any validation errors are found
@@ -462,6 +470,9 @@ def check_correct_schema(schema: GraphQLSchema) -> list[str]:
     Exits:
         Calls sys.exit(1) if the schema has validation errors
     """
+    if isinstance(schema, Path):
+        schema = build_schema(schema.read_text(encoding="utf-8"))
+
     spec_errors = validate_schema(schema)
     enum_errors = check_enum_defaults(schema)
 

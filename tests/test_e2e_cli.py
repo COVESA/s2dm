@@ -1918,6 +1918,32 @@ def test_deps_resolve_uses_default_config_path_from_current_working_directory(ru
         assert (working_directory / ".s2dm" / "vendor" / "B" / "5.1.0" / "schema.graphql").exists()
 
 
+def test_deps_resolve_rejects_invalid_dependency_schema(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Vehicle { vin: String }\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 1
+        assert not (working_directory / "s2dm.deps.lock").exists()
+        assert not (working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0").exists()
+
+
 def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRunner) -> None:
     with runner.isolated_filesystem():
         working_directory = Path.cwd()

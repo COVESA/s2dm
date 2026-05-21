@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
+from graphql import GraphQLError
+
 from s2dm import log
 from s2dm.deps.models import (
     DependencyConfig,
@@ -18,6 +20,7 @@ from s2dm.deps.models import (
 from s2dm.deps.naming import sanitize_prefix
 from s2dm.deps.resolve.common import DEPENDENCY_LOCK_FILENAME, METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.deps.resolve.factory import ResolverFactory
+from s2dm.exporters.utils.schema_loader import check_correct_schema
 
 
 @dataclass
@@ -199,6 +202,7 @@ def _resolve_dependency(
         raise ValueError(
             f"Dependency version mismatch for '{dependency.name}': metadata.yaml declares '{metadata.version}'"
         )
+    _validate_dependency_schema(resolved_source.source.schema_path, dependency.name, dependency.version)
 
     target_directory.mkdir(parents=True, exist_ok=False)
 
@@ -321,6 +325,17 @@ def _build_expected_resolved_path(dependency: DependencyEntry) -> str:
     if isinstance(dependency.source, Path):
         return str((dependency.source / dependency.artifact).absolute())
     return f"{dependency.source.rstrip('/')}/releases/download/{dependency.version}/{dependency.artifact}"
+
+
+def _validate_dependency_schema(schema_path: Path, dependency_name: str, dependency_version: str) -> None:
+    dependency_label = f"{dependency_name}/{dependency_version}"
+    try:
+        schema_errors = check_correct_schema(schema_path)
+    except GraphQLError:
+        raise ValueError(f"Dependency '{dependency_label}' schema is invalid: {schema_path}") from None
+
+    if schema_errors:
+        raise ValueError(f"Dependency '{dependency_label}' schema is invalid: {schema_path}")
 
 
 def _sha256_for_file(path: Path) -> str:
