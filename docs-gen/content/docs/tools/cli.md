@@ -13,12 +13,13 @@ The `deps resolve` command resolves dependencies from a dependency manifest, ven
 #### Usage
 
 ```bash
-s2dm deps resolve [--config CONFIG_PATH]
+s2dm deps resolve [--config CONFIG_PATH] [--identity IDENTITY_PATH] [--clean]
 ```
 
 #### Options
 
 - `--config CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
+- `--identity IDENTITY_PATH`: Path to the dependency identity YAML file containing remote access tokens (optional, defaults to `.s2dm.identity.yaml` in the current working directory when present)
 - `--clean`: Resolve from a clean dependency state while restoring the previous lock file and vendored dependencies if resolution fails
 
 #### Behavior
@@ -26,6 +27,7 @@ s2dm deps resolve [--config CONFIG_PATH]
 - Reads dependency entries from the dependency manifest.
 - Resolves local dependencies from absolute source directories.
 - Resolves remote dependencies from repository release assets.
+- Uses configured identity tokens for authenticated remote release access when an identity file is provided.
 - Validates that `metadata.yaml` matches the dependency name and version.
 - Vendors resolved files to `.s2dm/vendor/<name>/<version>/`.
 - Writes `s2dm.deps.lock` in the current working directory.
@@ -68,6 +70,33 @@ For example, `source: "https://github.com/owner/repo"`, `version: "1.0.0"`, and 
 https://github.com/owner/repo/releases/download/1.0.0/schema.graphql
 ```
 
+#### Identity File
+
+For authenticated remote dependencies, `deps resolve` can read tokens from a dependency identity file.
+If `--identity` is not provided, the command looks for `.s2dm.identity.yaml` in the current working directory.
+
+> This file should not be committed.
+
+The file format is:
+
+```yaml
+identities:
+  - host: github.com
+    token: <host-wide-token>
+  - host: github.com
+    scope: owner/repo
+    token: <repository-token>
+```
+
+Each identity entry contains:
+
+- `host`: Host name only, with optional port. Do not include a scheme, path, or credentials.
+- `scope`: Optional repository scope in `owner/repo` form.
+- `token`: Token used for authenticated release access.
+
+Scoped entries take precedence over host-wide entries for the same host.
+Duplicate host/scope entries are not allowed.
+
 #### Output Files
 
 - `.s2dm/vendor/<name>/<version>/schema.graphql`: Vendored dependency schema
@@ -89,7 +118,7 @@ s2dm deps resolve
 Resolve dependencies from a specific manifest path:
 
 ```bash
-s2dm deps resolve --config path/to/s2dm.deps.yaml
+s2dm deps resolve --config path/to/deps/file
 ```
 
 ##### Clean Resolve
@@ -98,6 +127,14 @@ Resolve from a clean dependency state while preserving the previous lock file an
 
 ```bash
 s2dm deps resolve --clean
+```
+
+##### Resolve with an Identity File
+
+Resolve remote dependencies using an explicit identity file:
+
+```bash
+s2dm deps resolve --identity path/to/identity/file
 ```
 
 ##### Remote Dependency
@@ -110,6 +147,72 @@ dependencies:
     version: "1.0.0"
     source: "https://github.com/owner/repo"
     artifact: "schema.graphql"
+```
+
+### Build
+
+The `deps build` command composes vendored dependency schemas into a single GraphQL SDL output file.
+The same command is also available through the `deps compose` alias.
+
+#### Usage
+
+```bash
+s2dm deps build [--config CONFIG_PATH] [--auto-prefix] --output <output_file>
+```
+
+#### Options
+
+- `--config CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
+- `--auto-prefix`: Prefix conflicting dependency types using `preferred_prefix`, falling back to the dependency metadata `id`
+- `-o, --output OUTPUT`: Output file path for the composed schema (required)
+
+#### Behavior
+
+- Reads dependency entries from the dependency manifest.
+- Loads vendored dependency schemas from `.s2dm/vendor/<name>/<version>/schema.graphql`.
+- Applies the dependency `selection` query when one is configured in the manifest.
+- Detects duplicate type definitions across vendored dependencies.
+- Fails when duplicate type names are found and `--auto-prefix` is not used.
+- With `--auto-prefix`, rewrites conflicting type definitions and references before composing the final schema.
+- Writes a single composed schema to the requested output path.
+
+#### Prerequisites
+
+- Vendored dependency schemas must already exist under `.s2dm/vendor/`.
+- In the normal workflow, run `s2dm deps resolve` before `s2dm deps build`.
+
+#### Examples
+
+##### Build Vendored Dependencies
+
+Compose all vendored dependency schemas into a single output file:
+
+```bash
+s2dm deps build --output composed.graphql
+```
+
+##### Build with Automatic Prefixing
+
+Compose vendored schemas and automatically rename conflicting types:
+
+```bash
+s2dm deps build --output composed.graphql --auto-prefix
+```
+
+##### Build with a Custom Manifest
+
+Use an explicit dependency manifest path:
+
+```bash
+s2dm deps build --config path/to/s2dm.deps.yaml --output composed.graphql
+```
+
+##### Alias Form
+
+Run the same command through its alias:
+
+```bash
+s2dm deps compose --output composed.-graphql
 ```
 
 ## Check Commands
