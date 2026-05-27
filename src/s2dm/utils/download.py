@@ -12,6 +12,7 @@ def download_url_to_path(
     resource_label: str,
     overwrite: bool,
     max_size_mb: int = 10,
+    headers: dict[str, str] | None = None,
 ) -> Path:
     """Download a remote file to a destination path.
 
@@ -21,6 +22,7 @@ def download_url_to_path(
         resource_label: Human-readable label used in log and error messages.
         overwrite: Whether to overwrite an existing destination file.
         max_size_mb: Maximum allowed file size in megabytes.
+        headers: Optional HTTP request headers.
 
     Returns:
         Path to the downloaded file.
@@ -36,14 +38,13 @@ def download_url_to_path(
 
     try:
         log.debug(f"Downloading {resource_label} from {url}")
-        response = requests.get(url, timeout=30)
+        response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
 
         content_length = response.headers.get("content-length")
         if content_length and int(content_length) > max_size_bytes:
             raise RuntimeError(
-                f"{resource_label} file too large: "
-                f"{int(content_length) / 1024 / 1024:.1f} MB (max {max_size_mb} MB)"
+                f"{resource_label} file too large: {int(content_length) / 1024 / 1024:.1f} MB (max {max_size_mb} MB)"
             )
 
         destination_path.parent.mkdir(parents=True, exist_ok=True)

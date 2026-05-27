@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
-from graphql import GraphQLError
+from graphql import GraphQLError, build_schema
 
 from s2dm import log
 from s2dm.deps.models import (
@@ -15,12 +15,11 @@ from s2dm.deps.models import (
     DependencyLockFile,
     DependencyMetadata,
     ResolvedDependencyLockEntry,
-    ResolvedDependencySource,
 )
 from s2dm.deps.naming import sanitize_prefix
 from s2dm.deps.resolve.common import DEPENDENCY_LOCK_FILENAME, METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
+from s2dm.deps.resolve.context import ResolverContext
 from s2dm.deps.resolve.factory import ResolverFactory
-from s2dm.exporters.utils.schema_loader import check_correct_schema
 
 
 @dataclass
@@ -102,7 +101,11 @@ def _begin_clean_resolved_dependencies(working_directory: Path) -> CleanDependen
     )
 
 
-def resolve_dependencies(dependency_config: DependencyConfig, working_directory: Path) -> DependencyLockFile:
+def resolve_dependencies(
+    dependency_config: DependencyConfig,
+    working_directory: Path,
+    context: ResolverContext | None = None,
+) -> DependencyLockFile:
     """Resolve configured dependencies into the workspace vendor directory."""
     vendor_root = working_directory / VENDOR_DIRECTORY
     existing_lock_entries = _load_existing_lock_entries(working_directory / DEPENDENCY_LOCK_FILENAME)
@@ -112,7 +115,7 @@ def resolve_dependencies(dependency_config: DependencyConfig, working_directory:
     lock_entries: list[ResolvedDependencyLockEntry] = []
 
     for dependency in dependency_config.dependencies:
-        lock_entry = _resolve_dependency(dependency, vendor_root, existing_lock_entries)
+        lock_entry = _resolve_dependency(dependency, vendor_root, existing_lock_entries, context)
         lock_entries.append(lock_entry)
 
     warn_on_prefix_collisions(lock_entries, vendor_root)
@@ -171,6 +174,7 @@ def _resolve_dependency(
     dependency: DependencyEntry,
     vendor_root: Path,
     existing_lock_entries: dict[tuple[str, str], ResolvedDependencyLockEntry],
+    context: ResolverContext | None,
 ) -> ResolvedDependencyLockEntry:
     vendor_key = (dependency.name, dependency.version)
     target_directory = vendor_root / dependency.name / dependency.version
@@ -193,7 +197,8 @@ def _resolve_dependency(
         return lock_entry
 
     log.info(f"Resolving dependency '{dependency.name}' version '{dependency.version}'")
-    resolved_source = _resolve_dependency_source(dependency)
+    resolver = ResolverFactory.create_resolver(dependency, context)
+    resolved_source = resolver.resolve(dependency)
 
     metadata = DependencyMetadata.load(resolved_source.source.metadata_path)
     if dependency.name != metadata.name:
@@ -202,7 +207,7 @@ def _resolve_dependency(
         raise ValueError(
             f"Dependency version mismatch for '{dependency.name}': metadata.yaml declares '{metadata.version}'"
         )
-    _validate_dependency_schema(resolved_source.source.schema_path, dependency.name, dependency.version)
+    _build_dependency_schema(resolved_source.source.schema_path, dependency.name, dependency.version)
 
     target_directory.mkdir(parents=True, exist_ok=False)
 
@@ -217,11 +222,6 @@ def _resolve_dependency(
             "integrity": _sha256_for_file(vendored_schema_path),
         }
     )
-
-
-def _resolve_dependency_source(dependency: DependencyEntry) -> ResolvedDependencySource:
-    resolver = ResolverFactory.create_resolver(dependency)
-    return resolver.resolve(dependency)
 
 
 def _resolve_cached_dependency(
@@ -327,15 +327,12 @@ def _build_expected_resolved_path(dependency: DependencyEntry) -> str:
     return f"{dependency.source.rstrip('/')}/releases/download/{dependency.version}/{dependency.artifact}"
 
 
-def _validate_dependency_schema(schema_path: Path, dependency_name: str, dependency_version: str) -> None:
+def _build_dependency_schema(schema_path: Path, dependency_name: str, dependency_version: str) -> None:
     dependency_label = f"{dependency_name}/{dependency_version}"
     try:
-        schema_errors = check_correct_schema(schema_path)
+        build_schema(schema_path.read_text(encoding="utf-8"))
     except GraphQLError:
         raise ValueError(f"Dependency '{dependency_label}' schema is invalid: {schema_path}") from None
-
-    if schema_errors:
-        raise ValueError(f"Dependency '{dependency_label}' schema is invalid: {schema_path}")
 
 
 def _sha256_for_file(path: Path) -> str:

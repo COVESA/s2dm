@@ -2,8 +2,10 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
+from unittest.mock import Mock, patch
 
 import pytest
+import yaml
 from click.exceptions import MissingParameter
 from click.testing import CliRunner
 from linkml_runtime.loaders import yaml_loader
@@ -16,6 +18,7 @@ LINKML_SCHEMA_ID = "https://covesa.global/s2dm"
 LINKML_SCHEMA_NAME = "TestSchema"
 LINKML_DEFAULT_PREFIX = "s2dm"
 LINKML_DEFAULT_PREFIX_URL = "https://covesa.global/s2dm"
+TEST_REMOTE_HOST = "example.ghe.com"
 
 
 @pytest.fixture(scope="session")
@@ -1918,12 +1921,87 @@ def test_deps_resolve_uses_default_config_path_from_current_working_directory(ru
         assert (working_directory / ".s2dm" / "vendor" / "B" / "5.1.0" / "schema.graphql").exists()
 
 
+def test_deps_resolve_uses_default_identity_file_for_authenticated_remote_release(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: B\n"
+            '    version: "5.1.0"\n'
+            f'    source: "https://{TEST_REMOTE_HOST}/owner/repo"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+        (working_directory / ".s2dm.identity.yaml").write_text(
+            yaml.safe_dump(
+                {"identities": [{"host": TEST_REMOTE_HOST, "token": "test-token"}]},
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+
+        release_response = Mock()
+        release_response.raise_for_status = Mock()
+        release_response.json = Mock(
+            return_value={
+                "assets": [
+                    {
+                        "name": "metadata.yaml",
+                        "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/1",
+                    },
+                    {
+                        "name": "schema.graphql",
+                        "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/2",
+                    },
+                ]
+            }
+        )
+
+        metadata_response = Mock()
+        metadata_response.raise_for_status = Mock()
+        metadata_response.headers = {}
+        metadata_response.content = yaml.safe_dump(
+            {"name": "B", "id": "urn:test:B", "version": "5.1.0"},
+            sort_keys=False,
+        ).encode("utf-8")
+
+        schema_response = Mock()
+        schema_response.raise_for_status = Mock()
+        schema_response.headers = {}
+        schema_response.content = b"type Query { ping: String }\n"
+
+        def mock_request_get(url: str, headers: dict[str, str], timeout: int) -> Mock:
+            assert timeout == 30
+            if url == f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/tags/5.1.0":
+                assert headers == {
+                    "Authorization": "Bearer test-token",
+                    "Accept": "application/vnd.github+json",
+                }
+                return release_response
+            assert headers == {
+                "Authorization": "Bearer test-token",
+                "Accept": "application/octet-stream",
+            }
+            if url == f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/1":
+                return metadata_response
+            if url == f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/2":
+                return schema_response
+            raise AssertionError(f"Unexpected URL requested: {url}")
+
+        with patch("s2dm.deps.resolve.resolvers.remote_resolver.requests.get", side_effect=mock_request_get):
+            result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (working_directory / ".s2dm" / "vendor" / "B" / "5.1.0" / "schema.graphql").exists()
+
+
 def test_deps_resolve_rejects_invalid_dependency_schema(runner: CliRunner) -> None:
     with runner.isolated_filesystem():
         working_directory = Path.cwd()
         source_directory = working_directory / "source"
         source_directory.mkdir()
-        (source_directory / "schema.graphql").write_text("type Vehicle { vin: String }\n", encoding="utf-8")
+        (source_directory / "schema.graphql").write_text("type Vehicle {\n", encoding="utf-8")
         (source_directory / "metadata.yaml").write_text(
             "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
             encoding="utf-8",

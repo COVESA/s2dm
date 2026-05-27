@@ -10,6 +10,7 @@ import threading
 import time
 import webbrowser
 from collections.abc import Callable
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -25,6 +26,7 @@ from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
 from s2dm.deps import (
     DEFAULT_DEPS_CONFIG_FILENAME,
+    DEFAULT_IDENTITY_FILENAME,
     DEPENDENCY_LOCK_FILENAME,
     clean_resolved_dependencies,
     resolve_dependencies,
@@ -33,8 +35,10 @@ from s2dm.deps.compose import (
     DependencySchemaBuilder,
     DependencySchemaInput,
 )
-from s2dm.deps.models import DependencyConfig, DependencyMetadata
+from s2dm.deps.models import DependencyConfig, DependencyMetadata, RemoteIdentityConfig
 from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
+from s2dm.deps.resolve.context import ResolverContext
+from s2dm.deps.resolve.providers import RemoteIdentityProvider
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -208,6 +212,16 @@ deps_config_option = click.option(
     "config_path",
     type=click.Path(dir_okay=False, path_type=Path),
     help="Dependency manifest file. Defaults to s2dm.deps.yaml in the current working directory.",
+)
+
+deps_identity_option = click.option(
+    "--identity",
+    "identity_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help=(
+        "Dependency identity file containing tokens; do not commit it. "
+        "Defaults to .s2dm.identity.yaml in the current working directory when present."
+    ),
 )
 
 
@@ -511,18 +525,19 @@ def query(
 
 @deps.command(name="resolve")
 @deps_config_option
+@deps_identity_option
 @click.option("--clean", is_flag=True, default=False, help="Remove the lock file and vendored dependencies first.")
-def deps_resolve(config_path: Path | None, clean: bool) -> None:
+def deps_resolve(config_path: Path | None, identity_path: Path | None, clean: bool) -> None:
     """Resolve dependencies from the configured dependency manifest."""
     working_directory = Path.cwd()
     resolved_config_path = _resolve_deps_config_path(config_path, working_directory)
 
     try:
-        if clean:
-            with clean_resolved_dependencies(working_directory):
-                lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory)
-        else:
-            lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory)
+        identity_config = _load_dependency_identity_config(identity_path, working_directory)
+        resolver_context = _build_resolver_context(identity_config)
+        clean_context = clean_resolved_dependencies(working_directory) if clean else nullcontext()
+        with clean_context:
+            lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory, resolver_context)
         log.success(f"Resolved dependencies and wrote lock file to {lock_path}")
     except (OSError, RuntimeError, TypeError, ValueError, ValidationError, yaml.YAMLError) as error:
         log.error(f"Dependency resolution failed: {error}")
@@ -617,9 +632,30 @@ def _resolve_deps_config_path(config_path: Path | None, working_directory: Path)
     return working_directory / DEFAULT_DEPS_CONFIG_FILENAME
 
 
-def _resolve_dependencies_to_lock(resolved_config_path: Path, working_directory: Path) -> Path:
+def _load_dependency_identity_config(
+    identity_path: Path | None,
+    working_directory: Path,
+) -> RemoteIdentityConfig | None:
+    resolved_identity_path = identity_path or working_directory / DEFAULT_IDENTITY_FILENAME
+    if identity_path is None and not resolved_identity_path.exists():
+        return None
+    return RemoteIdentityConfig.load(resolved_identity_path)
+
+
+def _build_resolver_context(identity_config: RemoteIdentityConfig | None) -> ResolverContext:
+    remote_identity_provider = None
+    if identity_config is not None:
+        remote_identity_provider = RemoteIdentityProvider(identity_config)
+    return ResolverContext(remote_identity_provider=remote_identity_provider)
+
+
+def _resolve_dependencies_to_lock(
+    resolved_config_path: Path,
+    working_directory: Path,
+    resolver_context: ResolverContext | None = None,
+) -> Path:
     dependency_config = DependencyConfig.load(resolved_config_path)
-    lock_file = resolve_dependencies(dependency_config, working_directory)
+    lock_file = resolve_dependencies(dependency_config, working_directory, resolver_context)
     lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
     lock_file.save(lock_path)
     return lock_path

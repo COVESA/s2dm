@@ -4,11 +4,15 @@ from pathlib import Path
 
 from s2dm.deps.models import DependencyEntry, DependencySource, ResolvedDependencySource
 from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME
+from s2dm.deps.resolve.context import ResolverContext
 from s2dm.deps.resolve.extractors.factory import ExtractorFactory
 
 
 class Resolver(ABC):
     """Base interface for dependency resolvers."""
+
+    def __init__(self, context: ResolverContext | None = None) -> None:
+        self.context = context
 
     @classmethod
     @abstractmethod

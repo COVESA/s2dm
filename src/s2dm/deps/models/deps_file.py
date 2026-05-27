@@ -31,7 +31,11 @@ def is_dependency_source_url(value: str) -> bool:
         return False
 
     path_segments = [path_segment for path_segment in parsed.path.split("/") if path_segment]
-    return len(path_segments) >= 2
+    if len(path_segments) != 2:
+        return False
+
+    repository_name = path_segments[1]
+    return not repository_name.endswith(".git")
 
 
 class DependencyEntry(BaseModel):

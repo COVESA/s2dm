@@ -1,6 +1,7 @@
 from typing import TypeVar
 
 from s2dm.deps.models import DependencyEntry
+from s2dm.deps.resolve.context import ResolverContext
 from s2dm.deps.resolve.resolvers.resolver import Resolver
 
 ResolverClass = TypeVar("ResolverClass", bound=type[Resolver])
@@ -23,11 +24,15 @@ class ResolverFactory:
         return tuple(cls._registered_resolvers)
 
     @classmethod
-    def create_resolver(cls, dependency: DependencyEntry) -> Resolver:
+    def create_resolver(
+        cls,
+        dependency: DependencyEntry,
+        context: ResolverContext | None = None,
+    ) -> Resolver:
         """Create the matching resolver for the given dependency."""
         resolver_classes = cls.get_registered_resolvers()
         for resolver_class in resolver_classes:
             if resolver_class.matches(dependency):
-                return resolver_class()
+                return resolver_class(context)
 
         raise ValueError(f"Unsupported dependency source: {dependency.source}")
