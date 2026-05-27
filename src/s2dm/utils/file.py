@@ -1,6 +1,7 @@
 """File utility functions."""
 
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
 
 
@@ -51,3 +52,23 @@ def temp_file_from_content(
         temp_file.write(content)
         temp_file.flush()
         return Path(temp_file.name)
+
+
+def temp_files_from_contents(
+    contents: Iterable[str],
+    suffix: str = ".graphql",
+    prefix: str = "",
+    delete: bool = False,
+    encoding: str = "utf-8",
+) -> list[Path]:
+    """Write string contents to temporary files and return their paths."""
+    return [
+        temp_file_from_content(
+            content=content,
+            suffix=suffix,
+            prefix=prefix,
+            delete=delete,
+            encoding=encoding,
+        )
+        for content in contents
+    ]

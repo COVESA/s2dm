@@ -10,17 +10,35 @@ import threading
 import time
 import webbrowser
 from collections.abc import Callable
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlparse
 
 import rich_click as click
-from graphql import DocumentNode, GraphQLSchema, parse
+import yaml
+from graphql import DocumentNode, GraphQLError, GraphQLSchema, parse
+from pydantic import ValidationError
 from rdflib import Graph
 from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
+from s2dm.deps import (
+    DEFAULT_DEPS_CONFIG_FILENAME,
+    DEFAULT_IDENTITY_FILENAME,
+    DEPENDENCY_LOCK_FILENAME,
+    clean_resolved_dependencies,
+    resolve_dependencies,
+)
+from s2dm.deps.compose import (
+    DependencySchemaBuilder,
+    DependencySchemaInput,
+)
+from s2dm.deps.models import DependencyConfig, DependencyMetadata, RemoteIdentityConfig
+from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
+from s2dm.deps.resolve.context import ResolverContext
+from s2dm.deps.resolve.providers import RemoteIdentityProvider
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -51,11 +69,10 @@ from s2dm.exporters.utils.naming_config import ValidationMode, load_naming_conve
 from s2dm.exporters.utils.schema import search_schema
 from s2dm.exporters.utils.schema_loader import (
     build_schema_str,
+    build_schema_str_with_optional_source_map,
     build_schema_with_query,
     check_correct_schema,
     create_tempfile_to_composed_schema,
-    download_url_to_temp,
-    is_url,
     load_and_process_schema,
     load_schema,
     load_schema_with_source_map,
@@ -77,6 +94,9 @@ from s2dm.units.sync import (
     get_latest_qudt_version,
     sync_qudt_units,
 )
+from s2dm.utils.download import download_url_to_temp
+from s2dm.utils.file import temp_files_from_contents
+from s2dm.utils.url import is_url
 
 S2DM_HOME = Path.home() / ".s2dm"
 DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
@@ -154,7 +174,7 @@ class SchemaResolverOption(_PathResolverOption):
 
     _url_suffix = ".graphql"
     _resource_label = "Schema"
-    _file_extensions = frozenset({".graphql"})
+    _file_extensions = frozenset({".graphql", ".gql"})
 
 
 schema_option = click.option(
@@ -185,6 +205,24 @@ def selection_query_option(required: bool = False) -> Callable[[Callable[..., An
         required=required,
         help="GraphQL query file to filter the passed schema",
     )
+
+
+deps_config_option = click.option(
+    "--config",
+    "config_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help="Dependency manifest file. Defaults to s2dm.deps.yaml in the current working directory.",
+)
+
+deps_identity_option = click.option(
+    "--identity",
+    "identity_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help=(
+        "Dependency identity file containing tokens; do not commit it. "
+        "Defaults to .s2dm.identity.yaml in the current working directory when present."
+    ),
+)
 
 
 root_type_option = click.option(
@@ -375,6 +413,12 @@ def diff() -> None:
 
 
 @click.group()
+def deps() -> None:
+    """Dependency commands."""
+    pass
+
+
+@click.group()
 def export() -> None:
     """Export commands."""
     pass
@@ -477,6 +521,144 @@ def query(
         display_name = query_name  # type: ignore[assignment]
 
     _output_results(results, display_name, json_output=json_output, output=output)
+
+
+@deps.command(name="resolve")
+@deps_config_option
+@deps_identity_option
+@click.option("--clean", is_flag=True, default=False, help="Remove the lock file and vendored dependencies first.")
+def deps_resolve(config_path: Path | None, identity_path: Path | None, clean: bool) -> None:
+    """Resolve dependencies from the configured dependency manifest."""
+    working_directory = Path.cwd()
+    resolved_config_path = _resolve_deps_config_path(config_path, working_directory)
+
+    try:
+        identity_config = _load_dependency_identity_config(identity_path, working_directory)
+        resolver_context = _build_resolver_context(identity_config)
+        clean_context = clean_resolved_dependencies(working_directory) if clean else nullcontext()
+        with clean_context:
+            lock_path = _resolve_dependencies_to_lock(resolved_config_path, working_directory, resolver_context)
+        log.success(f"Resolved dependencies and wrote lock file to {lock_path}")
+    except (OSError, RuntimeError, TypeError, ValueError, ValidationError, yaml.YAMLError) as error:
+        log.error(f"Dependency resolution failed: {error}")
+        sys.exit(1)
+
+
+@deps.command(name="build")
+@deps_config_option
+@click.option(
+    "--auto-prefix",
+    is_flag=True,
+    default=False,
+    help="Prefix conflicting dependency types using preferred_prefix, falling back to metadata id.",
+)
+@output_option
+def deps_build(config_path: Path | None, auto_prefix: bool, output: Path) -> None:
+    """Compose all vendored dependency schemas into a single output file."""
+    working_directory = Path.cwd()
+    resolved_config_path = _resolve_deps_config_path(config_path, working_directory)
+    vendor_root = working_directory / VENDOR_DIRECTORY
+
+    try:
+        dependency_config = DependencyConfig.load(resolved_config_path)
+        schemas: list[Path] = []
+        selection_by_schema_path: dict[Path, DocumentNode] = {}
+        selected_schema_contents: list[str] = []
+        dependency_schema_contents: list[DependencySchemaInput] = []
+
+        def resolve_schema_selection(schema_path: Path) -> DocumentNode | None:
+            return selection_by_schema_path.get(schema_path.resolve())
+
+        for dependency in dependency_config.dependencies:
+            dependency_vendor_directory = vendor_root / dependency.name / dependency.version
+            schema_path = (dependency_vendor_directory / SCHEMA_FILENAME).resolve()
+
+            if dependency.selection is not None:
+                selection_by_schema_path[schema_path] = parse(dependency.selection.read_text(encoding="utf-8"))
+
+            schema_content, _ = build_schema_str_with_optional_source_map(
+                [schema_path],
+                schema_selection_resolver=resolve_schema_selection,
+            )
+            selected_schema_contents.append(schema_content)
+
+            metadata_path = dependency_vendor_directory / METADATA_FILENAME
+            dependency_schema_contents.append(
+                DependencySchemaInput(
+                    schema_content=schema_content,
+                    metadata=DependencyMetadata.load(metadata_path),
+                )
+            )
+
+        if not selected_schema_contents:
+            raise ValueError(f"No vendored dependency schemas found under {vendor_root}")
+
+        dependency_schema_builder = DependencySchemaBuilder(dependency_schema_contents)
+        type_name_conflicts = dependency_schema_builder.find_conflicts()
+        if type_name_conflicts:
+            log_conflict = log.info if auto_prefix else log.error
+            for conflict in type_name_conflicts:
+                dependency_labels = ", ".join(
+                    f"{dependency.name}@{dependency.version}" for dependency in conflict.dependencies_metadata
+                )
+                log_conflict(f"Multiple `{conflict.type_name}` types found in [{dependency_labels}]")
+            if not auto_prefix:
+                sys.exit(1)
+
+        if auto_prefix:
+            schemas = dependency_schema_builder.write_auto_prefixed_schema_files()
+        else:
+            schemas = temp_files_from_contents(selected_schema_contents)
+
+        _compose_schemas(
+            schemas=schemas,
+            root_type=None,
+            selection_query=None,
+            naming_config=None,
+            output=output,
+            expanded_instances=False,
+        )
+    except (OSError, RuntimeError, TypeError, ValueError, GraphQLError, ValidationError, yaml.YAMLError) as error:
+        log.error(f"Dependency build failed: {error}")
+        sys.exit(1)
+
+
+deps.add_command(deps_build, name="compose")
+
+
+def _resolve_deps_config_path(config_path: Path | None, working_directory: Path) -> Path:
+    if config_path is not None:
+        return config_path
+    return working_directory / DEFAULT_DEPS_CONFIG_FILENAME
+
+
+def _load_dependency_identity_config(
+    identity_path: Path | None,
+    working_directory: Path,
+) -> RemoteIdentityConfig | None:
+    resolved_identity_path = identity_path or working_directory / DEFAULT_IDENTITY_FILENAME
+    if identity_path is None and not resolved_identity_path.exists():
+        return None
+    return RemoteIdentityConfig.load(resolved_identity_path)
+
+
+def _build_resolver_context(identity_config: RemoteIdentityConfig | None) -> ResolverContext:
+    remote_identity_provider = None
+    if identity_config is not None:
+        remote_identity_provider = RemoteIdentityProvider(identity_config)
+    return ResolverContext(remote_identity_provider=remote_identity_provider)
+
+
+def _resolve_dependencies_to_lock(
+    resolved_config_path: Path,
+    working_directory: Path,
+    resolver_context: ResolverContext | None = None,
+) -> Path:
+    dependency_config = DependencyConfig.load(resolved_config_path)
+    lock_file = resolve_dependencies(dependency_config, working_directory, resolver_context)
+    lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
+    lock_file.save(lock_path)
+    return lock_path
 
 
 @click.group()
@@ -776,8 +958,32 @@ def compose(
     expanded_instances: bool,
 ) -> None:
     """Compose GraphQL schema files into a single output file."""
+    _compose_schemas(
+        schemas=schemas,
+        root_type=root_type,
+        selection_query=selection_query,
+        naming_config=naming_config,
+        output=output,
+        expanded_instances=expanded_instances,
+    )
+
+
+def _compose_schemas(
+    schemas: list[Path],
+    root_type: str | None,
+    selection_query: Path | None,
+    naming_config: Path | None,
+    output: Path,
+    expanded_instances: bool,
+    source_map_value_resolver: Callable[[Path, str], str] | None = None,
+    schema_selection_resolver: Callable[[Path], DocumentNode | None] | None = None,
+) -> None:
     try:
-        graphql_schema, source_map = load_schema_with_source_map(schemas)
+        graphql_schema, source_map = load_schema_with_source_map(
+            schemas,
+            source_map_value_resolver=source_map_value_resolver,
+            schema_selection_resolver=schema_selection_resolver,
+        )
         assert_correct_schema(graphql_schema)
 
         query_document = None
@@ -2027,6 +2233,7 @@ def _output_results(
 
 cli.add_command(check)
 cli.add_command(compose)
+cli.add_command(deps)
 cli.add_command(diff)
 
 export.add_command(avro)

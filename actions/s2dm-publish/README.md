@@ -11,6 +11,7 @@ GitHub Action for automated artifact generation and publishing workflow through 
 - SHACL generation
 - RDF export (SKOS concepts + ontology data graph)
 - VSpec generation
+- Release metadata generation
 - Automated release creation
 
 ## Usage
@@ -40,6 +41,7 @@ jobs:
         with:
           repository-path: .
           spec-path: ./spec
+          metadata-path: metadata.yaml
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
@@ -86,6 +88,7 @@ jobs:
 |-------|-------------|----------|---------|
 | `repository-path` | Path to the git repository root | Yes | - |
 | `spec-path` | Path to the spec directory relative to the root of the repository | No | `./spec` |
+| `metadata-path` | Path to the repository metadata YAML file relative to the root of the repository | No | `metadata.yaml` |
 | `github-token` | GitHub token for creating releases | Yes | - |
 | `s2dm-path` | Path where S2DM repository will be checked out | No | `s2dm` |
 | `concept-namespace` | Concept namespace for registry | No | `''` |
@@ -151,8 +154,19 @@ You need to use credentials that can bypass branch protection:
 Your repository must have:
 
 1. A `spec/` directory with S2DM specification files
-2. A `.bumpversion.toml` configuration file for version management
-3. Proper permissions: `contents: write` in the workflow
+2. A repository-level `metadata.yaml` file with `name`, `id`, and optional `preferred_prefix`
+3. A `.bumpversion.toml` configuration file for version management
+4. Proper permissions: `contents: write` in the workflow
+
+### Example `metadata.yaml`
+
+```yaml
+name: VehicleModel
+id: https://example.com/models/vehicle
+preferred_prefix: vehicle
+```
+
+The action adds `version` from the release tag when generating release metadata. Do not include `version` in the repository metadata file.
 
 ### Example `.bumpversion.toml`
 
@@ -189,6 +203,7 @@ The action automatically manages variant-based IDs for schema concepts:
 ### Release Artifacts
 
 Each release includes:
+- `metadata.yaml` - Release metadata with the release tag as `version`
 - `registry.json` - Complete spec history with variant IDs
 - `variant_ids_<tag>.json` - Current variant ID mappings
 - `concept_uris_<tag>.json` - Concept URI definitions
@@ -207,8 +222,10 @@ Each release includes:
    - For updates: Increments variant IDs based on detected changes (major for breaking, minor for non-breaking)
 5. **Artifact Generation**: Generates all required artifacts (GraphQL, JSON Schema, SHACL, RDF, VSpec)
 6. **Version Bump**: Updates version using bump-my-version and creates git tag
-7. **Release Creation**: Creates GitHub release with all generated artifacts including:
+7. **Metadata Generation**: Copies repository metadata and adds the release tag as `version`
+8. **Release Creation**: Creates GitHub release with all generated artifacts including:
    - Composed GraphQL schema
+   - Release metadata
    - JSON Schema
    - SHACL shapes
    - RDF export (SKOS + data graph in .nt and .ttl formats) when `rdf-namespace` is provided
