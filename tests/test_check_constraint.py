@@ -106,7 +106,7 @@ def test_cardinality_min_leq_max() -> None:
     directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
 
     type Foo {
-      bar: Int @cardinality(min: 0, max: 2)
+      bar: [Int] @cardinality(min: 0, max: 2)
     }
     """
     schema = make_schema(sdl)
@@ -121,7 +121,7 @@ def test_cardinality_min_gt_max() -> None:
     directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
 
     type Foo {
-      bar: Int @cardinality(min: 3, max: 2)
+      bar: [Int] @cardinality(min: 3, max: 2)
     }
     """
     schema = make_schema(sdl)
@@ -129,3 +129,74 @@ def test_cardinality_min_gt_max() -> None:
     checker = ConstraintChecker(schema)
     errors = checker.run(objects)
     assert any("has min > max" in e for e in errors)
+
+
+def test_cardinality_on_nullable_scalar_is_flagged() -> None:
+    """@cardinality on a non-list field is misuse — there is no list to size."""
+    sdl = """
+    directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+    type Foo {
+      bar: Int @cardinality(min: 0, max: 2)
+    }
+    """
+    schema = make_schema(sdl)
+    objects = get_objects(schema)
+    checker = ConstraintChecker(schema)
+    errors = checker.run(objects)
+    assert any(
+        "Foo.bar" in e and "non-list" in e and "cardinality" in e for e in errors
+    ), f"Expected a 'non-list' cardinality error for Foo.bar; got: {errors}"
+
+
+def test_cardinality_on_non_null_scalar_is_flagged() -> None:
+    """A non-null scalar already pins cardinality at 1..1; @cardinality contradicts it."""
+    sdl = """
+    directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+    type Foo {
+      bar: Int! @cardinality(min: 0, max: 2)
+    }
+    """
+    schema = make_schema(sdl)
+    objects = get_objects(schema)
+    checker = ConstraintChecker(schema)
+    errors = checker.run(objects)
+    assert any(
+        "Foo.bar" in e and "non-list" in e for e in errors
+    ), f"Expected a 'non-list' cardinality error for Foo.bar; got: {errors}"
+
+
+def test_cardinality_on_list_passes() -> None:
+    """@cardinality on a list field of any nullability flavour is fine."""
+    sdl = """
+    directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+    type Foo {
+      a: [Int] @cardinality(min: 0, max: 5)
+      b: [Int]! @cardinality(min: 1, max: 5)
+      c: [Int!] @cardinality(min: 0, max: 5)
+      d: [Int!]! @cardinality(min: 1, max: 5)
+    }
+    """
+    schema = make_schema(sdl)
+    objects = get_objects(schema)
+    checker = ConstraintChecker(schema)
+    errors = checker.run(objects)
+    assert not errors, f"Expected no errors for list fields with cardinality; got: {errors}"
+
+
+def test_no_cardinality_directive_passes() -> None:
+    """A scalar with no @cardinality directive at all is fine."""
+    sdl = """
+    directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+    type Foo {
+      bar: Int
+    }
+    """
+    schema = make_schema(sdl)
+    objects = get_objects(schema)
+    checker = ConstraintChecker(schema)
+    errors = checker.run(objects)
+    assert not errors
