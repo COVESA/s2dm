@@ -11,6 +11,10 @@ class ResponseError(ValueError):
     """Validation-like error that is safe to expose to API clients."""
 
 
+class ResourceNotFoundError(FileNotFoundError):
+    """Resource requested through the API does not exist."""
+
+
 def format_error_list(summary: str, errors: list[str]) -> str:
     """Format multiple validation errors as a multiline message."""
     if not errors:

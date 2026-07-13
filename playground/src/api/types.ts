@@ -1,6 +1,11 @@
-type ContentInput = {
+export type ContentInput = {
 	type: "content";
 	content: string;
+};
+
+export type PathInput = {
+	type: "path";
+	path: string;
 };
 
 type FileContentInput = {
@@ -16,6 +21,45 @@ type UrlInput = {
 
 export type SchemaInput = ContentInput | FileContentInput | UrlInput;
 export type QueryInput = ContentInput;
+
+export type DependencyConfigEntry = {
+	name: string;
+	version: string;
+	source: string;
+	artifact: string;
+	selection: ContentInput | PathInput | null;
+	schema_content?: string | null;
+};
+
+export type DependenciesConfig = {
+	dependencies: DependencyConfigEntry[];
+};
+
+export type GetDependenciesConfigResponse = DependenciesConfig;
+
+export type SaveDependenciesConfigRequest = DependenciesConfig & {
+	config_directory?: string | null;
+};
+
+export type DependencyIdentityEntry = {
+	host: string;
+	scope: string | null;
+	token: string;
+};
+
+export type DependenciesIdentities = {
+	identities: DependencyIdentityEntry[];
+};
+
+export type DependencyStatus =
+	| "not_configured"
+	| "unresolved"
+	| "resolved"
+	| "invalid";
+
+export type DependenciesStatusResponse = {
+	status: DependencyStatus;
+};
 
 type ResponseMetadata = {
 	result_format: string;

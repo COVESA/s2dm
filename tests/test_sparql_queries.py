@@ -238,11 +238,11 @@ class TestDownloadRdfToTemp:
     def test_downloads_ttl_url(self, tmp_path: Path) -> None:
         """A .ttl URL is downloaded with correct suffix."""
         mock_response = MagicMock()
-        mock_response.text = "@prefix ex: <https://example.org/> ."
+        mock_response.content = b"@prefix ex: <https://example.org/> ."
         mock_response.headers = {}
         mock_response.raise_for_status = MagicMock()
 
-        with patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response) as mock_get:
+        with patch("s2dm.utils.download.requests.get", return_value=mock_response) as mock_get:
             result = download_rdf_to_temp("https://example.org/graph.ttl")
             mock_get.assert_called_once()
             assert result.exists()
@@ -252,11 +252,11 @@ class TestDownloadRdfToTemp:
     def test_unknown_extension_defaults_to_ttl(self) -> None:
         """URL with unrecognised extension falls back to .ttl suffix."""
         mock_response = MagicMock()
-        mock_response.text = "some rdf content"
+        mock_response.content = b"some rdf content"
         mock_response.headers = {}
         mock_response.raise_for_status = MagicMock()
 
-        with patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response):
+        with patch("s2dm.utils.download.requests.get", return_value=mock_response):
             result = download_rdf_to_temp("https://example.org/graph")
             assert result.suffix == ".ttl"
             result.unlink()
@@ -266,7 +266,7 @@ class TestDownloadRdfToTemp:
         import requests as req
 
         with (
-            patch("s2dm.exporters.utils.schema_loader.requests.get", side_effect=req.RequestException("fail")),
+            patch("s2dm.utils.download.requests.get", side_effect=req.RequestException("fail")),
             pytest.raises(RuntimeError, match="Failed to download RDF"),
         ):
             download_rdf_to_temp("https://example.org/graph.ttl")
@@ -278,7 +278,7 @@ class TestDownloadRdfToTemp:
         mock_response.raise_for_status = MagicMock()
 
         with (
-            patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response),
+            patch("s2dm.utils.download.requests.get", return_value=mock_response),
             pytest.raises(RuntimeError, match="RDF file too large"),
         ):
             download_rdf_to_temp("https://example.org/graph.ttl", max_size_mb=50)

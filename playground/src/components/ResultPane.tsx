@@ -16,13 +16,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
 	fetchCapabilities,
-	setSelectedExporterEndpoint,
 	selectCapabilitiesError,
-	selectSelectedExporterEndpoint,
 	selectExporterByEndpoint,
 	selectExporters,
 	selectIsLoadingCapabilities,
+	selectSelectedExporterEndpoint,
+	setSelectedExporterEndpoint,
 } from "@/store/capabilities/capabilitiesSlice";
+import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
 import {
 	clearExportResult,
 	clearExportResultForEndpoint,
@@ -52,9 +53,12 @@ export function ResultPane({
 }: ResultPaneProps) {
 	const dispatch = useAppDispatch();
 	const isCollapsed = useAppSelector(selectResultPaneCollapsed);
+	const exploringDependencyId = useAppSelector(selectExploringDependencyId);
 	const filteredSchema = useAppSelector(selectFilteredSchema);
 	const hasFilteredSchema = filteredSchema.trim().length > 0;
-	const canCollapsePane = Boolean(collapsible && hasFilteredSchema);
+	const canCollapsePane = Boolean(
+		collapsible && hasFilteredSchema && !exploringDependencyId,
+	);
 	const shouldCollapsePane = !hasFilteredSchema || isCollapsed;
 	const exporters = useAppSelector(selectExporters);
 	const selectedExporterEndpoint = useAppSelector(

@@ -1,0 +1,16 @@
+directive @config(mode: ModeEnum) on OBJECT
+directive @metadata(label: String) on ENUM
+
+enum ModeEnum @metadata(label: "workflow") {
+  ACTIVE
+  INACTIVE
+}
+
+type Vehicle @config(mode: ACTIVE) {
+  id: ID!
+  model: String
+}
+
+type Query {
+  vehicle: Vehicle
+}

@@ -1,19 +1,23 @@
 import type { SchemaInput } from "@/api/types";
-import type { ImportedFile } from "@/types/importedFile";
+import type { SchemaSource } from "@/types/schemaSource";
 
 export function mapImportedFilesToSchemaInputs(
-	importedFiles: ImportedFile[],
+	sources: SchemaSource[],
 ): SchemaInput[] {
-	return importedFiles.map((importedFile) => {
-		if (importedFile.type === "url") {
-			return { type: "url", url: importedFile.path };
+	return sources.map((source) => {
+		if (source.type === "content") {
+			return { type: "content", content: source.content };
 		}
 
-		const content = importedFile.content ?? "";
-		if (importedFile.name.trim()) {
+		if (source.type === "url") {
+			return { type: "url", url: source.path };
+		}
+
+		const content = source.content ?? "";
+		if (source.name.trim()) {
 			return {
 				type: "file_content",
-				filename: importedFile.name,
+				filename: source.name,
 				content,
 			};
 		}

@@ -36,7 +36,11 @@ const exportSlice = createSlice({
 		},
 		exportSuccess: (
 			state,
-			action: PayloadAction<{ endpoint: string; output: string; format: string }>,
+			action: PayloadAction<{
+				endpoint: string;
+				output: string;
+				format: string;
+			}>,
 		) => {
 			state.isExporting = false;
 			state.activeEndpoint = null;
@@ -76,11 +80,9 @@ export const {
 
 export const selectIsExporting = (state: RootState) =>
 	state.schemaExport.isExporting;
-export const selectIsExportingEndpoint = (
-	state: RootState,
-	endpoint: string,
-) =>
-	state.schemaExport.isExporting && state.schemaExport.activeEndpoint === endpoint;
+export const selectIsExportingEndpoint = (state: RootState, endpoint: string) =>
+	state.schemaExport.isExporting &&
+	state.schemaExport.activeEndpoint === endpoint;
 export const selectExportResult = (state: RootState, endpoint: string) =>
 	state.schemaExport.resultsByEndpoint[endpoint]?.output || "";
 export const selectExportFormat = (state: RootState, endpoint: string) =>

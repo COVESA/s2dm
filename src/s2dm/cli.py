@@ -15,12 +15,27 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 import rich_click as click
-from graphql import DocumentNode, GraphQLSchema, parse
+import yaml
+from graphql import DocumentNode, GraphQLError, GraphQLSchema
+from pydantic import ValidationError
 from rdflib import Graph
 from rich.traceback import install
 
 from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
+from s2dm.deps.helpers import (
+    build_resolver_context,
+    get_dependency_config_path,
+    get_dependency_identity_path,
+    load_dependency_config,
+    load_dependency_identity_config,
+    load_vendored_dependency_schema_inputs,
+    prepare_dependency_schemas_for_composition,
+    resolve_dependency_config_to_lock_path,
+    validate_cached_dependency_workspace,
+)
+from s2dm.deps.resolve.common import VENDOR_DIRECTORY
+from s2dm.deps.resolve.warnings import LoggingWarningCollector
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -46,21 +61,16 @@ from s2dm.exporters.sparql_queries import (
 from s2dm.exporters.spec_history import SpecHistoryExporter
 from s2dm.exporters.utils.extraction import get_all_named_types, get_all_object_types, get_root_level_types_from_query
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_introspection_type
-from s2dm.exporters.utils.naming import load_naming_config
 from s2dm.exporters.utils.naming_config import ValidationMode, load_naming_convention_config
 from s2dm.exporters.utils.schema import search_schema
 from s2dm.exporters.utils.schema_loader import (
     build_schema_str,
     build_schema_with_query,
     check_correct_schema,
+    compose_schemas_to_string,
     create_tempfile_to_composed_schema,
-    download_url_to_temp,
-    is_url,
     load_and_process_schema,
     load_schema,
-    load_schema_with_source_map,
-    print_schema_with_directives_preserved,
-    process_schema,
     resolve_files_by_extensions,
 )
 from s2dm.exporters.vspec import translate_to_vspec
@@ -77,6 +87,8 @@ from s2dm.units.sync import (
     get_latest_qudt_version,
     sync_qudt_units,
 )
+from s2dm.utils.download import download_url_to_temp
+from s2dm.utils.url import is_url
 
 S2DM_HOME = Path.home() / ".s2dm"
 DEFAULT_QUDT_UNITS_DIR = S2DM_HOME / "units" / "qudt"
@@ -154,7 +166,7 @@ class SchemaResolverOption(_PathResolverOption):
 
     _url_suffix = ".graphql"
     _resource_label = "Schema"
-    _file_extensions = frozenset({".graphql"})
+    _file_extensions = frozenset({".graphql", ".gql"})
 
 
 schema_option = click.option(
@@ -185,6 +197,24 @@ def selection_query_option(required: bool = False) -> Callable[[Callable[..., An
         required=required,
         help="GraphQL query file to filter the passed schema",
     )
+
+
+deps_config_option = click.option(
+    "--config",
+    "config_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help="Dependency manifest file. Defaults to s2dm.deps.yaml in the current working directory.",
+)
+
+deps_identity_option = click.option(
+    "--identity",
+    "identity_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help=(
+        "Dependency identity file containing tokens; do not commit it. "
+        "Defaults to .s2dm.identity.yaml in the current working directory when present."
+    ),
+)
 
 
 root_type_option = click.option(
@@ -375,6 +405,12 @@ def diff() -> None:
 
 
 @click.group()
+def deps() -> None:
+    """Dependency commands."""
+    pass
+
+
+@click.group()
 def export() -> None:
     """Export commands."""
     pass
@@ -477,6 +513,86 @@ def query(
         display_name = query_name  # type: ignore[assignment]
 
     _output_results(results, display_name, json_output=json_output, output=output)
+
+
+@deps.command(name="resolve")
+@deps_config_option
+@deps_identity_option
+@click.option("--clean", is_flag=True, default=False, help="Remove the lock file and vendored dependencies first.")
+def deps_resolve(config_path: Path | None, identity_path: Path | None, clean: bool) -> None:
+    """Resolve dependencies from the configured dependency manifest."""
+    working_directory = Path.cwd()
+    resolved_config_path = config_path or get_dependency_config_path(working_directory)
+
+    try:
+        resolved_identity_path = identity_path or get_dependency_identity_path(working_directory)
+        identity_config = load_dependency_identity_config(resolved_identity_path)
+        resolver_context = build_resolver_context(identity_config, warning_collector=LoggingWarningCollector())
+        dependency_config = load_dependency_config(resolved_config_path)
+        lock_path = resolve_dependency_config_to_lock_path(
+            dependency_config,
+            working_directory,
+            resolver_context,
+            clean,
+        )
+        log.success(f"Resolved dependencies and wrote lock file to {lock_path}")
+    except (OSError, RuntimeError, TypeError, ValueError, ValidationError, yaml.YAMLError) as error:
+        log.error(f"Dependency resolution failed: {error}")
+        sys.exit(1)
+
+
+@deps.command(name="build")
+@deps_config_option
+@click.option(
+    "--auto-prefix",
+    is_flag=True,
+    default=False,
+    help="Prefix conflicting dependency types using preferred_prefix, falling back to metadata id.",
+)
+@output_option
+def deps_build(config_path: Path | None, auto_prefix: bool, output: Path) -> None:
+    """Compose all vendored dependency schemas into a single output file."""
+    working_directory = Path.cwd()
+    resolved_config_path = config_path or get_dependency_config_path(working_directory)
+    vendor_root = working_directory / VENDOR_DIRECTORY
+
+    try:
+        dependency_config = load_dependency_config(resolved_config_path)
+        validate_cached_dependency_workspace(dependency_config, working_directory)
+        selected_schema_contents, dependency_schema_inputs = load_vendored_dependency_schema_inputs(
+            dependency_config,
+            vendor_root,
+        )
+        schema_paths, type_name_conflicts = prepare_dependency_schemas_for_composition(
+            dependency_schema_inputs,
+            selected_schema_contents,
+            auto_prefix,
+        )
+        if type_name_conflicts:
+            log_conflict = log.info if auto_prefix else log.error
+            for conflict in type_name_conflicts:
+                dependency_labels = ", ".join(
+                    f"{dependency.name}@{dependency.version}" for dependency in conflict.dependencies_metadata
+                )
+                log_conflict(f"Multiple `{conflict.type_name}` types found in [{dependency_labels}]")
+            if not auto_prefix:
+                sys.exit(1)
+
+        composed_schema_str = compose_schemas_to_string(
+            schemas=schema_paths,
+            root_type=None,
+            selection_query=None,
+            naming_config=None,
+            expanded_instances=False,
+        )
+        output.write_text(composed_schema_str)
+        log.success(f"Successfully composed schema to {output}")
+    except (OSError, RuntimeError, TypeError, ValueError, GraphQLError, ValidationError, yaml.YAMLError) as error:
+        log.error(f"Dependency build failed: {error}")
+        sys.exit(1)
+
+
+deps.add_command(deps_build, name="compose")
 
 
 @click.group()
@@ -776,25 +892,36 @@ def compose(
     expanded_instances: bool,
 ) -> None:
     """Compose GraphQL schema files into a single output file."""
+    _compose_schemas(
+        schemas=schemas,
+        root_type=root_type,
+        selection_query=selection_query,
+        naming_config=naming_config,
+        output=output,
+        expanded_instances=expanded_instances,
+    )
+
+
+def _compose_schemas(
+    schemas: list[Path],
+    root_type: str | None,
+    selection_query: Path | None,
+    naming_config: Path | None,
+    output: Path,
+    expanded_instances: bool,
+    source_map_value_resolver: Callable[[Path, str], str] | None = None,
+    schema_selection_resolver: Callable[[Path], DocumentNode | None] | None = None,
+) -> None:
     try:
-        graphql_schema, source_map = load_schema_with_source_map(schemas)
-        assert_correct_schema(graphql_schema)
-
-        query_document = None
-        if selection_query:
-            query_document = parse(selection_query.read_text())
-
-        naming_config_dict = load_naming_config(naming_config)
-
-        annotated_schema = process_schema(
-            schema=graphql_schema,
-            source_map=source_map,
-            naming_config=naming_config_dict,
-            query_document=query_document,
-            root_type=root_type,
-            expanded_instances=expanded_instances,
+        composed_schema_str = compose_schemas_to_string(
+            schemas,
+            root_type,
+            selection_query,
+            naming_config,
+            expanded_instances,
+            source_map_value_resolver=source_map_value_resolver,
+            schema_selection_resolver=schema_selection_resolver,
         )
-        composed_schema_str = print_schema_with_directives_preserved(annotated_schema.schema, source_map)
 
         output.write_text(composed_schema_str)
 
@@ -2027,6 +2154,7 @@ def _output_results(
 
 cli.add_command(check)
 cli.add_command(compose)
+cli.add_command(deps)
 cli.add_command(diff)
 
 export.add_command(avro)

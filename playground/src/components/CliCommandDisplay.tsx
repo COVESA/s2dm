@@ -2,10 +2,17 @@ import { Check, Copy, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { selectExporterByEndpoint } from "@/store/capabilities/capabilitiesSlice";
-import { selectExportFormat, selectExportResult } from "@/store/export/exportSlice";
+import { selectHasComposedDependenciesSchema } from "@/store/deps/compose/composeSlice";
+import {
+	selectExportFormat,
+	selectExportResult,
+} from "@/store/export/exportSlice";
 import { useAppSelector } from "@/store/hooks";
-import { selectSourceFiles } from "@/store/schema/schemaSlice";
-import { selectSelectionQuery } from "@/store/selection/selectionSlice";
+import {
+	selectIncludeBuiltDependencies,
+	selectSourceFiles,
+} from "@/store/schema/schemaSlice";
+import { selectAppliedSelectionQuery } from "@/store/selection/selectionSlice";
 import { buildCliCommand, buildComposeCommand } from "@/utils/buildCliCommand";
 
 type CliCommandDisplayProps =
@@ -15,7 +22,13 @@ type CliCommandDisplayProps =
 export function CliCommandDisplay(props: CliCommandDisplayProps) {
 	const [copied, setCopied] = useState(false);
 	const schemas = useAppSelector(selectSourceFiles);
-	const selectionQuery = useAppSelector(selectSelectionQuery);
+	const includeBuiltDependencies = useAppSelector(
+		selectIncludeBuiltDependencies,
+	);
+	const hasComposedDependenciesSchema = useAppSelector(
+		selectHasComposedDependenciesSchema,
+	);
+	const appliedSelectionQuery = useAppSelector(selectAppliedSelectionQuery);
 	const exporter = useAppSelector((state) =>
 		props.type === "export"
 			? selectExporterByEndpoint(state, props.selectedExporterEndpoint)
@@ -37,15 +50,23 @@ export function CliCommandDisplay(props: CliCommandDisplayProps) {
 	});
 
 	let command: string | null = null;
+	const hasBuiltDependenciesSchema =
+		includeBuiltDependencies && hasComposedDependenciesSchema;
 
 	if (props.type === "export") {
 		if (!exporter) {
 			return null;
 		}
 		const outputFormat = exportResult ? exportFormat : undefined;
-		command = buildCliCommand(exporter, schemas, selectionQuery, outputFormat);
+		command = buildCliCommand(
+			exporter,
+			schemas,
+			appliedSelectionQuery,
+			outputFormat,
+			hasBuiltDependenciesSchema,
+		);
 	} else if (props.type === "compose") {
-		command = buildComposeCommand(schemas);
+		command = buildComposeCommand(schemas, hasBuiltDependenciesSchema);
 	}
 
 	const handleCopy = async () => {

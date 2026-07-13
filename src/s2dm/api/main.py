@@ -7,9 +7,10 @@ from fastapi.responses import JSONResponse
 from graphql import GraphQLError, GraphQLSyntaxError
 
 from s2dm import __version__, log
-from s2dm.api.errors import ResponseError
+from s2dm.api.errors import ResourceNotFoundError, ResponseError
 from s2dm.api.models.base import ErrorResponse
-from s2dm.api.routes import avro, filter, jsonschema, linkml, protobuf, query_validate, shacl, validate, vspec
+from s2dm.api.routes import avro, deps, filter, jsonschema, linkml, protobuf, query_validate, shacl, validate, vspec
+from s2dm.deps.resolve.errors import DependencyConfigError, DependencySourceError, DependencyUpstreamError
 
 app = FastAPI(
     title="S2DM Export API",
@@ -50,6 +51,14 @@ def request_validation_error_handler(_request: Request, exc: RequestValidationEr
     )
     log.warning(f"Request validation error: {exc}")
     return JSONResponse(status_code=400, content=error_response.model_dump())
+
+
+@app.exception_handler(ResourceNotFoundError)
+def resource_not_found_handler(_request: Request, exc: ResourceNotFoundError) -> JSONResponse:
+    """Handle API-managed resources that are missing."""
+    error_response = ErrorResponse(error="NotFound", message=str(exc), details=None)
+    log.warning(f"API resource not found: {exc}")
+    return JSONResponse(status_code=404, content=error_response.model_dump())
 
 
 @app.exception_handler(FileNotFoundError)
@@ -100,6 +109,30 @@ def graphql_error_handler(request: Request, exc: GraphQLError) -> JSONResponse:
     return JSONResponse(status_code=422, content=error_response.model_dump())
 
 
+@app.exception_handler(DependencyConfigError)
+def dependency_config_error_handler(_request: Request, exc: DependencyConfigError) -> JSONResponse:
+    """Handle invalid dependency configuration errors."""
+    error_response = ErrorResponse(error="ValidationError", message=str(exc), details=None)
+    log.warning(f"Dependency config error: {exc}")
+    return JSONResponse(status_code=422, content=error_response.model_dump())
+
+
+@app.exception_handler(DependencySourceError)
+def dependency_source_error_handler(_request: Request, exc: DependencySourceError) -> JSONResponse:
+    """Handle user-fixable dependency source errors."""
+    error_response = ErrorResponse(error="DependencySourceError", message=str(exc), details=None)
+    log.warning(f"Dependency source error: {exc}")
+    return JSONResponse(status_code=422, content=error_response.model_dump())
+
+
+@app.exception_handler(DependencyUpstreamError)
+def dependency_upstream_error_handler(_request: Request, exc: DependencyUpstreamError) -> JSONResponse:
+    """Handle upstream dependency provider errors."""
+    error_response = ErrorResponse(error="DependencyUpstreamError", message=str(exc), details=None)
+    log.warning(f"Dependency upstream error: {exc}")
+    return JSONResponse(status_code=502, content=error_response.model_dump())
+
+
 @app.exception_handler(Exception)
 def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected errors."""
@@ -120,6 +153,7 @@ app.include_router(jsonschema.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(linkml.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(avro.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(protobuf.router, prefix="/api/v1/export", tags=["export"])
+app.include_router(deps.router, prefix="/api/v1/deps", tags=["deps"])
 app.include_router(filter.router, prefix="/api/v1/schema", tags=["schema"])
 app.include_router(validate.router, prefix="/api/v1/schema", tags=["schema"])
 app.include_router(query_validate.router, prefix="/api/v1/query", tags=["query"])

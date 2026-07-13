@@ -2,13 +2,8 @@ import type { Monaco } from "@monaco-editor/react";
 import Editor from "@monaco-editor/react";
 import { Download, Maximize } from "lucide-react";
 import { useCallback, useState } from "react";
+import { TextEditorDialog } from "@/components/TextEditorDialog";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 import { useMonacoTheme } from "@/hooks/useMonacoTheme";
 import { registerTurtle } from "@/language-support/turtleMonaco";
 import { downloadTextFile } from "@/utils/download";
@@ -21,6 +16,7 @@ type TextEditorProps = {
 	readOnly?: boolean;
 	fullscreenTitle?: string;
 	fileName?: string;
+	isExpandable?: boolean;
 };
 
 export function TextEditor({
@@ -30,6 +26,7 @@ export function TextEditor({
 	readOnly = false,
 	fullscreenTitle,
 	fileName,
+	isExpandable = true,
 }: TextEditorProps) {
 	const theme = useMonacoTheme();
 	const [isFullscreen, setIsFullscreen] = useState(false);
@@ -78,8 +75,9 @@ export function TextEditor({
 		<div className="group relative h-full w-full overflow-hidden">
 			{renderEditor()}
 			<div className="absolute top-2 right-4 z-10 flex flex-col gap-2">
-				{showMaximize && (
+				{showMaximize && isExpandable && (
 					<Button
+						type="button"
 						variant="outline"
 						size="icon"
 						className="bg-background/50 hover:bg-background/70 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -91,6 +89,7 @@ export function TextEditor({
 				)}
 				{fileName && value.trim() && (
 					<Button
+						type="button"
 						variant="outline"
 						size="icon"
 						className="bg-background/50 hover:bg-background/70 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -108,19 +107,13 @@ export function TextEditor({
 		<>
 			{renderEditorWithButtons(true)}
 
-			<Dialog
+			<TextEditorDialog
 				open={isFullscreen}
-				onOpenChange={(open) => !open && setIsFullscreen(false)}
+				onOpenChange={setIsFullscreen}
+				title={fullscreenTitle || "Editor"}
 			>
-				<DialogContent className="w-[90vw] h-[90vh] max-w-none sm:max-w-none flex flex-col p-0">
-					<DialogHeader className="px-6 py-4 border-b shrink-0">
-						<DialogTitle>{fullscreenTitle || "Editor"}</DialogTitle>
-					</DialogHeader>
-					<div className="flex-1 overflow-hidden">
-						{renderEditorWithButtons(false)}
-					</div>
-				</DialogContent>
-			</Dialog>
+				{renderEditorWithButtons(false)}
+			</TextEditorDialog>
 		</>
 	);
 }

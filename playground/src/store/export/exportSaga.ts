@@ -11,9 +11,10 @@ import {
 	exportSchema as exportSchemaAction,
 	exportSuccess,
 } from "@/store/export/exportSlice";
-import { selectSourceFiles } from "@/store/schema/schemaSlice";
-import { selectSelectionQuery } from "@/store/selection/selectionSlice";
-import type { ImportedFile } from "@/types/importedFile";
+import { selectComposedSources } from "@/store/schema/composedSources";
+import { selectAppliedSelectionQuery } from "@/store/selection/selectionSlice";
+import type { SchemaSource } from "@/types/schemaSource";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 function getExportErrorMessage(err: unknown): string {
 	if (err instanceof AxiosError) {
@@ -30,11 +31,7 @@ function getExportErrorMessage(err: unknown): string {
 		}
 	}
 
-	if (err instanceof Error) {
-		return err.message;
-	}
-
-	return String(err);
+	return getErrorMessage(err);
 }
 
 function isEmpty(value: unknown, propertyType: string): boolean {
@@ -59,18 +56,22 @@ function isEmpty(value: unknown, propertyType: string): boolean {
 function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 	try {
 		const { endpoint } = action.payload;
-		const sourceFiles: ImportedFile[] = yield select(selectSourceFiles);
-		const selectionQuery: string = yield select(selectSelectionQuery);
+		const sources: SchemaSource[] = yield select(selectComposedSources);
+		const appliedSelectionQuery: string = yield select(
+			selectAppliedSelectionQuery,
+		);
 		const exporters: ReturnType<typeof selectExporters> =
 			yield select(selectExporters);
 
-		const exporter = exporters.find((exporter) => exporter.endpoint === endpoint);
+		const exporter = exporters.find(
+			(exporter) => exporter.endpoint === endpoint,
+		);
 		if (!exporter) {
 			yield put(exportFailure({ endpoint, error: "Exporter not found" }));
 			return;
 		}
 
-		const hasSelectionQuery = selectionQuery.trim().length > 0;
+		const hasSelectionQuery = appliedSelectionQuery.trim().length > 0;
 
 		const missingRequired: string[] = [];
 		if (exporter.requiresSelectionQuery && !hasSelectionQuery) {
@@ -78,7 +79,10 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 		}
 
 		for (const [key, property] of Object.entries(exporter.properties)) {
-			if (property.required && isEmpty(exporter.propertyValues[key], property.type)) {
+			if (
+				property.required &&
+				isEmpty(exporter.propertyValues[key], property.type)
+			) {
 				missingRequired.push(property.title || key);
 			}
 		}
@@ -93,11 +97,14 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 			return;
 		}
 
-		const schemas = mapImportedFilesToSchemaInputs(sourceFiles);
+		const schemas = mapImportedFilesToSchemaInputs(sources);
 
 		let selectionQueryPayload = null;
 		if (hasSelectionQuery) {
-			selectionQueryPayload = { type: "content", content: selectionQuery };
+			selectionQueryPayload = {
+				type: "content",
+				content: appliedSelectionQuery,
+			};
 		}
 
 		const transformedValues: Record<string, unknown> = {};
@@ -138,7 +145,9 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 		yield put(exportSuccess({ endpoint, output, format }));
 	} catch (err) {
 		const errorMsg = getExportErrorMessage(err);
-		yield put(exportFailure({ endpoint: action.payload.endpoint, error: errorMsg }));
+		yield put(
+			exportFailure({ endpoint: action.payload.endpoint, error: errorMsg }),
+		);
 	}
 }
 
