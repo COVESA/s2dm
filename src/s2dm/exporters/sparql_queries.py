@@ -21,7 +21,8 @@ from rdflib import Graph
 from rdflib.query import ResultRow
 
 from s2dm.exporters.rdf_materializer import FORMAT_REGISTRY
-from s2dm.exporters.utils.schema_loader import download_url_to_temp, resolve_files_by_extensions
+from s2dm.exporters.utils.schema_loader import resolve_files_by_extensions
+from s2dm.utils.download import download_url_to_temp
 
 log = logging.getLogger(__name__)
 

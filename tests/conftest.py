@@ -42,6 +42,8 @@ class TestSchemaData:
     VALID_QUERY = TESTS_DATA_DIR / "valid_query.graphql"
     INVALID_QUERY = TESTS_DATA_DIR / "invalid_query.graphql"
     SCHEMA1_QUERY = TESTS_DATA_DIR / "schema1_query.graphql"
+    NESTED_ENUM_SCHEMA = TESTS_DATA_DIR / "nested_enum_schema.graphql"
+    NESTED_INPUT_TYPE_SCHEMA = TESTS_DATA_DIR / "nested_input_type_schema.graphql"
 
     # Version bump test schemas
     BASE_SCHEMA = TESTS_DATA_DIR / "base.graphql"

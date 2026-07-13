@@ -14,6 +14,7 @@ import {
 	fetchCapabilitiesSuccess,
 	selectCapabilitiesSpec,
 } from "@/store/capabilities/capabilitiesSlice";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 function* fetchCapabilitiesSaga() {
 	try {
@@ -23,7 +24,7 @@ function* fetchCapabilitiesSaga() {
 		yield put(fetchCapabilitiesSuccess(filteredSpec));
 		yield put(computeCapabilities());
 	} catch (err) {
-		const errorMsg = err instanceof Error ? err.message : String(err);
+		const errorMsg = getErrorMessage(err);
 		yield put(
 			fetchCapabilitiesFailure(
 				`Failed to load export capabilities: ${errorMsg}`,
@@ -50,7 +51,7 @@ function* computeCapabilitiesSaga() {
 
 		yield put(computeCapabilitiesSuccess(sortedExporters));
 	} catch (err) {
-		const errorMsg = err instanceof Error ? err.message : String(err);
+		const errorMsg = getErrorMessage(err);
 		yield put(
 			fetchCapabilitiesFailure(
 				`Failed to load export capabilities: ${errorMsg}`,

@@ -2,20 +2,27 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
+from unittest.mock import Mock, patch
 
 import pytest
+import yaml
 from click.exceptions import MissingParameter
 from click.testing import CliRunner
+from graphql import GraphQLObjectType, build_schema
 from linkml_runtime.loaders import yaml_loader
 
 from s2dm.cli import cli
+from s2dm.deps import DEPENDENCY_LOCK_FILENAME
+from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.tools.string import normalize_whitespace
 from tests.conftest import TestSchemaData as TSD
+from tests.deps.helpers import file_sha256, write_dependency_lock, write_metadata_file
 
 LINKML_SCHEMA_ID = "https://covesa.global/s2dm"
 LINKML_SCHEMA_NAME = "TestSchema"
 LINKML_DEFAULT_PREFIX = "s2dm"
 LINKML_DEFAULT_PREFIX_URL = "https://covesa.global/s2dm"
+TEST_REMOTE_HOST = "example.ghe.com"
 
 
 @pytest.fixture(scope="session")
@@ -1538,6 +1545,27 @@ def test_compose_graphql(runner: CliRunner, tmp_outputs: Path, spec_directory: P
     assert "Successfully composed schema" in normalize_whitespace(result.output)
 
 
+def test_compose_graphql_accepts_gql_schema_file(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        schema_path = Path("schema.gql")
+        schema_path.write_text("type Query { ping: String }\n", encoding="utf-8")
+        output_path = Path("composed.graphql")
+
+        result = runner.invoke(
+            cli,
+            [
+                "compose",
+                "-s",
+                str(schema_path),
+                "-o",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert output_path.exists()
+
+
 def test_compose_graphql_with_root_type(
     runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path
 ) -> None:
@@ -1831,6 +1859,75 @@ def test_compose_with_valid_selection_query_prunes_schema(
     assert "directive @metadata" not in composed_content
 
 
+def test_compose_with_selection_query_keeps_nested_enum_directive_dependencies(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        selection_path = working_directory / "selection.graphql"
+        output_path = working_directory / "composed.graphql"
+
+        selection_path.write_text(
+            "query Selection {\n" "  vehicle {\n" "    id\n" "  }\n" "}\n",
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(
+            cli,
+            [
+                "compose",
+                "-s",
+                str(TSD.NESTED_INPUT_TYPE_SCHEMA),
+                "-q",
+                str(selection_path),
+                "-o",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+
+        composed_content = output_path.read_text(encoding="utf-8")
+
+        assert "directive @config(input: ConfigInput) on OBJECT" in composed_content
+        assert "input ConfigInput" in composed_content
+        assert "type Vehicle" in composed_content
+        assert 'enum ModeEnum @metadata(label: "workflow")' in composed_content
+        assert "directive @metadata(label: String) on ENUM" in composed_content
+
+
+def test_compose_with_selection_query_keeps_nested_enum_schema_enum(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        selection_path = working_directory / "selection.graphql"
+        output_path = working_directory / "composed.graphql"
+
+        selection_path.write_text(
+            "query Selection {\n" "  vehicle {\n" "    id\n" "  }\n" "}\n",
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(
+            cli,
+            [
+                "compose",
+                "-s",
+                str(TSD.NESTED_ENUM_SCHEMA),
+                "-q",
+                str(selection_path),
+                "-o",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+
+        composed_content = output_path.read_text(encoding="utf-8")
+
+        assert "directive @config(mode: ModeEnum) on OBJECT" in composed_content
+        assert "type Vehicle" in composed_content
+        assert 'enum ModeEnum @metadata(label: "workflow")' in composed_content
+        assert "directive @metadata(label: String) on ENUM" in composed_content
+
+
 # ToDo(DA): needs refactoring after final decision how stats will work
 def test_stats_graphql(runner: CliRunner, spec_directory: Path, units_directory: Path) -> None:
     result = runner.invoke(
@@ -1869,3 +1966,452 @@ def test_units_sync_cli(
     assert (
         "Would generate" in normalize_whitespace(result.output) or "dry" in normalize_whitespace(result.output).lower()
     )
+
+
+def test_deps_resolve_uses_default_config_path_from_current_working_directory(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: B\nid: urn:test:B\nversion: 5.1.0\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: B\n"
+            '    version: "5.1.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (working_directory / ".s2dm" / "vendor" / "B" / "5.1.0" / "schema.graphql").exists()
+
+
+def test_deps_resolve_uses_default_identity_file_for_authenticated_remote_release(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: B\n"
+            '    version: "5.1.0"\n'
+            f'    source: "https://{TEST_REMOTE_HOST}/owner/repo"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+        (working_directory / ".s2dm.identity.yaml").write_text(
+            yaml.safe_dump(
+                {"identities": [{"host": TEST_REMOTE_HOST, "token": "test-token"}]},
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+
+        release_response = Mock()
+        release_response.raise_for_status = Mock()
+        release_response.json = Mock(
+            return_value={
+                "assets": [
+                    {
+                        "name": "metadata.yaml",
+                        "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/1",
+                    },
+                    {
+                        "name": "schema.graphql",
+                        "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/2",
+                    },
+                ]
+            }
+        )
+
+        metadata_response = Mock()
+        metadata_response.raise_for_status = Mock()
+        metadata_response.headers = {}
+        metadata_response.content = yaml.safe_dump(
+            {"name": "B", "id": "urn:test:B", "version": "5.1.0"},
+            sort_keys=False,
+        ).encode("utf-8")
+
+        schema_response = Mock()
+        schema_response.raise_for_status = Mock()
+        schema_response.headers = {}
+        schema_response.content = b"type Query { ping: String }\n"
+
+        def mock_request_get(url: str, headers: dict[str, str], timeout: int) -> Mock:
+            assert timeout == 30
+            if url == f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/tags/5.1.0":
+                assert headers == {
+                    "Authorization": "Bearer test-token",
+                    "Accept": "application/vnd.github+json",
+                }
+                return release_response
+            assert headers == {
+                "Authorization": "Bearer test-token",
+                "Accept": "application/octet-stream",
+            }
+            if url == f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/1":
+                return metadata_response
+            if url == f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/2":
+                return schema_response
+            raise AssertionError(f"Unexpected URL requested: {url}")
+
+        with patch("s2dm.deps.resolve.resolvers.remote_resolver.requests.get", side_effect=mock_request_get):
+            result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (working_directory / ".s2dm" / "vendor" / "B" / "5.1.0" / "schema.graphql").exists()
+
+
+def test_deps_resolve_rejects_invalid_dependency_schema(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Vehicle {\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(cli, ["deps", "resolve"])
+
+        assert result.exit_code == 1
+        assert not (working_directory / "s2dm.deps.lock").exists()
+        assert not (working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0").exists()
+
+
+def test_deps_resolve_clean_removes_existing_lock_and_vendor_state(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\npreferred_prefix: demo\n",
+            encoding="utf-8",
+        )
+        config_path = working_directory / "custom.deps.yaml"
+        config_path.write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        stale_vendor_directory = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0"
+        stale_vendor_directory.mkdir(parents=True)
+        (stale_vendor_directory / "schema.graphql").write_text("type Query { stale: String }\n", encoding="utf-8")
+        (stale_vendor_directory / "metadata.yaml").write_text("name: stale\n", encoding="utf-8")
+        (working_directory / "s2dm.deps.lock").write_text("dependencies: []\n", encoding="utf-8")
+
+        result = runner.invoke(cli, ["deps", "resolve", "--config", str(config_path), "--clean"])
+
+        assert result.exit_code == 0, result.output
+        assert (working_directory / "s2dm.deps.lock").exists()
+        assert (stale_vendor_directory / "schema.graphql").read_text(
+            encoding="utf-8"
+        ) == "type Query { ping: String }\n"
+        assert "name: stale" not in (stale_vendor_directory / "metadata.yaml").read_text(encoding="utf-8")
+        assert not list(working_directory.glob("s2dm.deps.lock.clean-backup.*"))
+        assert not list((working_directory / ".s2dm").glob("vendor.clean-backup.*"))
+
+
+def test_deps_resolve_clean_restores_existing_lock_and_vendor_state_on_failure(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text("type Query { ping: String }\n", encoding="utf-8")
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        vendor_directory = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0"
+        vendor_directory.mkdir(parents=True)
+        (vendor_directory / "schema.graphql").write_text("type Query { cached: String }\n", encoding="utf-8")
+        (vendor_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        lock_path = working_directory / "s2dm.deps.lock"
+        lock_content = "dependencies: []\n"
+        lock_path.write_text(lock_content, encoding="utf-8")
+
+        result = runner.invoke(cli, ["deps", "resolve", "--clean"])
+
+        assert result.exit_code == 1, result.output
+        assert lock_path.read_text(encoding="utf-8") == lock_content
+        assert (vendor_directory / "schema.graphql").read_text(encoding="utf-8") == "type Query { cached: String }\n"
+        assert (vendor_directory / "metadata.yaml").exists()
+        assert not list(working_directory.glob("s2dm.deps.lock.clean-backup.*"))
+        assert not list((working_directory / ".s2dm").glob("vendor.clean-backup.*"))
+
+
+def test_deps_build_applies_dependency_selection_and_preserves_vendor_schema(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        source_schema = (
+            "type Query { vehicle: Vehicle }\n"
+            "type Vehicle { vin: String model: String speed: Speed cabin: Cabin }\n"
+            "type Speed { value: Float unit: String }\n"
+            "type Cabin { seats: Int }\n"
+        )
+        (source_directory / "schema.graphql").write_text(source_schema, encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        selection_path = working_directory / "selection.graphql"
+        selection_path.write_text("query Selection { vehicle { vin speed { value } } }\n", encoding="utf-8")
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n'
+            f'    selection: "{selection_path.resolve()}"\n',
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+        build_result = runner.invoke(cli, ["deps", "build", "-o", str(output_path)])
+
+        assert resolve_result.exit_code == 0
+        assert build_result.exit_code == 0
+        composed_schema = output_path.read_text(encoding="utf-8")
+        assert "type Vehicle" in composed_schema
+        assert "vin: String" in composed_schema
+        assert "speed: Speed" in composed_schema
+        assert "value: Float" in composed_schema
+        assert "model: String" not in composed_schema
+        assert "unit: String" not in composed_schema
+        assert "type Cabin" not in composed_schema
+
+        vendored_schema_path = working_directory / ".s2dm" / "vendor" / "DemoDependency" / "1.0.0" / "schema.graphql"
+        assert vendored_schema_path.read_text(encoding="utf-8") == source_schema
+
+
+def test_deps_build_resolves_relative_dependency_selection_path(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+
+        source_schema = (
+            "type Query { vehicle: Vehicle }\n"
+            "type Vehicle { vin: String model: String speed: Speed cabin: Cabin }\n"
+            "type Speed { value: Float unit: String }\n"
+            "type Cabin { seats: Int }\n"
+        )
+        (source_directory / "schema.graphql").write_text(source_schema, encoding="utf-8")
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        selection_path = working_directory / "selection.graphql"
+        selection_path.write_text("query Selection { vehicle { vin speed { value } } }\n", encoding="utf-8")
+
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n'
+            '    selection: "selection.graphql"\n',
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+
+        build_result = runner.invoke(cli, ["deps", "build", "-o", str(output_path)])
+
+        assert resolve_result.exit_code == 0
+        assert build_result.exit_code == 0
+        built_schema = build_schema(output_path.read_text(encoding="utf-8"))
+        vehicle_type = cast(GraphQLObjectType, built_schema.type_map["Vehicle"])
+        speed_type = cast(GraphQLObjectType, built_schema.type_map["Speed"])
+
+        assert set(vehicle_type.fields) == {"vin", "speed"}
+        assert set(speed_type.fields) == {"value"}
+        assert "Cabin" not in built_schema.type_map
+
+
+def test_deps_build_fails_when_cached_workspace_is_invalid(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+
+        (source_directory / SCHEMA_FILENAME).write_text("type Query { ping: String }\n", encoding="utf-8")
+        write_metadata_file(
+            source_directory / METADATA_FILENAME,
+            name="DemoDependency",
+            version="1.0.0",
+            id="urn:test:demo",
+        )
+
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        vendor_directory = working_directory / VENDOR_DIRECTORY / "DemoDependency" / "1.0.0"
+        vendor_directory.mkdir(parents=True)
+        vendored_schema_path = vendor_directory / SCHEMA_FILENAME
+        vendored_schema_path.write_text("type Query { cached: String }\n", encoding="utf-8")
+        write_metadata_file(
+            vendor_directory / METADATA_FILENAME,
+            name="DemoDependency",
+            version="1.0.0",
+            id="urn:test:demo",
+        )
+        lock_path = working_directory / DEPENDENCY_LOCK_FILENAME
+        invalid_resolved_path = str((Path("/tmp") / "other" / SCHEMA_FILENAME).resolve())
+        write_dependency_lock(
+            lock_path,
+            name="DemoDependency",
+            version="1.0.0",
+            resolved_path=invalid_resolved_path,
+            integrity=file_sha256(vendored_schema_path),
+        )
+        lock_content = lock_path.read_text(encoding="utf-8")
+        metadata_path = vendor_directory / METADATA_FILENAME
+        metadata_content = metadata_path.read_text(encoding="utf-8")
+        vendored_schema_content = vendored_schema_path.read_text(encoding="utf-8")
+
+        output_path = working_directory / "composed.graphql"
+        result = runner.invoke(cli, ["deps", "build", "-o", str(output_path)])
+
+        assert result.exit_code == 1, result.output
+        assert not output_path.exists()
+        assert lock_path.read_text(encoding="utf-8") == lock_content
+        assert metadata_path.read_text(encoding="utf-8") == metadata_content
+        assert vendored_schema_path.read_text(encoding="utf-8") == vendored_schema_content
+
+
+def test_deps_build_auto_prefix_writes_composed_schema_for_conflicts(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        dependencies = (
+            {
+                "directory": "body-source",
+                "name": "BodyModel",
+                "version": "1.0.0",
+                "metadata_id": "urn:test:body",
+                "preferred_prefix": "body",
+                "schema": "type BodyCatalog { vehicle: Vehicle }\ntype Vehicle { vin: String }\n",
+            },
+            {
+                "directory": "powertrain-source",
+                "name": "PowertrainModel",
+                "version": "2.0.0",
+                "metadata_id": "urn:test:powertrain",
+                "preferred_prefix": "powertrain",
+                "schema": "type PowertrainCatalog { vehicle: Vehicle }\ntype Vehicle { speed: Float }\n",
+            },
+        )
+        config_lines = ["dependencies:"]
+
+        for dependency in dependencies:
+            source_directory = working_directory / dependency["directory"]
+            source_directory.mkdir()
+            (source_directory / "schema.graphql").write_text(
+                dependency["schema"],
+                encoding="utf-8",
+            )
+            write_metadata_file(
+                source_directory / "metadata.yaml",
+                name=dependency["name"],
+                version=dependency["version"],
+                id=dependency["metadata_id"],
+                preferred_prefix=dependency["preferred_prefix"],
+            )
+            config_lines.extend(
+                [
+                    f'  - name: {dependency["name"]}',
+                    f'    version: "{dependency["version"]}"',
+                    f'    source: "{source_directory.resolve()}"',
+                    '    artifact: "schema.graphql"',
+                ]
+            )
+
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "\n".join(config_lines) + "\n",
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+        build_result = runner.invoke(
+            cli,
+            ["deps", "build", "--auto-prefix", "-o", str(output_path)],
+        )
+
+        assert resolve_result.exit_code == 0
+        assert build_result.exit_code == 0
+        composed_schema = output_path.read_text(encoding="utf-8")
+        assert "type body_Vehicle" in composed_schema
+        assert "type powertrain_Vehicle" in composed_schema
+        assert "vehicle: body_Vehicle" in composed_schema
+        assert "vehicle: powertrain_Vehicle" in composed_schema
+
+
+def test_deps_compose_alias_writes_composed_schema(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+        source_directory = working_directory / "source"
+        source_directory.mkdir()
+        (source_directory / "schema.graphql").write_text(
+            "type Query { vehicle: Vehicle }\ntype Vehicle { vin: String }\n",
+            encoding="utf-8",
+        )
+        (source_directory / "metadata.yaml").write_text(
+            "name: DemoDependency\nid: urn:test:demo\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: DemoDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{source_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+        compose_result = runner.invoke(cli, ["deps", "compose", "-o", str(output_path)])
+
+        assert resolve_result.exit_code == 0, resolve_result.output
+        assert compose_result.exit_code == 0, compose_result.output
+        assert "type Vehicle" in output_path.read_text(encoding="utf-8")

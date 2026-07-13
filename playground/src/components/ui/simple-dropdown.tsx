@@ -1,5 +1,14 @@
-import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import {
+	Children,
+	cloneElement,
+	isValidElement,
+	type KeyboardEvent,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { cn } from "@/utils/cn";
 
 type DropdownProps = {
@@ -13,6 +22,7 @@ type DropdownItemProps = {
 	onClick: () => void;
 	children: ReactNode;
 	className?: string;
+	closeDropdown?: () => void;
 };
 
 export function Dropdown({
@@ -24,6 +34,28 @@ export function Dropdown({
 	const [isOpen, setIsOpen] = useState(false);
 	const [isAnimating, setIsAnimating] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	const handleClose = useCallback(() => {
+		setIsAnimating(true);
+		setTimeout(() => {
+			setIsOpen(false);
+			setIsAnimating(false);
+		}, 200);
+	}, []);
+
+	const handleToggle = useCallback(() => {
+		setIsOpen((currentIsOpen) => !currentIsOpen);
+	}, []);
+
+	const handleTriggerKeyDown = useCallback(
+		(event: KeyboardEvent<HTMLElement>) => {
+			if (event.key === "Enter" || event.key === " ") {
+				event.preventDefault();
+				handleToggle();
+			}
+		},
+		[handleToggle],
+	);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -42,19 +74,28 @@ export function Dropdown({
 		return () => {
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
-	}, [isOpen]);
+	}, [isOpen, handleClose]);
 
-	const handleClose = () => {
-		setIsAnimating(true);
-		setTimeout(() => {
-			setIsOpen(false);
-			setIsAnimating(false);
-		}, 200);
-	};
+	let renderedTrigger: ReactNode = trigger;
+	if (isValidElement(trigger)) {
+		renderedTrigger = cloneElement(trigger, {
+			onClick: handleToggle,
+			onKeyDown: handleTriggerKeyDown,
+			"aria-expanded": isOpen,
+		});
+	}
+
+	const renderedChildren = Children.map(children, (child) => {
+		if (!isValidElement<DropdownItemProps>(child)) {
+			return child;
+		}
+
+		return cloneElement(child, { closeDropdown: handleClose });
+	});
 
 	return (
 		<div className="relative" ref={dropdownRef}>
-			<div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+			{renderedTrigger}
 			{isOpen && (
 				<div
 					className={cn(
@@ -65,9 +106,8 @@ export function Dropdown({
 						align === "end" ? "right-0" : "left-0",
 						className,
 					)}
-					onClick={() => handleClose()}
 				>
-					{children}
+					{renderedChildren}
 				</div>
 			)}
 		</div>
@@ -78,14 +118,19 @@ export function DropdownItem({
 	onClick,
 	children,
 	className,
+	closeDropdown,
 }: DropdownItemProps) {
 	return (
 		<button
+			type="button"
 			className={cn(
 				"w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent first:rounded-t-md last:rounded-b-md cursor-pointer",
 				className,
 			)}
-			onClick={onClick}
+			onClick={() => {
+				onClick();
+				closeDropdown?.();
+			}}
 		>
 			{children}
 		</button>

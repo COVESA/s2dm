@@ -1,10 +1,8 @@
 import re
 from pathlib import Path
 from typing import Any, cast
-from unittest.mock import Mock, patch
 
 import pytest
-import requests
 from graphql import DirectiveLocation, build_schema, parse
 from graphql.type import (
     GraphQLEnumType,
@@ -22,6 +20,8 @@ from s2dm.exporters.utils import field as field_utils
 from s2dm.exporters.utils import instance_tag as instance_tag_utils
 from s2dm.exporters.utils import schema as schema_utils
 from s2dm.exporters.utils import schema_loader as schema_loader_utils
+from s2dm.utils import url as url_utils
+from tests.conftest import TestSchemaData as TSD
 
 # #########################################################
 # Schema loader utils
@@ -42,44 +42,7 @@ from s2dm.exporters.utils import schema_loader as schema_loader_utils
     ],
 )
 def test_is_url(value: str, expected: bool, description: str) -> None:
-    assert schema_loader_utils.is_url(value) == expected, description
-
-
-def test_download_schema_to_temp_success() -> None:
-    mock_response = Mock()
-    mock_response.text = "type Query { ping: String }"
-    mock_response.headers = {}
-    mock_response.raise_for_status = Mock()
-
-    with patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response):
-        result = schema_loader_utils.download_schema_to_temp("https://example.com/schema.graphql")
-
-        assert result.exists()
-        assert result.suffix == ".graphql"
-        assert result.read_text() == "type Query { ping: String }"
-        result.unlink()
-
-
-def test_download_schema_to_temp_failure() -> None:
-    with (
-        patch(
-            "s2dm.exporters.utils.schema_loader.requests.get", side_effect=requests.RequestException("Network error")
-        ),
-        pytest.raises(RuntimeError, match="(?i)Failed to download schema"),
-    ):
-        schema_loader_utils.download_schema_to_temp("https://example.com/schema.graphql")
-
-
-def test_download_schema_to_temp_size_limit() -> None:
-    mock_response = Mock()
-    mock_response.headers = {"content-length": str(15 * 1024 * 1024)}
-    mock_response.raise_for_status = Mock()
-
-    with (
-        patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response),
-        pytest.raises(RuntimeError, match="(?i)Schema file too large"),
-    ):
-        schema_loader_utils.download_schema_to_temp("https://example.com/schema.graphql", max_size_mb=10)
+    assert url_utils.is_url(value) == expected, description
 
 
 def test_build_schema_str(schema_path: list[Path]) -> None:
@@ -249,6 +212,29 @@ def test_prune_schema_keeps_directive_argument_list_input_object_definition() ->
         r"input KeyValue \{\n\s+key: String\n\s+value: String\n\}",
         pruned_schema_str,
     )
+
+
+def test_select_schema_content_keeps_direct_enum_directive_argument_type() -> None:
+    schema_str = TSD.NESTED_ENUM_SCHEMA.read_text(encoding="utf-8")
+
+    selection_query = parse(
+        """
+        query Selection {
+          vehicle {
+            id
+          }
+        }
+        """
+    )
+
+    selected_schema_str = schema_loader_utils.select_schema_content(schema_str, selection_query)
+
+    assert "directive @config(mode: ModeEnum) on OBJECT" in selected_schema_str
+    assert "type Vehicle" in selected_schema_str
+    assert 'enum ModeEnum @metadata(label: "workflow")' in selected_schema_str
+    assert "directive @metadata(label: String) on ENUM" in selected_schema_str
+    assert "ACTIVE" in selected_schema_str
+    assert "INACTIVE" in selected_schema_str
 
 
 # #########################################################

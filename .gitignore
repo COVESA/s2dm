@@ -19,6 +19,7 @@ docs-gen/resources/_gen/
 
 # Local configuration files
 .envrc
+.s2dm.identity.yaml
 .vscode
 
 # Byte-compiled / optimized / DLL files

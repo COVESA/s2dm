@@ -125,12 +125,12 @@ class TestProcessSchemaInputDispatch:
         """URL dispatch calls schema_service downloader wired to schema_loader logic."""
         schema_input = UrlInput(type="url", url=cast(AnyHttpUrl, "https://example.com/schema.graphql"))
         mock_response = Mock()
-        mock_response.text = "type Query { ping: String }"
+        mock_response.content = b"type Query { ping: String }"
         mock_response.headers = {}
         mock_response.raise_for_status = Mock()
 
         with (
-            patch("s2dm.exporters.utils.schema_loader.requests.get", return_value=mock_response),
+            patch("s2dm.utils.download.requests.get", return_value=mock_response),
             patch(
                 "s2dm.api.services.schema_service.download_schema_to_temp",
                 wraps=schema_loader.download_schema_to_temp,

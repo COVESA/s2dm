@@ -1,13 +1,6 @@
-const JSON_LANGUAGE_ALIASES = new Set([
-	"json-ld",
-	"jsonld",
-	"avsc",
-]);
+const JSON_LANGUAGE_ALIASES = new Set(["json-ld", "jsonld", "avsc"]);
 
-const TURTLE_LANGUAGE_ALIASES = new Set([
-	"ttl",
-	"turtle",
-]);
+const TURTLE_LANGUAGE_ALIASES = new Set(["ttl", "turtle"]);
 
 export function resolveMonacoLanguage(inputLanguage: string): string {
 	const normalizedLanguage = inputLanguage.trim().toLowerCase();

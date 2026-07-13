@@ -1,12 +1,16 @@
 import type { ExporterCapability } from "@/api/types";
 import {
+	BUILT_DEPENDENCIES_SCHEMA_FILENAME,
 	FILTERED_SCHEMA_FILENAME,
 	ORIGINAL_SCHEMA_FILENAME,
 	SELECTION_QUERY_FILENAME,
 } from "@/constants";
 import type { ImportedFile } from "@/types/importedFile";
 
-export function buildComposeCommand(schemas: ImportedFile[]): string | null {
+export function buildComposeCommand(
+	schemas: ImportedFile[],
+	includeBuiltDependencies: boolean,
+): string | null {
 	if (schemas.length === 0) {
 		return null;
 	}
@@ -19,6 +23,10 @@ export function buildComposeCommand(schemas: ImportedFile[]): string | null {
 		} else if (schema.type === "url") {
 			parts.push(`--schema ${schema.path}`);
 		}
+	}
+
+	if (includeBuiltDependencies) {
+		parts.push(`--schema ${BUILT_DEPENDENCIES_SCHEMA_FILENAME}`);
 	}
 
 	return parts.join(" ");
@@ -51,6 +59,7 @@ export function buildCliCommand(
 	schemas: ImportedFile[],
 	selectionQuery: string,
 	outputFormat?: string,
+	includeBuiltDependencies?: boolean,
 ): string | null {
 	if (schemas.length === 0) {
 		return null;
@@ -74,6 +83,10 @@ export function buildCliCommand(
 		parts.push(`--schema ${urlSchemas[0].path}`);
 	} else if (urlSchemas.length > 1) {
 		parts.push("--schema <urls>");
+	}
+
+	if (includeBuiltDependencies) {
+		parts.push(`--schema ${BUILT_DEPENDENCIES_SCHEMA_FILENAME}`);
 	}
 
 	if (hasSelectionQuery) {

@@ -1,10 +1,9 @@
 import re
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import cast
-from urllib.parse import urlparse
+from typing import Any, cast, overload
 
-import requests
 from ariadne import load_schema_from_path
 from graphql import (
     DocumentNode,
@@ -56,63 +55,10 @@ from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
+from s2dm.utils.download import download_url_to_temp
 
-
-def is_url(value: str) -> bool:
-    """Check if value is a valid HTTP/HTTPS URL.
-
-    Args:
-        value: String to check
-
-    Returns:
-        True if value is a valid HTTP/HTTPS URL, False otherwise
-    """
-    try:
-        parsed = urlparse(value)
-        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-    except Exception:
-        return False
-
-
-def download_url_to_temp(url: str, suffix: str, resource_label: str, max_size_mb: int = 10) -> Path:
-    """Download a remote text file to a named temporary file.
-
-    Args:
-        url: HTTP/HTTPS URL to download.
-        suffix: File extension for the temp file (e.g. ``.graphql``, ``.ttl``).
-        resource_label: Human-readable label used in log and error messages (e.g. ``"schema"``).
-        max_size_mb: Maximum allowed file size in megabytes.
-
-    Returns:
-        Path to the downloaded temporary file.
-
-    Raises:
-        RuntimeError: If the download fails or the file exceeds the size limit.
-    """
-    max_size_bytes = max_size_mb * 1024 * 1024
-
-    try:
-        log.info(f"Downloading {resource_label} from {url}")
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
-
-        content_length = response.headers.get("content-length")
-        if content_length and int(content_length) > max_size_bytes:
-            raise RuntimeError(
-                f"{resource_label} file too large: "
-                f"{int(content_length) / 1024 / 1024:.1f} MB (max {max_size_mb} MB)"
-            )
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False, encoding="utf-8") as tmp:
-            tmp.write(response.text)
-            tmp.flush()
-            tmp_path = Path(tmp.name)
-
-        log.debug(f"{resource_label} downloaded to temporary file: {tmp_path}")
-        return tmp_path
-
-    except requests.RequestException as e:
-        raise RuntimeError(f"Failed to download {resource_label} from {url}: {e}") from e
+SourceMapValueResolver = Callable[[Path, str], str]
+SchemaSelectionResolver = Callable[[Path], DocumentNode | None]
 
 
 def download_schema_to_temp(url: str, max_size_mb: int = 10) -> Path:
@@ -166,8 +112,16 @@ def resolve_files_by_extensions(paths: list[Path], extensions: frozenset[str]) -
     return sorted(resolved)
 
 
+def _default_source_map_value_resolver(schema_path: Path, type_name: str) -> str:
+    """Return the source map value for standard file-based schema composition."""
+    return schema_path.name
+
+
 def build_schema_str_with_optional_source_map(
-    graphql_schema_paths: list[Path], with_source_map: bool, naming_config: NamingConventionConfig | None = None
+    graphql_schema_paths: list[Path],
+    naming_config: NamingConventionConfig | None = None,
+    source_map_value_resolver: SourceMapValueResolver | None = None,
+    schema_selection_resolver: SchemaSelectionResolver | None = None,
 ) -> tuple[str, dict[str, str]]:
     """Build a GraphQL schema from a file or folder, returning also a source map."""
     schema_str = ""
@@ -177,19 +131,23 @@ def build_schema_str_with_optional_source_map(
 
     for graphql_file in graphql_schema_paths:
         content = load_schema_from_path(graphql_file)
+        if schema_selection_resolver is not None:
+            selection_document = schema_selection_resolver(graphql_file)
+            if selection_document is not None:
+                content = select_schema_content(content, selection_document)
         schema_str += content + "\n"
-        if with_source_map:
+        if source_map_value_resolver is not None:
             type_names = _extract_type_names_from_content(content)
             for type_name in type_names:
                 transformed_name = convert_name(type_name, type_case) if type_case else type_name
-                source_map[transformed_name] = graphql_file.name
+                source_map[transformed_name] = source_map_value_resolver(graphql_file, type_name)
 
     return schema_str, source_map
 
 
 def build_schema_str(graphql_schema_paths: list[Path]) -> str:
     """Build a GraphQL schema from a file or folder."""
-    schema_str, _ = build_schema_str_with_optional_source_map(graphql_schema_paths, with_source_map=False)
+    schema_str, _ = build_schema_str_with_optional_source_map(graphql_schema_paths)
     return schema_str
 
 
@@ -212,14 +170,27 @@ def load_schema(graphql_schema_paths: Path | list[Path]) -> GraphQLSchema:
 
 
 def load_schema_with_source_map(
-    graphql_schema_paths: list[Path], naming_config: NamingConventionConfig | None = None
+    graphql_schema_paths: list[Path],
+    naming_config: NamingConventionConfig | None = None,
+    source_map_value_resolver: SourceMapValueResolver | None = None,
+    schema_selection_resolver: SchemaSelectionResolver | None = None,
 ) -> tuple[GraphQLSchema, dict[str, str]]:
     """Load and build a GraphQL schema from files or folders, returning schema and source map."""
     schema_str, source_map = build_schema_str_with_optional_source_map(
-        graphql_schema_paths, with_source_map=True, naming_config=naming_config
+        graphql_schema_paths,
+        naming_config=naming_config,
+        source_map_value_resolver=source_map_value_resolver or _default_source_map_value_resolver,
+        schema_selection_resolver=schema_selection_resolver,
     )
     schema = build_schema_with_query(schema_str)
     return schema, source_map
+
+
+def select_schema_content(schema_content: str, selection_document: DocumentNode) -> str:
+    """Return schema SDL pruned to the types referenced by a selection document."""
+    schema = build_schema_with_query(schema_content)
+    selected_schema = prune_schema_using_query_selection(schema, selection_document)
+    return print_schema_with_directives_preserved(selected_schema)
 
 
 def load_schema_with_naming(
@@ -342,9 +313,48 @@ def print_schema_with_directives_preserved(schema: GraphQLSchema, source_map: di
     return add_directives_to_schema(base_schema, directive_map)
 
 
+def compose_schemas_to_string(
+    schemas: list[Path],
+    root_type: str | None,
+    selection_query: Path | None,
+    naming_config: Path | None,
+    expanded_instances: bool,
+    source_map_value_resolver: SourceMapValueResolver | None = None,
+    schema_selection_resolver: SchemaSelectionResolver | None = None,
+) -> str:
+    """Compose schema files into a single GraphQL schema string with optional filtering and naming transforms."""
+    graphql_schema, source_map = load_schema_with_source_map(
+        schemas,
+        source_map_value_resolver=source_map_value_resolver,
+        schema_selection_resolver=schema_selection_resolver,
+    )
+    schema_errors = check_correct_schema(graphql_schema)
+    if schema_errors:
+        raise ValueError("Schema validation failed:\n" + "\n".join(schema_errors))
+
+    query_document = None
+    if selection_query:
+        query_document = parse(selection_query.read_text())
+
+    naming_config_dict = load_naming_config(naming_config)
+    annotated_schema = process_schema(
+        schema=graphql_schema,
+        source_map=source_map,
+        naming_config=naming_config_dict,
+        query_document=query_document,
+        root_type=root_type,
+        expanded_instances=expanded_instances,
+    )
+    return print_schema_with_directives_preserved(annotated_schema.schema, source_map)
+
+
 def load_schema_as_str(graphql_schema_paths: list[Path], add_references: bool = False) -> str:
     """Load and build GraphQL schema but return as str."""
-    schema_str, source_map = build_schema_str_with_optional_source_map(graphql_schema_paths, add_references)
+    source_map_value_resolver = _default_source_map_value_resolver if add_references else None
+    schema_str, source_map = build_schema_str_with_optional_source_map(
+        graphql_schema_paths,
+        source_map_value_resolver=source_map_value_resolver,
+    )
     schema = build_schema_with_query(schema_str)
     return print_schema_with_directives_preserved(schema, source_map)
 
@@ -475,11 +485,19 @@ def check_enum_defaults(schema: GraphQLSchema) -> list[str]:
     return errors
 
 
-def check_correct_schema(schema: GraphQLSchema) -> list[str]:
+@overload
+def check_correct_schema(schema: GraphQLSchema) -> list[str]: ...
+
+
+@overload
+def check_correct_schema(schema: Path) -> list[str]: ...
+
+
+def check_correct_schema(schema: GraphQLSchema | Path) -> list[str]:
     """Assert that the schema conforms to GraphQL specification and has valid enum defaults.
 
     Args:
-        schema: The GraphQL schema to validate
+        schema: The GraphQL schema or schema file path to validate
 
     Returns:
         list[str]: List of error messages if any validation errors are found
@@ -487,6 +505,9 @@ def check_correct_schema(schema: GraphQLSchema) -> list[str]:
     Exits:
         Calls sys.exit(1) if the schema has validation errors
     """
+    if isinstance(schema, Path):
+        schema = build_schema(schema.read_text(encoding="utf-8"))
+
     spec_errors = validate_schema(schema)
     enum_errors = check_enum_defaults(schema)
 
@@ -604,15 +625,16 @@ def get_referenced_types(
     return referenced
 
 
-def _validate_schema(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema | None:
+def _validate_schema(schema: GraphQLSchema, document: DocumentNode) -> GraphQLSchema:
     log.debug("Validating schema against the provided document")
 
     errors = graphql_validate(schema, document)
     if errors:
+        error_messages = [f"  - {error.message}" for error in errors]
         log.error("Schema validation failed:")
-        for error in errors:
-            log.error(f" - {error}")
-        return None
+        for message in error_messages:
+            log.error(message)
+        raise ValueError("Schema validation failed:\n" + "\n".join(error_messages))
 
     log.debug("Schema validation succeeded")
 
@@ -636,18 +658,26 @@ def prune_schema_using_query_selection(
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
 
-    if _validate_schema(schema, document) is None:
-        raise ValueError("Schema validation failed")
+    _validate_schema(schema, document)
 
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
+    directives_used: set[str] = set()
+    pending_types: list[str] = []
+    schema_directives_by_name = {directive.name: directive for directive in schema.directives}
+
+    def keep_type(type_name: str) -> None:
+        if type_name in types_to_keep:
+            return
+        types_to_keep.add(type_name)
+        pending_types.append(type_name)
 
     def traverse_input_type_dependencies(input_type_name: str) -> None:
         """Recursively traverse input object field dependencies to collect all referenced types."""
         if input_type_name in types_to_keep:
             return
 
-        types_to_keep.add(input_type_name)
+        keep_type(input_type_name)
 
         type_def = schema.type_map.get(input_type_name)
         if not type_def or not is_input_object_type(type_def):
@@ -658,40 +688,47 @@ def prune_schema_using_query_selection(
             field_type = get_named_type(field.type)
             traverse_input_type_dependencies(field_type.name)
 
-    def collect_used_directives() -> set[str]:
-        """Collect directive names used on types and fields that are being kept."""
-        directives_used: set[str] = set()
+    def collect_ast_directives(ast_node: Any | None) -> set[str]:
+        if ast_node is None:
+            return set()
 
-        for type_name in types_to_keep:
-            type_obj = schema.type_map.get(type_name)
-            if not type_obj:
-                continue
+        directive_nodes = getattr(ast_node, "directives", None)
+        if directive_nodes is None:
+            return set()
 
-            if type_obj.ast_node:
-                for directive in type_obj.ast_node.directives:
-                    directives_used.add(directive.name.value)
+        return {directive.name.value for directive in directive_nodes}
 
-            if not (is_object_type(type_obj) or is_interface_type(type_obj)):
-                continue
+    def directives_on_type(type_name: str) -> set[str]:
+        """Collect directive names applied to a type, its fields, and its enum values."""
+        type_obj = schema.type_map.get(type_name)
+        if not type_obj:
+            return set()
 
-            obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
-            for field in obj_type.fields.values():
-                if field.ast_node:
-                    for directive in field.ast_node.directives:
-                        directives_used.add(directive.name.value)
+        directives = collect_ast_directives(type_obj.ast_node)
 
-        return directives_used
+        if is_object_type(type_obj) or is_interface_type(type_obj) or is_input_object_type(type_obj):
+            composite_type = cast(GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType, type_obj)
+            for field in composite_type.fields.values():
+                directives |= collect_ast_directives(field.ast_node)
 
-    def collect_directive_argument_type_dependencies(directives_used: set[str]) -> None:
-        """Keep input types referenced by used directive argument definitions."""
-        for directive in schema.directives:
-            if directive.name not in directives_used:
-                continue
+        if isinstance(type_obj, GraphQLEnumType):
+            for enum_value in type_obj.values.values():
+                directives |= collect_ast_directives(enum_value.ast_node)
 
-            for argument in directive.args.values():
-                argument_type = get_named_type(argument.type)
-                if is_input_object_type(schema.type_map.get(argument_type.name)):
-                    traverse_input_type_dependencies(argument_type.name)
+        return directives
+
+    def keep_directive(directive_name: str) -> None:
+        if directive_name in directives_used:
+            return
+        directives_used.add(directive_name)
+
+        directive = schema_directives_by_name.get(directive_name)
+        if directive is None:
+            return
+
+        for argument in directive.args.values():
+            argument_type = get_named_type(argument.type)
+            traverse_input_type_dependencies(argument_type.name)
 
     def collect_selections(type_name: str, selection_set: SelectionSetNode) -> None:
         """Recursively collect field names and type names to keep."""
@@ -699,7 +736,7 @@ def prune_schema_using_query_selection(
         if not graphql_type:
             return
 
-        types_to_keep.add(type_name)
+        keep_type(type_name)
 
         if not (is_object_type(graphql_type) or is_interface_type(graphql_type)):
             for selection in selection_set.selections:
@@ -717,7 +754,7 @@ def prune_schema_using_query_selection(
             fields_to_keep[type_name].add("instanceTag")
             instance_tag_field = composite_type.fields["instanceTag"]
             instance_tag_type = get_named_type(instance_tag_field.type)
-            types_to_keep.add(instance_tag_type.name)
+            keep_type(instance_tag_type.name)
 
         for selection in selection_set.selections:
             if isinstance(selection, InlineFragmentNode) and selection.selection_set is not None:
@@ -732,7 +769,7 @@ def prune_schema_using_query_selection(
 
                 field = composite_type.fields[field_name]
                 field_type = get_named_type(field.type)
-                types_to_keep.add(field_type.name)
+                keep_type(field_type.name)
 
                 for argument in field.args.values():
                     argument_type = get_named_type(argument.type)
@@ -754,8 +791,11 @@ def prune_schema_using_query_selection(
 
     query_operation = query_operations[0]
     collect_selections(schema.query_type.name, query_operation.selection_set)
-    directives_used = collect_used_directives()
-    collect_directive_argument_type_dependencies(directives_used)
+
+    while pending_types:
+        type_name = pending_types.pop()
+        for directive_name in directives_on_type(type_name):
+            keep_directive(directive_name)
 
     for type_name, fields_to_keep_set in fields_to_keep.items():
         type_obj = schema.type_map.get(type_name)

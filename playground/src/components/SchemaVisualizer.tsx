@@ -13,6 +13,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Heading } from "@/components/ui/heading";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 type SchemaVisualizerProps = {
 	schema: string;
@@ -32,7 +33,7 @@ export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 			setGraphqlSchema(builtSchema);
 			setError("");
 		} catch (err) {
-			setError(err instanceof Error ? err.message : String(err));
+			setError(getErrorMessage(err));
 			setGraphqlSchema(null);
 		}
 	}, [schema]);

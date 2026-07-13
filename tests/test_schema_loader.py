@@ -1,14 +1,57 @@
 from pathlib import Path
 
 import pytest
-from graphql import build_schema
+from graphql import DocumentNode, GraphQLObjectType, build_schema, parse
 
-from s2dm.exporters.utils.schema_loader import print_schema_with_directives_preserved
+from s2dm.exporters.utils.schema_loader import load_schema_with_source_map, print_schema_with_directives_preserved
 
 
 @pytest.fixture
 def spec_directory() -> Path:
     return Path(__file__).parent.parent / "src" / "s2dm" / "spec"
+
+
+def test_load_schema_with_source_map_applies_schema_selection_resolver(tmp_path: Path) -> None:
+    selected_schema_path = tmp_path / "selected.graphql"
+    selected_schema_path.write_text(
+        "type Query { vehicle: Vehicle }\n"
+        "type Vehicle {\n"
+        "  vin: String\n"
+        "  model: String\n"
+        "  speed: Speed\n"
+        "}\n"
+        "type Speed {\n"
+        "  value: Float\n"
+        "  unit: String\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    full_schema_path = tmp_path / "full.graphql"
+    full_schema_path.write_text(
+        "type Extra {\n" "  kept: String\n" "  removed: String\n" "}\n",
+        encoding="utf-8",
+    )
+    selection_document = parse("query Selection { vehicle { vin } }")
+
+    def resolve_selection(schema_path: Path) -> DocumentNode | None:
+        if schema_path.resolve() == selected_schema_path.resolve():
+            return selection_document
+        return None
+
+    schema, source_map = load_schema_with_source_map(
+        [selected_schema_path, full_schema_path],
+        schema_selection_resolver=resolve_selection,
+    )
+
+    vehicle_type = schema.type_map["Vehicle"]
+    extra_type = schema.type_map["Extra"]
+    assert isinstance(vehicle_type, GraphQLObjectType)
+    assert isinstance(extra_type, GraphQLObjectType)
+    assert set(vehicle_type.fields) == {"vin"}
+    assert set(extra_type.fields) == {"kept", "removed"}
+    assert "Speed" not in schema.type_map
+    assert source_map["Vehicle"] == selected_schema_path.name
+    assert source_map["Extra"] == full_schema_path.name
 
 
 def test_reference_directive_only_applied_to_supported_locations(spec_directory: Path) -> None:
