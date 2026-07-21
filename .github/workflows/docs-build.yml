@@ -1,0 +1,187 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Reusable workflow: Build and deploy a Docusaurus documentation site for any
+# modeling project that follows the s2dm approach.
+#
+# This workflow is hosted in the s2dm repository so adopters never need to check
+# in Docusaurus files.  It:
+#   1. Installs s2dm
+#   2. Composes the adopter's GraphQL schema files into dist/model.graphql
+#   3. Scaffolds a fresh Docusaurus website via `s2dm docs scaffold`
+#   4. Runs `npm ci` + `npm run doc` + `npm run build`
+#   5. Deploys the built site to GitHub Pages
+#
+# ── HOW TO USE ────────────────────────────────────────────────────────────────
+# In your modeling project, create `.github/workflows/docs.yml` with:
+#
+#   on:
+#     push:
+#       branches: [main]
+#       paths:
+#         - "spec/**"          # adjust to your schema directory
+#     workflow_dispatch:
+#
+#   # Required for GitHub Pages deployment
+#   permissions:
+#     pages: write
+#     id-token: write
+#
+#   jobs:
+#     docs:
+#       uses: COVESA/s2dm/.github/workflows/docs-build.yml@main
+#       with:
+#         project_title: "My Domain Model"
+#         project_name: my-model
+#         org_name: myorg
+#         pages_url: https://myorg.github.io/my-model
+#         github_repo_url: https://github.com/myorg/my-model
+#         # Space-separated list of directories or files passed to `s2dm compose -s`.
+#         # Each entry maps to one -s flag.  Use paths relative to the repo root.
+#         schema_sources: "spec"
+#
+# ── INPUTS ────────────────────────────────────────────────────────────────────
+# schema_sources  Space-separated paths/dirs passed to `s2dm compose -s`.
+#                 Examples:
+#                   "spec"                       → one directory
+#                   "spec/core spec/seat.graphql" → two separate sources
+#
+# s2dm_version    Optional.  Pin to a specific s2dm release (e.g. "0.22.0").
+#                 Omit to always use the latest published version.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: "S2DM Docs Build (reusable)"
+
+on:
+  workflow_call:
+    inputs:
+      project_title:
+        description: "Human-readable project title shown in the navbar and homepage."
+        required: true
+        type: string
+      project_name:
+        description: "Machine-readable project name used as the repo slug."
+        required: true
+        type: string
+      org_name:
+        description: "GitHub organization name."
+        required: true
+        type: string
+      pages_url:
+        description: "Full URL where the site is deployed (e.g. https://myorg.github.io/my-model)."
+        required: true
+        type: string
+      github_repo_url:
+        description: "Full URL to the GitHub repository (e.g. https://github.com/myorg/my-model)."
+        required: true
+        type: string
+      schema_sources:
+        description: >
+          Space-separated list of directories or files passed to `s2dm compose -s`.
+          Each token becomes one `-s` flag.  Paths are relative to the repo root.
+          Example: "spec" or "spec/core spec/extensions/seat.graphql"
+        required: true
+        type: string
+      s2dm_version:
+        description: "s2dm version to install (e.g. '0.22.0'). Omit to use the latest release."
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # These permissions are required for GitHub Pages deployment.
+    # They must also be granted in the calling workflow.
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout adopter repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      # Install s2dm as a CLI tool (isolated from the adopter's own venv).
+      - name: Install s2dm
+        run: |
+          if [ -n "${{ inputs.s2dm_version }}" ]; then
+            uv tool install "s2dm==${{ inputs.s2dm_version }}"
+          else
+            uv tool install s2dm
+          fi
+
+      # Build the -s flags string from the space-separated schema_sources input.
+      # e.g. "spec/core spec/seat.graphql" → "-s spec/core -s spec/seat.graphql"
+      - name: Build compose flags
+        id: sources
+        run: |
+          FLAGS=""
+          for src in ${{ inputs.schema_sources }}; do
+            FLAGS="$FLAGS -s $src"
+          done
+          echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"
+
+      # Compose all schema files into a single dist/model.graphql that
+      # Docusaurus reads when generating the API reference.
+      - name: Compose model.graphql
+        run: |
+          mkdir -p dist
+          s2dm compose ${{ steps.sources.outputs.flags }} -o dist/model.graphql
+
+      # Scaffold the Docusaurus website into ./website using the template
+      # bundled with s2dm.  No website files need to be checked into the repo.
+      - name: Scaffold Docusaurus website
+        run: |
+          s2dm docs scaffold \
+            --project-title "${{ inputs.project_title }}" \
+            --project-name  "${{ inputs.project_name }}" \
+            --org-name      "${{ inputs.org_name }}" \
+            --pages-url     "${{ inputs.pages_url }}" \
+            --github-repo-url "${{ inputs.github_repo_url }}" \
+            --output website
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      # Install Node dependencies using the lock file shipped inside the
+      # s2dm template (ensures reproducible builds without extra network calls).
+      - name: Install website dependencies
+        run: npm ci
+        working-directory: website
+
+      # generate-introspection.js writes static/introspection.json, then
+      # graphql-to-doc builds the full API reference under docs/api/.
+      - name: Generate introspection + GraphQL API docs
+        run: npm run doc
+        working-directory: website
+
+      - name: Build site
+        run: npm run build
+        working-directory: website
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

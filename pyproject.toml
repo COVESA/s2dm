@@ -47,6 +47,9 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 path = "src/s2dm/__init__.py"
 
+[tool.hatch.build.targets.wheel]
+exclude = ["src/s2dm/templates/**/node_modules/**"]
+
 [dependency-groups]
 dev = [
     "jupyter>=1.1.1",

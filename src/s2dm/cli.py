@@ -37,6 +37,7 @@ from s2dm.deps.helpers import (
 )
 from s2dm.deps.resolve.common import VENDOR_DIRECTORY
 from s2dm.deps.resolve.warnings import LoggingWarningCollector
+from s2dm.docs import docs
 from s2dm.exporters.avro import translate_to_avro_protocol, translate_to_avro_schema
 from s2dm.exporters.id import IDExporter
 from s2dm.exporters.jsonschema import translate_to_jsonschema
@@ -2198,6 +2199,7 @@ cli.add_command(search)
 cli.add_command(stats)
 cli.add_command(validate)
 cli.add_command(units)
+cli.add_command(docs)
 
 if __name__ == "__main__":
     cli()
