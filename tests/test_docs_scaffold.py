@@ -50,13 +50,16 @@ def test_scaffold_substitutes_placeholders(tmp_path: Path) -> None:
     assert "My Model" in config
     assert "myorg" in config
     assert "my-model" in config
-    assert "https://myorg.github.io/my-model" in config
+    # pages_url is split into origin + base_url
+    assert "https://myorg.github.io" in config
+    assert "/my-model/" in config
     assert "https://github.com/myorg/my-model" in config
     # No unresolved placeholders remain
     assert "$project_title" not in config
     assert "$org_name" not in config
     assert "$project_name" not in config
-    assert "$pages_url" not in config
+    assert "$pages_origin" not in config
+    assert "$pages_base_url" not in config
     assert "$github_repo_url" not in config
 
 

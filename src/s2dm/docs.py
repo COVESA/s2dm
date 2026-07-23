@@ -2,6 +2,7 @@ import shutil
 import string
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 import rich_click as click
 
@@ -64,11 +65,18 @@ def scaffold(
             sys.exit(1)
         shutil.rmtree(output)
 
+    # Docusaurus requires url (bare origin) and baseUrl (sub-path) to be separate.
+    # e.g. https://myorg.github.io/my-model → url=https://myorg.github.io  baseUrl=/my-model/
+    _parsed = urlparse(pages_url)
+    pages_origin = f"{_parsed.scheme}://{_parsed.netloc}"
+    pages_base_url = (_parsed.path.rstrip("/") + "/") if _parsed.path.strip("/") else "/"
+
     substitutions = {
         "project_title": project_title,
         "project_name": project_name,
         "org_name": org_name,
-        "pages_url": pages_url,
+        "pages_origin": pages_origin,
+        "pages_base_url": pages_base_url,
         "github_repo_url": github_repo_url,
     }
 
