@@ -1,0 +1,6 @@
+# Any change to the reusable docs workflow requires maintainer review.
+# This prevents unauthorized modifications from silently affecting all adopters.
+.github/workflows/docs-build.yml @COVESA/s2dm-maintainers
+
+# Default owner for everything else.
+* @COVESA/s2dm-maintainers

@@ -1,10 +1,11 @@
 version: 2
 updates:
   # Enable version updates for GitHub Actions
+  # Dependabot will open PRs updating SHA pins when action authors advance tags.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     labels:
       - "dependencies"
       - "github-actions"
