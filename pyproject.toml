@@ -27,7 +27,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "linkml-runtime>=1.10.0",
-    "modl",
+    "ddmodl",
 ]
 requires-python = ">=3.11"
 
@@ -41,8 +41,6 @@ s2dm = "s2dm.cli:cli"
 [tool.uv]
 package = true
 
-[tool.uv.sources]
-modl = { git = "https://github.com/COVESA/modl", rev = "7956af7c9e2b2505a398f4120fb57d6a538d4813" }
 
 [build-system]
 requires = ["hatchling"]
