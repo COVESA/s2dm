@@ -10,6 +10,7 @@ from rdflib import Graph, Literal
 from rdflib.plugins.sparql import prepareQuery
 from rdflib.query import ResultRow
 
+from s2dm import log
 from s2dm.tools.string import normalize_whitespace
 
 NO_LIMIT_KEYWORDS = {"inf", "infinity", "-1", "no", "none", "unlimited", "all"}
@@ -69,16 +70,42 @@ class SKOSSearchService:
 
     @classmethod
     def parse_limit(cls, limit: int | str) -> int | None:
-        """Parse and validate the limit parameter."""
+        """Parse and validate the limit parameter.
+
+        Returns ``None`` for unlimited (when *limit* matches one of
+        ``NO_LIMIT_KEYWORDS``), and otherwise an int >= 0. Unparseable
+        strings and negative values are coerced to 0 (no results) but a
+        warning is logged so the silent coerce isn't invisible to the
+        user — search_keyword treats limit_value == 0 as an empty-result
+        sentinel, which is otherwise indistinguishable from a typoed
+        --limit value.
+        """
         if isinstance(limit, str):
             if limit.lower() in NO_LIMIT_KEYWORDS:
                 return None
             try:
                 limit_int = int(limit)
-                return limit_int if limit_int > 0 else 0
             except ValueError:
+                log.warning(
+                    f"Could not parse limit value {limit!r} as an integer; "
+                    f"treating as 0 (no results). Use a positive integer or "
+                    f"one of {sorted(NO_LIMIT_KEYWORDS)} for unlimited."
+                )
                 return 0
-        return limit if limit > 0 else 0
+            if limit_int < 0:
+                log.warning(
+                    f"Limit value {limit!r} is negative; treating as 0 "
+                    f"(no results). Use a positive integer or one of "
+                    f"{sorted(NO_LIMIT_KEYWORDS)} for unlimited."
+                )
+                return 0
+            return limit_int
+        if limit < 0:
+            log.warning(
+                f"Limit value {limit} is negative; treating as 0 (no results)."
+            )
+            return 0
+        return limit
 
     def count_keyword_matches(self, keyword: str, ignore_case: bool = False) -> int:
         """Count total number of matches for a keyword in SKOS RDF data."""
