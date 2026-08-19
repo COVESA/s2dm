@@ -4,7 +4,10 @@ import {
 } from "@insights-ui/state/insightDetailSlice";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
+import { openLedgerDetail, pushLedgerDetail } from "@/store/ledger/ledgerSlice";
 import type { RootState } from "@/store/types";
+
+export type Workspace = "schema" | "ledger";
 
 export type ExploreTab = "explorer" | "insights";
 
@@ -17,6 +20,7 @@ export interface UIState {
 			isCollapsed: boolean;
 		};
 	};
+	workspace: Workspace;
 	exploreTab: ExploreTab;
 }
 
@@ -29,6 +33,7 @@ const initialState: UIState = {
 			isCollapsed: true,
 		},
 	},
+	workspace: "schema",
 	exploreTab: "explorer",
 };
 
@@ -45,6 +50,9 @@ const uiSlice = createSlice({
 		collapseResultPane: (state) => {
 			state.panes.result.isCollapsed = true;
 		},
+		setWorkspace: (state, action: PayloadAction<Workspace>) => {
+			state.workspace = action.payload;
+		},
 		setExploreTab: (state, action: PayloadAction<ExploreTab>) => {
 			state.exploreTab = action.payload;
 		},
@@ -57,6 +65,12 @@ const uiSlice = createSlice({
 			})
 			.addCase(pushInsightDetail, (state) => {
 				state.panes.result.isCollapsed = false;
+			})
+			.addCase(openLedgerDetail, (state) => {
+				state.panes.result.isCollapsed = false;
+			})
+			.addCase(pushLedgerDetail, (state) => {
+				state.panes.result.isCollapsed = false;
 			});
 	},
 });
@@ -65,6 +79,7 @@ export const {
 	toggleInputPane,
 	toggleResultPane,
 	collapseResultPane,
+	setWorkspace,
 	setExploreTab,
 } = uiSlice.actions;
 
@@ -72,6 +87,7 @@ export const selectInputPaneCollapsed = (state: RootState) =>
 	state.ui.panes.input.isCollapsed;
 export const selectResultPaneCollapsed = (state: RootState) =>
 	state.ui.panes.result.isCollapsed;
+export const selectWorkspace = (state: RootState) => state.ui.workspace;
 export const selectExploreTab = (state: RootState) => state.ui.exploreTab;
 
 export default uiSlice.reducer;

@@ -24,6 +24,8 @@ import exportReducer from "@/store/export/exportSlice";
 import { insightsSaga } from "@/store/insights/insightsSaga";
 import { instanceTagsSaga } from "@/store/instanceTags/instanceTagsSaga";
 import instanceTagsReducer from "@/store/instanceTags/instanceTagsSlice";
+import { ledgerSaga } from "@/store/ledger/ledgerSaga";
+import ledgerReducer from "@/store/ledger/ledgerSlice";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";
@@ -48,6 +50,7 @@ function* rootSaga() {
 		insightsSaga(),
 		instanceTagsSaga(),
 		semanticSearchSaga(),
+		ledgerSaga(),
 	]);
 }
 
@@ -67,6 +70,7 @@ export const store = configureStore({
 		depsResolve: depsResolveReducer,
 		depsCompose: depsComposeReducer,
 		schema: schemaReducer,
+		ledger: ledgerReducer,
 		selection: selectionReducer,
 		validation: validationReducer,
 		ui: uiReducer,

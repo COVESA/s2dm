@@ -8,6 +8,7 @@ import type { DepsIdentitiesState } from "@/store/deps/identities/identitiesSlic
 import type { DepsResolveState } from "@/store/deps/resolve/resolveSlice";
 import type { ExportState } from "@/store/export/exportSlice";
 import type { InstanceTagsState } from "@/store/instanceTags/instanceTagsSlice";
+import type { LedgerState } from "@/store/ledger/ledgerSlice";
 import type { SchemaState } from "@/store/schema/schemaSlice";
 import type { SelectionState } from "@/store/selection/selectionSlice";
 import type { SemanticSearchState } from "@/store/semanticSearch/semanticSearchSlice";
@@ -21,6 +22,7 @@ export interface RootState {
 	depsResolve: DepsResolveState;
 	depsCompose: DepsComposeState;
 	schema: SchemaState;
+	ledger: LedgerState;
 	selection: SelectionState;
 	validation: ValidationState;
 	ui: UIState;
