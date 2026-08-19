@@ -8,6 +8,7 @@ import {
 import { ArrowLeft, X } from "lucide-react";
 import { DetailsPane } from "@/components/DetailsPane";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectFilteredSchema } from "@/store/schema/schemaSlice";
 import { collapseResultPane } from "@/store/ui/uiSlice";
 
 type InsightsDetailsPaneProps = {
@@ -24,6 +25,8 @@ export function InsightsDetailsPane({
 	const dispatch = useAppDispatch();
 	const detail = useAppSelector(selectInsightDetail);
 	const canGoBack = useAppSelector(selectCanGoBackInsightDetail);
+	const filteredSchema = useAppSelector(selectFilteredSchema);
+	const hasFilteredSchema = filteredSchema.trim().length > 0;
 	const detailView = detail ? getInsightDetailView(detail) : null;
 
 	const handleClose = () => {
@@ -81,6 +84,7 @@ export function InsightsDetailsPane({
 			className={className}
 			position={position}
 			collapsible={collapsible}
+			hasContent={hasFilteredSchema}
 		>
 			{content}
 		</DetailsPane>
