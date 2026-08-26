@@ -1,6 +1,8 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 import type { LedgerChain } from "@/ledger/chain";
+import { PREDEFINED_QUERIES } from "@/ledger/predefinedQueries";
+import { DEFAULT_SEARCH_OPTIONS, type SearchOptions } from "@/ledger/search";
 import type {
 	LedgerRecord,
 	LedgerSearchMatch,
@@ -24,6 +26,7 @@ export interface LedgerState {
 	page: number;
 	filters: Record<string, string>;
 	filterOptions: Record<string, string[]>;
+	searchOptions: SearchOptions;
 	isLoadingRows: boolean;
 	rowsError: string | null;
 	exploreQuery: string;
@@ -32,6 +35,7 @@ export interface LedgerState {
 	isExploring: boolean;
 	exploreError: string | null;
 	sql: string;
+	predefinedQuery: string;
 	queryResult: QueryResult | null;
 	isRunningQuery: boolean;
 	queryError: string | null;
@@ -59,6 +63,7 @@ const initialState: LedgerState = {
 	page: 0,
 	filters: {},
 	filterOptions: {},
+	searchOptions: DEFAULT_SEARCH_OPTIONS,
 	isLoadingRows: false,
 	rowsError: null,
 	exploreQuery: "",
@@ -67,6 +72,7 @@ const initialState: LedgerState = {
 	isExploring: false,
 	exploreError: null,
 	sql: "",
+	predefinedQuery: "",
 	queryResult: null,
 	isRunningQuery: false,
 	queryError: null,
@@ -94,6 +100,7 @@ function clearLedger(state: LedgerState) {
 	state.isExploring = false;
 	state.exploreError = null;
 	state.sql = "";
+	state.predefinedQuery = "";
 	state.queryResult = null;
 	state.isRunningQuery = false;
 	state.queryError = null;
@@ -129,10 +136,17 @@ const ledgerSlice = createSlice({
 			state.rowsTotal = 0;
 			state.rowsError = null;
 		},
-		openLedgerFailure: (state, action: PayloadAction<string>) => {
+		openLedgerFailure: (
+			state,
+			action: PayloadAction<{ message: string; cleared: boolean }>,
+		) => {
 			state.isLoading = false;
-			state.error = action.payload;
-			clearLedger(state);
+			state.error = action.payload.message;
+			// Only when this import had already replaced the loaded ledger: a file
+			// that never opened must leave the one on screen alone.
+			if (action.payload.cleared) {
+				clearLedger(state);
+			}
 		},
 		closeLedger: (state) => {
 			state.isLoading = false;
@@ -174,11 +188,44 @@ const ledgerSlice = createSlice({
 			state.page = 0;
 			state.isLoadingRows = true;
 		},
+		setSearchOptions: (
+			state,
+			action: PayloadAction<Partial<SearchOptions>>,
+		) => {
+			state.searchOptions = { ...state.searchOptions, ...action.payload };
+			// Which rows match only changes while a raw search is active, so an
+			// unsearched table keeps the page it was on.
+			if (state.search.trim() !== "") {
+				state.page = 0;
+			}
+			state.isLoadingRows = true;
+		},
 		setLedgerFilterOptions: (
 			state,
 			action: PayloadAction<Record<string, string[]>>,
 		) => {
 			state.filterOptions = action.payload;
+		},
+		// The saga looks the record up by URI, then opens it as the detail.
+		viewLedgerRecord: (
+			state,
+			_action: PayloadAction<{ table: string; column: string; value: string }>,
+		) => {
+			state.isLoadingChain = true;
+			state.chainError = null;
+		},
+		// The saga works out the page; the table itself stays unfiltered.
+		showRecordInTable: (
+			state,
+			_action: PayloadAction<{ table: string; record: LedgerRecord }>,
+		) => {
+			state.view = "raw";
+			state.selectedTable = _action.payload.table;
+			state.isLoadingRows = true;
+			state.search = "";
+			state.filters = {};
+			state.filterOptions = {};
+			state.rowsError = null;
 		},
 		openTableWithSearch: (
 			state,
@@ -190,6 +237,7 @@ const ledgerSlice = createSlice({
 			state.search = action.payload.search;
 			state.page = 0;
 			state.filters = {};
+			state.filterOptions = {};
 			state.rows = null;
 			state.rowsTotal = 0;
 			state.rowsError = null;
@@ -243,6 +291,18 @@ const ledgerSlice = createSlice({
 		},
 		setLedgerSql: (state, action: PayloadAction<string>) => {
 			state.sql = action.payload;
+			// Edited SQL is no longer the query that was picked.
+			state.predefinedQuery = "";
+		},
+		selectPredefinedQuery: (state, action: PayloadAction<string>) => {
+			const query = PREDEFINED_QUERIES.find(
+				(candidate) => candidate.label === action.payload,
+			);
+			if (!query) {
+				return;
+			}
+			state.predefinedQuery = query.label;
+			state.sql = query.sql;
 		},
 		runLedgerQuery: (state) => {
 			state.isRunningQuery = true;
@@ -306,12 +366,16 @@ export const {
 	setLedgerPage,
 	setLedgerFilter,
 	setLedgerFilterOptions,
+	setSearchOptions,
 	openTableWithSearch,
+	showRecordInTable,
+	viewLedgerRecord,
 	setExploreQuery,
 	exploreLedger,
 	exploreLedgerSuccess,
 	exploreLedgerFailure,
 	setLedgerSql,
+	selectPredefinedQuery,
 	runLedgerQuery,
 	runLedgerQuerySuccess,
 	runLedgerQueryFailure,
@@ -345,6 +409,8 @@ export const selectLedgerPage = (state: RootState) => state.ledger.page;
 export const selectLedgerFilters = (state: RootState) => state.ledger.filters;
 export const selectLedgerFilterOptions = (state: RootState) =>
 	state.ledger.filterOptions;
+export const selectSearchOptions = (state: RootState) =>
+	state.ledger.searchOptions;
 export const selectExploreQuery = (state: RootState) =>
 	state.ledger.exploreQuery;
 export const selectExploreMatches = (state: RootState) =>
@@ -354,6 +420,8 @@ export const selectIsExploring = (state: RootState) => state.ledger.isExploring;
 export const selectExploreError = (state: RootState) =>
 	state.ledger.exploreError;
 export const selectLedgerSql = (state: RootState) => state.ledger.sql;
+export const selectPredefinedQueryLabel = (state: RootState) =>
+	state.ledger.predefinedQuery;
 export const selectLedgerQueryResult = (state: RootState) =>
 	state.ledger.queryResult;
 export const selectIsRunningLedgerQuery = (state: RootState) =>

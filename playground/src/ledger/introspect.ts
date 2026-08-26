@@ -1,4 +1,13 @@
 import type { Database } from "sql.js";
+import {
+	compileSearchPattern,
+	DEFAULT_SEARCH_OPTIONS,
+	type SearchOptions,
+} from "@/ledger/search";
+import { columnPredicate } from "@/ledger/searchPredicate";
+
+export { escapeLikePattern } from "@/ledger/searchPredicate";
+
 import type {
 	LedgerColumn,
 	LedgerForeignKey,
@@ -13,13 +22,6 @@ export const DEFAULT_ROW_LIMIT = 1000;
 
 export function quoteIdentifier(name: string): string {
 	return `"${name.replaceAll('"', '""')}"`;
-}
-
-export function escapeLikePattern(value: string): string {
-	return value
-		.replaceAll("\\", "\\\\")
-		.replaceAll("%", "\\%")
-		.replaceAll("_", "\\_");
 }
 
 function readAll(
@@ -88,17 +90,25 @@ export function describeForeignKeys(
 		database,
 		`PRAGMA foreign_key_list(${quoteIdentifier(table)})`,
 	);
-	return rows.map(([, , referencesTable, column, referencesColumn]) => ({
-		column: String(column),
-		referencesTable: String(referencesTable),
-		referencesColumn: String(referencesColumn),
-	}));
+	return rows.map(([, , referencesTable, column, referencesColumn]) => {
+		const target = String(referencesTable);
+		return {
+			column: String(column),
+			referencesTable: target,
+			// SQLite reports no target column when the key omits one, meaning it
+			// resolves to the parent's primary key.
+			referencesColumn:
+				referencesColumn === null
+					? (primaryKeyColumn(database, target) ?? "rowid")
+					: String(referencesColumn),
+		};
+	});
 }
 
 export function countRows(
 	database: Database,
 	table: string,
-	options: { filters?: RowFilters } = {},
+	options: { filters?: RowFilters; search?: SearchOptions } = {},
 ): number {
 	return countSearchMatches(database, table, "", options);
 }
@@ -153,7 +163,12 @@ export function readSchema(database: Database): LedgerTable[] {
 export function readTablePage(
 	database: Database,
 	table: string,
-	options: { limit?: number; offset?: number; filters?: RowFilters } = {},
+	options: {
+		limit?: number;
+		offset?: number;
+		filters?: RowFilters;
+		search?: SearchOptions;
+	} = {},
 ): QueryResult {
 	return searchTable(database, table, "", options);
 }
@@ -165,6 +180,7 @@ function buildConditions(
 	table: string,
 	needle: string,
 	filters: RowFilters,
+	search: SearchOptions,
 ): { where: string; params: LedgerValue[] } | null {
 	const columns = describeColumns(database, table);
 	if (columns.length === 0) {
@@ -175,16 +191,14 @@ function buildConditions(
 	const params: LedgerValue[] = [];
 
 	if (needle !== "") {
-		const pattern = `%${escapeLikePattern(needle)}%`;
-		clauses.push(
-			`(${columns
-				.map(
-					(column) =>
-						`CAST(${quoteIdentifier(column.name)} AS TEXT) LIKE ? ESCAPE '\\'`,
-				)
-				.join(" OR ")})`,
+		const pattern = compileSearchPattern(needle, search);
+		const perColumn = columns.map((column) =>
+			columnPredicate(quoteIdentifier(column.name), pattern),
 		);
-		params.push(...columns.map(() => pattern));
+		clauses.push(`(${perColumn.map((one) => one.sql).join(" OR ")})`);
+		for (const one of perColumn) {
+			params.push(...one.params);
+		}
 	}
 
 	const known = new Set(columns.map((column) => column.name));
@@ -205,13 +219,19 @@ export function searchTable(
 	database: Database,
 	table: string,
 	needle: string,
-	options: { limit?: number; offset?: number; filters?: RowFilters } = {},
+	options: {
+		limit?: number;
+		offset?: number;
+		filters?: RowFilters;
+		search?: SearchOptions;
+	} = {},
 ): QueryResult {
 	const conditions = buildConditions(
 		database,
 		table,
 		needle,
 		options.filters ?? {},
+		options.search ?? DEFAULT_SEARCH_OPTIONS,
 	);
 	if (!conditions) {
 		return { columns: [], rows: [], truncated: false };
@@ -219,14 +239,49 @@ export function searchTable(
 
 	const limit = options.limit ?? DEFAULT_ROW_LIMIT;
 	const offset = options.offset ?? 0;
+	// Ordered by primary key so a given row is always on the same page.
+	const order = primaryKeyColumn(database, table);
 	// One row beyond the limit reveals whether more exist without a second query.
 	const result = readAll(
 		database,
-		`SELECT * FROM ${quoteIdentifier(table)}
-		 ${conditions.where} LIMIT ? OFFSET ?`,
+		`SELECT * FROM ${quoteIdentifier(table)} ${conditions.where}
+		 ${order ? `ORDER BY ${quoteIdentifier(order)}` : ""} LIMIT ? OFFSET ?`,
 		[...conditions.params, limit + 1, offset],
 	);
 	return capRows(result, limit);
+}
+
+export function primaryKeyColumn(
+	database: Database,
+	table: string,
+): string | null {
+	return (
+		describeColumns(database, table).find((column) => column.primaryKey)
+			?.name ?? null
+	);
+}
+
+/** Which page a row falls on, given the same ordering readTablePage uses. */
+export function rowPageIndex(
+	database: Database,
+	table: string,
+	record: LedgerRecord,
+	pageSize: number,
+): number {
+	// Pages are ordered by the primary key, so only that column can locate a row.
+	const order = primaryKeyColumn(database, table);
+	const value = order === null ? undefined : record[order];
+	if (order === null || value === undefined || value === null) {
+		return 0;
+	}
+	// NULLs sort first in SQLite, so they precede any value and must be counted.
+	const { rows } = readAll(
+		database,
+		`SELECT COUNT(*) FROM ${quoteIdentifier(table)}
+		 WHERE ${quoteIdentifier(order)} IS NULL OR ${quoteIdentifier(order)} < ?`,
+		[value],
+	);
+	return Math.floor(Number(rows[0]?.[0] ?? 0) / Math.max(1, pageSize));
 }
 
 export function findRows(
@@ -275,13 +330,14 @@ export function countSearchMatches(
 	database: Database,
 	table: string,
 	needle: string,
-	options: { filters?: RowFilters } = {},
+	options: { filters?: RowFilters; search?: SearchOptions } = {},
 ): number {
 	const conditions = buildConditions(
 		database,
 		table,
 		needle,
 		options.filters ?? {},
+		options.search ?? DEFAULT_SEARCH_OPTIONS,
 	);
 	if (!conditions) {
 		return 0;
@@ -319,7 +375,7 @@ export function listDistinctValues(
 export function searchLedger(
 	database: Database,
 	needle: string,
-	options: { limit?: number } = {},
+	options: { limit?: number; search?: SearchOptions } = {},
 ): LedgerSearchMatch[] {
 	const tables = orderTablesByDependency(
 		listTableNames(database).map((name) => ({
@@ -329,11 +385,20 @@ export function searchLedger(
 	);
 
 	return tables
-		.map((table) => ({
-			table: table.name,
-			result: searchTable(database, table.name, needle, options),
-			total: countSearchMatches(database, table.name, needle),
-		}))
+		.map((table) => {
+			const result = searchTable(database, table.name, needle, options);
+			return {
+				table: table.name,
+				result,
+				// A preview that was not truncated has already counted the matches,
+				// which spares a second full scan of the table.
+				total: result.truncated
+					? countSearchMatches(database, table.name, needle, {
+							search: options.search,
+						})
+					: result.rows.length,
+			};
+		})
 		.filter((match) => match.result.rows.length > 0);
 }
 

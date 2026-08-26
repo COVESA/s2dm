@@ -8,7 +8,7 @@ import {
 	useTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { StatusBadge } from "@/components/ledger/StatusBadge";
 import {
 	Table,
@@ -18,6 +18,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { formatValue } from "@/ledger/recordLabel";
 import type { LedgerRecord, LedgerValue, QueryResult } from "@/ledger/types";
 import { cn } from "@/utils/cn";
 
@@ -60,20 +61,16 @@ function isSameRecord(
 }
 
 function renderCell(columnId: string, value: LedgerValue): React.ReactNode {
-	if (columnId === "status" && typeof value === "string" && value.length > 0) {
+	// Ids are `${index}:${name}`, so the name is what follows the first colon.
+	const columnName = columnId.slice(columnId.indexOf(":") + 1);
+	if (
+		columnName === "status" &&
+		typeof value === "string" &&
+		value.length > 0
+	) {
 		return <StatusBadge status={value} />;
 	}
 	return formatValue(value);
-}
-
-function formatValue(value: LedgerValue): string {
-	if (value === null) {
-		return "—";
-	}
-	if (value instanceof Uint8Array) {
-		return `${value.byteLength} bytes`;
-	}
-	return String(value);
 }
 
 export function LedgerResultsGrid({
@@ -97,12 +94,26 @@ export function LedgerResultsGrid({
 
 	const table = useTable({ features, columns, data });
 
+	// Queried by attribute because TableRow is a plain function component, which
+	// cannot take a ref on React 18. The ref goes on the scroll container itself
+	// rather than a wrapper, which would break the height max-h-full resolves against.
+	const containerRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (!selectedRecord || result.rows.length === 0) {
+			return;
+		}
+		containerRef.current
+			?.querySelector('[aria-selected="true"]')
+			// "nearest" leaves an already-visible row where it is.
+			?.scrollIntoView({ block: "nearest", inline: "nearest" });
+	}, [selectedRecord, result]);
+
 	if (result.columns.length === 0) {
 		return null;
 	}
 
 	return (
-		<Table containerClassName={containerClassName}>
+		<Table containerClassName={containerClassName} containerRef={containerRef}>
 			<TableHeader>
 				{table.getHeaderGroups().map((headerGroup) => (
 					<TableRow key={headerGroup.id}>
