@@ -267,7 +267,6 @@ export function InputPane({
 		body = (
 			<>
 				<LedgerFileList leading={ledgerToolbar} />
-				<Separator />
 				<LedgerOverview />
 			</>
 		);

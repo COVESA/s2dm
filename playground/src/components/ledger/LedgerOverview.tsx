@@ -6,14 +6,11 @@ import { useAppSelector } from "@/store/hooks";
 import {
 	selectIsLoadingLedger,
 	selectLedgerTables,
-	selectLedgerView,
 } from "@/store/ledger/ledgerSlice";
 
 export function LedgerOverview() {
 	const tables = useAppSelector(selectLedgerTables);
 	const isLoading = useAppSelector(selectIsLoadingLedger);
-	const view = useAppSelector(selectLedgerView);
-	const showSchema = view === "query";
 
 	if (isLoading) {
 		return <EmptyState isLoading title="Reading ledger..." />;
@@ -59,30 +56,28 @@ export function LedgerOverview() {
 									</span>
 								</dd>
 							</div>
-							{showSchema && (
-								<ul className="mt-1 flex flex-col">
-									{table.columns.map((column) => (
-										<li
-											key={column.name}
-											className="flex items-baseline justify-between gap-2 font-mono text-xs text-muted-foreground"
-										>
-											<span className="truncate">
-												{column.name}
-												{column.primaryKey && " ·pk"}
-											</span>
-											<span className="shrink-0 opacity-70">
-												{column.declaredType}
-											</span>
-										</li>
-									))}
-								</ul>
-							)}
+							<ul className="mt-1 flex flex-col">
+								{table.columns.map((column) => (
+									<li
+										key={column.name}
+										className="flex items-baseline justify-between gap-2 font-mono text-xs text-muted-foreground"
+									>
+										<span className="truncate">
+											{column.name}
+											{column.primaryKey && " ·pk"}
+										</span>
+										<span className="shrink-0 opacity-70">
+											{column.declaredType}
+										</span>
+									</li>
+								))}
+							</ul>
 						</div>
 					);
 				})}
 			</dl>
 
-			{showSchema && <LedgerErdButton />}
+			<LedgerErdButton />
 		</div>
 	);
 }

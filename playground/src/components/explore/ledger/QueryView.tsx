@@ -37,6 +37,9 @@ export function QueryView() {
 	const detail = useAppSelector(selectLedgerDetail);
 	const predefinedQuery = useAppSelector(selectPredefinedQueryLabel);
 
+	const selectedDescription = PREDEFINED_QUERIES.find(
+		(query) => query.label === predefinedQuery,
+	)?.description;
 	// By column shape, not row count: whole records stay identifiable however
 	// many of them the query returned.
 	const recordTable = result ? matchResultTable(result.columns, tables) : null;
@@ -84,39 +87,44 @@ export function QueryView() {
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col">
-			<div className="flex flex-wrap items-center gap-3 border-b px-6 py-3">
-				<Select value={predefinedQuery} onValueChange={handlePredefined}>
-					<SelectTrigger className="w-64">
-						<SelectValue placeholder="Predefined queries">
-							{predefinedQuery}
-						</SelectValue>
-					</SelectTrigger>
-					<SelectContent>
-						{PREDEFINED_QUERIES.map((query) => (
-							<SelectItem key={query.label} value={query.label}>
-								<span className="flex flex-col items-start">
-									<span>{query.label}</span>
-									<span className="text-xs text-muted-foreground">
-										{query.description}
+			<div className="flex flex-col gap-2 border-b px-6 py-3">
+				<div className="flex flex-wrap items-center gap-3">
+					<Select value={predefinedQuery} onValueChange={handlePredefined}>
+						<SelectTrigger className="w-64">
+							<SelectValue placeholder="Predefined queries">
+								{predefinedQuery}
+							</SelectValue>
+						</SelectTrigger>
+						<SelectContent>
+							{PREDEFINED_QUERIES.map((query) => (
+								<SelectItem key={query.label} value={query.label}>
+									<span className="flex flex-col items-start">
+										<span>{query.label}</span>
+										<span className="text-xs text-muted-foreground">
+											{query.description}
+										</span>
 									</span>
-								</span>
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 
-				<Button
-					onClick={() => dispatch(runLedgerQuery())}
-					disabled={!sql.trim()}
-					loading={isRunning}
+					<Button
+						onClick={() => dispatch(runLedgerQuery())}
+						disabled={!sql.trim()}
+						loading={isRunning}
+					>
+						<Play className="h-4 w-4" />
+						Run
+					</Button>
+				</div>
+
+				{/* Always present so the toolbar keeps its height. */}
+				<span
+					className="block min-h-4 truncate text-muted-foreground text-xs"
+					title={selectedDescription}
 				>
-					<Play className="h-4 w-4" />
-					Run
-				</Button>
-
-				<span className="text-muted-foreground text-xs">
-					{PREDEFINED_QUERIES.find((query) => query.label === predefinedQuery)
-						?.description ?? "Read-only: SELECT, WITH and EXPLAIN"}
+					{selectedDescription}
 				</span>
 			</div>
 
