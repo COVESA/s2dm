@@ -12,8 +12,10 @@ import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { FileList } from "@/components/FileList";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
+import { LedgerBadge } from "@/components/ledger/LedgerBadge";
 import { LedgerFileList } from "@/components/ledger/LedgerFileList";
 import { LedgerOverview } from "@/components/ledger/LedgerOverview";
+import { StatusBadge } from "@/components/ledger/StatusBadge";
 import { Pane } from "@/components/Pane";
 import { TextEditor } from "@/components/TextEditor";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -231,6 +233,30 @@ export function InputPane({
 				<HelpItem term="Query">
 					run a predefined query or write your own read-only SQL. The database
 					schema is listed here while this view is open.
+				</HelpItem>
+				<HelpItem
+					term={
+						<span className="flex items-center gap-2">
+							<LedgerBadge tone="active">8</LedgerBadge>
+							<span className="text-muted-foreground text-sm">9</span>
+						</span>
+					}
+				>
+					in the table summary above: active records, then the total.
+				</HelpItem>
+				<HelpItem
+					term={
+						<span className="flex flex-wrap items-center gap-1">
+							<StatusBadge status="ACTIVE" />
+							<StatusBadge status="SUPERSEDED" />
+							<StatusBadge status="REMOVED" />
+						</span>
+					}
+				>
+					a record's status, shown wherever a status column appears.
+				</HelpItem>
+				<HelpItem term="Highlighted row">
+					the record currently open in the details pane on the right.
 				</HelpItem>
 			</HelpButton>
 		</>

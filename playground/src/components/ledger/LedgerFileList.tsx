@@ -2,6 +2,7 @@ import { CollapsibleSection } from "@insights-ui/components/CollapsibleSection";
 import { Database, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
+import { FileListRow } from "@/components/FileListRow";
 import { Button } from "@/components/ui/button";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useFileImport } from "@/hooks/useFileImport";
@@ -9,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	closeLedger,
 	openLedger,
+	selectLedgerError,
 	selectLedgerFileName,
 } from "@/store/ledger/ledgerSlice";
 
@@ -19,6 +21,7 @@ type LedgerFileListProps = {
 export function LedgerFileList({ leading }: LedgerFileListProps) {
 	const dispatch = useAppDispatch();
 	const fileName = useAppSelector(selectLedgerFileName);
+	const error = useAppSelector(selectLedgerError);
 	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
 	const { openImportInput, hiddenInputProps } = useFileImport({
@@ -64,19 +67,26 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 
 			<input {...hiddenInputProps} />
 
+			{error && (
+				<div className="mx-2 mb-2 p-2 text-sm bg-destructive/10 text-destructive rounded border border-destructive">
+					{error}
+				</div>
+			)}
+
 			<CollapsibleSection
 				title={fileName ? "1 ledger" : "0 ledgers"}
 				className="mt-2"
 			>
 				{fileName ? (
-					<div className="flex items-center gap-2 px-2 py-1.5">
-						<Database className="h-4 w-4 shrink-0 text-muted-foreground" />
-						<span className="truncate text-sm" title={fileName}>
-							{fileName}
-						</span>
-					</div>
+					<ul className="space-y-1 py-2">
+						<FileListRow
+							icon={<Database className="h-4 w-4 flex-shrink-0" />}
+							label={fileName}
+							title={fileName}
+						/>
+					</ul>
 				) : (
-					<p className="px-2 py-1.5 text-sm text-muted-foreground">
+					<p className="px-3 py-2 text-sm text-muted-foreground">
 						No ledger imported
 					</p>
 				)}

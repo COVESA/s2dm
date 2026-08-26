@@ -1,7 +1,10 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { ChainGroup, ChainNode } from "@/ledger/chain";
-import { CHAIN_GROUP_RENDER_LIMIT } from "@/ledger/constants";
+import {
+	CHAIN_AUTO_EXPAND_DEPTH,
+	CHAIN_GROUP_RENDER_LIMIT,
+} from "@/ledger/constants";
 import {
 	recordLabel,
 	recordTypeName,
@@ -25,11 +28,13 @@ function GroupView({
 	group,
 	selected,
 	depth,
+	autoOpenRemaining,
 	onSelect,
 }: {
 	group: ChainGroup;
 	selected: SelectedRef;
 	depth: number;
+	autoOpenRemaining: number;
 	onSelect: (table: string, record: LedgerRecord) => void;
 }) {
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -43,17 +48,21 @@ function GroupView({
 		? group.nodes
 		: group.nodes.slice(0, CHAIN_GROUP_RENDER_LIMIT);
 
-	const hidden = group.total - visible.length;
+	// Only the fetched rows can be revealed; the rest are reported separately.
+	const hidden = group.nodes.length - visible.length;
 	const notFetched = group.total - group.nodes.length;
 
 	return (
 		<div className="flex flex-col gap-1">
-			{visible.map((node) => (
+			{visible.map((node, index) => (
 				<NodeView
-					key={`${node.table}-${node.identity}`}
+					// Identity can be empty when its column is null, which would
+					// collapse siblings onto one key.
+					key={`${node.table}-${node.identity || index}`}
 					node={node}
 					selected={selected}
 					depth={depth}
+					autoOpenRemaining={autoOpenRemaining}
 					onSelect={onSelect}
 				/>
 			))}
@@ -85,14 +94,18 @@ function NodeView({
 	node,
 	selected,
 	depth,
+	autoOpenRemaining,
 	onSelect,
 }: {
 	node: ChainNode;
 	selected: SelectedRef;
 	depth: number;
+	autoOpenRemaining: number;
 	onSelect: (table: string, record: LedgerRecord) => void;
 }) {
-	const [isExpanded, setIsExpanded] = useState(false);
+	// null until the user decides for themselves, so the automatic state can
+	// change with the selection without discarding an explicit choice.
+	const [override, setOverride] = useState<boolean | null>(null);
 
 	const isSelected =
 		node.table === selected.table && node.identity === selected.identity;
@@ -104,7 +117,10 @@ function NodeView({
 	const holdsSelectionBelow = groups.some((group) =>
 		group.nodes.some((child) => containsSelected(child, selected)),
 	);
-	const isOpen = hasChildren && (holdsSelectionBelow || isExpanded);
+	const budget = isSelected ? CHAIN_AUTO_EXPAND_DEPTH : autoOpenRemaining;
+	const openByDefault = holdsSelectionBelow || budget > 0;
+	const isOpen =
+		hasChildren && (holdsSelectionBelow || (override ?? openByDefault));
 
 	const handleClick = () => {
 		if (!isSelected) {
@@ -114,7 +130,7 @@ function NodeView({
 		if (!hasChildren) {
 			return;
 		}
-		setIsExpanded((open) => !open);
+		setOverride(!(override ?? openByDefault));
 	};
 
 	let chevron: React.ReactNode = <span className="h-3 w-3 shrink-0" />;
@@ -157,6 +173,7 @@ function NodeView({
 						group={group}
 						selected={selected}
 						depth={depth + 1}
+						autoOpenRemaining={budget - 1}
 						onSelect={onSelect}
 					/>
 				))}
@@ -176,6 +193,14 @@ export function LedgerChainView({
 	onSelect,
 }: LedgerChainViewProps) {
 	return (
-		<NodeView node={node} selected={selected} depth={0} onSelect={onSelect} />
+		<NodeView
+			// Remounts on a new selection so automatic expansion applies afresh.
+			key={`${selected.table}:${selected.identity}`}
+			node={node}
+			selected={selected}
+			depth={0}
+			autoOpenRemaining={0}
+			onSelect={onSelect}
+		/>
 	);
 }

@@ -1,5 +1,6 @@
 import type { Database } from "sql.js";
-import { CHAIN_GROUP_FETCH_LIMIT } from "@/ledger/constants";
+import { CHAIN_GROUP_FETCH_LIMIT, CHAIN_NODE_BUDGET } from "@/ledger/constants";
+import { identityColumnOf } from "@/ledger/identity";
 import { countRowsWhere, findRows, toRecords } from "@/ledger/introspect";
 import type {
 	LedgerRecord,
@@ -13,6 +14,7 @@ export type ChainLevel = {
 	identityColumn: string;
 	parentTable: string | null;
 	parentColumn: string | null;
+	parentIdentityColumn: string | null;
 	orderColumn: string | null;
 };
 
@@ -50,11 +52,18 @@ function identityOf(record: LedgerRecord, column: string): string {
 
 export function deriveChainSpec(tables: LedgerTable[]): ChainLevel[] {
 	const positionOf = new Map(tables.map((table, index) => [table.name, index]));
+	const columnsOf = new Map(
+		tables.map((table) => [
+			table.name,
+			new Set(table.columns.map((column) => column.name)),
+		]),
+	);
 
 	return tables.map((table, index) => {
 		// By key search, not array position: an unrelated table may sit between levels.
 		let parentTable: string | null = null;
 		let parentColumn: string | null = null;
+		let parentIdentityColumn: string | null = null;
 		let closest = -1;
 		for (const key of table.foreignKeys) {
 			if (key.referencesTable === table.name) {
@@ -64,30 +73,25 @@ export function deriveChainSpec(tables: LedgerTable[]): ChainLevel[] {
 			if (at === undefined || at >= index || at <= closest) {
 				continue;
 			}
+			// A rowid target is real to SQLite but absent from SELECT *, so it
+			// cannot identify a parent record here.
+			if (!columnsOf.get(key.referencesTable)?.has(key.referencesColumn)) {
+				continue;
+			}
 			closest = at;
 			parentTable = key.referencesTable;
 			parentColumn = key.column;
+			parentIdentityColumn = key.referencesColumn;
 		}
 
-		const referencedBy = tables
-			.filter((other) => other.name !== table.name)
-			.flatMap((other) => other.foreignKeys)
-			.find((key) => key.referencesTable === table.name);
-		const selfKey = table.foreignKeys.find(
-			(key) => key.referencesTable === table.name,
-		);
 		const primaryKey = table.columns.find((column) => column.primaryKey);
 
 		return {
 			table: table.name,
-			identityColumn:
-				referencedBy?.referencesColumn ??
-				selfKey?.referencesColumn ??
-				primaryKey?.name ??
-				table.columns[0]?.name ??
-				"",
+			identityColumn: identityColumnOf(table),
 			parentTable,
 			parentColumn,
+			parentIdentityColumn,
 			orderColumn: primaryKey?.name ?? null,
 		};
 	});
@@ -137,12 +141,13 @@ function buildDescendants(
 	spec: ChainLevel[],
 	level: ChainLevel,
 	record: LedgerRecord,
+	budget: { remaining: number },
 ): ChainNode {
 	const identity = identityOf(record, level.identityColumn);
 	const groups: ChainGroup[] = [];
 
 	for (const child of childLevels(spec, level.table)) {
-		if (!child.parentColumn) {
+		if (!child.parentColumn || !child.parentIdentityColumn) {
 			continue;
 		}
 		const group = buildGroup(
@@ -150,9 +155,22 @@ function buildDescendants(
 			child.table,
 			child.table,
 			child.parentColumn,
-			identity,
+			// The column this child's own key points at, which is not necessarily
+			// the one another table uses to reference the same parent.
+			identityOf(record, child.parentIdentityColumn),
 			child.orderColumn,
-			(childRecord) => buildDescendants(database, spec, child, childRecord),
+			(childRecord) => {
+				if (budget.remaining <= 0) {
+					return {
+						table: child.table,
+						identity: identityOf(childRecord, child.identityColumn),
+						record: childRecord,
+						groups: [],
+					};
+				}
+				budget.remaining -= 1;
+				return buildDescendants(database, spec, child, childRecord, budget);
+			},
 		);
 		if (group) {
 			groups.push(group);
@@ -190,7 +208,11 @@ export function resolveChain(
 	let anchorLevel = spec[selectedIndex];
 	let anchorRecord = selectedRecord;
 	const visited = new Set<string>([anchorLevel.table]);
-	while (anchorLevel.parentTable && anchorLevel.parentColumn) {
+	while (
+		anchorLevel.parentTable &&
+		anchorLevel.parentColumn &&
+		anchorLevel.parentIdentityColumn
+	) {
 		const parent = levelOf(spec, anchorLevel.parentTable);
 		// `visited` guards against a cycle in the declared keys.
 		if (!parent || visited.has(parent.table)) {
@@ -199,7 +221,7 @@ export function resolveChain(
 		const parentRecord: LedgerRecord | null = findOne(
 			database,
 			parent.table,
-			parent.identityColumn,
+			anchorLevel.parentIdentityColumn,
 			anchorRecord[anchorLevel.parentColumn] ?? null,
 		);
 		if (!parentRecord) {
@@ -212,7 +234,9 @@ export function resolveChain(
 
 	return {
 		levels,
-		root: buildDescendants(database, spec, anchorLevel, anchorRecord),
+		root: buildDescendants(database, spec, anchorLevel, anchorRecord, {
+			remaining: CHAIN_NODE_BUDGET,
+		}),
 		selected,
 	};
 }

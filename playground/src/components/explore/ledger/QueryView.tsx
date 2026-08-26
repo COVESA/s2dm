@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { PREDEFINED_QUERIES } from "@/ledger/predefinedQueries";
-import { matchSingleRecordTable } from "@/ledger/resultRecord";
+import { matchResultTable } from "@/ledger/resultRecord";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	openLedgerDetail,
@@ -22,6 +22,8 @@ import {
 	selectLedgerQueryResult,
 	selectLedgerSql,
 	selectLedgerTables,
+	selectPredefinedQuery,
+	selectPredefinedQueryLabel,
 	setLedgerSql,
 } from "@/store/ledger/ledgerSlice";
 
@@ -33,17 +35,15 @@ export function QueryView() {
 	const error = useAppSelector(selectLedgerQueryError);
 	const tables = useAppSelector(selectLedgerTables);
 	const detail = useAppSelector(selectLedgerDetail);
+	const predefinedQuery = useAppSelector(selectPredefinedQueryLabel);
 
-	const recordTable = matchSingleRecordTable(result, tables);
+	// By column shape, not row count: whole records stay identifiable however
+	// many of them the query returned.
+	const recordTable = result ? matchResultTable(result.columns, tables) : null;
 
 	const handlePredefined = (label: string) => {
-		const query = PREDEFINED_QUERIES.find(
-			(candidate) => candidate.label === label,
-		);
-		if (query) {
-			dispatch(setLedgerSql(query.sql));
-			dispatch(runLedgerQuery());
-		}
+		dispatch(selectPredefinedQuery(label));
+		dispatch(runLedgerQuery());
 	};
 
 	let content: React.ReactNode;
@@ -71,13 +71,12 @@ export function QueryView() {
 				result={result}
 				containerClassName="max-h-full"
 				selectedRecord={
+					// Only when the result is one identifiable table: a projection has
+					// no identity, so matching by value would highlight unrelated rows.
 					recordTable && detail?.table === recordTable ? detail.record : null
 				}
-				onRowClick={
-					recordTable
-						? (record) =>
-								dispatch(openLedgerDetail({ table: recordTable, record }))
-						: undefined
+				onRowClick={(record) =>
+					dispatch(openLedgerDetail({ table: recordTable ?? "", record }))
 				}
 			/>
 		);
@@ -86,9 +85,11 @@ export function QueryView() {
 	return (
 		<div className="flex min-h-0 flex-1 flex-col">
 			<div className="flex flex-wrap items-center gap-3 border-b px-6 py-3">
-				<Select value="" onValueChange={handlePredefined}>
+				<Select value={predefinedQuery} onValueChange={handlePredefined}>
 					<SelectTrigger className="w-64">
-						<SelectValue placeholder="Predefined queries" />
+						<SelectValue placeholder="Predefined queries">
+							{predefinedQuery}
+						</SelectValue>
 					</SelectTrigger>
 					<SelectContent>
 						{PREDEFINED_QUERIES.map((query) => (
@@ -113,18 +114,19 @@ export function QueryView() {
 					Run
 				</Button>
 
-				<span className="text-xs text-muted-foreground">
-					Read-only: SELECT, WITH and EXPLAIN
+				<span className="text-muted-foreground text-xs">
+					{PREDEFINED_QUERIES.find((query) => query.label === predefinedQuery)
+						?.description ?? "Read-only: SELECT, WITH and EXPLAIN"}
 				</span>
 			</div>
 
-			<div className="h-56 shrink-0 border-b">
+			<div className="h-48 shrink-0 border-b">
 				<TextEditor
 					language="sql"
 					value={sql}
 					onChange={(value) => dispatch(setLedgerSql(value))}
 					fullscreenTitle="Ledger query"
-					isExpandable={false}
+					fileName="query.sql"
 				/>
 			</div>
 

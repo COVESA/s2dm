@@ -10,22 +10,31 @@ import {
 import {
 	countRows,
 	countSearchMatches,
+	findRows,
 	listDistinctValues,
 	readSchema,
 	readTablePage,
+	rowPageIndex,
 	runReadQuery,
 	searchLedger,
 	searchTable,
 	toRecords,
 } from "@/ledger/introspect";
 import { matchSingleRecordTable } from "@/ledger/resultRecord";
+import type { SearchOptions } from "@/ledger/search";
 import {
+	beginLedgerOpen,
 	closeLedgerDatabase,
 	getLedgerDatabase,
 	setLedgerDatabase,
 } from "@/ledger/session";
-import { openLedgerDatabase, readFileBytes } from "@/ledger/sqlite";
+import {
+	LedgerImportSuperseded,
+	openLedgerDatabase,
+	readFileBytes,
+} from "@/ledger/sqlite";
 import type {
+	LedgerRecord,
 	LedgerSearchMatch,
 	LedgerTable,
 	QueryResult,
@@ -59,29 +68,50 @@ import {
 	selectLedgerSql,
 	selectLedgerTable,
 	selectLedgerTables,
+	selectSearchOptions,
 	selectSelectedLedgerTable,
 	setExploreQuery,
 	setLedgerFilter,
 	setLedgerFilterOptions,
 	setLedgerPage,
 	setLedgerSearch,
+	setSearchOptions,
+	showRecordInTable,
+	viewLedgerRecord,
 } from "@/store/ledger/ledgerSlice";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
 function* openLedgerWorker(action: PayloadAction<File>) {
 	const file = action.payload;
+	let opened: Database | null = null;
 
 	try {
+		const token: number = beginLedgerOpen();
 		const bytes: Uint8Array = yield call(readFileBytes, file);
-		const database: Database = yield call(openLedgerDatabase, bytes);
+		const database: Database = yield call(openLedgerDatabase, bytes, token);
+		opened = database;
 		setLedgerDatabase(database);
 
 		const tables: LedgerTable[] = yield call(readSchema, database);
 		yield put(openLedgerSuccess({ fileName: file.name, tables }));
 		yield put(loadLedgerRows());
 	} catch (error) {
-		closeLedgerDatabase();
-		yield put(openLedgerFailure(getErrorMessage(error)));
+		// The user replaced or removed the ledger mid-import, so there is nothing
+		// to report and nothing of theirs to tear down.
+		if (error instanceof LedgerImportSuperseded) {
+			return;
+		}
+		// Only what this run installed: a file that fails to open must not take
+		// the ledger already loaded with it.
+		if (opened) {
+			closeLedgerDatabase();
+		}
+		yield put(
+			openLedgerFailure({
+				message: getErrorMessage(error),
+				cleared: opened !== null,
+			}),
+		);
 	}
 }
 
@@ -92,15 +122,17 @@ function* loadLedgerRowsWorker() {
 			return;
 		}
 
-		const search: string = yield select(selectLedgerSearch);
+		const needle: string = yield select(selectLedgerSearch);
 		const page: number = yield select(selectLedgerPage);
 		const filters: Record<string, string> = yield select(selectLedgerFilters);
-		const trimmed = search.trim();
+		const trimmed = needle.trim();
 		const database = getLedgerDatabase();
+		const search: SearchOptions = yield select(selectSearchOptions);
 		const window = {
 			limit: LEDGER_PAGE_SIZE,
 			offset: page * LEDGER_PAGE_SIZE,
 			filters,
+			search,
 		};
 
 		const result: QueryResult = trimmed
@@ -108,8 +140,11 @@ function* loadLedgerRowsWorker() {
 			: yield call(readTablePage, database, table, window);
 		// Filters must reach the count, or the page numbers describe the whole table.
 		const total: number = trimmed
-			? yield call(countSearchMatches, database, table, trimmed, { filters })
-			: yield call(countRows, database, table, { filters });
+			? yield call(countSearchMatches, database, table, trimmed, {
+					filters,
+					search,
+				})
+			: yield call(countRows, database, table, { filters, search });
 
 		yield put(loadLedgerRowsSuccess({ result, total }));
 
@@ -133,18 +168,19 @@ function* loadLedgerRowsWorker() {
 
 function* exploreLedgerWorker() {
 	try {
-		const needle: string = yield select(selectExploreQuery);
-		const trimmed = needle.trim();
+		const exploreNeedle: string = yield select(selectExploreQuery);
+		const trimmed = exploreNeedle.trim();
 		if (!trimmed) {
 			return;
 		}
 
+		const search: SearchOptions = yield select(selectSearchOptions);
 		yield put(exploreLedger());
 		const matches: LedgerSearchMatch[] = yield call(
 			searchLedger,
 			getLedgerDatabase(),
 			trimmed,
-			{ limit: EXPLORE_PREVIEW_LIMIT },
+			{ limit: EXPLORE_PREVIEW_LIMIT, search },
 		);
 		yield put(exploreLedgerSuccess(matches));
 	} catch (error) {
@@ -200,6 +236,49 @@ function* resolveChainWorker() {
 	}
 }
 
+function* showRecordInTableWorker(
+	action: PayloadAction<{ table: string; record: LedgerRecord }>,
+) {
+	try {
+		const { table, record } = action.payload;
+		const page: number = yield call(
+			rowPageIndex,
+			getLedgerDatabase(),
+			table,
+			record,
+			LEDGER_PAGE_SIZE,
+		);
+		// setLedgerPage also triggers the row load, so this is the only dispatch.
+		yield put(setLedgerPage(page));
+	} catch (error) {
+		yield put(loadLedgerRowsFailure(getErrorMessage(error)));
+	}
+}
+
+function* viewLedgerRecordWorker(
+	action: PayloadAction<{ table: string; column: string; value: string }>,
+) {
+	try {
+		const { table, column, value } = action.payload;
+		const found: QueryResult = yield call(
+			findRows,
+			getLedgerDatabase(),
+			table,
+			column,
+			value,
+			{ limit: 1 },
+		);
+		const [record] = toRecords(found);
+		if (!record) {
+			yield put(resolveChainFailure(`No ${table} record found for ${value}`));
+			return;
+		}
+		yield put(pushLedgerDetail({ table, record }));
+	} catch (error) {
+		yield put(resolveChainFailure(getErrorMessage(error)));
+	}
+}
+
 function closeLedgerWorker() {
 	closeLedgerDatabase();
 }
@@ -211,7 +290,13 @@ export function* ledgerSaga() {
 	yield takeLatest(loadLedgerRows.type, loadLedgerRowsWorker);
 	yield takeLatest(setLedgerPage.type, loadLedgerRowsWorker);
 	yield takeLatest(setLedgerFilter.type, loadLedgerRowsWorker);
+	// Both searches re-run: the one off screen would otherwise still show results
+	// for the previous matching mode when the user switches back to it.
+	yield takeLatest(setSearchOptions.type, loadLedgerRowsWorker);
+	yield takeLatest(setSearchOptions.type, exploreLedgerWorker);
 	yield takeLatest(openTableWithSearch.type, loadLedgerRowsWorker);
+	yield takeLatest(showRecordInTable.type, showRecordInTableWorker);
+	yield takeLatest(viewLedgerRecord.type, viewLedgerRecordWorker);
 	yield debounce(200, setLedgerSearch.type, loadLedgerRowsWorker);
 	yield debounce(250, setExploreQuery.type, exploreLedgerWorker);
 	yield takeLatest(runLedgerQuery.type, runLedgerQueryWorker);
