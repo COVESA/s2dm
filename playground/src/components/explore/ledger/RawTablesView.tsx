@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { LedgerResultsGrid } from "@/components/explore/ledger/LedgerResultsGrid";
+import { SearchOptionToggles } from "@/components/explore/ledger/SearchOptionToggles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -96,9 +97,10 @@ export function RawTablesView() {
 						value={search}
 						onChange={(event) => dispatch(setLedgerSearch(event.target.value))}
 						placeholder={`Search ${selectedTable}`}
-						className="pl-8"
+						className="pl-8 pr-24"
 						aria-label={`Search ${selectedTable}`}
 					/>
+					<SearchOptionToggles />
 				</div>
 
 				<div className="flex flex-wrap items-center gap-3">
@@ -165,6 +167,9 @@ export function RawTablesView() {
 					<span className="text-sm text-muted-foreground tabular-nums">
 						{firstRow}–{lastRow} of {total}
 						{search.trim() ? " matching" : ""}
+						{pageCount > 1 && (
+							<span className="ml-2">· Sorting applies to this page only</span>
+						)}
 					</span>
 					<div className="flex items-center gap-2">
 						<span className="text-sm text-muted-foreground tabular-nums">

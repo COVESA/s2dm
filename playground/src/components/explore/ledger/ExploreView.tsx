@@ -1,5 +1,6 @@
 import { ArrowRight, Search } from "lucide-react";
 import { LedgerResultsGrid } from "@/components/explore/ledger/LedgerResultsGrid";
+import { SearchOptionToggles } from "@/components/explore/ledger/SearchOptionToggles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBanner } from "@/components/ui/status-banner";
@@ -43,9 +44,10 @@ export function ExploreView() {
 				</p>
 			</div>
 		);
-	} else if (isExploring) {
+	} else if (isExploring || !hasExplored) {
+		// Also before the first result lands, when there is nothing to report yet.
 		content = <p className="text-sm text-muted-foreground">Searching…</p>;
-	} else if (hasExplored && matches.length === 0) {
+	} else if (matches.length === 0) {
 		content = (
 			<p className="text-sm text-muted-foreground">
 				Nothing in this ledger matches “{query.trim()}”
@@ -117,9 +119,10 @@ export function ExploreView() {
 						value={query}
 						onChange={(event) => dispatch(setExploreQuery(event.target.value))}
 						placeholder="Search the ledger"
-						className="pl-8"
+						className="pl-8 pr-24"
 						aria-label="Search the ledger"
 					/>
+					<SearchOptionToggles />
 				</div>
 			</div>
 

@@ -1,13 +1,19 @@
+import { InsightLinkButton } from "@insights-ui/components/InsightLinkButton";
 import { ArrowLeft, X } from "lucide-react";
 import { DetailsPane } from "@/components/DetailsPane";
 import { LedgerChainView } from "@/components/ledger/LedgerChainView";
 import { StatusBadge } from "@/components/ledger/StatusBadge";
+import { Heading } from "@/components/ui/heading";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { identityColumnFor } from "@/ledger/identity";
 import {
+	formatValue,
 	recordLabel,
 	recordStatus,
 	recordTypeName,
+	shortenIdentity,
 } from "@/ledger/recordLabel";
+import { findLedgerReferences } from "@/ledger/references";
 import type { LedgerRecord } from "@/ledger/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -20,6 +26,9 @@ import {
 	selectLedgerChain,
 	selectLedgerChainError,
 	selectLedgerDetail,
+	selectLedgerTables,
+	showRecordInTable,
+	viewLedgerRecord,
 } from "@/store/ledger/ledgerSlice";
 import { collapseResultPane } from "@/store/ui/uiSlice";
 
@@ -28,23 +37,6 @@ type LedgerDetailsPaneProps = {
 	collapsible?: boolean;
 	className?: string;
 };
-
-function Section({
-	title,
-	children,
-}: {
-	title: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<section className="flex flex-col gap-2">
-			<h3 className="font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
-				{title}
-			</h3>
-			{children}
-		</section>
-	);
-}
 
 export function LedgerDetailsPane({
 	position = "right",
@@ -58,6 +50,7 @@ export function LedgerDetailsPane({
 	const error = useAppSelector(selectLedgerChainError);
 	const canGoBack = useAppSelector(selectCanGoBackLedgerDetail);
 	const hasLedger = useAppSelector(selectHasLedger);
+	const tables = useAppSelector(selectLedgerTables);
 
 	const handleSelect = (table: string, record: LedgerRecord) => {
 		dispatch(pushLedgerDetail({ table, record }));
@@ -88,8 +81,21 @@ export function LedgerDetailsPane({
 	const selectedTitle =
 		`${recordTypeName(detail.table)} ${selectedName}`.trim();
 	const selectedStatus = recordStatus(detail.record);
+	// Anything this row points at, other than the record already on screen. Its
+	// own URI is compared, not its label, so a parent in the same table is kept.
+	const ownUri =
+		detail.table === ""
+			? undefined
+			: detail.record[identityColumnFor(tables, detail.table)];
+	const references = findLedgerReferences(
+		detail.record,
+		tables.map((table) => table.name),
+	).filter(
+		(reference) =>
+			!(reference.table === detail.table && reference.value === ownUri),
+	);
 
-	let ledgerContext: React.ReactNode;
+	let ledgerContext: React.ReactNode = null;
 	if (error) {
 		ledgerContext = (
 			<StatusBanner variant="destructive" className="whitespace-pre-wrap">
@@ -101,11 +107,9 @@ export function LedgerDetailsPane({
 			<p className="text-sm text-muted-foreground">Resolving context…</p>
 		);
 	} else if (!chain.root) {
-		ledgerContext = (
-			<p className="text-sm text-muted-foreground">
-				This record has no related context.
-			</p>
-		);
+		// A query projection is not a record of any table, so there is no chain to
+		// show and the section is left out rather than stating that.
+		ledgerContext = null;
 	} else {
 		ledgerContext = (
 			<LedgerChainView
@@ -156,10 +160,16 @@ export function LedgerDetailsPane({
 					</div>
 				</div>
 
-				<div className="flex flex-1 animate-in flex-col gap-6 overflow-y-auto px-5 pt-5 pb-14 fade-in slide-in-from-right-4 duration-200">
-					<Section title="Ledger context">{ledgerContext}</Section>
+				<div className="flex flex-1 animate-in flex-col gap-6 overflow-y-auto px-5 pt-5 pb-14 text-sm text-card-foreground fade-in slide-in-from-right-4 duration-200">
+					{ledgerContext && (
+						<section className="flex flex-col gap-2">
+							<Heading level="h3">Ledger context</Heading>
+							{ledgerContext}
+						</section>
+					)}
 
-					<Section title="Record details">
+					<section className="flex flex-col gap-2">
+						<Heading level="h3">Record details</Heading>
 						<dl className="flex flex-col gap-px">
 							{Object.entries(detail.record).map(([key, value]) => (
 								<div
@@ -171,20 +181,54 @@ export function LedgerDetailsPane({
 									</dt>
 									<dd
 										className="min-w-0 truncate font-mono text-xs"
-										title={value === null ? "" : String(value)}
+										title={formatValue(value)}
 									>
-										{value === null ? "—" : String(value)}
+										{formatValue(value)}
 									</dd>
 								</div>
 							))}
 						</dl>
-					</Section>
+					</section>
 
-					<Section title="Actions">
-						<p className="text-muted-foreground text-sm">
-							No actions available yet
-						</p>
-					</Section>
+					<section className="flex flex-col gap-2">
+						<Heading level="h3">Actions</Heading>
+						<div className="flex flex-col items-start gap-1">
+							{references.map((reference) => (
+								<InsightLinkButton
+									key={`${reference.table}-${reference.value}`}
+									label={`View ${recordTypeName(reference.table).toLowerCase()} ${shortenIdentity(reference.value)}`}
+									onClick={() =>
+										dispatch(
+											viewLedgerRecord({
+												table: reference.table,
+												column: identityColumnFor(tables, reference.table),
+												value: reference.value,
+											}),
+										)
+									}
+								/>
+							))}
+							{detail.table !== "" && (
+								<InsightLinkButton
+									label="Show in Raw Tables"
+									onClick={() =>
+										dispatch(
+											showRecordInTable({
+												table: detail.table,
+												record: detail.record,
+											}),
+										)
+									}
+								/>
+							)}
+
+							{detail.table === "" && references.length === 0 && (
+								<p className="text-muted-foreground">
+									This row does not point at any ledger record
+								</p>
+							)}
+						</div>
+					</section>
 				</div>
 			</div>
 		</DetailsPane>
