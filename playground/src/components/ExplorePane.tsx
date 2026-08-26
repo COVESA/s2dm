@@ -1,10 +1,5 @@
 import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
-import {
-	Tabs,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
-} from "@shared-ui/components/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { ExplorerTab } from "@/components/explore/ExplorerTab";
 import { InsightsTab } from "@/components/explore/InsightsTab";
 import { LedgerTab } from "@/components/explore/LedgerTab";
@@ -40,11 +35,16 @@ export function ExplorePane({
 		);
 	}
 
-	const schemaPrompt = (
-		<div className="flex-1 flex items-center justify-center bg-background text-muted-foreground">
-			<p>Import a schema to start</p>
-		</div>
-	);
+	// Checked after the ledger workspace, which this must not block.
+	if (!hasSchema) {
+		return (
+			<Pane className={className} position={position}>
+				<div className="flex-1 flex items-center justify-center bg-background text-muted-foreground">
+					<p>Import a schema to start</p>
+				</div>
+			</Pane>
+		);
+	}
 
 	return (
 		<Pane className={className} position={position}>
@@ -63,27 +63,8 @@ export function ExplorePane({
 					</TabsList>
 				</div>
 
-				{hasSchema ? (
-					<>
-						<ExplorerTab />
-						<InsightsTab />
-					</>
-				) : (
-					<>
-						<TabsContent
-							value="explorer"
-							className="mt-0 flex min-h-0 flex-1 flex-col"
-						>
-							{schemaPrompt}
-						</TabsContent>
-						<TabsContent
-							value="insights"
-							className="mt-0 flex min-h-0 flex-1 flex-col"
-						>
-							{schemaPrompt}
-						</TabsContent>
-					</>
-				)}
+				<ExplorerTab />
+				<InsightsTab />
 			</Tabs>
 		</Pane>
 	);

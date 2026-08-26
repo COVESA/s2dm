@@ -1,4 +1,3 @@
-import { CollapsibleSection } from "@insights-ui/components/CollapsibleSection";
 import { Database, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
@@ -73,24 +72,17 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 				</div>
 			)}
 
-			<CollapsibleSection
-				title={fileName ? "1 ledger" : "0 ledgers"}
-				className="mt-2"
-			>
-				{fileName ? (
-					<ul className="space-y-1 py-2">
+			{fileName && (
+				<div className="px-2">
+					<ul>
 						<FileListRow
 							icon={<Database className="h-4 w-4 flex-shrink-0" />}
 							label={fileName}
 							title={fileName}
 						/>
 					</ul>
-				) : (
-					<p className="px-3 py-2 text-sm text-muted-foreground">
-						No ledger imported
-					</p>
-				)}
-			</CollapsibleSection>
+				</div>
+			)}
 
 			<ConfirmActionDialog
 				open={showRemoveConfirm}
