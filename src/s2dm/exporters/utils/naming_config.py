@@ -75,6 +75,7 @@ class NamingConventionConfig(BaseModel):
     argument: ArgumentNamingConfig | None = None
     enum_value: CaseFormat | None = Field(None, alias="enumValue")
     instance_tag: CaseFormat | None = Field(None, alias="instanceTag")
+    exceptions: dict[str, str] | None = None
 
     @model_validator(mode="after")
     def validate_enum_value_requires_instance_tag(self, info: ValidationInfo) -> "NamingConventionConfig":
