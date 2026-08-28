@@ -45,16 +45,21 @@ TYPE_CONTEXTS = {
 }
 
 
-def convert_name(name: str, target_case: CaseFormat) -> str:
+def convert_name(name: str, target_case: CaseFormat, exceptions: dict[str, str] | None = None) -> str:
     """Convert a name to the specified case format.
 
     Args:
         name: The name to convert
         target_case: The target case format
+        exceptions: Optional mapping of literal names to literal replacements, checked
+            before case conversion. Matching is exact and applies regardless of
+            element type or context (e.g. type, field, argument, enum value).
 
     Returns:
         The converted name
     """
+    if exceptions and name in exceptions:
+        return exceptions[name]
     return str(CASE_CONVERTERS[target_case](name))
 
 
@@ -93,7 +98,7 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: NamingConventio
         if context:
             target_case = get_case_for_element(ElementType.TYPE, context, naming_config)
             if target_case:
-                new_name = convert_name(type_name, target_case)
+                new_name = convert_name(type_name, target_case, naming_config.exceptions)
                 if new_name != type_name:
                     types_to_rename.append((type_name, new_name, type_obj))
 
@@ -131,7 +136,7 @@ def convert_field_names(
     if target_case:
         new_fields = {}
         for old_name, field in type_obj.fields.items():
-            new_name = convert_name(old_name, target_case)
+            new_name = convert_name(old_name, target_case, naming_config.exceptions)
             new_fields[new_name] = field
 
         type_obj.fields.clear()
@@ -144,7 +149,7 @@ def convert_field_names(
                 if arg_target_case:
                     new_args = {}
                     for old_name, arg in field.args.items():
-                        new_name = convert_name(old_name, arg_target_case)
+                        new_name = convert_name(old_name, arg_target_case, naming_config.exceptions)
                         new_args[new_name] = arg
 
                     field.args.clear()
@@ -170,7 +175,7 @@ def convert_enum_values(
 
     new_values = {}
     for old_name, enum_value in type_obj.values.items():
-        new_name = convert_name(old_name, target_case)
+        new_name = convert_name(old_name, target_case, naming_config.exceptions)
         new_values[new_name] = enum_value
 
     type_obj.values.clear()
@@ -196,7 +201,7 @@ def apply_naming_to_instance_values(
     if not target_case:
         return instance_values
 
-    return [convert_name(value, target_case) for value in instance_values]
+    return [convert_name(value, target_case, naming_config.exceptions) for value in instance_values]
 
 
 def load_naming_config(config_path: Path | None) -> NamingConventionConfig | None:

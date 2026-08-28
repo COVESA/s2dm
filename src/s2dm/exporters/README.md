@@ -316,6 +316,14 @@ instanceTag: COBOL-CASE
 # Transform argument names by context
 argument:
   field: camelCase
+
+# Literal overrides applied before case conversion, regardless of element type
+# or context (type, field, argument, enum value, instance tag). Matching is
+# exact and case-sensitive against the original schema name.
+exceptions:
+  AI: AI
+  VIN: VIN
+  PWFStatus: PWFStatus
 ```
 
 ### Supported Case Formats
@@ -372,7 +380,7 @@ The naming configuration system enforces several validation rules to ensure cons
 
 #### Element Type Validation
 
-- **Valid element types**: Only `type`, `field`, `argument`, `enumValue`, and `instanceTag` are allowed
+- **Valid element types**: Only `type`, `field`, `argument`, `enumValue`, `instanceTag`, and `exceptions` are allowed
 - **Context restrictions**: Some element types cannot have context-specific configurations:
   - `enumValue` and `instanceTag` are contextless and use a single case format
   - `argument` can only have `field` context
@@ -393,6 +401,24 @@ The naming configuration system enforces several validation rules to ensure cons
 
 - **EnumValue-InstanceTag pairing**: If `enumValue` is present in the configuration, `instanceTag` must also be present
 - **InstanceTag preservation**: The literal field name `instanceTag` is never transformed, regardless of naming configuration, to preserve its semantic meaning
+
+### Exceptions
+
+The optional `exceptions` key maps literal names to literal replacements that are
+applied instead of case conversion. This is useful for names that a case converter
+would otherwise mangle, such as acronyms (e.g. `AI`, `VIN` becoming `Ai`, `Vin` under
+PascalCase).
+
+- **Global scope**: exceptions apply to every element type and context (type, field,
+  argument, enum value, instance tag) — there is currently no way to scope an
+  exception to only one of these. If the same literal name needs different
+  treatment depending on where it appears, this is a known limitation.
+- **Exact, case-sensitive matching**: the full name as it appears in the source
+  schema must match a key in `exceptions`; partial/substring matches are not
+  supported.
+- **Applies everywhere `convert_name` is used**: both export-time conversion and
+  `s2dm check constraints` naming validation honor `exceptions`, so an excepted
+  name is treated as compliant in both cases.
 
 ### Notes
 

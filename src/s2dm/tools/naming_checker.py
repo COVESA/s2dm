@@ -21,17 +21,21 @@ from s2dm.exporters.utils.naming_config import (
 _inflect_engine = inflect.engine()
 
 
-def _matches_case_format(name: str, case_format: CaseFormat) -> tuple[bool, str]:
+def _matches_case_format(
+    name: str, case_format: CaseFormat, exceptions: dict[str, str] | None = None
+) -> tuple[bool, str]:
     """Check if a name matches the specified case format.
 
     Args:
         name: The name to check
         case_format: The expected case format
+        exceptions: Optional mapping of literal names to literal replacements that are
+            considered compliant as-is, checked before case conversion.
 
     Returns:
         True if the name matches the case format, False otherwise
     """
-    converted_name = convert_name(name, case_format)
+    converted_name = convert_name(name, case_format, exceptions)
     matches = name == converted_name
 
     return matches, converted_name
@@ -81,7 +85,7 @@ def check_naming_conventions(
 
         expected_case = get_case_for_element(ElementType.TYPE, context, config)
         if expected_case:
-            matches, suggestion = _matches_case_format(type_name, expected_case)
+            matches, suggestion = _matches_case_format(type_name, expected_case, config.exceptions)
             if not matches:
                 type_errors.append(
                     f"[naming] Type '{type_name}' should be {expected_case.value} (suggestion: '{suggestion}')"
@@ -94,7 +98,7 @@ def check_naming_conventions(
             expected_case = get_case_for_element(enum_element_type, None, config)
             if expected_case:
                 for value_name in object_type.values:
-                    matches, suggestion = _matches_case_format(value_name, expected_case)
+                    matches, suggestion = _matches_case_format(value_name, expected_case, config.exceptions)
                     if not matches:
                         enum_value_errors.append(
                             f"[naming] Enum value '{object_type.name}.{value_name}' should be {expected_case.value} "
@@ -111,7 +115,7 @@ def check_naming_conventions(
 
             for field_name, field in object_type.fields.items():
                 if field_case:
-                    matches, suggestion = _matches_case_format(field_name, field_case)
+                    matches, suggestion = _matches_case_format(field_name, field_case, config.exceptions)
                     if not matches:
                         field_errors.append(
                             f"[naming] Field '{object_type.name}.{field_name}' should be {field_case.value} "
@@ -136,7 +140,7 @@ def check_naming_conventions(
 
                 if argument_case and field.args:
                     for arg_name in field.args:
-                        matches, suggestion = _matches_case_format(arg_name, argument_case)
+                        matches, suggestion = _matches_case_format(arg_name, argument_case, config.exceptions)
                         if not matches:
                             argument_errors.append(
                                 f"[naming] Argument '{object_type.name}.{field_name}({arg_name})' should be "
