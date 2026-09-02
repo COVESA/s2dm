@@ -1,5 +1,6 @@
 import { Network } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LedgerErrorBanner } from "@/components/ledger/LedgerErrorBanner";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -8,7 +9,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { StatusBanner } from "@/components/ui/status-banner";
 import { useTheme } from "@/hooks/useTheme";
 import { LEDGER_ER_DIAGRAM } from "@/ledger/erDiagram";
 
@@ -90,12 +90,7 @@ export function LedgerErdButton() {
 						)}
 						{error && (
 							<div className="absolute inset-0 bg-background p-6">
-								<StatusBanner
-									variant="destructive"
-									className="whitespace-pre-wrap"
-								>
-									{error}
-								</StatusBanner>
+								<LedgerErrorBanner>{error}</LedgerErrorBanner>
 							</div>
 						)}
 					</div>

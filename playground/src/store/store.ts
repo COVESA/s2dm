@@ -24,8 +24,12 @@ import exportReducer from "@/store/export/exportSlice";
 import { insightsSaga } from "@/store/insights/insightsSaga";
 import { instanceTagsSaga } from "@/store/instanceTags/instanceTagsSaga";
 import instanceTagsReducer from "@/store/instanceTags/instanceTagsSlice";
+import ledgerDetailReducer from "@/store/ledger/ledgerDetailSlice";
+import ledgerExploreReducer from "@/store/ledger/ledgerExploreSlice";
+import ledgerFileReducer from "@/store/ledger/ledgerFileSlice";
+import ledgerQueryReducer from "@/store/ledger/ledgerQuerySlice";
 import { ledgerSaga } from "@/store/ledger/ledgerSaga";
-import ledgerReducer from "@/store/ledger/ledgerSlice";
+import ledgerTableReducer from "@/store/ledger/ledgerTableSlice";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";
@@ -70,7 +74,11 @@ export const store = configureStore({
 		depsResolve: depsResolveReducer,
 		depsCompose: depsComposeReducer,
 		schema: schemaReducer,
-		ledger: ledgerReducer,
+		ledgerFile: ledgerFileReducer,
+		ledgerTable: ledgerTableReducer,
+		ledgerExplore: ledgerExploreReducer,
+		ledgerQuery: ledgerQueryReducer,
+		ledgerDetail: ledgerDetailReducer,
 		selection: selectionReducer,
 		validation: validationReducer,
 		ui: uiReducer,

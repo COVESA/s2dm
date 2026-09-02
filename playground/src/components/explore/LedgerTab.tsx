@@ -1,6 +1,7 @@
 import { ExploreView } from "@/components/explore/ledger/ExploreView";
 import { QueryView } from "@/components/explore/ledger/QueryView";
 import { RawTablesView } from "@/components/explore/ledger/RawTablesView";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -16,11 +17,7 @@ export function LedgerTab() {
 	const view = useAppSelector(selectLedgerView);
 
 	if (!hasLedger) {
-		return (
-			<div className="flex flex-1 items-center justify-center bg-background text-muted-foreground">
-				<p>Load a ledger database to start</p>
-			</div>
-		);
+		return <EmptyState title="Load a ledger database to start" />;
 	}
 
 	return (
