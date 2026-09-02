@@ -1,10 +1,11 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import type { ChainGroup, ChainNode } from "@/ledger/chain";
 import {
-	CHAIN_AUTO_EXPAND_DEPTH,
-	CHAIN_GROUP_RENDER_LIMIT,
-} from "@/ledger/constants";
+	type ChainGroup,
+	type ChainNode,
+	chainNodeKey,
+	selectedAncestry,
+} from "@/ledger/chainSpec";
 import {
 	recordLabel,
 	recordTypeName,
@@ -13,35 +14,37 @@ import {
 import type { LedgerRecord } from "@/ledger/types";
 import { cn } from "@/utils/cn";
 
+// Rows shown before "See N more".
+const CHAIN_GROUP_RENDER_LIMIT = 5;
+
+// Levels opened automatically below the selected record. Three reaches bindings
+// from a concept, which is the full chain.
+const CHAIN_AUTO_EXPAND_DEPTH = 3;
+
 type SelectedRef = { table: string; identity: string };
 
-function containsSelected(node: ChainNode, selected: SelectedRef): boolean {
-	if (node.table === selected.table && node.identity === selected.identity) {
-		return true;
-	}
-	return node.groups.some((group) =>
-		group.nodes.some((child) => containsSelected(child, selected)),
-	);
-}
+type ChainViewProps = {
+	selected: SelectedRef;
+	// Every node on the path to the selection, so neither test re-walks the tree.
+	ancestry: Set<string>;
+	depth: number;
+	autoOpenRemaining: number;
+	onSelect: (table: string, record: LedgerRecord) => void;
+};
 
 function GroupView({
 	group,
 	selected,
+	ancestry,
 	depth,
 	autoOpenRemaining,
 	onSelect,
-}: {
-	group: ChainGroup;
-	selected: SelectedRef;
-	depth: number;
-	autoOpenRemaining: number;
-	onSelect: (table: string, record: LedgerRecord) => void;
-}) {
+}: ChainViewProps & { group: ChainGroup }) {
 	const [isExpanded, setIsExpanded] = useState(false);
 
 	// Order is never changed; the group opens instead of hoisting the selection.
 	const selectedIndex = group.nodes.findIndex((node) =>
-		containsSelected(node, selected),
+		ancestry.has(chainNodeKey(node)),
 	);
 	const showAll = isExpanded || selectedIndex >= CHAIN_GROUP_RENDER_LIMIT;
 	const visible = showAll
@@ -61,6 +64,7 @@ function GroupView({
 					key={`${node.table}-${node.identity || index}`}
 					node={node}
 					selected={selected}
+					ancestry={ancestry}
 					depth={depth}
 					autoOpenRemaining={autoOpenRemaining}
 					onSelect={onSelect}
@@ -93,16 +97,11 @@ function GroupView({
 function NodeView({
 	node,
 	selected,
+	ancestry,
 	depth,
 	autoOpenRemaining,
 	onSelect,
-}: {
-	node: ChainNode;
-	selected: SelectedRef;
-	depth: number;
-	autoOpenRemaining: number;
-	onSelect: (table: string, record: LedgerRecord) => void;
-}) {
+}: ChainViewProps & { node: ChainNode }) {
 	// null until the user decides for themselves, so the automatic state can
 	// change with the selection without discarding an explicit choice.
 	const [override, setOverride] = useState<boolean | null>(null);
@@ -114,9 +113,7 @@ function NodeView({
 	const hasChildren = groups.length > 0;
 
 	// Ancestors stay open so the selection is always reachable.
-	const holdsSelectionBelow = groups.some((group) =>
-		group.nodes.some((child) => containsSelected(child, selected)),
-	);
+	const holdsSelectionBelow = ancestry.has(chainNodeKey(node)) && !isSelected;
 	const budget = isSelected ? CHAIN_AUTO_EXPAND_DEPTH : autoOpenRemaining;
 	const openByDefault = holdsSelectionBelow || budget > 0;
 	const isOpen =
@@ -135,11 +132,8 @@ function NodeView({
 
 	let chevron: React.ReactNode = <span className="h-3 w-3 shrink-0" />;
 	if (hasChildren) {
-		chevron = isOpen ? (
-			<ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-		) : (
-			<ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-		);
+		const Chevron = isOpen ? ChevronDown : ChevronRight;
+		chevron = <Chevron className="h-3 w-3 shrink-0 text-muted-foreground" />;
 	}
 
 	return (
@@ -172,6 +166,7 @@ function NodeView({
 						key={`${node.identity}-${group.table}-${group.label}`}
 						group={group}
 						selected={selected}
+						ancestry={ancestry}
 						depth={depth + 1}
 						autoOpenRemaining={budget - 1}
 						onSelect={onSelect}
@@ -192,12 +187,14 @@ export function LedgerChainView({
 	selected,
 	onSelect,
 }: LedgerChainViewProps) {
+	const ancestry = selectedAncestry(node, selected);
 	return (
 		<NodeView
 			// Remounts on a new selection so automatic expansion applies afresh.
 			key={`${selected.table}:${selected.identity}`}
 			node={node}
 			selected={selected}
+			ancestry={ancestry}
 			depth={0}
 			autoOpenRemaining={0}
 			onSelect={onSelect}

@@ -18,8 +18,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { toRecord } from "@/ledger/introspect";
+import { STATUS_COLUMN } from "@/ledger/modlProfile";
 import { formatValue } from "@/ledger/recordLabel";
+import { isSameRow } from "@/ledger/resultRow";
 import type { LedgerRecord, LedgerValue, QueryResult } from "@/ledger/types";
+import type { LedgerCell } from "@/store/ledger/ledgerSlice";
 import { cn } from "@/utils/cn";
 
 const features = tableFeatures({
@@ -32,39 +36,17 @@ const features = tableFeatures({
 	},
 });
 
-export type LedgerRow = Record<string, LedgerValue>;
-
 type LedgerResultsGridProps = {
 	result: QueryResult;
-	selectedRecord?: LedgerRecord | null;
+	selectedValues?: LedgerValue[] | null;
 	containerClassName?: string;
-	onRowClick?: (row: LedgerRow) => void;
+	onRowClick?: (record: LedgerRecord, cells: LedgerCell[]) => void;
+	sortable?: boolean;
 };
 
-function toRecord(row: LedgerValue[], columns: string[]): LedgerRecord {
-	return Object.fromEntries(
-		columns.map((column, index) => [column, row[index] ?? null]),
-	);
-}
-
-// By value, not identity: rows from the chain view are re-read from the database.
-function isSameRecord(
-	left: LedgerRecord,
-	right: LedgerRecord,
-	columns: string[],
-): boolean {
-	return columns.every((column) => {
-		const a = left[column] ?? null;
-		const b = right[column] ?? null;
-		return a instanceof Uint8Array || b instanceof Uint8Array ? false : a === b;
-	});
-}
-
-function renderCell(columnId: string, value: LedgerValue): React.ReactNode {
-	// Ids are `${index}:${name}`, so the name is what follows the first colon.
-	const columnName = columnId.slice(columnId.indexOf(":") + 1);
+function renderCell(columnName: string, value: LedgerValue): React.ReactNode {
 	if (
-		columnName === "status" &&
+		columnName === STATUS_COLUMN &&
 		typeof value === "string" &&
 		value.length > 0
 	) {
@@ -75,9 +57,10 @@ function renderCell(columnId: string, value: LedgerValue): React.ReactNode {
 
 export function LedgerResultsGrid({
 	result,
-	selectedRecord,
+	selectedValues,
 	containerClassName,
 	onRowClick,
+	sortable = true,
 }: LedgerResultsGridProps) {
 	// By position: a repeated column name would collapse in a keyed record.
 	const data = useMemo<LedgerValue[][]>(() => result.rows, [result.rows]);
@@ -99,14 +82,14 @@ export function LedgerResultsGrid({
 	// rather than a wrapper, which would break the height max-h-full resolves against.
 	const containerRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
-		if (!selectedRecord || result.rows.length === 0) {
+		if (!selectedValues || result.rows.length === 0) {
 			return;
 		}
 		containerRef.current
 			?.querySelector('[aria-selected="true"]')
 			// "nearest" leaves an already-visible row where it is.
 			?.scrollIntoView({ block: "nearest", inline: "nearest" });
-	}, [selectedRecord, result]);
+	}, [selectedValues, result]);
 
 	if (result.columns.length === 0) {
 		return null;
@@ -123,15 +106,25 @@ export function LedgerResultsGrid({
 								<TableHead key={header.id}>
 									<button
 										type="button"
-										onClick={header.column.getToggleSortingHandler()}
-										className="flex cursor-pointer items-center gap-1 font-mono text-xs hover:text-foreground"
+										disabled={!sortable}
+										onClick={
+											sortable
+												? header.column.getToggleSortingHandler()
+												: undefined
+										}
+										className={cn(
+											"flex items-center gap-1 font-mono text-xs",
+											sortable && "cursor-pointer hover:text-foreground",
+										)}
 									>
 										{header.column.columnDef.header as string}
-										{sortDirection === "asc" && <ArrowUp className="h-3 w-3" />}
-										{sortDirection === "desc" && (
+										{sortable && sortDirection === "asc" && (
+											<ArrowUp className="h-3 w-3" />
+										)}
+										{sortable && sortDirection === "desc" && (
 											<ArrowDown className="h-3 w-3" />
 										)}
-										{!sortDirection && (
+										{sortable && !sortDirection && (
 											<ChevronsUpDown className="h-3 w-3 opacity-40" />
 										)}
 									</button>
@@ -144,22 +137,35 @@ export function LedgerResultsGrid({
 			<TableBody>
 				{table.getRowModel().rows.map((row) => {
 					const record = toRecord(row.original, result.columns);
-					const isSelected = selectedRecord
-						? isSameRecord(record, selectedRecord, result.columns)
-						: false;
+					const isSelected =
+						selectedValues != null && isSameRow(row.original, selectedValues);
 					return (
 						<TableRow
 							key={row.id}
-							onClick={onRowClick ? () => onRowClick(record) : undefined}
+							onClick={
+								onRowClick
+									? () =>
+											onRowClick(
+												record,
+												result.columns.map((column, index) => ({
+													column,
+													value: row.original[index] ?? null,
+												})),
+											)
+									: undefined
+							}
 							aria-selected={isSelected}
 							className={cn(
 								onRowClick && "cursor-pointer",
 								isSelected && "bg-accent hover:bg-accent",
 							)}
 						>
-							{row.getAllCells().map((cell) => (
+							{row.getAllCells().map((cell, index) => (
 								<TableCell key={cell.id} className="font-mono text-xs">
-									{renderCell(cell.column.id, cell.getValue() as LedgerValue)}
+									{renderCell(
+										result.columns[index] ?? "",
+										cell.getValue() as LedgerValue,
+									)}
 								</TableCell>
 							))}
 						</TableRow>

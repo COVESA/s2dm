@@ -14,7 +14,16 @@ export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
 
 export const MATCH_FUNCTION = "s2dm_match";
 
-export function escapeRegExp(value: string): string {
+function isAscii(value: string): boolean {
+	for (const character of value) {
+		if ((character.codePointAt(0) ?? 0) > 0x7f) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function escapeRegExp(value: string): string {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
@@ -40,7 +49,18 @@ export function compileSearchPattern(
 	}
 
 	if (options.mode === "wholeWord") {
-		return { kind: "regexp", source: `\\b${escapeRegExp(needle)}\\b`, flags };
+		// Not \b, which JavaScript defines over [A-Za-z0-9_] only.
+		return {
+			kind: "regexp",
+			source: `(?<![\\p{L}\\p{N}_])${escapeRegExp(needle)}(?![\\p{L}\\p{N}_])`,
+			flags: `${flags}u`,
+		};
+	}
+
+	// SQLite's LIKE folds case for ASCII only, so anything else takes the regex
+	// path to agree with the other modes.
+	if (!options.caseSensitive && !isAscii(needle)) {
+		return { kind: "regexp", source: escapeRegExp(needle), flags: "i" };
 	}
 
 	// LIKE is case-insensitive for ASCII and instr is not, so between them the

@@ -6,7 +6,8 @@ import { isCurrentLedgerOpen } from "@/ledger/session";
 let sqlJs: Promise<SqlJsStatic> | null = null;
 
 function loadSqlJs(): Promise<SqlJsStatic> {
-	// On demand to keep the wasm out of the initial bundle; a failure is not cached.
+	// Caches into module state so the wasm loads once. On demand to keep it out
+	// of the initial bundle; a failure is not cached, so a retry can succeed.
 	sqlJs ??= import("sql.js")
 		.then((module) => module.default({ locateFile: () => wasmUrl }))
 		.catch((error) => {

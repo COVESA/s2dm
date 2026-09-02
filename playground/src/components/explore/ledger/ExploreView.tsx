@@ -1,9 +1,12 @@
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import pluralize from "pluralize";
 import { LedgerResultsGrid } from "@/components/explore/ledger/LedgerResultsGrid";
-import { SearchOptionToggles } from "@/components/explore/ledger/SearchOptionToggles";
+import { LedgerSearchInput } from "@/components/explore/ledger/LedgerSearchInput";
+import { LedgerErrorBanner } from "@/components/ledger/LedgerErrorBanner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { StatusBanner } from "@/components/ui/status-banner";
+import { capitalise } from "@/ledger/recordLabel";
+import { recordValues } from "@/ledger/resultRow";
+import type { LedgerSearchMatch } from "@/ledger/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	openLedgerDetail,
@@ -28,13 +31,14 @@ export function ExploreView() {
 
 	const totalRows = matches.reduce((total, match) => total + match.total, 0);
 
+	const selectedValuesIn = (match: LedgerSearchMatch) =>
+		detail?.kind === "row" && detail.table === match.table
+			? recordValues(detail.record, match.result.columns)
+			: null;
+
 	let content: React.ReactNode;
 	if (error) {
-		content = (
-			<StatusBanner variant="destructive" className="whitespace-pre-wrap">
-				{error}
-			</StatusBanner>
-		);
+		content = <LedgerErrorBanner>{error}</LedgerErrorBanner>;
 	} else if (!query.trim()) {
 		content = (
 			<div className="flex flex-1 items-center justify-center text-muted-foreground">
@@ -58,21 +62,22 @@ export function ExploreView() {
 			<div className="flex flex-col gap-6">
 				<p className="text-muted-foreground text-sm">
 					{totalRows} records in {matches.length}{" "}
-					{matches.length === 1 ? "table" : "tables"}
+					{pluralize("table", matches.length)}
 				</p>
 
 				{matches.map((match) => {
 					const shown = match.result.rows.length;
 					const hasMore = match.total > shown;
+					const countLabel = hasMore
+						? `${shown} of ${match.total} matching`
+						: `${match.total} matching`;
 					return (
 						<section key={match.table} className="flex flex-col gap-2">
 							<div className="flex items-center justify-between gap-2">
 								<div className="flex items-baseline gap-2">
-									<h3 className="font-semibold capitalize">{match.table}</h3>
+									<h3 className="font-semibold">{capitalise(match.table)}</h3>
 									<span className="font-mono text-xs text-muted-foreground">
-										{hasMore
-											? `${shown} of ${match.total} matching`
-											: `${match.total} matching`}
+										{countLabel}
 									</span>
 								</div>
 								{hasMore && (
@@ -95,12 +100,17 @@ export function ExploreView() {
 							</div>
 							<LedgerResultsGrid
 								result={match.result}
+								sortable={false}
 								containerClassName="max-h-96"
-								selectedRecord={
-									detail?.table === match.table ? detail.record : null
-								}
+								selectedValues={selectedValuesIn(match)}
 								onRowClick={(record) =>
-									dispatch(openLedgerDetail({ table: match.table, record }))
+									dispatch(
+										openLedgerDetail({
+											kind: "row",
+											table: match.table,
+											record,
+										}),
+									)
 								}
 							/>
 						</section>
@@ -113,17 +123,11 @@ export function ExploreView() {
 	return (
 		<div className="flex min-h-0 flex-1 flex-col">
 			<div className="flex flex-col gap-3 border-b px-6 py-3">
-				<div className="relative w-full">
-					<Search className="absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-					<Input
-						value={query}
-						onChange={(event) => dispatch(setExploreQuery(event.target.value))}
-						placeholder="Search the ledger"
-						className="pl-8 pr-24"
-						aria-label="Search the ledger"
-					/>
-					<SearchOptionToggles />
-				</div>
+				<LedgerSearchInput
+					value={query}
+					onChange={(value) => dispatch(setExploreQuery(value))}
+					label="Search the ledger"
+				/>
 			</div>
 
 			<div className="flex flex-1 flex-col overflow-auto px-6 py-4">

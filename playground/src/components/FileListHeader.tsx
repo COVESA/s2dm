@@ -4,6 +4,7 @@ import { AddUrlDialog } from "@/components/AddUrlDialog";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { DependencyManagerDialog } from "@/components/DependencyManagerDialog";
 import { Button } from "@/components/ui/button";
+import { ImportErrorBanner } from "@/components/ui/import-error-banner";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useImportSources } from "@/hooks/useImportSources";
 import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
@@ -85,11 +86,7 @@ export function FileListHeader({ leading }: FileListHeaderProps) {
 				</div>
 			</div>
 
-			{importError && (
-				<div className="mx-2 mb-2 p-2 text-sm bg-destructive/10 text-destructive rounded border border-destructive">
-					{importError}
-				</div>
-			)}
+			{importError && <ImportErrorBanner>{importError}</ImportErrorBanner>}
 
 			{hiddenInputs}
 

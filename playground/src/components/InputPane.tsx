@@ -1,24 +1,13 @@
 import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
-import {
-	Eye,
-	Hammer,
-	Layers,
-	Package,
-	Plus,
-	Trash2,
-	Upload,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { FileList } from "@/components/FileList";
-import { HelpButton, HelpItem } from "@/components/HelpButton";
-import { LedgerBadge } from "@/components/ledger/LedgerBadge";
 import { LedgerFileList } from "@/components/ledger/LedgerFileList";
+import { LedgerToolbar } from "@/components/ledger/LedgerHelpButton";
 import { LedgerOverview } from "@/components/ledger/LedgerOverview";
-import { StatusBadge } from "@/components/ledger/StatusBadge";
 import { Pane } from "@/components/Pane";
+import { SchemaToolbar } from "@/components/SchemaHelpButton";
 import { TextEditor } from "@/components/TextEditor";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -135,145 +124,18 @@ export function InputPane({
 		);
 	};
 
-	const schemaToolbar = (
-		<>
-			<ThemeToggle />
-			<HelpButton
-				title="Schema Files & Dependencies"
-				ariaLabel="Schema files help"
-			>
-				<HelpItem
-					term={
-						<>
-							<Package className="inline h-4 w-4 align-text-bottom" /> Manage
-							dependencies
-						</>
-					}
-				>
-					open the dependency manager to configure, resolve, and build external
-					schema dependencies. Disabled while exploring a dependency.
-				</HelpItem>
-				<HelpItem
-					term={
-						<>
-							<Plus className="inline h-4 w-4 align-text-bottom" /> Add schemas
-						</>
-					}
-				>
-					import schema files, a whole directory, or add a schema from a URL.
-				</HelpItem>
-				<HelpItem
-					term={
-						<>
-							<Trash2 className="inline h-4 w-4 align-text-bottom" /> Remove all
-							files
-						</>
-					}
-				>
-					clear every imported source file from the list.
-				</HelpItem>
-				<HelpItem term="Dependencies section">
-					lists the resolved dependencies. Use{" "}
-					<Hammer className="inline h-4 w-4 align-text-bottom" /> Build to
-					compose them into a single schema (the dropdown offers Build and
-					Auto-prefix), and <Eye className="inline h-4 w-4 align-text-bottom" />{" "}
-					to preview that built dependency schema.
-				</HelpItem>
-				<HelpItem term="Files section">
-					lists the imported source files. Drag entries to reorder them.
-				</HelpItem>
-				<HelpItem
-					term={
-						<>
-							<Layers className="inline h-4 w-4 align-text-bottom" /> Compose
-							and Validate
-						</>
-					}
-				>
-					validate and compose all source files into one schema. Tick “Include
-					built dependencies in composition” to merge the built dependency
-					schema into the result.
-				</HelpItem>
-			</HelpButton>
-		</>
-	);
-
-	const ledgerToolbar = (
-		<>
-			<ThemeToggle />
-			<HelpButton title="Ledger" ariaLabel="Ledger help">
-				<HelpItem
-					term={
-						<>
-							<Upload className="inline h-4 w-4 align-text-bottom" /> Upload
-							Ledger
-						</>
-					}
-				>
-					import a ModL ledger as a SQLite database. It is read in your browser
-					and never uploaded.
-				</HelpItem>
-				<HelpItem
-					term={
-						<>
-							<Trash2 className="inline h-4 w-4 align-text-bottom" /> Remove
-							ledger
-						</>
-					}
-				>
-					close the ledger and clear its tables, searches and queries.
-				</HelpItem>
-				<HelpItem term="Raw Tables">
-					browse each ledger table with search and pagination.
-				</HelpItem>
-				<HelpItem term="Explore">
-					search the whole ledger at once, by label, kind, status, URI, serial
-					or instance.
-				</HelpItem>
-				<HelpItem term="Query">
-					run a predefined query or write your own read-only SQL. The database
-					schema is listed here while this view is open.
-				</HelpItem>
-				<HelpItem
-					term={
-						<span className="flex items-center gap-2">
-							<LedgerBadge tone="active">8</LedgerBadge>
-							<span className="text-muted-foreground text-sm">9</span>
-						</span>
-					}
-				>
-					in the table summary above: active records, then the total.
-				</HelpItem>
-				<HelpItem
-					term={
-						<span className="flex flex-wrap items-center gap-1">
-							<StatusBadge status="ACTIVE" />
-							<StatusBadge status="SUPERSEDED" />
-							<StatusBadge status="REMOVED" />
-						</span>
-					}
-				>
-					a record's status, shown wherever a status column appears.
-				</HelpItem>
-				<HelpItem term="Highlighted row">
-					the record currently open in the details pane on the right.
-				</HelpItem>
-			</HelpButton>
-		</>
-	);
-
 	let body: React.ReactNode;
 	if (isLedger) {
 		body = (
 			<>
-				<LedgerFileList leading={ledgerToolbar} />
+				<LedgerFileList leading={<LedgerToolbar />} />
 				<LedgerOverview />
 			</>
 		);
 	} else {
 		body = (
 			<>
-				<FileList leading={schemaToolbar} />
+				<FileList leading={<SchemaToolbar />} />
 				{originalSchema?.trim() && <Separator />}
 				{renderSchemaEditor()}
 			</>

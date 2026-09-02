@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { FileListRow } from "@/components/FileListRow";
 import { Button } from "@/components/ui/button";
+import { ImportErrorBanner } from "@/components/ui/import-error-banner";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useFileImport } from "@/hooks/useFileImport";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -66,14 +67,10 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 
 			<input {...hiddenInputProps} />
 
-			{error && (
-				<div className="mx-2 mb-2 p-2 text-sm bg-destructive/10 text-destructive rounded border border-destructive">
-					{error}
-				</div>
-			)}
+			{error && <ImportErrorBanner>{error}</ImportErrorBanner>}
 
 			{fileName && (
-				<div className="px-2">
+				<div className="px-2 pt-4">
 					<ul>
 						<FileListRow
 							icon={<Database className="h-4 w-4 flex-shrink-0" />}

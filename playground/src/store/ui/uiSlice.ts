@@ -3,7 +3,7 @@ import {
 	pushInsightDetail,
 } from "@insights-ui/state/insightDetailSlice";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 import { openLedgerDetail, pushLedgerDetail } from "@/store/ledger/ledgerSlice";
 import type { RootState } from "@/store/types";
 
@@ -59,19 +59,17 @@ const uiSlice = createSlice({
 	},
 	extraReducers: (builder) => {
 		// Opening a detail reveals it in the result pane, which starts collapsed.
-		builder
-			.addCase(openInsightDetail, (state) => {
+		builder.addMatcher(
+			isAnyOf(
+				openInsightDetail,
+				pushInsightDetail,
+				openLedgerDetail,
+				pushLedgerDetail,
+			),
+			(state) => {
 				state.panes.result.isCollapsed = false;
-			})
-			.addCase(pushInsightDetail, (state) => {
-				state.panes.result.isCollapsed = false;
-			})
-			.addCase(openLedgerDetail, (state) => {
-				state.panes.result.isCollapsed = false;
-			})
-			.addCase(pushLedgerDetail, (state) => {
-				state.panes.result.isCollapsed = false;
-			});
+			},
+		);
 	},
 });
 

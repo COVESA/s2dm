@@ -10,11 +10,15 @@ import {
 type Theme = "light" | "dark" | "system";
 
 export function ThemeToggle() {
-	// Read during the first render: a mount per workspace switch would otherwise
-	// paint one frame of the system theme.
-	const [theme, setTheme] = useState<Theme>(
-		() => (localStorage.getItem("theme") as Theme | null) ?? "system",
-	);
+	// Read during the first render, or a mount per workspace switch paints one
+	// frame of the system theme. Guarded: a blocked accessor throws.
+	const [theme, setTheme] = useState<Theme>(() => {
+		try {
+			return (localStorage.getItem("theme") as Theme | null) ?? "system";
+		} catch {
+			return "system";
+		}
+	});
 
 	useLayoutEffect(() => {
 		const root = document.documentElement;
@@ -43,7 +47,11 @@ export function ThemeToggle() {
 
 	const handleThemeChange = (newTheme: Theme) => {
 		setTheme(newTheme);
-		localStorage.setItem("theme", newTheme);
+		try {
+			localStorage.setItem("theme", newTheme);
+		} catch {
+			// Applies to this session, just not the next one.
+		}
 	};
 
 	return (

@@ -2,6 +2,7 @@ import { LedgerBadge } from "@/components/ledger/LedgerBadge";
 import { LedgerErdButton } from "@/components/ledger/LedgerErdButton";
 import { tableIcon } from "@/components/ledger/tableIcon";
 import { EmptyState } from "@/components/ui/empty-state";
+import { capitalise } from "@/ledger/recordLabel";
 import { useAppSelector } from "@/store/hooks";
 import {
 	selectIsLoadingLedger,
@@ -40,7 +41,7 @@ export function LedgerOverview() {
 							<div className="flex items-center justify-between gap-2">
 								<dt className="flex min-w-0 items-center gap-2 text-sm">
 									<Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-									<span className="truncate capitalize">{table.name}</span>
+									<span className="truncate">{capitalise(table.name)}</span>
 								</dt>
 								<dd className="flex shrink-0 items-center gap-2">
 									{table.activeCount !== null && (
@@ -56,7 +57,7 @@ export function LedgerOverview() {
 									</span>
 								</dd>
 							</div>
-							<ul className="mt-1 flex flex-col">
+							<ul className="mt-2 flex flex-col">
 								{table.columns.map((column) => (
 									<li
 										key={column.name}
