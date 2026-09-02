@@ -2,12 +2,13 @@ import { call, debounce, put, select, takeLatest } from "redux-saga/effects";
 import { searchLedger } from "@/ledger/ledgerSearch";
 import type { SearchOptions } from "@/ledger/search";
 import { getLedgerDatabase } from "@/ledger/session";
-import type { LedgerSearchMatch } from "@/ledger/types";
+import type { LedgerSearchMatch, LedgerTable } from "@/ledger/types";
 import {
 	exploreLedger,
 	exploreLedgerFailure,
 	exploreLedgerSuccess,
 	selectExploreQuery,
+	selectLedgerTables,
 	selectSearchOptions,
 	setExploreQuery,
 	setSearchOptions,
@@ -25,9 +26,11 @@ function* exploreLedgerWorker() {
 		const search: SearchOptions = yield select(selectSearchOptions);
 		yield put(exploreLedger());
 		const database = getLedgerDatabase();
+		const tables: LedgerTable[] = yield select(selectLedgerTables);
 		const matches: LedgerSearchMatch[] = yield call(
 			searchLedger,
 			database,
+			tables,
 			trimmed,
 			{ limit: EXPLORE_PREVIEW_LIMIT, search },
 		);

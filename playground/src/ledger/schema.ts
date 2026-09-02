@@ -144,7 +144,6 @@ export function orderingColumn(
 		: null;
 }
 
-/** Which page a row falls on, under the same primary-key ordering pages use. */
 export function countRowsWhere(
 	database: Database,
 	table: string,

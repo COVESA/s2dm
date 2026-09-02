@@ -1,4 +1,5 @@
 import { StatusBanner } from "@/components/ui/status-banner";
+import { cn } from "@/utils/cn";
 
 type LedgerErrorBannerProps = {
 	children: React.ReactNode;
@@ -12,7 +13,7 @@ export function LedgerErrorBanner({
 	return (
 		<StatusBanner
 			variant="destructive"
-			className={className ?? "whitespace-pre-wrap"}
+			className={cn("whitespace-pre-wrap", className)}
 		>
 			{children}
 		</StatusBanner>
