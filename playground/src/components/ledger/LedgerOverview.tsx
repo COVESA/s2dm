@@ -27,7 +27,7 @@ export function LedgerOverview() {
 	);
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+		<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4">
 			<div className="flex items-baseline justify-between gap-2">
 				<span className="text-sm text-muted-foreground">Records</span>
 				<span className="text-sm tabular-nums">{totalRecords}</span>

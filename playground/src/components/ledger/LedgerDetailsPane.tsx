@@ -4,15 +4,10 @@ import { LedgerChainView } from "@/components/ledger/LedgerChainView";
 import { LedgerErrorBanner } from "@/components/ledger/LedgerErrorBanner";
 import { RecordActions } from "@/components/ledger/RecordActions";
 import { RecordDetailsList } from "@/components/ledger/RecordDetailsList";
-import { StatusBadge } from "@/components/ledger/StatusBadge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Heading } from "@/components/ui/heading";
 import { identityColumnFor } from "@/ledger/identity";
-import {
-	recordLabel,
-	recordStatus,
-	recordTypeName,
-} from "@/ledger/recordLabel";
+import { recordLabel, recordTypeName } from "@/ledger/recordLabel";
 import { findLedgerReferences } from "@/ledger/references";
 import type { LedgerRecord } from "@/ledger/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -77,7 +72,6 @@ export function LedgerDetailsPane({
 	const row = detail.kind === "row" ? detail : null;
 	const selectedTitle =
 		`${row ? recordTypeName(row.table) : ""} ${selectedName}`.trim();
-	const selectedStatus = recordStatus(detail.record);
 	// Anything this row points at, other than the record already on screen. Its
 	// own URI is compared, not its label, so a parent in the same table is kept.
 	const identityColumn = row ? identityColumnFor(tables, row.table) : null;
@@ -134,9 +128,6 @@ export function LedgerDetailsPane({
 				title={selectedTitle}
 				onClose={handleClose}
 				onBack={canGoBack ? () => dispatch(popLedgerDetail()) : undefined}
-				trailing={
-					selectedStatus ? <StatusBadge status={selectedStatus} /> : undefined
-				}
 			>
 				<div className="flex flex-col gap-6 text-sm text-card-foreground">
 					{ledgerContext && (
