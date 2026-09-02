@@ -70,9 +70,13 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 			{error && <ImportErrorBanner>{error}</ImportErrorBanner>}
 
 			{fileName && (
-				<div className="px-2 pt-4">
-					<ul>
+				<div className="px-2 pt-2">
+					<ul className="space-y-1 py-2">
 						<FileListRow
+							// A placeholder where the schema list has its drag handle, so
+							// the name lines up across the two sidebars. One ledger cannot
+							// be reordered, so there is nothing to grab.
+							leading={<span className="h-8 w-4" />}
 							icon={<Database className="h-4 w-4 flex-shrink-0" />}
 							label={fileName}
 							title={fileName}
