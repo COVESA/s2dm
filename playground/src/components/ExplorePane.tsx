@@ -1,6 +1,7 @@
 import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
 import { ExplorerTab } from "@/components/explore/ExplorerTab";
 import { InsightsTab } from "@/components/explore/InsightsTab";
+import { LedgerTab } from "@/components/explore/LedgerTab";
 import { Pane } from "@/components/Pane";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -8,6 +9,7 @@ import { selectHasSchema } from "@/store/schema/schemaSlice";
 import {
 	type ExploreTab,
 	selectExploreTab,
+	selectWorkspace,
 	setExploreTab,
 } from "@/store/ui/uiSlice";
 
@@ -22,13 +24,18 @@ export function ExplorePane({
 }: ExplorePaneProps) {
 	const dispatch = useAppDispatch();
 	const hasSchema = useAppSelector(selectHasSchema);
+	const workspace = useAppSelector(selectWorkspace);
 	const activeTab = useAppSelector(selectExploreTab);
 
-	const handleTabChange = (value: string) => {
-		dispatch(setExploreTab(value as ExploreTab));
-		dispatch(closeInsightDetail());
-	};
+	if (workspace === "ledger") {
+		return (
+			<Pane className={className} position={position}>
+				<LedgerTab />
+			</Pane>
+		);
+	}
 
+	// Checked after the ledger workspace, which this must not block.
 	if (!hasSchema) {
 		return (
 			<Pane className={className} position={position}>
@@ -43,7 +50,10 @@ export function ExplorePane({
 		<Pane className={className} position={position}>
 			<Tabs
 				value={activeTab}
-				onValueChange={handleTabChange}
+				onValueChange={(value) => {
+					dispatch(setExploreTab(value as ExploreTab));
+					dispatch(closeInsightDetail());
+				}}
 				className="flex h-full w-full min-h-0 flex-col"
 			>
 				<div className="my-2 px-4 flex items-center justify-center gap-2">

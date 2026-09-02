@@ -9,7 +9,11 @@ import {
 } from "@/store/deps/depsSlice";
 import { useAppDispatch } from "@/store/hooks";
 
-export function FileList() {
+type FileListProps = {
+	leading?: React.ReactNode;
+};
+
+export function FileList({ leading }: FileListProps) {
 	const dispatch = useAppDispatch();
 
 	useEffect(() => {
@@ -19,7 +23,7 @@ export function FileList() {
 
 	return (
 		<div className="flex flex-col">
-			<FileListHeader />
+			<FileListHeader leading={leading} />
 			<ResolvedDependenciesSection />
 			<SourceFilesSection />
 			<ComposeSection />
