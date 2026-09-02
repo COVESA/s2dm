@@ -103,6 +103,7 @@ export function searchTable(
 	);
 }
 
+/** Which page a row falls on, under the same primary-key ordering pages use. */
 export function rowPageIndex(
 	database: Database,
 	table: string,

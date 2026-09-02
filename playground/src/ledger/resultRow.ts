@@ -10,15 +10,20 @@ export function isSameRow(
 		return false;
 	}
 	return row.every((value, index) => {
-		const other = selected[index] ?? null;
-		const left = value ?? null;
-		if (left instanceof Uint8Array && other instanceof Uint8Array) {
-			return left.byteLength === other.byteLength;
+		const rowValue = value ?? null;
+		const selectedValue = selected[index] ?? null;
+		if (rowValue instanceof Uint8Array && selectedValue instanceof Uint8Array) {
+			// By content, not length alone. Reached only for a row whose earlier
+			// columns already matched, and it stops at the first differing byte.
+			return (
+				rowValue.byteLength === selectedValue.byteLength &&
+				rowValue.every((byte, position) => byte === selectedValue[position])
+			);
 		}
-		if (left instanceof Uint8Array || other instanceof Uint8Array) {
+		if (rowValue instanceof Uint8Array || selectedValue instanceof Uint8Array) {
 			return false;
 		}
-		return left === other;
+		return rowValue === selectedValue;
 	});
 }
 

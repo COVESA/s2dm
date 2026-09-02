@@ -81,6 +81,18 @@ export function LedgerResultsGrid({
 	// cannot take a ref on React 18. The ref goes on the scroll container itself
 	// rather than a wrapper, which would break the height max-h-full resolves against.
 	const containerRef = useRef<HTMLDivElement>(null);
+	// A key, not the array: every call site builds selectedValues inline, so its
+	// identity changes on each render and the row would be re-scrolled into view.
+	const selectionKey = selectedValues
+		? selectedValues
+				.map((value) =>
+					value instanceof Uint8Array
+						? `bytes:${value.byteLength}`
+						: String(value),
+				)
+				.join("\u0000")
+		: null;
+
 	useEffect(() => {
 		if (!selectedValues || result.rows.length === 0) {
 			return;
@@ -89,7 +101,9 @@ export function LedgerResultsGrid({
 			?.querySelector('[aria-selected="true"]')
 			// "nearest" leaves an already-visible row where it is.
 			?.scrollIntoView({ block: "nearest", inline: "nearest" });
-	}, [selectedValues, result]);
+		// biome-ignore lint/correctness/useExhaustiveDependencies: selectionKey
+		// stands in for selectedValues, whose identity is unstable by design.
+	}, [selectionKey, result]);
 
 	if (result.columns.length === 0) {
 		return null;

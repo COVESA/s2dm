@@ -128,6 +128,7 @@ export function LedgerDetailsPane({
 				title={selectedTitle}
 				onClose={handleClose}
 				onBack={canGoBack ? () => dispatch(popLedgerDetail()) : undefined}
+				bodyKey={`${detail.kind}:${row?.table ?? ""}:${selectedName}`}
 			>
 				<div className="flex flex-col gap-6 text-sm text-card-foreground">
 					{ledgerContext && (
