@@ -7,6 +7,7 @@ import {
 } from "@insights-ui/state/insightDetailSlice";
 import { DetailsPane } from "@/components/DetailsPane";
 import { DetailsPaneShell } from "@/components/DetailsPaneShell";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectFilteredSchema } from "@/store/schema/schemaSlice";
 import { collapseResultPane } from "@/store/ui/uiSlice";
@@ -36,11 +37,7 @@ export function InsightsDetailsPane({
 
 	let content: React.ReactNode;
 	if (!detailView) {
-		content = (
-			<div className="flex flex-1 items-center justify-center p-5 text-center text-muted-foreground">
-				<p>Select a card to see details</p>
-			</div>
-		);
+		content = <EmptyState title="Select a card to see details" />;
 	} else {
 		content = (
 			<DetailsPaneShell
