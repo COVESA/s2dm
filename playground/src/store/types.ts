@@ -8,7 +8,11 @@ import type { DepsIdentitiesState } from "@/store/deps/identities/identitiesSlic
 import type { DepsResolveState } from "@/store/deps/resolve/resolveSlice";
 import type { ExportState } from "@/store/export/exportSlice";
 import type { InstanceTagsState } from "@/store/instanceTags/instanceTagsSlice";
-import type { LedgerState } from "@/store/ledger/ledgerSlice";
+import type { LedgerDetailState } from "@/store/ledger/ledgerDetailSlice";
+import type { LedgerExploreState } from "@/store/ledger/ledgerExploreSlice";
+import type { LedgerFileState } from "@/store/ledger/ledgerFileSlice";
+import type { LedgerQueryState } from "@/store/ledger/ledgerQuerySlice";
+import type { LedgerTableState } from "@/store/ledger/ledgerTableSlice";
 import type { SchemaState } from "@/store/schema/schemaSlice";
 import type { SelectionState } from "@/store/selection/selectionSlice";
 import type { SemanticSearchState } from "@/store/semanticSearch/semanticSearchSlice";
@@ -22,7 +26,11 @@ export interface RootState {
 	depsResolve: DepsResolveState;
 	depsCompose: DepsComposeState;
 	schema: SchemaState;
-	ledger: LedgerState;
+	ledgerFile: LedgerFileState;
+	ledgerTable: LedgerTableState;
+	ledgerExplore: LedgerExploreState;
+	ledgerQuery: LedgerQueryState;
+	ledgerDetail: LedgerDetailState;
 	selection: SelectionState;
 	validation: ValidationState;
 	ui: UIState;

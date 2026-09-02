@@ -13,23 +13,12 @@ export function matchResultTable(
 			table.columns.every((column) => available.has(column.name)),
 	);
 
-	if (candidates.length === 0) {
-		return null;
-	}
-
-	const ranked = [...candidates].sort(
-		(first, second) => second.columns.length - first.columns.length,
-	);
-	if (
-		ranked.length > 1 &&
-		ranked[0].columns.length === ranked[1].columns.length
-	) {
-		return null;
-	}
-	return ranked[0].name;
+	// One candidate, or none: an ambiguous shape identifies no table.
+	const only = candidates.length === 1 ? candidates[0] : undefined;
+	return only?.name ?? null;
 }
 
-export function matchSingleRecordTable(
+export function tableToAutoOpen(
 	result: QueryResult | null,
 	tables: LedgerTable[],
 ): string | null {
