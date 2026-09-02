@@ -40,12 +40,15 @@ function buildConditions(
 
 	if (needle !== "") {
 		const pattern = compileSearchPattern(needle, search);
-		const perColumn = columns.map((column) =>
-			columnPredicate(quoteIdentifier(column.name), pattern),
+		const perColumn = columns.map((column) => {
+			const quoted = quoteIdentifier(column.name);
+			return columnPredicate(quoted, pattern);
+		});
+		clauses.push(
+			`(${perColumn.map((predicate) => predicate.sql).join(" OR ")})`,
 		);
-		clauses.push(`(${perColumn.map((one) => one.sql).join(" OR ")})`);
-		for (const one of perColumn) {
-			params.push(...one.params);
+		for (const predicate of perColumn) {
+			params.push(...predicate.params);
 		}
 	}
 
