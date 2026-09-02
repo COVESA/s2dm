@@ -91,6 +91,8 @@ const ledgerTableSlice = createSlice({
 		loadLedgerRowsFailure: (state, action: PayloadAction<string>) => {
 			state.isLoadingRows = false;
 			state.rowsError = action.payload;
+			state.rows = null;
+			state.rowsTotal = 0;
 		},
 	},
 	extraReducers: (builder) => {

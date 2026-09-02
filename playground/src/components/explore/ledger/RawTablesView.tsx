@@ -30,7 +30,6 @@ import {
 	setLedgerSearch,
 } from "@/store/ledger/ledgerSlice";
 
-// Radix Select treats "" as no selection, so the reset option needs a sentinel.
 export function RawTablesView() {
 	const dispatch = useAppDispatch();
 	const tables = useAppSelector(selectLedgerTables);
