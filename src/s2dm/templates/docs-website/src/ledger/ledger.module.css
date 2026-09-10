@@ -1,8 +1,6 @@
-.page {
-	margin: 0 auto;
-	max-width: 96rem;
+.content {
 	min-width: 0;
-	padding: 2rem 1.5rem 3rem;
+	padding: 1.5rem 0 3rem;
 	width: 100%;
 }
 
@@ -21,4 +19,14 @@
 	padding: 2rem;
 	text-align: center;
 	width: min(100%, 54rem);
+}
+
+/* Narrow rows of table names and columns, so they stay readable instead of
+   spanning the whole content column. */
+.schema {
+	display: flex;
+	flex-direction: column;
+	margin: 0 auto;
+	min-height: 0;
+	width: min(100%, 40rem);
 }

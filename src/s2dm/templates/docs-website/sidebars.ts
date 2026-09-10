@@ -49,6 +49,13 @@ export const insightsSidebar = [
   },
 ];
 
+export const ledgerSidebar = [
+  { type: "link" as const, label: "Raw Tables", href: "/ledger" },
+  { type: "link" as const, label: "Explore", href: "/ledger/explore" },
+  { type: "link" as const, label: "Query", href: "/ledger/query" },
+  { type: "link" as const, label: "Schema", href: "/ledger/schema" },
+];
+
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     "elements/schema",
@@ -79,6 +86,7 @@ const sidebars: SidebarsConfig = {
     },
   ],
   insightsSidebar,
+  ledgerSidebar,
 };
 
 export default sidebars;

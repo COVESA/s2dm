@@ -44,25 +44,35 @@ function getSidebarLinks(items: PropSidebar): string[] {
   });
 }
 
+// Each workspace renders one page against its own docs sidebar, with a route per
+// sidebar link so the sidebar highlights the current view the way the docs do.
+const SIDEBAR_PAGES = [
+  { sidebar: "insightsSidebar", data: "insights-sidebar.json", component: "@site/src/insights/InsightsPage.tsx" },
+  { sidebar: "ledgerSidebar", data: "ledger-sidebar.json", component: "@site/src/ledger/LedgerPage.tsx" },
+];
+
 const insightsPlugin = ({ baseUrl }: LoadContext) => ({
   name: "s2dm-insights",
   async allContentLoaded({ allContent, actions }) {
     const docsContent = allContent["docusaurus-plugin-content-docs"]?.default as LoadedContent | undefined;
     const version = docsContent?.loadedVersions.find((candidate) => candidate.isLast);
-    const sidebarItems = version?.sidebars.insightsSidebar as PropSidebar | undefined;
-    if (!sidebarItems) {
-      throw new Error("The insightsSidebar definition is missing from sidebars.ts");
-    }
 
-    const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
-    const sidebarData = await actions.createData("insights-sidebar.json", sidebar);
-    for (const path of getSidebarLinks(sidebar)) {
-      actions.addRoute({
-        path,
-        component: "@site/src/insights/InsightsPage.tsx",
-        exact: true,
-        modules: { sidebar: sidebarData },
-      });
+    for (const page of SIDEBAR_PAGES) {
+      const sidebarItems = version?.sidebars[page.sidebar] as PropSidebar | undefined;
+      if (!sidebarItems) {
+        throw new Error(`The ${page.sidebar} definition is missing from sidebars.ts`);
+      }
+
+      const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
+      const sidebarData = await actions.createData(page.data, sidebar);
+      for (const path of getSidebarLinks(sidebar)) {
+        actions.addRoute({
+          path,
+          component: page.component,
+          exact: true,
+          modules: { sidebar: sidebarData },
+        });
+      }
     }
   },
   configureWebpack() {

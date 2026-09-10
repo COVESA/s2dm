@@ -47,6 +47,11 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 					}
 				})
 				.catch((error: unknown) => {
+					// Guarded like the success path: a superseded read must not
+					// report over the ledger that did open.
+					if (sequence !== latestImport.current) {
+						return;
+					}
 					dispatch(
 						openLedgerFailure({
 							message: getErrorMessage(error),
