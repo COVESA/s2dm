@@ -1,11 +1,12 @@
 import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
+import { LedgerOverview } from "@ledger-ui/components/LedgerOverview";
+import { closeLedgerDetail } from "@ledger-ui/state/ledgerSlice";
 import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { FileList } from "@/components/FileList";
 import { LedgerFileList } from "@/components/ledger/LedgerFileList";
 import { LedgerToolbar } from "@/components/ledger/LedgerHelpButton";
-import { LedgerOverview } from "@/components/ledger/LedgerOverview";
 import { Pane } from "@/components/Pane";
 import { SchemaToolbar } from "@/components/SchemaHelpButton";
 import { TextEditor } from "@/components/TextEditor";
@@ -16,7 +17,6 @@ import {
 	ORIGINAL_SCHEMA_FILENAME,
 } from "@/constants";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { closeLedgerDetail } from "@/store/ledger/ledgerSlice";
 import {
 	selectFilteredSchema,
 	selectOriginalSchema,

@@ -1,5 +1,10 @@
 import type { InsightDetailState } from "@insights-ui/state/insightDetailSlice";
 import type { InsightsState } from "@insights-ui/state/insightsSlice";
+import type { LedgerDetailState } from "@ledger-ui/state/ledgerDetailSlice";
+import type { LedgerExploreState } from "@ledger-ui/state/ledgerExploreSlice";
+import type { LedgerFileState } from "@ledger-ui/state/ledgerFileSlice";
+import type { LedgerQueryState } from "@ledger-ui/state/ledgerQuerySlice";
+import type { LedgerTableState } from "@ledger-ui/state/ledgerTableSlice";
 import type { CapabilitiesState } from "@/store/capabilities/capabilitiesSlice";
 import type { DepsComposeState } from "@/store/deps/compose/composeSlice";
 import type { DependencyExplorationState } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
@@ -8,11 +13,6 @@ import type { DepsIdentitiesState } from "@/store/deps/identities/identitiesSlic
 import type { DepsResolveState } from "@/store/deps/resolve/resolveSlice";
 import type { ExportState } from "@/store/export/exportSlice";
 import type { InstanceTagsState } from "@/store/instanceTags/instanceTagsSlice";
-import type { LedgerDetailState } from "@/store/ledger/ledgerDetailSlice";
-import type { LedgerExploreState } from "@/store/ledger/ledgerExploreSlice";
-import type { LedgerFileState } from "@/store/ledger/ledgerFileSlice";
-import type { LedgerQueryState } from "@/store/ledger/ledgerQuerySlice";
-import type { LedgerTableState } from "@/store/ledger/ledgerTableSlice";
 import type { SchemaState } from "@/store/schema/schemaSlice";
 import type { SelectionState } from "@/store/selection/selectionSlice";
 import type { SemanticSearchState } from "@/store/semanticSearch/semanticSearchSlice";

@@ -1,0 +1,24 @@
+.page {
+	margin: 0 auto;
+	max-width: 96rem;
+	min-width: 0;
+	padding: 2rem 1.5rem 3rem;
+	width: 100%;
+}
+
+/* Tall enough to be worth scrolling, short enough to leave the page scrollable. */
+.workspace {
+	display: flex;
+	flex-direction: column;
+	height: min(70vh, 40rem);
+	min-height: 24rem;
+}
+
+.status {
+	border: 1px solid var(--ifm-color-emphasis-200);
+	border-radius: 0.75rem;
+	margin: 4rem auto;
+	padding: 2rem;
+	text-align: center;
+	width: min(100%, 54rem);
+}

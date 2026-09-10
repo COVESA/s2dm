@@ -11,6 +11,8 @@
 /static/introspection.json
 /static/insights.json
 /static/embeddings.json
+/static/sql-wasm.wasm
+/static/ledger.db
 
 # Misc
 .DS_Store

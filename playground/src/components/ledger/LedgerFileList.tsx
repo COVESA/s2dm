@@ -1,3 +1,10 @@
+import { readFileBytes } from "@ledger-ui/data/sqlite";
+import {
+	closeLedger,
+	openLedger,
+	selectLedgerError,
+	selectLedgerFileName,
+} from "@ledger-ui/state/ledgerSlice";
 import { Database, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
@@ -7,12 +14,6 @@ import { ImportErrorBanner } from "@/components/ui/import-error-banner";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useFileImport } from "@/hooks/useFileImport";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-	closeLedger,
-	openLedger,
-	selectLedgerError,
-	selectLedgerFileName,
-} from "@/store/ledger/ledgerSlice";
 
 type LedgerFileListProps = {
 	leading?: React.ReactNode;
@@ -26,10 +27,11 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 
 	const { openImportInput, hiddenInputProps } = useFileImport({
 		accept: ".db,.sqlite,.sqlite3",
-		onFilesSelected: (files) => {
+		onFilesSelected: async (files) => {
 			const file = files[0];
 			if (file) {
-				dispatch(openLedger(file));
+				const bytes = await readFileBytes(file);
+				dispatch(openLedger({ name: file.name, bytes }));
 			}
 		},
 	});

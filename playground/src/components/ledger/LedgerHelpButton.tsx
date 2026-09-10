@@ -1,7 +1,7 @@
+import { LedgerBadge } from "@ledger-ui/components/LedgerBadge";
+import { StatusBadge } from "@ledger-ui/components/StatusBadge";
 import { Trash2, Upload } from "lucide-react";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
-import { LedgerBadge } from "@/components/ledger/LedgerBadge";
-import { StatusBadge } from "@/components/ledger/StatusBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function LedgerToolbar() {

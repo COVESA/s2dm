@@ -11,8 +11,10 @@ from s2dm import log
 TEMPLATE_DIR = Path(__file__).parent / "templates" / "docs-website"
 
 # Host-agnostic React components shared with the playground. Vendored into the scaffolded
-# website so it stays self-contained, and reachable there through the `@insights-ui` alias.
+# website so it stays self-contained, and reachable there through the `@insights-ui` and
+# `@ledger-ui` aliases.
 INSIGHTS_UI_DIR = Path(__file__).parent / "templates" / "insights-ui"
+LEDGER_UI_DIR = Path(__file__).parent / "templates" / "ledger-ui"
 
 TEMPLATED_FILES = {"docusaurus.config.ts", "package-lock.json", "package.json"}
 
@@ -28,6 +30,7 @@ SHARED_UI_DIR = Path(__file__).parent / "templates" / "shared-ui"
 VENDORED_PACKAGE_DIRS = {
     "shared-ui": SHARED_UI_DIR,
     "insights-ui": INSIGHTS_UI_DIR,
+    "ledger-ui": LEDGER_UI_DIR,
     "search-ui": SEARCH_UI_DIR,
 }
 
