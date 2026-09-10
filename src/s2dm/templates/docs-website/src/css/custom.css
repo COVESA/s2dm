@@ -1,6 +1,7 @@
 @layer theme, s2dm-base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
 @import "../shared-ui/theme.css";
 @source "../components";
 @source "../shared-ui";
@@ -16,17 +17,13 @@
 	.s2dm-insights *::after,
 	.s2dm-ledger *,
 	.s2dm-ledger *::before,
-	.s2dm-ledger *::after,
-	[data-radix-popper-content-wrapper] *,
-	[role="dialog"] * {
+	.s2dm-ledger *::after {
 		border: 0 solid;
 		box-sizing: border-box;
 	}
 
 	.s2dm-insights :is(button, input, select, optgroup, textarea),
-	.s2dm-ledger :is(button, input, select, optgroup, textarea),
-	[data-radix-popper-content-wrapper] :is(button, input, select, textarea),
-	[role="dialog"] :is(button, input, select, textarea) {
+	.s2dm-ledger :is(button, input, select, optgroup, textarea) {
 		background-color: transparent;
 		border-radius: 0;
 		color: inherit;
@@ -85,18 +82,13 @@
 }
 
 .s2dm-insights,
-.s2dm-ledger,
-/* Radix portals to the body, outside both scopes. */
-[data-radix-popper-content-wrapper],
-[role="dialog"] {
+.s2dm-ledger {
 	color: var(--foreground);
 }
 
 /* Without preflight a `display` utility outranks `[hidden]`, so Radix's closed
    tab panels lay themselves out as if they were open. */
-.s2dm-ledger [hidden],
-[data-radix-popper-content-wrapper] [hidden],
-[role="dialog"] [hidden] {
+.s2dm-ledger [hidden] {
 	display: none !important;
 }
 

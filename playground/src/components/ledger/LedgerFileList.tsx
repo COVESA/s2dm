@@ -2,11 +2,12 @@ import { readFileBytes } from "@ledger-ui/data/sqlite";
 import {
 	closeLedger,
 	openLedger,
+	openLedgerFailure,
 	selectLedgerError,
 	selectLedgerFileName,
 } from "@ledger-ui/state/ledgerSlice";
 import { Database, Plus, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { FileListRow } from "@/components/FileListRow";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { ImportErrorBanner } from "@/components/ui/import-error-banner";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useFileImport } from "@/hooks/useFileImport";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 type LedgerFileListProps = {
 	leading?: React.ReactNode;
@@ -24,15 +26,34 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 	const fileName = useAppSelector(selectLedgerFileName);
 	const error = useAppSelector(selectLedgerError);
 	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+	// The read happens before the action is dispatched, so ordering and failure
+	// are this component's to handle rather than the saga's.
+	const latestImport = useRef(0);
 
 	const { openImportInput, hiddenInputProps } = useFileImport({
 		accept: ".db,.sqlite,.sqlite3",
-		onFilesSelected: async (files) => {
+		onFilesSelected: (files) => {
 			const file = files[0];
-			if (file) {
-				const bytes = await readFileBytes(file);
-				dispatch(openLedger({ name: file.name, bytes }));
+			if (!file) {
+				return;
 			}
+			const sequence = latestImport.current + 1;
+			latestImport.current = sequence;
+			readFileBytes(file)
+				.then((bytes) => {
+					// A newer pick already superseded this read.
+					if (sequence === latestImport.current) {
+						dispatch(openLedger({ name: file.name, bytes }));
+					}
+				})
+				.catch((error: unknown) => {
+					dispatch(
+						openLedgerFailure({
+							message: getErrorMessage(error),
+							cleared: false,
+						}),
+					);
+				});
 		},
 	});
 

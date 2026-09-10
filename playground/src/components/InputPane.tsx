@@ -1,6 +1,4 @@
-import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
 import { LedgerOverview } from "@ledger-ui/components/LedgerOverview";
-import { closeLedgerDetail } from "@ledger-ui/state/ledgerSlice";
 import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
@@ -155,8 +153,6 @@ export function InputPane({
 					value={workspace}
 					onValueChange={(value) => {
 						dispatch(setWorkspace(value as Workspace));
-						dispatch(closeInsightDetail());
-						dispatch(closeLedgerDetail());
 					}}
 				>
 					<TabsList>
