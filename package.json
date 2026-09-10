@@ -4,6 +4,7 @@
     "playground",
     "src/s2dm/templates/shared-ui",
     "src/s2dm/templates/insights-ui",
+    "src/s2dm/templates/ledger-ui",
     "src/s2dm/templates/search-ui"
   ],
   "devDependencies": {

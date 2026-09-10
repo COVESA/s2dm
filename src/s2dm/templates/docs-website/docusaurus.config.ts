@@ -10,6 +10,7 @@ const require = createRequire(import.meta.url);
 const sourceDirectory = fileURLToPath(new URL("./src", import.meta.url));
 const sharedUiDirectory = path.join(sourceDirectory, "shared-ui");
 const insightsUiDirectory = path.join(sourceDirectory, "insights-ui");
+const ledgerUiDirectory = path.join(sourceDirectory, "ledger-ui");
 const searchUiDirectory = path.join(sourceDirectory, "search-ui");
 
 function addBaseUrlToSidebar(items: PropSidebar, baseUrl: string): PropSidebar {
@@ -71,6 +72,7 @@ const insightsPlugin = ({ baseUrl }: LoadContext) => ({
           "@": sourceDirectory,
           "@shared-ui": sharedUiDirectory,
           "@insights-ui": insightsUiDirectory,
+          "@ledger-ui": ledgerUiDirectory,
           "@search-ui": searchUiDirectory,
         },
       },
@@ -111,6 +113,7 @@ const config: Config = {
         { type: "docSidebar", sidebarId: "tutorialSidebar", position: "left", label: "Docs" },
         { to: "/visualizer", label: "Visualizer", position: "left" },
         { to: "/insights", label: "Insights", position: "left" },
+        { to: "/ledger", label: "Ledger", position: "left" },
         { href: "$github_repo_url", label: "GitHub", position: "right" },
       ],
     },

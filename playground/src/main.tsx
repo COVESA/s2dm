@@ -1,13 +1,16 @@
 import "@/language-support/monacoWorkers";
 
+import { configureSqlJs } from "@ledger-ui/data/sqlite";
 import { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import wasmUrl from "sql.js/dist/sql-wasm-browser.wasm?url";
 import "@/index.css";
 import App from "@/App.tsx";
 
 loader.config({ monaco });
+configureSqlJs({ wasmUrl });
 
 const rootElement = document.getElementById("root");
 

@@ -1,11 +1,40 @@
-@layer theme, components, utilities;
+@layer theme, s2dm-base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "../shared-ui/theme.css";
 @source "../components";
 @source "../shared-ui";
 @source "../insights-ui";
+@source "../ledger-ui";
 @source "../search-ui";
+
+/* Preflight is not loaded here, so the two rules shadcn components assume are
+   restated. Layered before `utilities` so a `border` or `bg-*` class still wins. */
+@layer s2dm-base {
+	.s2dm-insights *,
+	.s2dm-insights *::before,
+	.s2dm-insights *::after,
+	.s2dm-ledger *,
+	.s2dm-ledger *::before,
+	.s2dm-ledger *::after,
+	[data-radix-popper-content-wrapper] *,
+	[role="dialog"] * {
+		border: 0 solid;
+		box-sizing: border-box;
+	}
+
+	.s2dm-insights :is(button, input, select, optgroup, textarea),
+	.s2dm-ledger :is(button, input, select, optgroup, textarea),
+	[data-radix-popper-content-wrapper] :is(button, input, select, textarea),
+	[role="dialog"] :is(button, input, select, textarea) {
+		background-color: transparent;
+		border-radius: 0;
+		color: inherit;
+		font: inherit;
+		letter-spacing: inherit;
+		opacity: 1;
+	}
+}
 
 /**
  * Any CSS included here will be global. The classic template
@@ -55,6 +84,58 @@
 	padding-bottom: 0.5rem;
 }
 
-.s2dm-insights {
+.s2dm-insights,
+.s2dm-ledger,
+/* Radix portals to the body, outside both scopes. */
+[data-radix-popper-content-wrapper],
+[role="dialog"] {
 	color: var(--foreground);
+}
+
+/* Without preflight a `display` utility outranks `[hidden]`, so Radix's closed
+   tab panels lay themselves out as if they were open. */
+.s2dm-ledger [hidden],
+[data-radix-popper-content-wrapper] [hidden],
+[role="dialog"] [hidden] {
+	display: none !important;
+}
+
+/* Infima styles every table on the site and its rules are unlayered, so utility
+   classes cannot outrank them. These restate `ui/table.tsx` via its data-slots. */
+.s2dm-ledger [data-slot="table"] {
+	border-collapse: collapse;
+	display: table;
+	margin-bottom: 0;
+	overflow: visible;
+	width: 100%;
+}
+
+.s2dm-ledger [data-slot="table-header"] {
+	background-color: transparent;
+}
+
+.s2dm-ledger [data-slot="table-row"] {
+	background-color: transparent;
+	border-bottom: 1px solid var(--border);
+	border-top: 0;
+}
+
+.s2dm-ledger [data-slot="table-body"] [data-slot="table-row"]:last-child {
+	border-bottom: 0;
+}
+
+.s2dm-ledger [data-slot="table-head"] {
+	background-color: var(--background);
+	border: 0;
+	color: var(--muted-foreground);
+	font-weight: 500;
+	height: 2.25rem;
+	padding: 0 0.75rem;
+	text-align: left;
+}
+
+.s2dm-ledger [data-slot="table-cell"] {
+	border: 0;
+	color: inherit;
+	padding: 0.5rem 0.75rem;
 }

@@ -2,6 +2,12 @@ import insightDetailReducer, {
 	type InsightDetailState,
 } from "@insights-ui/state/insightDetailSlice";
 import insightsReducer from "@insights-ui/state/insightsSlice";
+import ledgerDetailReducer from "@ledger-ui/state/ledgerDetailSlice";
+import ledgerExploreReducer from "@ledger-ui/state/ledgerExploreSlice";
+import ledgerFileReducer from "@ledger-ui/state/ledgerFileSlice";
+import ledgerQueryReducer from "@ledger-ui/state/ledgerQuerySlice";
+import { ledgerSaga } from "@ledger-ui/state/ledgerSaga";
+import ledgerTableReducer from "@ledger-ui/state/ledgerTableSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import { all } from "redux-saga/effects";
@@ -24,12 +30,6 @@ import exportReducer from "@/store/export/exportSlice";
 import { insightsSaga } from "@/store/insights/insightsSaga";
 import { instanceTagsSaga } from "@/store/instanceTags/instanceTagsSaga";
 import instanceTagsReducer from "@/store/instanceTags/instanceTagsSlice";
-import ledgerDetailReducer from "@/store/ledger/ledgerDetailSlice";
-import ledgerExploreReducer from "@/store/ledger/ledgerExploreSlice";
-import ledgerFileReducer from "@/store/ledger/ledgerFileSlice";
-import ledgerQueryReducer from "@/store/ledger/ledgerQuerySlice";
-import { ledgerSaga } from "@/store/ledger/ledgerSaga";
-import ledgerTableReducer from "@/store/ledger/ledgerTableSlice";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";

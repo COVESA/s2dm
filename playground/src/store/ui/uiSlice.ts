@@ -2,9 +2,12 @@ import {
 	openInsightDetail,
 	pushInsightDetail,
 } from "@insights-ui/state/insightDetailSlice";
+import {
+	openLedgerDetail,
+	pushLedgerDetail,
+} from "@ledger-ui/state/ledgerSlice";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
-import { openLedgerDetail, pushLedgerDetail } from "@/store/ledger/ledgerSlice";
 import type { RootState } from "@/store/types";
 
 export type Workspace = "schema" | "ledger";
