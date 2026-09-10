@@ -4,6 +4,7 @@ import { LedgerTab } from "@ledger-ui/components/LedgerTab";
 import { configureSqlJs } from "@ledger-ui/data/sqlite";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
+	closeLedger,
 	closeLedgerDetail,
 	openLedger,
 	selectLedgerDetail,
@@ -13,7 +14,7 @@ import {
 import Layout from "@theme/Layout";
 import { type ReactNode, useEffect, useState } from "react";
 import { Provider } from "react-redux";
-import { createLedgerStore, type LedgerStore } from "@/store/ledgerStore";
+import { createLedgerStore, type LedgerSession } from "@/store/ledgerStore";
 import styles from "./ledger.module.css";
 
 // The ledger this site ships. `npm run doc` copies it here from `../dist/ledger.db`,
@@ -68,7 +69,7 @@ function LedgerWorkspace() {
 export default function LedgerPage(): ReactNode {
 	const wasmUrl = useBaseUrl("/sql-wasm.wasm");
 	const ledgerUrl = useBaseUrl(LEDGER_FILE);
-	const [store, setStore] = useState<LedgerStore | null>(null);
+	const [session, setSession] = useState<LedgerSession | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	// Built in an effect, as the insights page does: every route here is
@@ -86,13 +87,13 @@ export default function LedgerPage(): ReactNode {
 				return response.arrayBuffer();
 			})
 			.then((buffer) => {
-				created.dispatch(
+				created.store.dispatch(
 					openLedger({
 						name: LEDGER_FILE.replace(/^\//, ""),
 						bytes: new Uint8Array(buffer),
 					}),
 				);
-				setStore(created);
+				setSession(created);
 			})
 			.catch((reason: unknown) => {
 				if (!controller.signal.aborted) {
@@ -100,7 +101,13 @@ export default function LedgerPage(): ReactNode {
 				}
 			});
 
-		return () => controller.abort();
+		return () => {
+			controller.abort();
+			// The ledger sits decoded in wasm memory, so leaving the page has to
+			// release it rather than wait for the next open to replace it.
+			created.store.dispatch(closeLedger());
+			created.stop();
+		};
 	}, [ledgerUrl, wasmUrl]);
 
 	let content: ReactNode;
@@ -110,11 +117,11 @@ export default function LedgerPage(): ReactNode {
 				Unable to load the ledger: {error}
 			</div>
 		);
-	} else if (!store) {
+	} else if (!session) {
 		content = <div className={styles.status}>Loading ledger...</div>;
 	} else {
 		content = (
-			<Provider store={store}>
+			<Provider store={session.store}>
 				<LedgerWorkspace />
 			</Provider>
 		);

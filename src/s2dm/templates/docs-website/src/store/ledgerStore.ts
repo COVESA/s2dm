@@ -28,8 +28,8 @@ export function createLedgerStore() {
 			}).concat(sagaMiddleware),
 	});
 
-	sagaMiddleware.run(ledgerSaga);
-	return store;
+	const task = sagaMiddleware.run(ledgerSaga);
+	return { store, stop: () => task.cancel() };
 }
 
-export type LedgerStore = ReturnType<typeof createLedgerStore>;
+export type LedgerSession = ReturnType<typeof createLedgerStore>;

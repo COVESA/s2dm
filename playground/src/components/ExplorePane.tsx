@@ -1,4 +1,3 @@
-import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
 import { LedgerTab } from "@ledger-ui/components/LedgerTab";
 import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { ExplorerTab } from "@/components/explore/ExplorerTab";
@@ -52,7 +51,6 @@ export function ExplorePane({
 				value={activeTab}
 				onValueChange={(value) => {
 					dispatch(setExploreTab(value as ExploreTab));
-					dispatch(closeInsightDetail());
 				}}
 				className="flex h-full w-full min-h-0 flex-col"
 			>
