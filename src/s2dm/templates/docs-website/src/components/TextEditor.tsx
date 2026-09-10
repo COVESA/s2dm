@@ -55,11 +55,18 @@ export function TextEditor({
 	// Monaco reaches for window as it loads, and every page here is prerendered
 	// in Node first. BrowserOnly defers the require to the browser, and the
 	// bundled copy is registered there too so no editor is fetched from a CDN.
+	//
+	// `edcore.main` and one language, not the whole package: the package entry
+	// adds the TypeScript, JSON, CSS and HTML language services and every other
+	// grammar, none of which a SQL box uses. Not `editor.api`, which registers
+	// none of the editor's own contributions — no find, suggest, hover, folding.
 	const renderEditor = () => (
 		<BrowserOnly fallback={<div className="h-full w-full" />}>
 			{() => {
 				const { default: Editor, loader } = require("@monaco-editor/react");
-				loader.config({ monaco: require("monaco-editor") });
+				const monaco = require("monaco-editor/esm/vs/editor/edcore.main");
+				require("monaco-editor/esm/vs/basic-languages/sql/sql.contribution");
+				loader.config({ monaco });
 				return (
 					<Editor
 						language={language}
