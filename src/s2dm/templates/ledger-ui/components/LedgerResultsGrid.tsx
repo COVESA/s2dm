@@ -175,7 +175,7 @@ export function LedgerResultsGrid({
 							aria-selected={isSelected}
 							className={cn(
 								onRowClick && "cursor-pointer",
-								isSelected && "bg-accent hover:bg-accent",
+								isSelected && "bg-sky-500/10 hover:bg-sky-500/10",
 							)}
 						>
 							{row.getAllCells().map((cell, index) => (
