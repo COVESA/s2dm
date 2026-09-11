@@ -10,6 +10,12 @@
 	overflow: hidden;
 }
 
+/* Four tables grow with the page; only a grid of many rows needs a box. */
+.schemaWorkspace {
+	display: flex;
+	flex-direction: column;
+}
+
 /* Tall enough to be worth scrolling, short enough to leave the page scrollable. */
 .workspace {
 	display: flex;
