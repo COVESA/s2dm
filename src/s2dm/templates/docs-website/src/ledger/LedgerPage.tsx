@@ -35,8 +35,7 @@ import {
 } from "@/store/ledgerStore";
 import styles from "./ledger.module.css";
 
-// The ledger this site ships. `npm run doc` copies it here from `../dist/ledger.db`,
-// the same staging directory the composed schema arrives in.
+// `npm run doc` copies it here from `../dist/ledger.db`, where the schema lands too.
 const LEDGER_FILE = "/ledger.db";
 
 const DEFAULT_VIEW: LedgerView = "schema";
@@ -70,8 +69,6 @@ function LedgerViewPanel() {
 	if (view === "query") {
 		return <QueryView />;
 	}
-	// The playground keeps this in its left pane; here it is the view, so it is
-	// held to a readable column rather than stretched across the page.
 	return (
 		<div className={styles.schema}>
 			<LedgerOverview />
@@ -93,11 +90,10 @@ function LedgerContent() {
 	const reconciledView = useRef<LedgerView | null>(null);
 	const workspaceRef = useRef<HTMLElement>(null);
 
-	// The sidebar navigates, and "show in table" switches view from inside the
-	// app, so whichever side moved since the last reconcile is the one that wins.
+	// The sidebar navigates and the store switches view on its own, so whichever
+	// side moved since the last reconcile wins.
 	useEffect(() => {
 		if (reconciledView.current !== urlView) {
-			// First render here, or the sidebar navigated: the URL is the change.
 			reconciledView.current = urlView;
 			if (view !== urlView) {
 				dispatch(setLedgerView(urlView));
@@ -110,14 +106,9 @@ function LedgerContent() {
 		}
 	}, [dispatch, history, ledgerRootUrl, urlView, view]);
 
-	// Details sit below the workspace here, so "Show in Raw Tables" leaves the
-	// grid above the viewport. The grid scrolls the selected row into view, but
-	// only as far as its own scroll box — once the row is visible there the page
-	// is already "nearest" and never moves. This brings the page along.
-	//
-	// Keyed on the rows rather than the table or the page: the action clears
-	// them through `resetTableView` and the saga loads a fresh set, so this
-	// fires even when the record is already in the table on screen.
+	// The grid scrolls its selected row into view, but only as far as its own
+	// scroll box, so the page never follows. Keyed on the rows because the
+	// table and the page can both be unchanged.
 	useEffect(() => {
 		workspaceRef.current?.scrollIntoView({
 			behavior: "smooth",
@@ -140,7 +131,11 @@ function LedgerContent() {
 				<section className={styles.workspaceCard} ref={workspaceRef}>
 					{/* The one bounded box on the page: a grid of many rows cannot grow
 					    with the document, so it scrolls inside instead. */}
-					<div className={styles.workspace}>
+					<div
+						className={
+							view === "schema" ? styles.schemaWorkspace : styles.workspace
+						}
+					>
 						<LedgerViewPanel />
 					</div>
 				</section>
@@ -198,9 +193,8 @@ export default function LedgerPage({
 	const ledgerRootUrl = useBaseUrl("/ledger");
 	const [session, setSession] = useState<LedgerSession | null>(null);
 
-	// Opened in an effect, as the insights page does: every route here is
-	// prerendered in Node, and nothing below the Provider may run there. The
-	// session owns the download, so a failure surfaces through the store.
+	// In an effect because every route here is prerendered in Node, and nothing
+	// below the Provider may run there.
 	useEffect(() => {
 		configureSqlJs({ wasmUrl });
 		setSession(
@@ -211,8 +205,7 @@ export default function LedgerPage({
 		);
 	}, [ledgerUrl, wasmUrl]);
 
-	// Released on leaving the ledger rather than on unmount, so moving between
-	// its views keeps the database that is already decoded in wasm memory.
+	// On leaving the ledger, not on unmount: each view is its own route.
 	useEffect(() => {
 		const root = ledgerRootUrl.replace(/\/$/, "");
 		return history.listen((next) => {
