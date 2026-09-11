@@ -73,15 +73,17 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 				}));
 
 	let ledgerContext: React.ReactNode = null;
-	if (error) {
+	if (!row) {
+		// A query projection is not a record of any table, so no chain is ever
+		// resolved for it and the section is left out rather than waiting.
+		ledgerContext = null;
+	} else if (error) {
 		ledgerContext = <LedgerErrorBanner>{error}</LedgerErrorBanner>;
 	} else if (isLoading || !chain) {
 		ledgerContext = (
 			<p className="text-sm text-muted-foreground">Resolving context…</p>
 		);
 	} else if (!chain.root) {
-		// A query projection is not a record of any table, so there is no chain to
-		// show and the section is left out rather than stating that.
 		ledgerContext = null;
 	} else {
 		ledgerContext = (

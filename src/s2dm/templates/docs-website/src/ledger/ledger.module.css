@@ -1,7 +1,13 @@
 .content {
 	min-width: 0;
-	padding: 1.5rem 0 3rem;
 	width: 100%;
+}
+
+.workspaceCard {
+	background-color: var(--card);
+	border: 1px solid var(--border);
+	border-radius: var(--ifm-global-radius, 0.5rem);
+	overflow: hidden;
 }
 
 /* Tall enough to be worth scrolling, short enough to leave the page scrollable. */

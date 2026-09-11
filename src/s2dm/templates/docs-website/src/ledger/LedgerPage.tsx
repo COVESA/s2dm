@@ -38,11 +38,11 @@ import styles from "./ledger.module.css";
 // the same staging directory the composed schema arrives in.
 const LEDGER_FILE = "/ledger.db";
 
-const DEFAULT_VIEW: LedgerView = "raw";
+const DEFAULT_VIEW: LedgerView = "schema";
 const VIEW_SEGMENTS: Record<string, LedgerView> = {
+	raw: "raw",
 	explore: "explore",
 	query: "query",
-	schema: "schema",
 };
 
 function getView(pathname: string): LedgerView {
@@ -60,22 +60,22 @@ function getViewPath(view: LedgerView, ledgerRootUrl: string): string {
 function LedgerViewPanel() {
 	const view = useLedgerSelector(selectLedgerView);
 
+	if (view === "raw") {
+		return <RawTablesView />;
+	}
 	if (view === "explore") {
 		return <ExploreView />;
 	}
 	if (view === "query") {
 		return <QueryView />;
 	}
-	if (view === "schema") {
-		// The playground keeps this in its left pane; here it is the view, so it
-		// is held to a readable column rather than stretched across the page.
-		return (
-			<div className={styles.schema}>
-				<LedgerOverview />
-			</div>
-		);
-	}
-	return <RawTablesView />;
+	// The playground keeps this in its left pane; here it is the view, so it is
+	// held to a readable column rather than stretched across the page.
+	return (
+		<div className={styles.schema}>
+			<LedgerOverview />
+		</div>
+	);
 }
 
 function LedgerContent() {
@@ -119,7 +119,7 @@ function LedgerContent() {
 	} else {
 		body = (
 			<>
-				<section className="overflow-hidden rounded-lg border border-border bg-card">
+				<section className={styles.workspaceCard}>
 					{/* The one bounded box on the page: a grid of many rows cannot grow
 					    with the document, so it scrolls inside instead. */}
 					<div className={styles.workspace}>
@@ -127,13 +127,21 @@ function LedgerContent() {
 					</div>
 				</section>
 
-				{detail && (
-					<section className="mt-6 overflow-hidden rounded-lg border border-border bg-card">
-						<LedgerDetailsContent
-							onClose={() => dispatch(closeLedgerDetail())}
-						/>
-					</section>
-				)}
+				{/* Only the views that list records: the schema view has nothing to
+				    select, so neither the details nor an invitation to select
+				    belongs under it. A selection made elsewhere survives. */}
+				{view !== "schema" &&
+					(detail ? (
+						<section className="mt-6 overflow-hidden rounded-lg border border-border bg-card">
+							<LedgerDetailsContent
+								onClose={() => dispatch(closeLedgerDetail())}
+							/>
+						</section>
+					) : (
+						<p className="mt-6 text-center text-muted-foreground text-sm">
+							Select a record to see its context, details and actions.
+						</p>
+					))}
 			</>
 		);
 	}

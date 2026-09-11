@@ -76,7 +76,7 @@ function GroupView({
 					type="button"
 					onClick={() => setIsExpanded(true)}
 					style={{ marginLeft: `${depth * 12}px` }}
-					className="cursor-pointer rounded-md px-2 py-1 text-left font-mono text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+					className="cursor-pointer rounded-md px-2 py-1 text-left font-mono text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
 				>
 					See {hidden} more {group.label}
 				</button>
@@ -85,7 +85,7 @@ function GroupView({
 			{showAll && notFetched > 0 && (
 				<p
 					style={{ marginLeft: `${depth * 12}px` }}
-					className="px-2 py-1 font-mono text-xs text-muted-foreground"
+					className="px-2 py-1 font-mono text-sm text-muted-foreground"
 				>
 					{notFetched} more not loaded
 				</p>
@@ -145,17 +145,17 @@ function NodeView({
 				className={cn(
 					"flex w-full cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors",
 					isSelected
-						? "border-primary bg-accent"
+						? "border-primary bg-sky-500/10"
 						: "border-transparent hover:bg-muted",
 				)}
 				aria-current={isSelected ? "true" : undefined}
 				aria-expanded={hasChildren ? isOpen : undefined}
 			>
 				{chevron}
-				<span className="shrink-0 font-mono text-xs text-muted-foreground">
+				<span className="shrink-0 font-mono text-sm text-muted-foreground">
 					{recordTypeName(node.table)}
 				</span>
-				<span className="min-w-0 flex-1 truncate font-mono text-xs">
+				<span className="min-w-0 flex-1 truncate font-mono text-sm">
 					{label || shortenIdentity(node.identity)}
 				</span>
 			</button>
