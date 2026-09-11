@@ -12,9 +12,14 @@ type DetailsPaneShellProps = {
  *
  * The playground shows details in a collapsible pane beside the content, with a
  * header carrying the record title, a back arrow and a close button. Here they
- * sit in the document flow beneath the workspace, where there is no pane to
- * close and the page's own scroll position is the way back — so the title and
- * both controls are left out and only the body is rendered.
+ * sit in the document flow beneath the workspace, so the header is left out and
+ * only the body is rendered.
+ *
+ * That makes the detail stack one-way: following a chain node or an action
+ * pushes onto it with nothing to pop it, and the only way out is selecting
+ * another record. Deliberate — the controls were not wanted on this host — so
+ * `title`, `onBack` and `onClose` are accepted to keep the shared contract and
+ * then ignored.
  */
 export function DetailsPaneShell({ bodyKey, children }: DetailsPaneShellProps) {
 	return (

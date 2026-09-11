@@ -20,6 +20,7 @@ import {
 	selectHasLedger,
 	selectLedgerDetail,
 	selectLedgerError,
+	selectLedgerRows,
 	selectLedgerView,
 	setLedgerView,
 } from "@ledger-ui/state/ledgerSlice";
@@ -87,8 +88,10 @@ function LedgerContent() {
 	const error = useLedgerSelector(selectLedgerError);
 	const hasLedger = useLedgerSelector(selectHasLedger);
 	const view = useLedgerSelector(selectLedgerView);
+	const rows = useLedgerSelector(selectLedgerRows);
 	const urlView = getView(location.pathname);
 	const reconciledView = useRef<LedgerView | null>(null);
+	const workspaceRef = useRef<HTMLElement>(null);
 
 	// The sidebar navigates, and "show in table" switches view from inside the
 	// app, so whichever side moved since the last reconcile is the one that wins.
@@ -107,6 +110,21 @@ function LedgerContent() {
 		}
 	}, [dispatch, history, ledgerRootUrl, urlView, view]);
 
+	// Details sit below the workspace here, so "Show in Raw Tables" leaves the
+	// grid above the viewport. The grid scrolls the selected row into view, but
+	// only as far as its own scroll box — once the row is visible there the page
+	// is already "nearest" and never moves. This brings the page along.
+	//
+	// Keyed on the rows rather than the table or the page: the action clears
+	// them through `resetTableView` and the saga loads a fresh set, so this
+	// fires even when the record is already in the table on screen.
+	useEffect(() => {
+		workspaceRef.current?.scrollIntoView({
+			behavior: "smooth",
+			block: "nearest",
+		});
+	}, [view, rows]);
+
 	let body: ReactNode;
 	if (error) {
 		body = (
@@ -119,7 +137,7 @@ function LedgerContent() {
 	} else {
 		body = (
 			<>
-				<section className={styles.workspaceCard}>
+				<section className={styles.workspaceCard} ref={workspaceRef}>
 					{/* The one bounded box on the page: a grid of many rows cannot grow
 					    with the document, so it scrolls inside instead. */}
 					<div className={styles.workspace}>
