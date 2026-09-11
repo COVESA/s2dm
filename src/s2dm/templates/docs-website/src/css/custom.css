@@ -12,9 +12,14 @@
 /* Preflight is not loaded here, so the two rules shadcn components assume are
    restated. Layered before `utilities` so a `border` or `bg-*` class still wins. */
 @layer s2dm-base {
+	/* The scopes themselves as well as their descendants: Radix portals the
+	   dialog and the dropdown to the body, so those roots carry the class
+	   rather than sitting inside it. */
+	.s2dm-insights,
 	.s2dm-insights *,
 	.s2dm-insights *::before,
 	.s2dm-insights *::after,
+	.s2dm-ledger,
 	.s2dm-ledger *,
 	.s2dm-ledger *::before,
 	.s2dm-ledger *::after {
