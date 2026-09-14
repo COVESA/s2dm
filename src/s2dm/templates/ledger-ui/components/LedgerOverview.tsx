@@ -9,7 +9,14 @@ import {
 } from "@ledger-ui/state/ledgerSlice";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export function LedgerOverview() {
+type LedgerOverviewProps = {
+	// How this host offers the relationships diagram. A narrow pane wants the
+	// dialog it defaults to; `null` leaves it out for a host that places the
+	// drawing itself.
+	relationships?: React.ReactNode;
+};
+
+export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 	const tables = useLedgerSelector(selectLedgerTables);
 	const isLoading = useLedgerSelector(selectIsLoadingLedger);
 
@@ -28,7 +35,7 @@ export function LedgerOverview() {
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4">
-			<div className="flex items-baseline justify-between gap-2">
+			<div className="flex items-baseline justify-between gap-2 rounded-md border bg-background/50 px-3 py-2">
 				<span className="text-sm text-muted-foreground">Records</span>
 				<span className="text-sm tabular-nums">{totalRecords}</span>
 			</div>
@@ -78,7 +85,7 @@ export function LedgerOverview() {
 				})}
 			</dl>
 
-			<LedgerErdButton />
+			{relationships === undefined ? <LedgerErdButton /> : relationships}
 		</div>
 	);
 }

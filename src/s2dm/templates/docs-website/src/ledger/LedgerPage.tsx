@@ -8,6 +8,7 @@ import {
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import { ExploreView } from "@ledger-ui/components/ExploreView";
 import { LedgerDetailsContent } from "@ledger-ui/components/LedgerDetailsContent";
+import { LedgerErdDiagram } from "@ledger-ui/components/LedgerErdDiagram";
 import { LedgerOverview } from "@ledger-ui/components/LedgerOverview";
 import { QueryView } from "@ledger-ui/components/QueryView";
 import { RawTablesView } from "@ledger-ui/components/RawTablesView";
@@ -69,11 +70,9 @@ function LedgerViewPanel() {
 	if (view === "query") {
 		return <QueryView />;
 	}
-	return (
-		<div className={styles.schema}>
-			<LedgerOverview />
-		</div>
-	);
+	// The page places the diagram in its own card below, so the overview leaves
+	// it out rather than offering the dialog.
+	return <LedgerOverview relationships={null} />;
 }
 
 function LedgerContent() {
@@ -139,6 +138,14 @@ function LedgerContent() {
 						<LedgerViewPanel />
 					</div>
 				</section>
+
+				{/* Its own card rather than a dialog: there is room for it on a page,
+				    and it scales to the width instead of scrolling. */}
+				{view === "schema" && (
+					<section className={`${styles.workspaceCard} mt-6`}>
+						<LedgerErdDiagram fit className="p-6" />
+					</section>
+				)}
 
 				{/* Only the views that list records: the schema view has nothing to
 				    select, so neither the details nor an invitation to select

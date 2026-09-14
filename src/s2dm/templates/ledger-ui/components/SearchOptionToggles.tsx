@@ -1,4 +1,4 @@
-import type { SearchMode } from "@ledger-ui/data/search";
+import type { SearchOptions } from "@ledger-ui/data/search";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
 	selectSearchOptions,
@@ -7,52 +7,36 @@ import {
 import { CaseSensitive, Regex, WholeWord } from "lucide-react";
 import { cn } from "@/utils/cn";
 
-const MODE_TOGGLES: {
-	mode: SearchMode;
+const TOGGLES: {
+	option: keyof SearchOptions;
 	label: string;
 	Icon: typeof Regex;
 }[] = [
-	{ mode: "wholeWord", label: "Match whole word", Icon: WholeWord },
-	{ mode: "regex", label: "Use regular expression", Icon: Regex },
+	{ option: "caseSensitive", label: "Match case", Icon: CaseSensitive },
+	{ option: "wholeWord", label: "Match whole word", Icon: WholeWord },
+	{ option: "regex", label: "Use regular expression", Icon: Regex },
 ];
 
 export function SearchOptionToggles() {
 	const dispatch = useLedgerDispatch();
 	const options = useLedgerSelector(selectSearchOptions);
 
-	const toggleClass = (active: boolean) =>
-		cn(
-			"cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-muted",
-			active && "bg-accent text-accent-foreground",
-		);
-
 	return (
 		<div className="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-0.5">
-			<button
-				type="button"
-				onClick={() =>
-					dispatch(setSearchOptions({ caseSensitive: !options.caseSensitive }))
-				}
-				className={toggleClass(options.caseSensitive)}
-				aria-pressed={options.caseSensitive}
-				title="Match case"
-			>
-				<CaseSensitive className="h-4 w-4" />
-			</button>
-
-			{MODE_TOGGLES.map(({ mode, label, Icon }) => (
+			{TOGGLES.map(({ option, label, Icon }) => (
 				<button
-					key={mode}
+					key={option}
 					type="button"
 					onClick={() =>
-						dispatch(
-							setSearchOptions({
-								mode: options.mode === mode ? "substring" : mode,
-							}),
-						)
+						dispatch(setSearchOptions({ [option]: !options[option] }))
 					}
-					className={toggleClass(options.mode === mode)}
-					aria-pressed={options.mode === mode}
+					className={cn(
+						"cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-muted",
+						// The same tint the grid and the record values use; --accent is
+						// barely a shade against a light ground.
+						options[option] && "bg-sky-500/10 text-foreground",
+					)}
+					aria-pressed={options[option]}
 					title={label}
 				>
 					<Icon className="h-4 w-4" />
