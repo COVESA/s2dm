@@ -1,14 +1,14 @@
 import type { Database } from "sql.js";
 
-export type SearchMode = "substring" | "wholeWord" | "regex";
-
 export type SearchOptions = {
-	mode: SearchMode;
 	caseSensitive: boolean;
+	regex: boolean;
+	wholeWord: boolean;
 };
 
 export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
-	mode: "substring",
+	regex: false,
+	wholeWord: false,
 	caseSensitive: false,
 };
 
@@ -38,23 +38,21 @@ export function compileSearchPattern(
 ): SearchPattern {
 	const flags = options.caseSensitive ? "" : "i";
 
-	if (options.mode === "regex") {
+	if (options.regex || options.wholeWord) {
+		// The needle is a pattern only where regex is asked for; otherwise it is
+		// literal text that happens to need the same machinery.
+		const source = options.regex ? needle : escapeRegExp(needle);
+		// Not \b, which JavaScript defines over [A-Za-z0-9_] only.
+		const bounded = options.wholeWord
+			? `(?<![\\p{L}\\p{N}_])(?:${source})(?![\\p{L}\\p{N}_])`
+			: source;
 		try {
-			new RegExp(needle, flags);
+			new RegExp(bounded, `${flags}u`);
 		} catch (error) {
 			const detail = error instanceof Error ? error.message : String(error);
 			throw new Error(`Invalid regular expression: ${detail}`);
 		}
-		return { kind: "regexp", source: needle, flags };
-	}
-
-	if (options.mode === "wholeWord") {
-		// Not \b, which JavaScript defines over [A-Za-z0-9_] only.
-		return {
-			kind: "regexp",
-			source: `(?<![\\p{L}\\p{N}_])${escapeRegExp(needle)}(?![\\p{L}\\p{N}_])`,
-			flags: `${flags}u`,
-		};
+		return { kind: "regexp", source: bounded, flags: `${flags}u` };
 	}
 
 	// SQLite's LIKE folds case for ASCII only, so anything else takes the regex

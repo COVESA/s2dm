@@ -11,6 +11,7 @@ import {
 } from "@ledger-ui/data/recordLabel";
 import type { LedgerRecord } from "@ledger-ui/data/types";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import pluralize from "pluralize";
 import { useState } from "react";
 import { cn } from "@/utils/cn";
 
@@ -78,7 +79,7 @@ function GroupView({
 					style={{ marginLeft: `${depth * 12}px` }}
 					className="cursor-pointer rounded-md px-2 py-1 text-left font-mono text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
 				>
-					See {hidden} more {group.label}
+					See {hidden} more {pluralize(pluralize.singular(group.label), hidden)}
 				</button>
 			)}
 
