@@ -1,12 +1,7 @@
+import { callLedger } from "@ledger-ui/data/ledgerClient";
 import { FILTERABLE_COLUMNS } from "@ledger-ui/data/modlProfile";
-import {
-	countSearchMatches,
-	LEDGER_PAGE_SIZE,
-	listDistinctValues,
-	searchTable,
-} from "@ledger-ui/data/rows";
+import { LEDGER_PAGE_SIZE } from "@ledger-ui/data/rows";
 import type { SearchOptions } from "@ledger-ui/data/search";
-import { getLedgerDatabase } from "@ledger-ui/data/session";
 import type { QueryResult } from "@ledger-ui/data/types";
 import {
 	chooseLedgerTable,
@@ -35,15 +30,12 @@ function* loadFilterOptionsWorker() {
 		if (!table) {
 			return;
 		}
-		const database = getLedgerDatabase();
 		const options: Record<string, string[]> = {};
 		for (const column of FILTERABLE_COLUMNS) {
-			const values: string[] = yield call(
-				listDistinctValues,
-				database,
+			const values: string[] = yield call(callLedger, "listDistinctValues", {
 				table,
 				column,
-			);
+			});
 			if (values.length > 0) {
 				options[column] = values;
 			}
@@ -71,31 +63,24 @@ function* loadLedgerRowsWorker() {
 		const page: number = yield select(selectLedgerPage);
 		const filters: Record<string, string> = yield select(selectLedgerFilters);
 		const trimmed = needle.trim();
-		const database = getLedgerDatabase();
 		const search: SearchOptions = yield select(selectSearchOptions);
-		const window = {
+
+		// An empty needle contributes no clause, so one call covers both cases.
+		const result: QueryResult = yield call(callLedger, "searchTable", {
+			table,
+			needle: trimmed,
 			limit: LEDGER_PAGE_SIZE,
 			offset: page * LEDGER_PAGE_SIZE,
 			filters,
 			search,
-		};
-
-		// An empty needle contributes no clause, so one call covers both cases.
-		const result: QueryResult = yield call(
-			searchTable,
-			database,
-			table,
-			trimmed,
-			window,
-		);
+		});
 		// Filters must reach the count, or the page numbers describe the whole table.
-		const total: number = yield call(
-			countSearchMatches,
-			database,
+		const total: number = yield call(callLedger, "countSearchMatches", {
 			table,
-			trimmed,
-			{ filters, search },
-		);
+			needle: trimmed,
+			filters,
+			search,
+		});
 
 		yield put(loadLedgerRowsSuccess({ result, total }));
 	} catch (error) {

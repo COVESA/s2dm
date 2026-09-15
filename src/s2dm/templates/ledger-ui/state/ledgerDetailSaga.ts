@@ -1,8 +1,7 @@
-import { findOne, resolveChain } from "@ledger-ui/data/chainResolve";
 import type { LedgerChain } from "@ledger-ui/data/chainSpec";
-import { LEDGER_PAGE_SIZE, rowPageIndex } from "@ledger-ui/data/rows";
-import { getLedgerDatabase } from "@ledger-ui/data/session";
-import type { LedgerRecord, LedgerTable } from "@ledger-ui/data/types";
+import { callLedger } from "@ledger-ui/data/ledgerClient";
+import { LEDGER_PAGE_SIZE } from "@ledger-ui/data/rows";
+import type { LedgerRecord } from "@ledger-ui/data/types";
 import type { LedgerDetail } from "@ledger-ui/state/ledgerSlice";
 import {
 	clearLedgerChain,
@@ -13,7 +12,6 @@ import {
 	resolveChainFailure,
 	resolveChainSuccess,
 	selectLedgerDetail,
-	selectLedgerTables,
 	setLedgerPage,
 	showRecordInTable,
 	viewLedgerRecord,
@@ -34,15 +32,10 @@ function* resolveChainWorker() {
 			return;
 		}
 
-		const tables: LedgerTable[] = yield select(selectLedgerTables);
-		const database = getLedgerDatabase();
-		const chain: LedgerChain = yield call(
-			resolveChain,
-			database,
-			tables,
-			detail.table,
-			detail.record,
-		);
+		const chain: LedgerChain = yield call(callLedger, "resolveChain", {
+			table: detail.table,
+			record: detail.record,
+		});
 		yield put(resolveChainSuccess(chain));
 	} catch (error) {
 		const message = getErrorMessage(error);
@@ -55,14 +48,11 @@ function* showRecordInTableWorker(
 ) {
 	try {
 		const { table, record } = action.payload;
-		const database = getLedgerDatabase();
-		const page: number = yield call(
-			rowPageIndex,
-			database,
+		const page: number = yield call(callLedger, "rowPageIndex", {
 			table,
 			record,
-			LEDGER_PAGE_SIZE,
-		);
+			pageSize: LEDGER_PAGE_SIZE,
+		});
 		// setLedgerPage also triggers the row load, so this is the only dispatch.
 		yield put(setLedgerPage(page));
 	} catch (error) {
@@ -76,14 +66,11 @@ function* viewLedgerRecordWorker(
 ) {
 	try {
 		const { table, column, value } = action.payload;
-		const database = getLedgerDatabase();
-		const record: LedgerRecord | null = yield call(
-			findOne,
-			database,
+		const record: LedgerRecord | null = yield call(callLedger, "findOne", {
 			table,
 			column,
 			value,
-		);
+		});
 		if (!record) {
 			yield put(resolveChainFailure(`No ${table} record found for ${value}`));
 			return;

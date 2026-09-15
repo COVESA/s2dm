@@ -67,7 +67,11 @@ export function LedgerErdDiagram({
 	}, [active, host, theme]);
 
 	return (
-		<div className={`relative ${className ?? ""}`}>
+		// Until the drawing gives it height, a fitted diagram is as tall as its
+		// padding, and the states below are positioned over nothing.
+		<div
+			className={`relative ${fit && !isDrawn ? "min-h-40" : ""} ${className ?? ""}`}
+		>
 			<div
 				ref={setHost}
 				className={

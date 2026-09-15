@@ -179,26 +179,24 @@ function countRows(
 	};
 }
 
+function readTableSchema(database: Database, name: string): LedgerTable {
+	const columns = describeColumns(database, name);
+	const hasStatus = columns.some((column) => column.name === STATUS_COLUMN);
+	const statusColumn = hasStatus ? STATUS_COLUMN : null;
+	const counted = countRows(database, name, statusColumn);
+	return {
+		name,
+		columns,
+		foreignKeys: describeForeignKeys(database, name),
+		rowCount: counted.total,
+		activeCount: counted.active,
+	};
+}
+
 export function readSchema(database: Database): LedgerTable[] {
+	const tableNames = listTableNames(database);
+	const tables = tableNames.map((name) => readTableSchema(database, name));
 	// The profile is applied before ordering, which reads the keys it supplies.
-	return orderTablesByDependency(
-		applyModlProfile(
-			listTableNames(database).map((name) => {
-				const columns = describeColumns(database, name);
-				const statusColumn = columns.some(
-					(column) => column.name === STATUS_COLUMN,
-				)
-					? STATUS_COLUMN
-					: null;
-				const counted = countRows(database, name, statusColumn);
-				return {
-					name,
-					columns,
-					foreignKeys: describeForeignKeys(database, name),
-					rowCount: counted.total,
-					activeCount: counted.active,
-				};
-			}),
-		),
-	);
+	const profiledTables = applyModlProfile(tables);
+	return orderTablesByDependency(profiledTables);
 }

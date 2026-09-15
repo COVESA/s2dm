@@ -4,11 +4,11 @@ import { STATUS_COLUMN } from "@ledger-ui/data/modlProfile";
 import { formatValue } from "@ledger-ui/data/recordLabel";
 import { isSameRow } from "@ledger-ui/data/resultRow";
 import type {
+	LedgerCell,
 	LedgerRecord,
 	LedgerValue,
 	QueryResult,
 } from "@ledger-ui/data/types";
-import type { LedgerCell } from "@ledger-ui/state/ledgerSlice";
 import {
 	createSortedRowModel,
 	rowSortingFeature,

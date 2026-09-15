@@ -1,5 +1,4 @@
 import { registerSearchFunction } from "@ledger-ui/data/search";
-import { isCurrentLedgerOpen } from "@ledger-ui/data/session";
 import type { Database, SqlJsStatic } from "sql.js";
 
 let sqlJs: Promise<SqlJsStatic> | null = null;
@@ -27,24 +26,9 @@ function loadSqlJs(): Promise<SqlJsStatic> {
 	return sqlJs;
 }
 
-export class LedgerImportSuperseded extends Error {
-	constructor() {
-		super("Ledger import superseded");
-		this.name = "LedgerImportSuperseded";
-	}
-}
-
-export async function openLedgerDatabase(
-	bytes: Uint8Array,
-	token: number,
-): Promise<Database> {
+export async function openLedgerDatabase(bytes: Uint8Array): Promise<Database> {
 	const { Database: SqlDatabase } = await loadSqlJs();
 	const database = new SqlDatabase(bytes);
-	if (!isCurrentLedgerOpen(token)) {
-		// Superseded while the wasm loaded: no one will ever receive this.
-		database.close();
-		throw new LedgerImportSuperseded();
-	}
 	// Enforced by SQLite: `WITH … DELETE … RETURNING` passes both string checks.
 	database.run("PRAGMA query_only = 1");
 	// SQLite has no regex of its own, so whole-word and regex search need one.

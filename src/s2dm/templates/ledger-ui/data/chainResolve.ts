@@ -51,6 +51,8 @@ function buildGroup(
 	value: string,
 	orderBy: string | null,
 	buildNode: (record: LedgerRecord) => ChainNode,
+	// The path record at this level, which a page of the first hundred can miss.
+	onPath?: { record: LedgerRecord; identityColumn: string | null },
 ): ChainGroup | null {
 	if (value === "") {
 		return null;
@@ -66,6 +68,17 @@ function buildGroup(
 		orderBy: orderBy ?? undefined,
 	});
 	const records = toRecords(page);
+	// Every group at this level is offered it; it is a child of only one.
+	if (onPath && String(onPath.record[column] ?? "") === value) {
+		const wanted = identityOf(onPath.record, onPath.identityColumn);
+		const present = records.some(
+			(record) => identityOf(record, onPath.identityColumn) === wanted,
+		);
+		// Appended, not hoisted: the view opens the group, so order is left alone.
+		if (!present) {
+			records.push(onPath.record);
+		}
+	}
 	return { table, label, nodes: records.map(buildNode), total };
 }
 
@@ -76,6 +89,8 @@ function buildDescendants(
 	record: LedgerRecord,
 	// Mutated: one budget is shared by the whole walk.
 	budget: { remaining: number },
+	// One record per table down to the selection, which page and budget may drop.
+	path: Map<string, LedgerRecord> = new Map(),
 ): ChainNode {
 	const identity = identityOf(record, level.identityColumn);
 	const groups: ChainGroup[] = [];
@@ -93,17 +108,38 @@ function buildDescendants(
 			identityOf(record, child.parent.identityColumn),
 			child.orderColumn,
 			(childRecord) => {
-				if (budget.remaining <= 0) {
+				const identity = identityOf(childRecord, child.identityColumn);
+				const onPath =
+					path.has(child.table) &&
+					identityOf(
+						path.get(child.table) as LedgerRecord,
+						child.identityColumn,
+					) === identity;
+				// Expanded whatever the budget: stopping hides the selection.
+				if (budget.remaining <= 0 && !onPath) {
 					return {
 						table: child.table,
-						identity: identityOf(childRecord, child.identityColumn),
+						identity,
 						record: childRecord,
 						groups: [],
 					};
 				}
 				budget.remaining -= 1;
-				return buildDescendants(database, spec, child, childRecord, budget);
+				return buildDescendants(
+					database,
+					spec,
+					child,
+					childRecord,
+					budget,
+					path,
+				);
 			},
+			path.has(child.table)
+				? {
+						record: path.get(child.table) as LedgerRecord,
+						identityColumn: child.identityColumn,
+					}
+				: undefined,
 		);
 		if (group) {
 			groups.push(group);
@@ -149,6 +185,11 @@ export function resolveChain(
 
 	let anchorLevel: ChainLevel = selectedLevel;
 	let anchorRecord = selectedRecord;
+	// Every record between the selection and the ancestor the tree is rebuilt
+	// from, which pages each group and can otherwise leave the selection out.
+	const path = new Map<string, LedgerRecord>([
+		[selectedLevel.table, selectedRecord],
+	]);
 	const visited = new Set<string>([anchorLevel.table]);
 	while (anchorLevel.parent) {
 		const parentLink = anchorLevel.parent;
@@ -168,14 +209,20 @@ export function resolveChain(
 		}
 		anchorRecord = parentRecord;
 		anchorLevel = parent;
+		path.set(parent.table, parentRecord);
 		visited.add(parent.table);
 	}
 
 	return {
 		levels,
-		root: buildDescendants(database, spec, anchorLevel, anchorRecord, {
-			remaining: CHAIN_NODE_BUDGET,
-		}),
+		root: buildDescendants(
+			database,
+			spec,
+			anchorLevel,
+			anchorRecord,
+			{ remaining: CHAIN_NODE_BUDGET },
+			path,
+		),
 		selected,
 	};
 }
