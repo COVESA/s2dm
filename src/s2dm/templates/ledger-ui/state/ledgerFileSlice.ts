@@ -17,6 +17,8 @@ import {
 import type { LedgerRootState } from "@ledger-ui/state/types";
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
+export type LedgerStatus = "idle" | "loading" | "ready" | "empty" | "failed";
+
 export interface LedgerFileState {
 	fileName: string;
 	tables: LedgerTable[];
@@ -93,6 +95,23 @@ export const selectLedgerError = (state: LedgerRootState) =>
 	state.ledgerFile.error;
 export const selectHasLedger = (state: LedgerRootState) =>
 	state.ledgerFile.tables.length > 0;
+
+// Derived, so it cannot drift from the fields it reads. A loaded ledger outranks
+// a failed or running import, which leaves it on screen; "empty" is a database
+// that opened holding no tables, which the table count alone reads as loading.
+export const selectLedgerStatus = (state: LedgerRootState): LedgerStatus => {
+	const file = state.ledgerFile;
+	if (file.error) {
+		return "failed";
+	}
+	if (file.isLoading) {
+		return "loading";
+	}
+	if (!file.fileName) {
+		return "idle";
+	}
+	return file.tables.length > 0 ? "ready" : "empty";
+};
 export const selectLedgerView = (state: LedgerRootState) =>
 	state.ledgerFile.view;
 export const selectSearchOptions = (state: LedgerRootState) =>

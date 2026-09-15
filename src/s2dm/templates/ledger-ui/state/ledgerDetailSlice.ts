@@ -1,5 +1,5 @@
 import type { LedgerChain } from "@ledger-ui/data/chainSpec";
-import type { LedgerRecord, LedgerValue } from "@ledger-ui/data/types";
+import type { LedgerCell, LedgerRecord } from "@ledger-ui/data/types";
 import {
 	closeLedger,
 	openLedgerFailure,
@@ -7,8 +7,6 @@ import {
 } from "@ledger-ui/state/ledgerActions";
 import type { LedgerRootState } from "@ledger-ui/state/types";
 import { createSlice, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
-
-export type LedgerCell = { column: string; value: LedgerValue };
 
 export type LedgerDetail =
 	| { kind: "row"; table: string; record: LedgerRecord }

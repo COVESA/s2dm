@@ -1,13 +1,11 @@
-import { searchLedger } from "@ledger-ui/data/ledgerSearch";
+import { callLedger } from "@ledger-ui/data/ledgerClient";
 import type { SearchOptions } from "@ledger-ui/data/search";
-import { getLedgerDatabase } from "@ledger-ui/data/session";
-import type { LedgerSearchMatch, LedgerTable } from "@ledger-ui/data/types";
+import type { LedgerSearchMatch } from "@ledger-ui/data/types";
 import {
 	exploreLedger,
 	exploreLedgerFailure,
 	exploreLedgerSuccess,
 	selectExploreQuery,
-	selectLedgerTables,
 	selectSearchOptions,
 	setExploreQuery,
 	setSearchOptions,
@@ -25,14 +23,14 @@ function* exploreLedgerWorker() {
 
 		const search: SearchOptions = yield select(selectSearchOptions);
 		yield put(exploreLedger());
-		const database = getLedgerDatabase();
-		const tables: LedgerTable[] = yield select(selectLedgerTables);
 		const matches: LedgerSearchMatch[] = yield call(
-			searchLedger,
-			database,
-			tables,
-			trimmed,
-			{ limit: EXPLORE_PREVIEW_LIMIT, search },
+			callLedger,
+			"searchLedger",
+			{
+				needle: trimmed,
+				limit: EXPLORE_PREVIEW_LIMIT,
+				search,
+			},
 		);
 		yield put(exploreLedgerSuccess(matches));
 	} catch (error) {

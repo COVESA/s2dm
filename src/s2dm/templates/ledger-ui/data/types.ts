@@ -23,6 +23,10 @@ export type LedgerValue = string | number | Uint8Array | null;
 
 export type LedgerRecord = Record<string, LedgerValue>;
 
+// Positional, unlike a record: a query may repeat a column name, and a keyed
+// record keeps only the last of them.
+export type LedgerCell = { column: string; value: LedgerValue };
+
 export type QueryResult = {
 	columns: string[];
 	rows: LedgerValue[][];

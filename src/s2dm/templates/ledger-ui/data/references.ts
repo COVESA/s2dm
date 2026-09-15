@@ -1,4 +1,4 @@
-import type { LedgerRecord } from "@ledger-ui/data/types";
+import type { LedgerCell } from "@ledger-ui/data/types";
 
 export type LedgerReference = {
 	table: string;
@@ -25,13 +25,13 @@ export function referenceTableOf(
  * tables are so the actions read in chain order.
  */
 export function findLedgerReferences(
-	record: LedgerRecord,
+	cells: LedgerCell[],
 	tableNames: string[],
 ): LedgerReference[] {
 	const seen = new Set<string>();
 	const found: LedgerReference[] = [];
 
-	for (const [column, value] of Object.entries(record)) {
+	for (const { column, value } of cells) {
 		const table = referenceTableOf(value, tableNames);
 		if (!table) {
 			continue;

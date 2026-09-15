@@ -165,13 +165,8 @@ export function countSearchMatches(
 	needle: string,
 	options: { filters?: RowFilters; search?: SearchOptions } = {},
 ): number {
-	return countMatches(
-		database,
-		table,
-		describeColumns(database, table),
-		needle,
-		options,
-	);
+	const columns = describeColumns(database, table);
+	return countMatches(database, table, columns, needle, options);
 }
 
 // Takes the columns rather than reading them, so a caller that already holds
