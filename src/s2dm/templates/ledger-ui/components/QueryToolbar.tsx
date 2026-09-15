@@ -2,12 +2,13 @@ import { PREDEFINED_QUERIES } from "@ledger-ui/data/predefinedQueries";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
 	applyPredefinedQuery,
+	cancelLedgerQuery,
 	runLedgerQuery,
 	selectIsRunningLedgerQuery,
 	selectLedgerSql,
 	selectPredefinedQueryLabel,
 } from "@ledger-ui/state/ledgerSlice";
-import { Play } from "lucide-react";
+import { Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Select,
@@ -19,7 +20,9 @@ import {
 
 export function QueryToolbar() {
 	const dispatch = useLedgerDispatch();
-	const sql = useLedgerSelector(selectLedgerSql);
+	const canRun = useLedgerSelector(
+		(state) => selectLedgerSql(state).trim().length > 0,
+	);
 	const isRunning = useLedgerSelector(selectIsRunningLedgerQuery);
 	const predefinedQuery = useLedgerSelector(selectPredefinedQueryLabel);
 	const selectedDescription = PREDEFINED_QUERIES.find(
@@ -57,12 +60,24 @@ export function QueryToolbar() {
 
 				<Button
 					onClick={() => dispatch(runLedgerQuery())}
-					disabled={!sql.trim()}
+					disabled={!canRun}
 					loading={isRunning}
 				>
 					<Play className="h-4 w-4" />
 					Run
 				</Button>
+
+				{/* The query runs on a worker thread, so the page can still offer
+				    a way out of one that is taking too long. */}
+				{isRunning && (
+					<Button
+						variant="outline"
+						onClick={() => dispatch(cancelLedgerQuery())}
+					>
+						<Square className="h-4 w-4" />
+						Cancel
+					</Button>
+				)}
 			</div>
 
 			{/* Always present so the toolbar keeps its height. */}

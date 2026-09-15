@@ -52,8 +52,15 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 	// own URI is compared, not its label, so a parent in the same table is kept.
 	const identityColumn = row ? identityColumnFor(tables, row.table) : null;
 	const ownUri = identityColumn ? detail.record[identityColumn] : undefined;
+	const cells =
+		detail.kind === "projection"
+			? detail.cells
+			: Object.entries(detail.record).map(([column, value]) => ({
+					column,
+					value,
+				}));
 	const tableNames = tables.map((table) => table.name);
-	const references = findLedgerReferences(detail.record, tableNames).filter(
+	const references = findLedgerReferences(cells, tableNames).filter(
 		(reference) =>
 			!(reference.table === row?.table && reference.value === ownUri),
 	);
@@ -63,14 +70,6 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 		const column = identityColumnFor(tables, reference.table);
 		return column ? [{ ...reference, column }] : [];
 	});
-
-	const cells =
-		detail.kind === "projection"
-			? detail.cells
-			: Object.entries(detail.record).map(([column, value]) => ({
-					column,
-					value,
-				}));
 
 	let ledgerContext: React.ReactNode = null;
 	if (!row) {

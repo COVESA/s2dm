@@ -2,9 +2,11 @@
 // their actions, selectors and types so callers need not know which is which.
 export type { LedgerView } from "@ledger-ui/state/ledgerActions";
 export {
+	cancelLedgerQuery,
 	closeLedger,
 	openLedger,
 	openLedgerFailure,
+	openLedgerQueryRow,
 	openLedgerSuccess,
 	openTableWithSearch,
 	setLedgerView,
@@ -14,7 +16,6 @@ export {
 export {
 	clearLedgerChain,
 	closeLedgerDetail,
-	type LedgerCell,
 	type LedgerDetail,
 	openLedgerDetail,
 	popLedgerDetail,
@@ -40,10 +41,12 @@ export {
 	setExploreQuery,
 } from "@ledger-ui/state/ledgerExploreSlice";
 export {
+	type LedgerStatus,
 	selectHasLedger,
 	selectIsLoadingLedger,
 	selectLedgerError,
 	selectLedgerFileName,
+	selectLedgerStatus,
 	selectLedgerTables,
 	selectLedgerView,
 	selectSearchOptions,

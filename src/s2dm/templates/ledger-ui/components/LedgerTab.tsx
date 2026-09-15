@@ -4,7 +4,7 @@ import { RawTablesView } from "@ledger-ui/components/RawTablesView";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
 	type LedgerView,
-	selectHasLedger,
+	selectLedgerStatus,
 	selectLedgerView,
 	setLedgerView,
 } from "@ledger-ui/state/ledgerSlice";
@@ -13,10 +13,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function LedgerTab() {
 	const dispatch = useLedgerDispatch();
-	const hasLedger = useLedgerSelector(selectHasLedger);
+	const status = useLedgerSelector(selectLedgerStatus);
 	const view = useLedgerSelector(selectLedgerView);
 
-	if (!hasLedger) {
+	if (status === "loading") {
+		return <EmptyState isLoading title="Reading ledger..." />;
+	}
+	if (status === "empty") {
+		return <EmptyState title="This ledger holds no tables" />;
+	}
+	// A failed import is reported beside the file that caused it.
+	if (status !== "ready") {
 		return <EmptyState title="Load a ledger database to start" />;
 	}
 

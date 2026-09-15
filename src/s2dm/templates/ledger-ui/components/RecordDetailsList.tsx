@@ -1,6 +1,6 @@
 import { EvidenceRow } from "@insights-ui/components/EvidenceRow";
 import { formatValue } from "@ledger-ui/data/recordLabel";
-import type { LedgerCell } from "@ledger-ui/state/ledgerSlice";
+import type { LedgerCell } from "@ledger-ui/data/types";
 
 type RecordDetailsListProps = {
 	cells: LedgerCell[];

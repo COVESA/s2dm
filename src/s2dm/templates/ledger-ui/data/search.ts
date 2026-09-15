@@ -46,13 +46,16 @@ export function compileSearchPattern(
 		const bounded = options.wholeWord
 			? `(?<![\\p{L}\\p{N}_])(?:${source})(?![\\p{L}\\p{N}_])`
 			: source;
+		// Only where \p{…} needs it: unicode mode also rejects escapes a written
+		// pattern may legally use, such as \- outside a character class.
+		const unicode = options.wholeWord ? "u" : "";
 		try {
-			new RegExp(bounded, `${flags}u`);
+			new RegExp(bounded, `${flags}${unicode}`);
 		} catch (error) {
 			const detail = error instanceof Error ? error.message : String(error);
 			throw new Error(`Invalid regular expression: ${detail}`);
 		}
-		return { kind: "regexp", source: bounded, flags: `${flags}u` };
+		return { kind: "regexp", source: bounded, flags: `${flags}${unicode}` };
 	}
 
 	// SQLite's LIKE folds case for ASCII only, so anything else takes the regex

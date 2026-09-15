@@ -6,7 +6,7 @@ import { recordValues } from "@ledger-ui/data/resultRow";
 import type { LedgerValue } from "@ledger-ui/data/types";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
-	openLedgerDetail,
+	openLedgerQueryRow,
 	selectLedgerDetail,
 	selectLedgerQueryError,
 	selectLedgerQueryResult,
@@ -17,16 +17,32 @@ import {
 import { TextEditor } from "@/components/TextEditor";
 import { StatusBanner } from "@/components/ui/status-banner";
 
-export function QueryView() {
+// Its own component so that typing re-renders the editor alone: the view below
+// lists every row it was given, and redrawing those on each keystroke is felt.
+function QuerySqlEditor() {
 	const dispatch = useLedgerDispatch();
 	const sql = useLedgerSelector(selectLedgerSql);
+
+	return (
+		<TextEditor
+			language="sql"
+			value={sql}
+			onChange={(value) => dispatch(setLedgerSql(value))}
+			fullscreenTitle="Ledger query"
+			fileName="query.sql"
+		/>
+	);
+}
+
+export function QueryView() {
+	const dispatch = useLedgerDispatch();
 	const result = useLedgerSelector(selectLedgerQueryResult);
 	const error = useLedgerSelector(selectLedgerQueryError);
 	const tables = useLedgerSelector(selectLedgerTables);
 	const detail = useLedgerSelector(selectLedgerDetail);
 
-	// By column shape, not row count: whole records stay identifiable however
-	// many of them the query returned.
+	// Shape alone, to match an open record detail back to a row of this result.
+	// Whether the row is stored is settled when it is opened, not here.
 	const recordTable = result ? matchResultTable(result.columns, tables) : null;
 
 	// A projection carries its cells, which is the only faithful selection when
@@ -65,13 +81,7 @@ export function QueryView() {
 				containerClassName="max-h-full"
 				selectedValues={selectedValues}
 				onRowClick={(record, cells) =>
-					dispatch(
-						openLedgerDetail(
-							recordTable
-								? { kind: "row", table: recordTable, record }
-								: { kind: "projection", record, cells },
-						),
-					)
+					dispatch(openLedgerQueryRow({ record, cells }))
 				}
 			/>
 		);
@@ -82,13 +92,7 @@ export function QueryView() {
 			<QueryToolbar />
 
 			<div className="h-48 shrink-0 border-b">
-				<TextEditor
-					language="sql"
-					value={sql}
-					onChange={(value) => dispatch(setLedgerSql(value))}
-					fullscreenTitle="Ledger query"
-					fileName="query.sql"
-				/>
+				<QuerySqlEditor />
 			</div>
 
 			<div className="flex-1 overflow-auto px-6 py-4">
