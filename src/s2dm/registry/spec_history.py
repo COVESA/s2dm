@@ -68,7 +68,7 @@ class SpecHistoryModel(ConceptBaseModel[SpecHistoryNode]):
 
 def load_json_file(file_path: Path) -> dict[str, Any]:
     """Load a JSON file and return its contents."""
-    with open(file_path) as f:
+    with open(file_path, encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, dict):
         raise ValueError(f"Expected JSON object in {file_path}, got {type(data).__name__}")
@@ -77,7 +77,7 @@ def load_json_file(file_path: Path) -> dict[str, Any]:
 
 def save_spec_history(spec_history: SpecHistoryModel, file_path: Path) -> None:
     """Save a spec history model to a JSON-LD file."""
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(spec_history.to_json_ld(), f, indent=2)
 
 
