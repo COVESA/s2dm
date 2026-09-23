@@ -171,6 +171,12 @@ def prepare_dependency_schemas_for_composition(
 
     schema_input_pairs = zip(dependency_schema_inputs, type_only_schema_definitions, strict=True)
     for dependency_schema_input, type_only_schema_definition in schema_input_pairs:
+        if not type_only_schema_definition.content.strip():
+            # Dependency only contributed shared definitions (directives/scalars/enums/Query) and
+            # defines no object/interface/input/union types of its own, so there is nothing left to
+            # hand to the type-name-conflict builder. Its shared definitions are still captured by
+            # `resolver.resolved_definitions_sdl()` below.
+            continue
         type_only_input = DependencySchemaInput(
             schema_content=type_only_schema_definition.content,
             metadata=dependency_schema_input.metadata,
