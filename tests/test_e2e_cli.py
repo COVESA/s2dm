@@ -2435,6 +2435,55 @@ def test_deps_build_applies_dependency_selection_and_preserves_vendor_schema(run
         assert vendored_schema_path.read_text(encoding="utf-8") == source_schema
 
 
+def test_deps_build_composes_shared_only_dependency_with_type_bearing_dependency(runner: CliRunner) -> None:
+    with runner.isolated_filesystem():
+        working_directory = Path.cwd()
+
+        shared_only_directory = working_directory / "shared_only_source"
+        shared_only_directory.mkdir()
+        shared_only_schema = (
+            "directive @metadata(comment: String) on FIELD_DEFINITION\n" "enum Color {\n" "    RED\n" "    BLUE\n" "}\n"
+        )
+        (shared_only_directory / "schema.graphql").write_text(shared_only_schema, encoding="utf-8")
+        (shared_only_directory / "metadata.yaml").write_text(
+            "name: SharedOnlyDependency\nid: urn:test:shared-only\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+
+        body_directory = working_directory / "body_source"
+        body_directory.mkdir()
+        body_schema = "type Query { body: Body }\ntype Body { color: String }\n"
+        (body_directory / "schema.graphql").write_text(body_schema, encoding="utf-8")
+        (body_directory / "metadata.yaml").write_text(
+            "name: BodyDependency\nid: urn:test:body\nversion: 1.0.0\n",
+            encoding="utf-8",
+        )
+
+        (working_directory / "s2dm.deps.yaml").write_text(
+            "dependencies:\n"
+            "  - name: SharedOnlyDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{shared_only_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n'
+            "  - name: BodyDependency\n"
+            '    version: "1.0.0"\n'
+            f'    source: "{body_directory.resolve()}"\n'
+            '    artifact: "schema.graphql"\n',
+            encoding="utf-8",
+        )
+
+        resolve_result = runner.invoke(cli, ["deps", "resolve"])
+        output_path = working_directory / "composed.graphql"
+        build_result = runner.invoke(cli, ["deps", "build", "-o", str(output_path)])
+
+        assert resolve_result.exit_code == 0
+        assert build_result.exit_code == 0, build_result.output
+        composed_schema = output_path.read_text(encoding="utf-8")
+        assert "directive @metadata(comment: String) on FIELD_DEFINITION" in composed_schema
+        assert "enum Color" in composed_schema
+        assert "type Body" in composed_schema
+
+
 def test_deps_build_resolves_relative_dependency_selection_path(runner: CliRunner) -> None:
     with runner.isolated_filesystem():
         working_directory = Path.cwd()
