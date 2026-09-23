@@ -1,0 +1,34 @@
+.content {
+	min-width: 0;
+	width: 100%;
+}
+
+.workspaceCard {
+	background-color: var(--card);
+	border: 1px solid var(--border);
+	border-radius: var(--ifm-global-radius, 0.5rem);
+	overflow: hidden;
+}
+
+/* Four tables grow with the page; only a grid of many rows needs a box. */
+.schemaWorkspace {
+	display: flex;
+	flex-direction: column;
+}
+
+/* Tall enough to be worth scrolling, short enough to leave the page scrollable. */
+.workspace {
+	display: flex;
+	flex-direction: column;
+	height: min(70vh, 40rem);
+	min-height: 24rem;
+}
+
+.status {
+	border: 1px solid var(--ifm-color-emphasis-200);
+	border-radius: 0.75rem;
+	margin: 4rem auto;
+	padding: 2rem;
+	text-align: center;
+	width: min(100%, 54rem);
+}

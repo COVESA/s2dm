@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Pane } from "@/components/Pane";
 import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectFilteredSchema } from "@/store/schema/schemaSlice";
 import {
 	selectResultPaneCollapsed,
 	toggleResultPane,
@@ -10,6 +9,7 @@ import {
 
 type DetailsPaneProps = {
 	children: ReactNode;
+	hasContent: boolean;
 	position?: "none" | "left" | "center" | "right";
 	collapsible?: boolean;
 	className?: string;
@@ -17,6 +17,7 @@ type DetailsPaneProps = {
 
 export function DetailsPane({
 	children,
+	hasContent,
 	position = "right",
 	collapsible,
 	className = "bg-card",
@@ -24,12 +25,10 @@ export function DetailsPane({
 	const dispatch = useAppDispatch();
 	const isCollapsed = useAppSelector(selectResultPaneCollapsed);
 	const exploringDependencyId = useAppSelector(selectExploringDependencyId);
-	const filteredSchema = useAppSelector(selectFilteredSchema);
-	const hasFilteredSchema = filteredSchema.trim().length > 0;
 	const canCollapsePane = Boolean(
-		collapsible && hasFilteredSchema && !exploringDependencyId,
+		collapsible && hasContent && !exploringDependencyId,
 	);
-	const shouldCollapsePane = !hasFilteredSchema || isCollapsed;
+	const shouldCollapsePane = !hasContent || isCollapsed;
 
 	return (
 		<Pane

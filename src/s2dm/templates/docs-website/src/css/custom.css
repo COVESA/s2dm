@@ -1,8 +1,43 @@
-@layer theme, components, utilities;
+@layer theme, s2dm-base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
 @source "../components";
 @source "../insights-ui";
+@source "../ledger-ui";
+
+/* Preflight is not loaded here, so the two rules shadcn components assume are
+   restated. Layered before `utilities` so a `border` or `bg-*` class still wins. */
+@layer s2dm-base {
+	/* The scopes themselves as well as their descendants: Radix portals the
+	   dialog and the dropdown to the body, so those roots carry the class
+	   rather than sitting inside it. */
+	.s2dm-insights,
+	.s2dm-insights *,
+	.s2dm-insights *::before,
+	.s2dm-insights *::after,
+	.s2dm-ledger,
+	.s2dm-ledger *,
+	.s2dm-ledger *::before,
+	.s2dm-ledger *::after {
+		/* The colour matters as much as the width: a `border-b` carries neither,
+		   so without this every uncoloured border falls back to `currentColor`
+		   and draws in the text colour. The playground sets the same default in
+		   its own base layer. */
+		border: 0 solid var(--border);
+		box-sizing: border-box;
+	}
+
+	.s2dm-insights :is(button, input, select, optgroup, textarea),
+	.s2dm-ledger :is(button, input, select, optgroup, textarea) {
+		background-color: transparent;
+		border-radius: 0;
+		color: inherit;
+		font: inherit;
+		letter-spacing: inherit;
+		opacity: 1;
+	}
+}
 
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
@@ -16,6 +51,8 @@
 	--color-primary-foreground: var(--primary-foreground);
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
 	--color-accent: var(--accent);
@@ -62,7 +99,8 @@
 	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-.s2dm-insights {
+.s2dm-insights,
+.s2dm-ledger {
 	--radius: 0.625rem;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.141 0.005 285.823);
@@ -72,6 +110,8 @@
 	--primary-foreground: oklch(0.985 0 0);
 	--secondary: oklch(0.967 0.001 286.375);
 	--secondary-foreground: oklch(0.21 0.006 285.885);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.141 0.005 285.823);
 	--muted: oklch(0.967 0.001 286.375);
 	--muted-foreground: oklch(0.552 0.016 285.938);
 	--accent: oklch(0.967 0.001 286.375);
@@ -86,4 +126,108 @@
 	--chart-4: oklch(0.828 0.189 84.429);
 	--chart-5: oklch(0.769 0.188 70.08);
 	color: var(--foreground);
+}
+
+/* Without preflight a `display` utility outranks `[hidden]`, so Radix's closed
+   tab panels lay themselves out as if they were open. */
+.s2dm-ledger [hidden] {
+	display: none !important;
+}
+
+/* Docusaurus's navbar is sticky at `--ifm-z-index-fixed` (200), well above the
+   z-50 these carry, so a dialog opened here would paint underneath it. Lifted to
+   Infima's own overlay level, which is what sits above the fixed chrome. */
+.s2dm-ledger[data-slot="dialog-overlay"],
+.s2dm-ledger[data-slot="dialog-content"],
+.s2dm-ledger[data-slot="select-content"] {
+	z-index: var(--ifm-z-index-overlay);
+}
+
+/* Sat below the navbar rather than centred over it: the dialogs here ask for
+   90vh, which centred would tuck their top edge behind it. `--tw-translate-y`
+   is how Tailwind centres, so clearing it leaves the horizontal half alone and
+   the zoom animation's own transform untouched. */
+.s2dm-ledger[data-slot="dialog-content"] {
+	--tw-translate-y: 0;
+	max-height: calc(100vh - var(--ifm-navbar-height) - 2rem);
+	top: calc(var(--ifm-navbar-height) + 1rem);
+}
+
+/* The rest of the site scrolls through Infima's `thin-scrollbar`; the ledger's
+   own scroll areas carry no such class and would fall back to the browser
+   default, which is wider and far darker. Same rules and variables, so they
+   match their surroundings and follow the theme. */
+.s2dm-ledger * {
+	scrollbar-width: thin;
+}
+
+.s2dm-ledger ::-webkit-scrollbar {
+	height: var(--ifm-scrollbar-size);
+	width: var(--ifm-scrollbar-size);
+}
+
+.s2dm-ledger ::-webkit-scrollbar-track {
+	background: var(--ifm-scrollbar-track-background-color);
+	border-radius: 10px;
+}
+
+.s2dm-ledger ::-webkit-scrollbar-thumb {
+	background: var(--ifm-scrollbar-thumb-background-color);
+	border-radius: 10px;
+}
+
+.s2dm-ledger ::-webkit-scrollbar-thumb:hover {
+	background: var(--ifm-scrollbar-thumb-hover-background-color);
+}
+
+/* Infima styles every table on the site and its rules are unlayered, so utility
+   classes cannot outrank them. These restate `ui/table.tsx` via its data-slots. */
+.s2dm-ledger [data-slot="table"] {
+	border-collapse: collapse;
+	display: table;
+	margin-bottom: 0;
+	overflow: visible;
+	width: 100%;
+}
+
+.s2dm-ledger [data-slot="table-header"] {
+	background-color: transparent;
+}
+
+.s2dm-ledger [data-slot="table-row"] {
+	background-color: transparent;
+	border-bottom: 1px solid var(--border);
+	border-top: 0;
+}
+
+/* Cancelling Infima's stripe above also beats the row's own background classes,
+   which are layered and so can never win here. The two states it would have
+   supplied are restated, matching `ui/table.tsx` and `LedgerResultsGrid`. */
+.s2dm-ledger [data-slot="table-row"]:hover {
+	background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+}
+
+.s2dm-ledger [data-slot="table-row"][aria-selected="true"],
+.s2dm-ledger [data-slot="table-row"][aria-selected="true"]:hover {
+	background-color: color-mix(in oklab, var(--color-sky-500) 10%, transparent);
+}
+
+.s2dm-ledger [data-slot="table-body"] [data-slot="table-row"]:last-child {
+	border-bottom: 0;
+}
+
+.s2dm-ledger [data-slot="table-head"] {
+	background-color: var(--background);
+	border: 0;
+	color: var(--muted-foreground);
+	font-weight: 500;
+	height: 2.25rem;
+	padding: 0 0.75rem;
+	text-align: left;
+}
+
+.s2dm-ledger [data-slot="table-cell"] {
+	border: 0;
+	color: inherit;
+	padding: 0.5rem 0.75rem;
 }

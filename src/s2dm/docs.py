@@ -11,14 +11,16 @@ from s2dm import log
 TEMPLATE_DIR = Path(__file__).parent / "templates" / "docs-website"
 
 # Host-agnostic React components shared with the playground. Vendored into the scaffolded
-# website so it stays self-contained, and reachable there through the `@insights-ui` alias.
+# website so it stays self-contained, and reachable there through the `@insights-ui` and
+# `@ledger-ui` aliases.
 INSIGHTS_UI_DIR = Path(__file__).parent / "templates" / "insights-ui"
+LEDGER_UI_DIR = Path(__file__).parent / "templates" / "ledger-ui"
 
 TEMPLATED_FILES = {"docusaurus.config.ts", "package-lock.json", "package.json"}
 
-# `insights-ui/package.json` only exists to make the directory an npm workspace member of this
-# repository. The scaffolded site reaches the vendored copy through a path alias instead.
-INSIGHTS_UI_EXCLUDED_FILES = {"package.json"}
+# Each shared template's `package.json` only exists to make the directory an npm workspace member
+# of this repository. The scaffolded site reaches the vendored copies through path aliases instead.
+SHARED_UI_EXCLUDED_FILES = {"package.json"}
 
 
 def copy_template_tree(
@@ -120,12 +122,13 @@ def scaffold(
     }
 
     copy_template_tree(TEMPLATE_DIR, output, substitutions)
-    copy_template_tree(
-        INSIGHTS_UI_DIR,
-        output / "src" / "insights-ui",
-        substitutions,
-        excluded_files=INSIGHTS_UI_EXCLUDED_FILES,
-    )
+    for source_dir, destination_name in ((INSIGHTS_UI_DIR, "insights-ui"), (LEDGER_UI_DIR, "ledger-ui")):
+        copy_template_tree(
+            source_dir,
+            output / "src" / destination_name,
+            substitutions,
+            excluded_files=SHARED_UI_EXCLUDED_FILES,
+        )
 
     log.success(
         f"Website scaffolded to '{output}/'.\n"

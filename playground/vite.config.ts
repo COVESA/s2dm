@@ -19,6 +19,10 @@ export default defineConfig({
 					"../src/s2dm/templates/insights-ui",
 				),
 			},
+			{
+				find: "@ledger-ui",
+				replacement: path.resolve(__dirname, "../src/s2dm/templates/ledger-ui"),
+			},
 		],
 		dedupe: ["monaco-editor"],
 	},
