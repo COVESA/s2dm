@@ -1,7 +1,22 @@
 """QUDT sync utilities to fetch TTLs and generate GraphQL unit enums.
 
-This module focuses on the scope:
-- Fetch a single QUDT quantity kinds catalog TTL for a given version (default: latest known)
+This module fetches a specific released version of the QUDT (Quantities, Units,
+Dimensions and Types) vocabulary and maps it onto GraphQL SDL enum types:
+
+- Each QUDT quantity kind (e.g. `quantitykind:Velocity`) becomes one GraphQL enum
+  type (e.g. `VelocityUnit`).
+- Each QUDT unit associated with that quantity kind (e.g. `unit:M-PER-SEC`) becomes
+  one enum value of that type (e.g. `M_PER_SEC`).
+- Elements that QUDT itself marks as deprecated (via `qudt:deprecated true` on
+  either the unit or its quantity kind) are intentionally excluded from the
+  generated enums, not mapped in any form (e.g. as `@deprecated` enum values).
+  This avoids propagating QUDT's legacy/renamed identifiers into generated
+  schemas; only the current, non-deprecated vocabulary is represented. These
+  excluded elements are instead recorded in a CHANGELOG.md alongside the
+  generated enums, for reference/traceability.
+
+The module focuses on the scope:
+- Fetch a single QUDT units catalog TTL for a given version (default: latest known)
 - Parse via RDFLib efficiently
 - Group units by quantity kind and emit GraphQL enum files under
   `/units/<QuantityKind>Unit.graphql`
@@ -39,6 +54,9 @@ QUDT_GITHUB_API_URL: str = "https://api.github.com/repos/qudt/qudt-public-repo/t
 # README file stored in the units directory root (replaces metadata.json)
 UNITS_README_FILENAME: str = "README.md"
 UNITS_README_VERSION_PATTERN: str = r"<!-- qudt-version: (\S+) -->"
+
+# Changelog file recording deprecated elements excluded from the generated enums
+UNITS_CHANGELOG_FILENAME: str = "CHANGELOG.md"
 
 
 def _extract_uri_segment(uri: str) -> str:
@@ -148,6 +166,10 @@ def _quantity_kind_to_enum_type(label: str) -> str:
 def _query_units(g: rdflib.Graph) -> list[UnitRow]:
     """Run SPARQL over the graph to extract units and their quantity kinds.
 
+    Units whose `qudt:deprecated` flag is true, or whose quantity kind's
+    `qudt:deprecated` flag is true, are excluded entirely (not emitted in any
+    form). This keeps generated enums aligned with QUDT's current vocabulary.
+
     Args:
         g: RDFLib graph containing QUDT units catalog
 
@@ -163,11 +185,20 @@ def _query_units(g: rdflib.Graph) -> list[UnitRow]:
     SELECT DISTINCT ?unit ?unitLabel ?qk ?qkLabel ?ucumCode
     WHERE {{
       ?unit a qudt:Unit .
-      ?unit qudt:hasQuantityKind ?qk .
+      # QUDT renamed the unit-to-quantity-kind predicate from "hasQuantityKind" to
+      # "unitForQuantityKind" around v3.4.0. Match either so both older and newer
+      # catalog versions resolve units to quantity kinds.
+      ?unit (qudt:hasQuantityKind|qudt:unitForQuantityKind) ?qk .
 
       # Filter out deprecated units (e.g., unit:Standard which is replaced by unit:STANDARD)
       # This prevents duplicate GraphQL enum symbols from deprecated/replacement unit pairs
       FILTER NOT EXISTS {{ ?unit qudt:deprecated true }}
+
+      # Filter out units whose quantity kind is itself deprecated (e.g.,
+      # quantitykind:Conductivity, replaced by quantitykind:ElectricConductivity).
+      # Without this, units would be grouped under a stale quantity kind label,
+      # producing an enum for a quantity kind QUDT no longer considers current.
+      FILTER NOT EXISTS {{ ?qk qudt:deprecated true }}
 
       OPTIONAL {{
         ?unit rdfs:label ?unitLabel .
@@ -215,22 +246,103 @@ def _query_units(g: rdflib.Graph) -> list[UnitRow]:
     return list(seen_units.values())
 
 
-def _emit_enum_sdl(quantity_kind_label: str, quantity_kind_iri: str, unit_rows: Iterable[UnitRow], version: str) -> str:
+@dataclass
+class DeprecatedRow:
+    """A deprecated unit or quantity kind excluded from the generated enums.
+
+    Attributes:
+        iri: IRI of the deprecated element
+        label: Human readable label (English or default)
+        kind: Either "unit" or "quantitykind"
+        deprecated_in_version: QUDT version string when deprecation was recorded, if present
+        replaced_by: IRI of the replacement element, if present
+    """
+
+    iri: str
+    label: str
+    kind: str
+    deprecated_in_version: str | None = None
+    replaced_by: str | None = None
+
+
+def _query_deprecated_elements(g: rdflib.Graph) -> list[DeprecatedRow]:
+    """Run SPARQL to find deprecated units and quantity kinds relevant to this exporter.
+
+    Scoped to only `qudt:Unit` and `qudt:QuantityKind` instances (the two element
+    types mapped by this module), not QUDT's broader vocabulary. Used to report,
+    in CHANGELOG.md, which elements were intentionally excluded from the
+    generated enums because QUDT marks them as deprecated.
+
+    Args:
+        g: RDFLib graph containing QUDT units catalog
+
+    Returns:
+        List of DeprecatedRow items
+    """
+    query = f"""
+    PREFIX qudt: <{QUDT_NS}>
+    PREFIX rdfs: <{RDFS}>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+
+    SELECT DISTINCT ?x ?label ?kind ?depVersion ?replacedBy
+    WHERE {{
+      {{
+        ?x a qudt:Unit .
+        BIND("unit" AS ?kind)
+      }} UNION {{
+        ?x a qudt:QuantityKind .
+        BIND("quantitykind" AS ?kind)
+      }}
+      ?x qudt:deprecated true .
+      OPTIONAL {{
+        ?x rdfs:label ?label .
+        FILTER(lang(?label) = "en" || lang(?label) = "en-US" || lang(?label) = "")
+      }}
+      OPTIONAL {{ ?x qudt:deprecatedInVersion ?depVersion }}
+      OPTIONAL {{ ?x dcterms:isReplacedBy ?replacedBy }}
+    }}
+    """
+
+    seen: dict[str, DeprecatedRow] = {}  # iri -> DeprecatedRow
+
+    for row in g.query(query):
+        iri = str(row[0])  # type: ignore[index]
+        label = str(row[1]) if row[1] else _extract_uri_segment(iri)  # type: ignore[index]
+        kind = str(row[2])  # type: ignore[index]
+        dep_version = str(row[3]) if row[3] else None  # type: ignore[index,misc]
+        replaced_by = str(row[4]) if row[4] else None  # type: ignore[index,misc]
+
+        if iri not in seen or (replaced_by and not seen[iri].replaced_by):
+            seen[iri] = DeprecatedRow(
+                iri=iri,
+                label=label,
+                kind=kind,
+                deprecated_in_version=dep_version,
+                replaced_by=replaced_by,
+            )
+
+    return list(seen.values())
+
+
+def _emit_enum_sdl(quantity_kind_label: str, quantity_kind_iri: str, unit_rows: Iterable[UnitRow]) -> str:
     """Build GraphQL SDL content for a quantity kind enum.
 
     Uses URI-based enum values with description strings containing human-readable labels.
-    Includes @reference directives linking to QUDT IRIs with version tags.
+    Includes @reference directives linking to QUDT IRIs.
 
     Note: We use a custom SDL generation approach instead of graphql-core's print_type()
     because we need to include custom @reference directives that are not supported by
     the standard GraphQL specification. The generated SDL is validated using graphql-core's
     build_schema() to ensure correctness.
 
+    The QUDT catalog version is intentionally not embedded in this file's header comment.
+    It is recorded once in the directory's README.md instead, so that re-syncing an
+    unchanged catalog does not touch every enum file and produce noisy diffs.
+
     Args:
         quantity_kind_label: Human-readable label for the quantity kind (e.g., "Velocity")
         quantity_kind_iri: QUDT IRI for the quantity kind
         unit_rows: Unit data for enum values
-        version: QUDT version for documentation and version tag
 
     Returns:
         Valid GraphQL SDL string with custom @reference directives
@@ -241,7 +353,7 @@ def _emit_enum_sdl(quantity_kind_label: str, quantity_kind_iri: str, unit_rows: 
     enum_type = _quantity_kind_to_enum_type(quantity_kind_label)
 
     lines = [
-        f"# Generated from QUDT units catalog version {version}",
+        "# Generated by S2DM from the QUDT unit vocabulary. See README.md in this directory for the QUDT version used.",
         "# Source data: QUDT Public Repository (https://github.com/qudt/qudt-public-repo)",
         "# © QUDT.org — Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)",
         "# License: https://creativecommons.org/licenses/by/4.0/",
@@ -343,12 +455,67 @@ Changes: vocabulary terms transformed to GraphQL SDL enum format by
 | QUDT catalog version | `{qudt_version}` |
 | S2DM version | `{s2dm_version}` |
 
+Elements deprecated in QUDT (units and quantity kinds intentionally not mapped
+above) are listed in [CHANGELOG.md](./CHANGELOG.md), or can be inspected directly
+at the [QUDT `{qudt_version}` release page](https://github.com/qudt/qudt-public-repo/releases/tag/{qudt_version}).
+
 ## Usage
 
 Run `s2dm units sync` to regenerate these files from the latest QUDT catalog.
 """
     readme_path.write_text(content, encoding="utf-8")
     return readme_path
+
+
+def _write_changelog(units_root: Path, qudt_version: str, deprecated: list[DeprecatedRow]) -> Path:
+    """Write CHANGELOG.md listing quantity kinds and units excluded as deprecated.
+
+    Scoped to only the two element types this module maps (units and quantity
+    kinds), not QUDT's full vocabulary.
+
+    Args:
+        units_root: Root directory for units
+        qudt_version: QUDT version this snapshot was read from
+        deprecated: Deprecated units/quantity kinds found in this release
+
+    Returns:
+        Path of the written file
+    """
+    units_root.mkdir(parents=True, exist_ok=True)
+    changelog_path = units_root / UNITS_CHANGELOG_FILENAME
+
+    quantity_kinds = sorted((d for d in deprecated if d.kind == "quantitykind"), key=lambda d: d.label)
+    units = sorted((d for d in deprecated if d.kind == "unit"), key=lambda d: d.label)
+
+    def _table(rows: list[DeprecatedRow]) -> list[str]:
+        if not rows:
+            return ["_None in this release._", ""]
+        lines = ["| Label | IRI | Deprecated in | Replaced by |", "|---|---|---|---|"]
+        for d in rows:
+            dep_in = d.deprecated_in_version or "—"
+            replaced = f"`{_extract_uri_segment(d.replaced_by)}`" if d.replaced_by else "—"
+            lines.append(f"| {d.label} | `{d.iri}` | {dep_in} | {replaced} |")
+        lines.append("")
+        return lines
+
+    content_lines = [
+        f"<!-- qudt-version: {qudt_version} -->",
+        "# QUDT Deprecations — as reported by S2DM",
+        "",
+        f"Snapshot of quantity kinds and units marked `qudt:deprecated true` in QUDT "
+        f"catalog version `{qudt_version}`. These elements are intentionally excluded "
+        "from the generated GraphQL enums (see README.md) and are listed here only "
+        "for reference/traceability.",
+        "",
+        "## Deprecated Quantity Kinds",
+        "",
+        *_table(quantity_kinds),
+        "## Deprecated Units",
+        "",
+        *_table(units),
+    ]
+    changelog_path.write_text("\n".join(content_lines) + "\n", encoding="utf-8")
+    return changelog_path
 
 
 def _load_graph_from_url(url: str) -> rdflib.Graph:
@@ -366,7 +533,15 @@ def _load_graph_from_url(url: str) -> rdflib.Graph:
 
 
 def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) -> list[Path]:
-    """Fetch QUDT quantity kinds TTL and generate GraphQL enums per quantity kind.
+    """Fetch a specific QUDT release and generate GraphQL enums per quantity kind.
+
+    Reads the QUDT units catalog for the given release and maps it onto GraphQL SDL
+    enum types: each quantity kind (e.g. `quantitykind:Velocity`) becomes one enum
+    type (e.g. `VelocityUnit`), and each unit belonging to that quantity kind
+    becomes one enum value. Elements that QUDT marks as deprecated in that release
+    (units or their quantity kind) are intentionally not mapped and are ignored.
+    A CHANGELOG.md listing those excluded elements is written alongside the
+    generated enums (skipped in dry-run mode).
 
     Cleans up existing unit enum files before generating new ones to prevent stale data.
 
@@ -388,6 +563,7 @@ def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) ->
 
     g = _load_graph_from_url(url)
     rows = _query_units(g)
+    deprecated_rows = _query_deprecated_elements(g)
 
     # Group rows by quantity kind label
     grouped: dict[str, list[UnitRow]] = defaultdict(list)
@@ -400,7 +576,7 @@ def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) ->
         if not items:  # Skip empty groups
             continue
         qk_iri = items[0].quantity_kind_iri
-        sdl = _emit_enum_sdl(qk_label, qk_iri, items, version)
+        sdl = _emit_enum_sdl(qk_label, qk_iri, items)
 
         if dry_run:
             # Simulate the file path that would be written without actually writing
@@ -412,6 +588,7 @@ def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) ->
 
     if not dry_run:
         _write_readme(units_root, version, _s2dm_version)
+        _write_changelog(units_root, version, deprecated_rows)
     return written
 
 
