@@ -650,7 +650,8 @@ def units() -> None:
     type=str,
     required=False,
     help=(
-        "QUDT version tag (e.g., 3.1.6). Defaults to the latest tag, falls back to 'main' when tags are unavailable."
+        "QUDT version tag, including the leading 'v' (e.g., v3.1.6), matching a tag in the "
+        "qudt-public-repo. Defaults to the latest tag, falls back to 'main' when tags are unavailable."
     ),
 )
 @units_directory_option
@@ -660,7 +661,13 @@ def units() -> None:
     help="Show what would be generated without actually writing files",
 )
 def units_sync(version: str | None, directory: Path, dry_run: bool) -> None:
-    """Fetch QUDT quantity kinds and generate GraphQL enums under the specified directory.
+    """Fetch a specific QUDT release and generate GraphQL enums under the specified directory.
+
+    Reads the given QUDT release and maps it onto GraphQL SDL enum structures: each
+    enum type corresponds to a specific quantity kind (e.g. `VelocityUnit`), and each
+    enum value is a possible unit for that quantity kind (e.g. `M_PER_SEC`). Elements
+    that are deprecated in the QUDT release (units or their quantity kind) are
+    intentionally not mapped and are ignored.
 
     Args:
         version: QUDT version tag. Defaults to the latest tag.

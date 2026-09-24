@@ -1,7 +1,20 @@
 """QUDT sync utilities to fetch TTLs and generate GraphQL unit enums.
 
-This module focuses on the scope:
-- Fetch a single QUDT quantity kinds catalog TTL for a given version (default: latest known)
+This module fetches a specific released version of the QUDT (Quantities, Units,
+Dimensions and Types) vocabulary and maps it onto GraphQL SDL enum types:
+
+- Each QUDT quantity kind (e.g. `quantitykind:Velocity`) becomes one GraphQL enum
+  type (e.g. `VelocityUnit`).
+- Each QUDT unit associated with that quantity kind (e.g. `unit:M-PER-SEC`) becomes
+  one enum value of that type (e.g. `M_PER_SEC`).
+- Elements that QUDT itself marks as deprecated (via `qudt:deprecated true` on
+  either the unit or its quantity kind) are intentionally excluded from the
+  generated enums, not mapped in any form (e.g. as `@deprecated` enum values).
+  This avoids propagating QUDT's legacy/renamed identifiers into generated
+  schemas; only the current, non-deprecated vocabulary is represented.
+
+The module focuses on the scope:
+- Fetch a single QUDT units catalog TTL for a given version (default: latest known)
 - Parse via RDFLib efficiently
 - Group units by quantity kind and emit GraphQL enum files under
   `/units/<QuantityKind>Unit.graphql`
@@ -148,6 +161,10 @@ def _quantity_kind_to_enum_type(label: str) -> str:
 def _query_units(g: rdflib.Graph) -> list[UnitRow]:
     """Run SPARQL over the graph to extract units and their quantity kinds.
 
+    Units whose `qudt:deprecated` flag is true, or whose quantity kind's
+    `qudt:deprecated` flag is true, are excluded entirely (not emitted in any
+    form). This keeps generated enums aligned with QUDT's current vocabulary.
+
     Args:
         g: RDFLib graph containing QUDT units catalog
 
@@ -163,11 +180,20 @@ def _query_units(g: rdflib.Graph) -> list[UnitRow]:
     SELECT DISTINCT ?unit ?unitLabel ?qk ?qkLabel ?ucumCode
     WHERE {{
       ?unit a qudt:Unit .
-      ?unit qudt:hasQuantityKind ?qk .
+      # QUDT renamed the unit-to-quantity-kind predicate from "hasQuantityKind" to
+      # "unitForQuantityKind" around v3.4.0. Match either so both older and newer
+      # catalog versions resolve units to quantity kinds.
+      ?unit (qudt:hasQuantityKind|qudt:unitForQuantityKind) ?qk .
 
       # Filter out deprecated units (e.g., unit:Standard which is replaced by unit:STANDARD)
       # This prevents duplicate GraphQL enum symbols from deprecated/replacement unit pairs
       FILTER NOT EXISTS {{ ?unit qudt:deprecated true }}
+
+      # Filter out units whose quantity kind is itself deprecated (e.g.,
+      # quantitykind:Conductivity, replaced by quantitykind:ElectricConductivity).
+      # Without this, units would be grouped under a stale quantity kind label,
+      # producing an enum for a quantity kind QUDT no longer considers current.
+      FILTER NOT EXISTS {{ ?qk qudt:deprecated true }}
 
       OPTIONAL {{
         ?unit rdfs:label ?unitLabel .
@@ -366,7 +392,13 @@ def _load_graph_from_url(url: str) -> rdflib.Graph:
 
 
 def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) -> list[Path]:
-    """Fetch QUDT quantity kinds TTL and generate GraphQL enums per quantity kind.
+    """Fetch a specific QUDT release and generate GraphQL enums per quantity kind.
+
+    Reads the QUDT units catalog for the given release and maps it onto GraphQL SDL
+    enum types: each quantity kind (e.g. `quantitykind:Velocity`) becomes one enum
+    type (e.g. `VelocityUnit`), and each unit belonging to that quantity kind
+    becomes one enum value. Elements that QUDT marks as deprecated in that release
+    (units or their quantity kind) are intentionally not mapped and are ignored.
 
     Cleans up existing unit enum files before generating new ones to prevent stale data.
 

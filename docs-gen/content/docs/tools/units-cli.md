@@ -8,6 +8,15 @@ chapter: false
 
 The S2DM Units CLI provides integration with the [QUDT (Quantities, Units, Dimensions and Types)](https://qudt.org/) reference model to generate standardized GraphQL unit enums. This replaces static unit definitions with a dynamic system that synchronizes directly from the authoritative QUDT repository.
 
+## How QUDT Maps to GraphQL
+
+The `sync` command reads a specific released version of QUDT and maps it onto GraphQL SDL enum structures:
+
+- Each QUDT **quantity kind** (e.g. `quantitykind:Velocity`) becomes one GraphQL **enum type** (e.g. `VelocityUnit`).
+- Each QUDT **unit** belonging to that quantity kind (e.g. `unit:M-PER-SEC`) becomes one **enum value** of that type (e.g. `M_PER_SEC`).
+
+Elements that are marked **deprecated in the QUDT release** — whether the unit itself or its quantity kind — are intentionally **not mapped and are ignored**. They do not appear in generated enums in any form (not even as `@deprecated` values); only QUDT's current, non-deprecated vocabulary is represented.
+
 ## Features
 
 - **Dynamic Unit Synchronization**: Fetch unit definitions from QUDT's GitHub repository
@@ -45,7 +54,7 @@ s2dm units sync --dry-run
 ```
 
 **Options:**
-- `--version` (optional): QUDT version string. Defaults to latest release if not specified
+- `--version` (optional): QUDT release tag, including the leading `v` (e.g. `v3.1.6`). This must match a git tag in the [qudt-public-repo](https://github.com/qudt/qudt-public-repo/tags) exactly. Defaults to the latest release tag if not specified
 - `--dry-run` (optional): Show how many enum files would be generated without creating them
 
 **Output:**
@@ -159,8 +168,13 @@ S2DM uses QUDT URI segments instead of labels for enum values because:
 
 ### Deduplication
 - Uses `DISTINCT` in SPARQL queries to eliminate exact duplicates
-- Filters out deprecated units to prevent symbol conflicts
+- Filters out units marked `qudt:deprecated true` to prevent symbol conflicts (e.g. `unit:Standard`, replaced by `unit:STANDARD`)
+- Filters out units whose quantity kind is itself marked `qudt:deprecated true` (e.g. `quantitykind:Conductivity`, replaced by `quantitykind:ElectricConductivity`), so units aren't grouped under a stale quantity kind label
 - Prefers entries with UCUM codes when duplicates remain
+
+{{< callout context="note" >}}
+QUDT's own git tags are prefixed with `v` (e.g. `v3.5.2`), not bare version numbers. Always pass `--version` with the `v` prefix, matching the tag names at [qudt-public-repo/tags](https://github.com/qudt/qudt-public-repo/tags).
+{{< /callout >}}
 
 ### Error Handling
 - **Network Issues**: Graceful failure with informative error messages
