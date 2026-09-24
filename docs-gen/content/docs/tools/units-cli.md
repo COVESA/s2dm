@@ -60,6 +60,7 @@ s2dm units sync --dry-run
 **Output:**
 - Creates `<QuantityKind>Unit.graphql` files in `~/.s2dm/units/qudt` (e.g., `LengthUnit.graphql`)
 - Generates `README.md` with version and attribution information
+- Generates `CHANGELOG.md` listing quantity kinds and units that QUDT marks as deprecated in that release (and are therefore intentionally excluded from the generated enums)
 - Reports number of enum files generated
 
 ### `s2dm units check-version`
@@ -117,6 +118,7 @@ QUDT units are stored in the `S2DM_HOME` directory:
 ```
 ~/.s2dm/units/qudt/                   # QUDT units (generated, read-only)
 ├── README.md                         # Version and attribution
+├── CHANGELOG.md                      # Deprecated quantity kinds/units excluded from this release
 ├── LengthUnit.graphql                # Length units
 ├── VelocityUnit.graphql              # Velocity units
 └── ... (500+ more unit enums)
