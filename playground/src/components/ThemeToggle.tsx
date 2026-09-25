@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import {
 	Select,
 	SelectContent,
@@ -10,14 +10,17 @@ import {
 type Theme = "light" | "dark" | "system";
 
 export function ThemeToggle() {
-	const [theme, setTheme] = useState<Theme>("system");
+	// Read during the first render, or a mount per workspace switch paints one
+	// frame of the system theme. Guarded: a blocked accessor throws.
+	const [theme, setTheme] = useState<Theme>(() => {
+		try {
+			return (localStorage.getItem("theme") as Theme | null) ?? "system";
+		} catch {
+			return "system";
+		}
+	});
 
-	useEffect(() => {
-		const stored = localStorage.getItem("theme") as Theme | null;
-		setTheme(stored || "system");
-	}, []);
-
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const root = document.documentElement;
 
 		if (theme === "system") {
@@ -44,7 +47,11 @@ export function ThemeToggle() {
 
 	const handleThemeChange = (newTheme: Theme) => {
 		setTheme(newTheme);
-		localStorage.setItem("theme", newTheme);
+		try {
+			localStorage.setItem("theme", newTheme);
+		} catch {
+			// Applies to this session, just not the next one.
+		}
 	};
 
 	return (

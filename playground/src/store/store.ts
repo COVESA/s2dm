@@ -22,6 +22,12 @@ import depsResolveReducer from "@/store/deps/resolve/resolveSlice";
 import { exportSaga } from "@/store/export/exportSaga";
 import exportReducer from "@/store/export/exportSlice";
 import { insightsSaga } from "@/store/insights/insightsSaga";
+import ledgerDetailReducer from "@/store/ledger/ledgerDetailSlice";
+import ledgerExploreReducer from "@/store/ledger/ledgerExploreSlice";
+import ledgerFileReducer from "@/store/ledger/ledgerFileSlice";
+import ledgerQueryReducer from "@/store/ledger/ledgerQuerySlice";
+import { ledgerSaga } from "@/store/ledger/ledgerSaga";
+import ledgerTableReducer from "@/store/ledger/ledgerTableSlice";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";
@@ -42,6 +48,7 @@ function* rootSaga() {
 		exportSaga(),
 		capabilitiesSaga(),
 		insightsSaga(),
+		ledgerSaga(),
 	]);
 }
 
@@ -61,6 +68,11 @@ export const store = configureStore({
 		depsResolve: depsResolveReducer,
 		depsCompose: depsComposeReducer,
 		schema: schemaReducer,
+		ledgerFile: ledgerFileReducer,
+		ledgerTable: ledgerTableReducer,
+		ledgerExplore: ledgerExploreReducer,
+		ledgerQuery: ledgerQueryReducer,
+		ledgerDetail: ledgerDetailReducer,
 		selection: selectionReducer,
 		validation: validationReducer,
 		ui: uiReducer,
