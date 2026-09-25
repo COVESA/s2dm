@@ -1,0 +1,374 @@
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:    <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct:    <http://purl.org/dc/terms/> .
+@prefix qudt:   <http://qudt.org/schema/qudt/> .
+@prefix coords: <http://qudt.org/vocab/coords/> .
+@prefix schema: <https://schema.org/> .
+@prefix vsso:   <https://github.com/w3c/vsso-core#> .
+@prefix s2dm:   <https://covesa.global/models/s2dm#> .
+@prefix vsspos: <http://example.org/vss-position#> .
+
+##############################################################################
+# Draft SKOS concept scheme for VSS descriptive position/location terms.
+#
+# STATUS: worked example / strawman for discussion. NOT an adopted COVESA
+# specification. This file demonstrates the S2DM multiple-classification-schemes
+# pattern (examples/multiple-classification-schemes/skos.ttl) applied to a live,
+# unresolved question in COVESA VSS.
+#
+# The namespace http://example.org/vss-position# follows the convention of the
+# sibling example. A real deployment would use a COVESA-allocated namespace
+# alongside S2DM's https://covesa.global/models/s2dm#.
+#
+# PURPOSE
+#   Supply a stable, machine-readable descriptive meaning for the instance
+#   tokens VSS already uses, and for the numeric wheel codes proposed in
+#   COVESA VSS PR #940 "BREAKING: Wheel designation refactoring"
+#   (https://github.com/COVESA/vehicle_signal_specification/pull/940).
+#   PR #940 numbers axles Row1,2,3... from the front and wheels outward from
+#   the centreline (Pos8 centre; Pos7..Pos1 left; Pos9..Pos15 right), citing
+#   ISO 11992-2 and SAE J1939-71. It retains Left/Right on the new half-axle
+#   branches, so this scheme complements the renumbering rather than opposing it.
+#
+#   It also addresses three problems that predate #940:
+#     - issue #879: HVAC Station uses ["Driver","Passenger"] while every other
+#       branch uses ["DriverSide","Middle","PassengerSide"].
+#     - VSS has three spellings of "laterally central": Middle, Center, Central.
+#     - issue #642 / PR #919: instance handling is to be decoupled from the
+#       model; a published concept scheme is the natural referent.
+#
+# GROUNDING
+#   Geometric axes: ISO 8855:2011 vehicle axis system (Xv forward, Yv LEFT,
+#   Zv up) ONLY. SAE J670e uses the opposite lateral sign (+Y right) and is
+#   limited to two-axle passenger cars; J670:2008 permits both orientations.
+#   Because the driving requirement here is ACEA/FMS multi-axle commercial
+#   vehicles, ISO 8855 is both the correct and the only in-scope anchor, and
+#   every axial-orientation annotation below is valid ONLY in that frame.
+#
+#   Seating terms (outboard/inboard, designated seating position): 49 CFR 571
+#   (FMVSS). ISO 8855 is a vehicle-dynamics vocabulary and does not define them.
+#
+# CARRIERS
+#   - COVESA S2DM: SKOS is one of S2DM's two core pillars.
+#     examples/multiple-classification-schemes/skos.ttl already layers four
+#     parallel schemes over VSS concepts (VehiclePhysicalMembership,
+#     PartMovementType, PartMaterial, OccupantInterface). Position is a natural
+#     fifth facet: it cross-classifies the same concepts by WHERE they are,
+#     which none of the existing four express.
+#   - VSSo: concepts are typed as vsso:PositionInVehicle individuals, which
+#     that class currently has none of, and are reached via vsso:postionedAt
+#     (the misspelling is in the published ontology; use it verbatim).
+#   - schema.org: schema:steeringPosition resolves DriverSide/PassengerSide.
+#   - QUDT: OPTIONAL axis-polarity annotation on six concepts only. Note that
+#     qudt:VehicleCoordinateSystem is explicitly "A sub-type of 'Aerospace
+#     coordinate system'" and is NOT used here.
+##############################################################################
+
+vsspos:PositionScheme a skos:ConceptScheme ;
+    dct:title "VSS Descriptive Vehicle Position Vocabulary (draft)"@en ;
+    dct:description """Descriptive position concepts for VSS instance tokens and for the numeric wheel position codes proposed in PR #940. Geometric concepts are grounded in the ISO 8855:2011 vehicle axis system; seating terms in 49 CFR 571 (FMVSS)."""@en ;
+    dct:source <https://www.iso.org/standard/51180.html> ;
+    dct:relation
+        <https://github.com/COVESA/vehicle_signal_specification/pull/940> ,
+        <https://github.com/COVESA/vehicle_signal_specification/pull/919> ,
+        <https://github.com/COVESA/vehicle_signal_specification/issues/879> ,
+        <https://github.com/COVESA/vehicle_signal_specification/issues/749> ,
+        <https://github.com/COVESA/vehicle_signal_specification/issues/642> ;
+    skos:note "Reference frame: ISO 8855:2011 (Xv forward, Yv left, Zv up). Axial-orientation annotations are invalid under SAE J670e, which inverts Yv."@en .
+
+##############################################################################
+# Scheme-local annotation properties
+##############################################################################
+
+vsspos:vssInstanceToken a owl:AnnotationProperty ;
+    rdfs:label "VSS instance token"@en ;
+    rdfs:comment "A literal instance identifier as it appears in a VSS .vspec instances list, e.g. \"DriverSide\", \"Middle\", \"Pos7\". Multiple tokens on one concept record that VSS spells the same concept several ways."@en ;
+    rdfs:range xsd:string .
+
+vsspos:axialOrientation a owl:AnnotationProperty ;
+    rdfs:label "axial orientation"@en ;
+    rdfs:comment "Optional annotation linking a concept to a qudt:AxialOrientationType individual, valid only in the ISO 8855:2011 vehicle frame. A scheme-local property is used rather than skos:closeMatch because coords:* individuals are not skos:Concepts, and rather than qudt:pitch/roll/yawRotationDefinition because those are about rotation axes, not part position."@en ;
+    rdfs:range qudt:AxialOrientationType .
+
+vsspos:resolvesVia a owl:AnnotationProperty ;
+    rdfs:label "resolves via"@en ;
+    rdfs:comment "Names the vehicle-configuration property required to resolve a configuration-dependent concept to a geometric one."@en .
+
+##############################################################################
+# Collections
+##############################################################################
+
+vsspos:GeometricPositions a skos:Collection ;
+    skos:prefLabel "Frame-fixed geometric positions"@en ;
+    skos:definition "Concepts whose meaning is fixed by the ISO 8855 vehicle axis system alone, independent of vehicle configuration or market."@en ;
+    skos:member vsspos:Left , vsspos:Right , vsspos:LateralCenter ,
+                vsspos:Front , vsspos:Rear , vsspos:Upper , vsspos:Lower ,
+                vsspos:Outboard , vsspos:Inboard ,
+                vsspos:FrontLeft , vsspos:FrontCenter , vsspos:FrontRight ,
+                vsspos:RearLeft , vsspos:RearCenter , vsspos:RearRight .
+
+vsspos:ConfigurationDependentPositions a skos:Collection ;
+    skos:prefLabel "Configuration-dependent positions"@en ;
+    skos:definition "Concepts that do not denote a fixed direction in the vehicle frame and require a per-vehicle configuration value to resolve. These are deliberately NOT asserted as narrower than any geometric concept."@en ;
+    skos:member vsspos:DriverSide , vsspos:PassengerSide .
+
+vsspos:OrdinalPositions a skos:Collection ;
+    skos:prefLabel "Ordinal position schemes"@en ;
+    skos:definition "Concepts denoting an indexed position rather than a single location; each is used together with an integer."@en ;
+    skos:member vsspos:RowOrdinal , vsspos:WheelPositionCode .
+
+##############################################################################
+# Lateral axis (ISO 8855 Yv)
+##############################################################################
+
+vsspos:Left a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Left"@en ;
+    skos:definition "The side of the vehicle in the positive Yv direction of the ISO 8855:2011 vehicle axis system, i.e. to the left of an occupant facing the direction of forward travel."@en ;
+    skos:scopeNote "Frame-fixed. Independent of which side the steering position is on; see vsspos:DriverSide."@en ;
+    vsspos:axialOrientation coords:PositiveY ;
+    vsspos:vssInstanceToken "Left" .
+
+vsspos:Right a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Right"@en ;
+    skos:definition "The side of the vehicle in the negative Yv direction of the ISO 8855:2011 vehicle axis system, i.e. to the right of an occupant facing the direction of forward travel."@en ;
+    skos:scopeNote "Frame-fixed. Independent of which side the steering position is on; see vsspos:PassengerSide."@en ;
+    vsspos:axialOrientation coords:NegativeY ;
+    vsspos:vssInstanceToken "Right" .
+
+# The synonym-normalisation concept: VSS spells this three ways today.
+vsspos:LateralCenter a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Lateral centre"@en ;
+    skos:altLabel "Middle"@en , "Center"@en , "Central"@en , "Centre"@en ;
+    skos:definition "On or straddling the vehicle's longitudinal centreline (Yv = 0); neither left nor right."@en ;
+    skos:scopeNote "VSS v6.1 uses three distinct tokens for this one concept: \"Middle\" (Cabin.Seat, Cabin.Door, Occupant, Body.Mirrors, InteriorLights), \"Center\" (ADAS) and \"Central\" (Vehicle.ControlUnit). Recording them as alternative tokens on a single concept resolves the inconsistency without a breaking rename. Pos8 in PR #940's wheel numbering is the centre wheel and maps here."@en ;
+    vsspos:vssInstanceToken "Middle" , "Center" , "Central" , "Pos8" .
+
+vsspos:Outboard a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Outboard"@en ;
+    skos:definition "Farther from the vehicle's longitudinal centreline than another position in the same row or on the same axle. In the seating sense, 49 CFR 571 defines an \"outboard designated seating position\" as one whose seating reference point is within 305 mm of the outermost portion of the occupant compartment at that position."@en ;
+    skos:scopeNote "Relative, not absolute: it has meaning only against a reference position. Not currently used as a VSS instance token; included because it is the standard regulatory and aftermarket (ACES) seating term and appears in the EDM Council Vehicle Parts definitions that already carry VSS path mappings."@en ;
+    skos:related vsspos:Inboard ;
+    dct:source <https://www.ecfr.gov/current/title-49/subtitle-B/chapter-V/part-571> .
+
+vsspos:Inboard a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Inboard"@en ;
+    skos:definition "Closer to the vehicle's longitudinal centreline than another position in the same row or on the same axle."@en ;
+    skos:scopeNote "Relative, not absolute. Not currently a VSS instance token. In PR #940's wheel numbering, Pos7 and Pos9 are the inboard wheels of their respective sides."@en ;
+    skos:related vsspos:Outboard ;
+    dct:source <https://www.ecfr.gov/current/title-49/subtitle-B/chapter-V/part-571> .
+
+##############################################################################
+# Longitudinal axis (ISO 8855 Xv)
+##############################################################################
+
+vsspos:Front a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Front"@en ;
+    skos:definition "Toward the forward end of the vehicle, in the positive Xv direction of the ISO 8855:2011 vehicle axis system."@en ;
+    vsspos:axialOrientation coords:PositiveX ;
+    vsspos:vssInstanceToken "Front" .
+
+vsspos:Rear a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Rear"@en ;
+    skos:definition "Toward the aft end of the vehicle, in the negative Xv direction of the ISO 8855:2011 vehicle axis system."@en ;
+    vsspos:axialOrientation coords:NegativeX ;
+    vsspos:vssInstanceToken "Rear" .
+
+##############################################################################
+# Vertical axis (ISO 8855 Zv)
+##############################################################################
+# Retained for completeness of the axis triple and for multi-deck vehicles.
+# NOTE: no VSS v6.1 instance token uses these. In particular Lights.Beam's
+# "Low"/"High" tokens denote beam TYPE, not vertical position, and are listed
+# under "explicitly out of scheme" below.
+
+vsspos:Upper a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Upper"@en ;
+    skos:altLabel "Top"@en ;
+    skos:definition "Toward the upper extent of the vehicle, in the positive Zv direction of the ISO 8855:2011 vehicle axis system."@en ;
+    skos:scopeNote "No VSS v6.1 instance token currently maps here."@en ;
+    vsspos:axialOrientation coords:PositiveZ .
+
+vsspos:Lower a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Lower"@en ;
+    skos:altLabel "Bottom"@en ;
+    skos:definition "Toward the lower extent of the vehicle, in the negative Zv direction of the ISO 8855:2011 vehicle axis system."@en ;
+    skos:scopeNote "No VSS v6.1 instance token currently maps here."@en ;
+    vsspos:axialOrientation coords:NegativeZ .
+
+##############################################################################
+# Compound concepts
+#
+# VSS uses single-token compounds as first-class instance identifiers. They
+# cannot be reliably recovered by string-splitting (cf. RearLeft1/RearLeft2),
+# so they are modelled explicitly with a polyhierarchy onto their two axes.
+##############################################################################
+
+vsspos:FrontLeft a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Front left"@en ;
+    skos:definition "Forward end of the vehicle, left side."@en ;
+    skos:broader vsspos:Front , vsspos:Left ;
+    vsspos:vssInstanceToken "FrontLeft" .
+
+vsspos:FrontCenter a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Front centre"@en ;
+    skos:altLabel "Front middle"@en ;
+    skos:definition "Forward end of the vehicle, on the longitudinal centreline."@en ;
+    skos:broader vsspos:Front , vsspos:LateralCenter ;
+    vsspos:vssInstanceToken "FrontMiddle" .
+
+vsspos:FrontRight a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Front right"@en ;
+    skos:definition "Forward end of the vehicle, right side."@en ;
+    skos:broader vsspos:Front , vsspos:Right ;
+    vsspos:vssInstanceToken "FrontRight" .
+
+vsspos:RearLeft a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Rear left"@en ;
+    skos:definition "Aft end of the vehicle, left side."@en ;
+    skos:broader vsspos:Rear , vsspos:Left ;
+    skos:scopeNote "Vehicle.ControlUnit enumerates RearLeft1 and RearLeft2, which are two distinct units at this position rather than two positions; the ordinal suffix is a unit index, not part of the position concept."@en ;
+    vsspos:vssInstanceToken "RearLeft" , "RearLeft1" , "RearLeft2" .
+
+vsspos:RearCenter a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Rear centre"@en ;
+    skos:altLabel "Rear middle"@en ;
+    skos:definition "Aft end of the vehicle, on the longitudinal centreline."@en ;
+    skos:broader vsspos:Rear , vsspos:LateralCenter ;
+    vsspos:vssInstanceToken "RearMiddle" .
+
+vsspos:RearRight a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Rear right"@en ;
+    skos:definition "Aft end of the vehicle, right side."@en ;
+    skos:broader vsspos:Rear , vsspos:Right ;
+    vsspos:vssInstanceToken "RearRight" .
+
+##############################################################################
+# Configuration-dependent concepts
+#
+# SKOS integrity note: these are linked to Left/Right with skos:related ONLY.
+# An earlier draft asserted skos:related AND skos:broadMatch between the same
+# pairs. skos:broadMatch is a sub-property of skos:broader and therefore of
+# skos:broaderTransitive, which SKOS integrity condition S27 declares DISJOINT
+# with skos:related — so that draft was inconsistent. skos:broadMatch was also
+# wrong on a second count: it is a skos:mappingRelation, for links BETWEEN
+# concept schemes, and both concepts were in this one.
+#
+# The substantive point is the same as the formal one: "driver's side" is not
+# a kind of "left". It is a function of vehicle configuration that YIELDS left
+# or right, which is what vsspos:resolvesVia records.
+##############################################################################
+
+vsspos:DriverSide a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Driver's side"@en ;
+    skos:altLabel "Driver"@en ;
+    skos:definition "The side of the vehicle on which the primary driving position is located. Resolves to vsspos:Left in a left-hand-drive vehicle and vsspos:Right in a right-hand-drive vehicle."@en ;
+    skos:scopeNote "VSS v6.1 spells this \"DriverSide\" everywhere except Cabin.HVAC.Station, which uses \"Driver\" — see issue #879. Both tokens are recorded here."@en ;
+    skos:related vsspos:Left , vsspos:Right , vsspos:PassengerSide ;
+    vsspos:resolvesVia schema:steeringPosition ;
+    skos:note "Resolution rule: schema:steeringPosition = schema:LeftHandDriving implies vsspos:Left; schema:RightHandDriving implies vsspos:Right."@en ;
+    vsspos:vssInstanceToken "DriverSide" , "Driver" .
+
+vsspos:PassengerSide a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Passenger's side"@en ;
+    skos:altLabel "Passenger"@en ;
+    skos:definition "The side of the vehicle opposite the primary driving position. Resolves to vsspos:Right in a left-hand-drive vehicle and vsspos:Left in a right-hand-drive vehicle."@en ;
+    skos:scopeNote "VSS v6.1 spells this \"PassengerSide\" everywhere except Cabin.HVAC.Station, which uses \"Passenger\" — see issue #879."@en ;
+    skos:related vsspos:Left , vsspos:Right , vsspos:DriverSide ;
+    vsspos:resolvesVia schema:steeringPosition ;
+    skos:note "Resolution rule: schema:steeringPosition = schema:LeftHandDriving implies vsspos:Right; schema:RightHandDriving implies vsspos:Left."@en ;
+    vsspos:vssInstanceToken "PassengerSide" , "Passenger" .
+
+##############################################################################
+# Ordinal schemes
+#
+# Not enumerated as individual concepts (Row1..RowN, Pos1..Pos15); each is one
+# concept used with an integer index. Enumerating them would put an arbitrary
+# upper bound in the vocabulary and add fifteen near-identical concepts whose
+# only content is their number.
+##############################################################################
+
+vsspos:RowOrdinal a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Row ordinal"@en ;
+    skos:definition "Ordinal seating or axle row, counted from the front of the vehicle rearward, indexed from 1."@en ;
+    skos:scopeNote "Used with an integer index; VSS renders it as the token Row1, Row2, ... There is no Row0. PR #940 numbers axles on this same basis."@en ;
+    skos:note "Index origin: 1. Not asserted as narrower than vsspos:Front: an ordinal scheme is not a kind of location, it is counted from one."@en ;
+    skos:related vsspos:Front , vsspos:Rear ;
+    vsspos:vssInstanceToken "Row" .
+
+vsspos:WheelPositionCode a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Wheel position code"@en ;
+    skos:definition "Numeric wheel position on an axle as proposed in COVESA VSS PR #940, citing ISO 11992-2 and SAE J1939-71: numbered outward from the vehicle centreline, with Pos8 the centre wheel, Pos7 through Pos1 progressively outboard on the left, and Pos9 through Pos15 progressively outboard on the right."@en ;
+    skos:scopeNote "Used with an integer index 1-15; VSS renders it as the token Pos1 ... Pos15. There is no Pos0. The standard catalog default under #940 is [\"Pos7\",\"Pos9\"] per axle; the motorbike profile is [\"Pos8\"]."@en ;
+    skos:note "Derivation rule: Pos8 maps to vsspos:LateralCenter; Pos1-Pos7 map to vsspos:Left; Pos9-Pos15 map to vsspos:Right. Within a side, a lower distance from 8 is more inboard."@en ;
+    skos:related vsspos:Left , vsspos:Right , vsspos:LateralCenter ,
+                 vsspos:Inboard , vsspos:Outboard ;
+    dct:relation <https://github.com/COVESA/vehicle_signal_specification/pull/940> ;
+    vsspos:vssInstanceToken "Pos" .
+
+##############################################################################
+# Unspecified
+##############################################################################
+
+vsspos:PositionUnspecified a skos:Concept , vsso:PositionInVehicle ;
+    skos:inScheme vsspos:PositionScheme ;
+    skos:prefLabel "Position unspecified"@en ;
+    skos:definition "Placeholder used where a branch is instantiated but no particular position is asserted."@en ;
+    skos:scopeNote "Corresponds to the VSS token \"AnyPosition\" (Powertrain.TractionBattery charging port). It is a wildcard, not a location, and is included only so that consumers mapping tokens to concepts have a total function."@en ;
+    vsspos:vssInstanceToken "AnyPosition" .
+
+##############################################################################
+# EXPLICITLY OUT OF SCHEME
+#
+# These VSS instance tokens look positional but are not, and must not be
+# mapped into this scheme:
+#
+#   "Low" / "High"            Vehicle.Body.Lights.Beam — beam TYPE (low beam /
+#                             high beam), not vertical position.
+#   "Primary" / "Secondary"   Body.WiperSystem — functional role, not location.
+#   "Trunk"                   Vehicle.ControlUnit — a compartment, i.e. a
+#                             part-whole membership fact. It belongs in a
+#                             physical-membership scheme; S2DM's
+#                             examples/multiple-classification-schemes already
+#                             has a Trunk concept under VehiclePhysicalMembership.
+#   "Sensor", "PID"           Not positions in any sense.
+#
+# Compare: "AnyPosition" IS included above, as a wildcard, because consumers
+# mapping the instance list of a positional branch will encounter it there.
+##############################################################################
+
+##############################################################################
+# Binding examples (illustrative, not part of the scheme)
+#
+#   # A VSS signal instance bound to a position, via VSSo:
+#   <...Cabin/Seat/Row2/DriverSide> vsso:postionedAt vsspos:DriverSide .
+#
+#   # Resolved for a specific vehicle:
+#   <...myVehicle> schema:steeringPosition schema:RightHandDriving .
+#   # => that seat's vsspos:DriverSide resolves to vsspos:Right
+#
+#   # A wheel under PR #940 numbering:
+#   <...Chassis/Axle/Row2/Wheel/Pos9> vsso:postionedAt vsspos:WheelPositionCode ;
+#       vsspos:positionIndex 9 .   # => vsspos:Right, most inboard on that side
+##############################################################################
