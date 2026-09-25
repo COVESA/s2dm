@@ -7,6 +7,7 @@ import pytest
 from graphql import GraphQLEnumType, GraphQLObjectType, GraphQLSchema, parse
 from graphql import print_schema as print_graphql_schema
 
+from s2dm import log
 from s2dm.exporters.utils.schema_loader import (
     load_and_process_schema,
     load_schema,
@@ -145,3 +146,19 @@ class TestInstanceTagDimensions:
 
         with pytest.raises(ValueError, match="match no instance"):
             expand(tmp_path, query, schema_path)
+
+    def test_a_selection_that_excludes_every_instance_warns(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        schema_path = tmp_path / "schema.graphql"
+        schema_path.write_text(SCHEMA_PATH.read_text().replace('"ROW2.LEFT"', '"ROW2.MIDDLE"'))
+        query = f"query Selection @retainedDefinitions(enums: {{ PositionEnum: [MIDDLE] }}) {{ {SEATS} }}"
+
+        log.addHandler(caplog.handler)
+        try:
+            instances = expand(tmp_path, query, schema_path)
+        finally:
+            log.removeHandler(caplog.handler)
+
+        assert instances == {}
+        assert "Cabin.seats' expands to no instances" in caplog.text
