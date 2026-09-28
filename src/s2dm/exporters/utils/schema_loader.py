@@ -580,10 +580,10 @@ def prune_schema_using_query_selection(
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
 
-    document, picked = extract_picked_definitions(document)
+    stripped_document, picked = extract_picked_definitions(document)
     validate_picked_definitions(schema, picked)
 
-    _validate_schema(schema, document)
+    _validate_schema(schema, stripped_document)
 
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
@@ -714,7 +714,7 @@ def prune_schema_using_query_selection(
 
     query_operations = [
         definition
-        for definition in document.definitions
+        for definition in stripped_document.definitions
         if isinstance(definition, OperationDefinitionNode) and definition.operation.value == "query"
     ]
 

@@ -32,7 +32,8 @@ def validate_query(request: ValidateQueryRequest) -> ApiResponse:
         query_path = path_for_content(request.selection_query, "selection_query", ".graphql")
         query_text = query_path.read_text(encoding="utf-8")
 
-        query_document, picked = extract_picked_definitions(parse_selection_query(query_text))
+        parsed_query = parse_selection_query(query_text)
+        query_document, picked = extract_picked_definitions(parsed_query)
         validate_picked_definitions(schema, picked)
 
         validation_errors = validate(schema, query_document)
