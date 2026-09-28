@@ -1,7 +1,7 @@
 """Query validate route - validate GraphQL query against schema."""
 
 from fastapi import APIRouter
-from graphql import parse, print_schema, validate
+from graphql import print_schema, validate
 
 from s2dm.api.config import COMMON_RESPONSES
 from s2dm.api.errors import ResponseError, format_error_list
@@ -9,7 +9,11 @@ from s2dm.api.models.base import ApiResponse
 from s2dm.api.models.query_validate import ValidateQueryRequest
 from s2dm.api.services.response_service import execute_and_respond
 from s2dm.api.services.schema_service import path_for_content, process_schema_input, validate_schema_or_raise
-from s2dm.exporters.utils.pick import extract_picked_definitions, validate_picked_definitions
+from s2dm.exporters.utils.pick import (
+    extract_picked_definitions,
+    parse_selection_query,
+    validate_picked_definitions,
+)
 from s2dm.exporters.utils.schema_loader import load_schema
 
 router = APIRouter(responses=COMMON_RESPONSES)
@@ -28,7 +32,7 @@ def validate_query(request: ValidateQueryRequest) -> ApiResponse:
         query_path = path_for_content(request.selection_query, "selection_query", ".graphql")
         query_text = query_path.read_text(encoding="utf-8")
 
-        query_document, picked = extract_picked_definitions(parse(query_text))
+        query_document, picked = extract_picked_definitions(parse_selection_query(query_text))
         validate_picked_definitions(schema, picked)
 
         validation_errors = validate(schema, query_document)

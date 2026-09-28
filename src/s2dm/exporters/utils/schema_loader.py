@@ -23,7 +23,6 @@ from graphql import (
     is_interface_type,
     is_object_type,
     is_union_type,
-    parse,
     print_schema,
 )
 from graphql import validate as graphql_validate
@@ -55,6 +54,7 @@ from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, lo
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
 from s2dm.exporters.utils.pick import (
     extract_picked_definitions,
+    parse_selection_query,
     picked_directive_names,
     picked_type_names,
     validate_picked_definitions,
@@ -380,7 +380,7 @@ def compose_schemas_to_string(
 
     query_document = None
     if selection_query:
-        query_document = parse(selection_query.read_text())
+        query_document = parse_selection_query(selection_query.read_text())
 
     naming_config_dict = load_naming_config(naming_config)
     annotated_schema = process_schema(
@@ -880,7 +880,7 @@ def load_and_process_schema(
 
     query_document = None
     if selection_query_path:
-        query_document = parse(selection_query_path.read_text())
+        query_document = parse_selection_query(selection_query_path.read_text())
 
     annotated_schema = process_schema(schema, source_map, naming_config, query_document, root_type, expanded_instances)
 

@@ -1,5 +1,6 @@
-"""Extraction and validation of the @pick selection query directive."""
+"""Parsing, extraction and validation of the @pick selection query directive."""
 
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -8,7 +9,9 @@ from graphql import (
     GraphQLEnumType,
     GraphQLScalarType,
     GraphQLSchema,
+    parse,
 )
+from graphql.error import GraphQLSyntaxError
 from graphql.language.ast import OperationDefinitionNode
 from graphql.utilities import value_from_ast_untyped
 
@@ -18,6 +21,10 @@ from s2dm.constants.directive import Directive
 DIRECTIVE_NAME = Directive.PICK.value
 ALL = "__all__"
 ARGUMENTS = ("enums", "scalars", "directives")
+
+# GraphQL requires a non-empty selection set, which a schema of only definitions has nothing to fill.
+EMPTY_SELECTION_SET = re.compile(r"\{\s*\}\s*$")
+NOTHING_SELECTED = "{ __typename }"
 
 
 @dataclass(frozen=True)
@@ -32,6 +39,32 @@ class PickedDefinitions:
     enums: list[str] | str | None = None
     scalars: list[str] | str | None = None
     directives: list[str] | str | None = None
+
+
+def parse_selection_query(text: str) -> DocumentNode:
+    """Parse a selection query, reading an empty selection set as selecting no fields.
+
+    A query that only picks definitions has no fields to name, but GraphQL rejects an empty
+    selection set. Such a query is read as selecting `__typename`, which every type carries and
+    which names nothing in the model.
+
+    Args:
+        text: The contents of the selection query file.
+
+    Returns:
+        The parsed document.
+
+    Raises:
+        GraphQLSyntaxError: If the query does not parse for any other reason.
+    """
+    try:
+        return parse(text)
+    except GraphQLSyntaxError:
+        stripped = text.rstrip()
+        repaired = EMPTY_SELECTION_SET.sub(NOTHING_SELECTED, stripped, count=1)
+        if repaired == stripped:
+            raise
+        return parse(repaired)
 
 
 def _name_list(value: Any, argument: str) -> list[str] | str:
@@ -108,6 +141,9 @@ def extract_picked_definitions(document: DocumentNode) -> tuple[DocumentNode, Pi
 def validate_picked_definitions(schema: GraphQLSchema, picked: PickedDefinitions) -> None:
     """Check every name and definition kind in the selection against the source model.
 
+    A name given under the wrong argument is reported as such, since a directive and a type can
+    share a name and neither is found where the other is looked up.
+
     Args:
         schema: The unfiltered schema the selection is written against.
         picked: The definitions the selection query asked to keep.
@@ -116,25 +152,44 @@ def validate_picked_definitions(schema: GraphQLSchema, picked: PickedDefinitions
         ValueError: If any name is missing from the model or is of the wrong kind.
     """
     errors: list[str] = []
+    directive_names = {directive.name for directive in schema.directives}
 
-    def check_kind(names: list[str] | str | None, kind: type, label: str) -> None:
+    def argument_for(type_definition: Any) -> str | None:
+        """The argument that would accept this type, if any."""
+        for kind, argument in ((GraphQLEnumType, "enums"), (GraphQLScalarType, "scalars")):
+            if isinstance(type_definition, kind):
+                return argument
+        return None
+
+    def check_types(names: list[str] | str | None, kind: type, label: str) -> None:
         if not isinstance(names, list):
             return
         for name in names:
             type_definition = schema.type_map.get(name)
+            if isinstance(type_definition, kind):
+                continue
             if type_definition is None:
-                errors.append(f"'{name}' is not defined in the model")
-            elif not isinstance(type_definition, kind):
-                errors.append(f"'{name}' is not {label}")
+                if name in directive_names:
+                    errors.append(f"'{name}' is a directive, not {label}; list it under 'directives'")
+                else:
+                    errors.append(f"'{name}' is not defined in the model")
+                continue
+            argument = argument_for(type_definition)
+            suffix = f"; list it under '{argument}'" if argument else ""
+            errors.append(f"'{name}' is not {label}{suffix}")
 
-    check_kind(picked.scalars, GraphQLScalarType, "a scalar")
-    check_kind(picked.enums, GraphQLEnumType, "an enum")
+    check_types(picked.scalars, GraphQLScalarType, "a scalar")
+    check_types(picked.enums, GraphQLEnumType, "an enum")
 
     if isinstance(picked.directives, list):
-        defined = {directive.name for directive in schema.directives}
-        errors.extend(
-            f"directive '@{name}' is not defined in the model" for name in picked.directives if name not in defined
-        )
+        for name in picked.directives:
+            if name in directive_names:
+                continue
+            argument = argument_for(schema.type_map.get(name))
+            if argument:
+                errors.append(f"'{name}' is not a directive; list it under '{argument}'")
+            else:
+                errors.append(f"directive '@{name}' is not defined in the model")
 
     if errors:
         raise ValueError(f"@{DIRECTIVE_NAME} validation failed:\n" + "\n".join(f"  - {error}" for error in errors))
