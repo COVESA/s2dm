@@ -53,12 +53,11 @@ from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema, is_valid_instance_tag_field
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
-from s2dm.exporters.utils.retained_definitions import (
-    apply_enum_value_selection,
-    extract_retained_definitions,
-    retained_directive_names,
-    retained_type_names,
-    validate_retained_definitions,
+from s2dm.exporters.utils.pick import (
+    extract_picked_definitions,
+    picked_directive_names,
+    picked_type_names,
+    validate_picked_definitions,
 )
 from s2dm.exporters.utils.violations import ConstraintViolation, Severity
 from s2dm.ledger import Ledger, annotate_schema_with_ledger
@@ -581,8 +580,8 @@ def prune_schema_using_query_selection(
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
 
-    document, retained = extract_retained_definitions(document)
-    validate_retained_definitions(schema, retained)
+    document, picked = extract_picked_definitions(document)
+    validate_picked_definitions(schema, picked)
 
     _validate_schema(schema, document)
 
@@ -727,9 +726,9 @@ def prune_schema_using_query_selection(
     query_operation = query_operations[0]
     collect_selections(schema.query_type.name, query_operation.selection_set)
 
-    for type_name in retained_type_names(schema, retained):
+    for type_name in picked_type_names(schema, picked):
         keep_type(type_name)
-    for directive_name in retained_directive_names(schema, retained):
+    for directive_name in picked_directive_names(schema, picked):
         keep_directive(directive_name)
 
     while pending_types:
@@ -758,8 +757,6 @@ def prune_schema_using_query_selection(
         del schema.type_map[type_name]
 
     schema.directives = tuple(directive for directive in schema.directives if directive.name in directives_used)
-
-    apply_enum_value_selection(schema, retained)
 
     log.debug(f"Composed filtered schema with {len(fields_to_keep)} object types")
 

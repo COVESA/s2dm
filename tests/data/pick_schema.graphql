@@ -1,21 +1,12 @@
-directive @instanceTag(exclude: [String!]) on OBJECT | FIELD_DEFINITION | ENUM
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
 directive @confidential on FIELD_DEFINITION
 
 scalar DateTime
 
-enum RowEnum { ROW1 ROW2 }
-enum PositionEnum { LEFT MIDDLE RIGHT }
 enum SeatMaterial { CLOTH LEATHER VINYL }
 enum VelocityUnit { KILOM_PER_HR MI_PER_HR M_PER_SEC }
 
-type CabinPosition @instanceTag {
-  row: RowEnum!
-  position: PositionEnum!
-}
-
 type Seat {
-  cabinPosition: CabinPosition @instanceTag(exclude: ["ROW1.MIDDLE", "ROW2.LEFT"])
   isOccupied: Boolean
   material: SeatMaterial
   lastAdjusted: DateTime

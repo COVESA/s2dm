@@ -411,11 +411,6 @@ def expand_instances_in_schema(
     field_metadata: dict[tuple[str, str], FieldMetadata] = {}
     for expandable in expandable_fields:
         instances = included_instances(expandable, instance_tag_case)
-        if not instances:
-            log.warning(
-                f"'{expandable.parent_type.name}.{expandable.field_name}' expands to no instances; "
-                f"every combination is excluded or filtered out"
-            )
         top_type, intermediate_types = _build_instance_types(
             expandable.base_type, list(expandable.instance_tag_dict), instances, expandable.leaf_nullable
         )

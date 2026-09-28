@@ -9,7 +9,7 @@ from s2dm.api.models.base import ApiResponse
 from s2dm.api.models.query_validate import ValidateQueryRequest
 from s2dm.api.services.response_service import execute_and_respond
 from s2dm.api.services.schema_service import path_for_content, process_schema_input, validate_schema_or_raise
-from s2dm.exporters.utils.retained_definitions import extract_retained_definitions, validate_retained_definitions
+from s2dm.exporters.utils.pick import extract_picked_definitions, validate_picked_definitions
 from s2dm.exporters.utils.schema_loader import load_schema
 
 router = APIRouter(responses=COMMON_RESPONSES)
@@ -28,8 +28,8 @@ def validate_query(request: ValidateQueryRequest) -> ApiResponse:
         query_path = path_for_content(request.selection_query, "selection_query", ".graphql")
         query_text = query_path.read_text(encoding="utf-8")
 
-        query_document, retained = extract_retained_definitions(parse(query_text))
-        validate_retained_definitions(schema, retained)
+        query_document, picked = extract_picked_definitions(parse(query_text))
+        validate_picked_definitions(schema, picked)
 
         validation_errors = validate(schema, query_document)
 

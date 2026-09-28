@@ -14,7 +14,7 @@ class Directive(str, Enum):
     REFERENCE = "reference"
     VSPEC = "vspec"
     MODL = "modl"
-    RETAINED_DEFINITIONS = "retainedDefinitions"
+    PICK = "pick"
 
 
 class BuiltInDirective(str, Enum):

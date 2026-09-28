@@ -2605,23 +2605,20 @@ The filtered schema will include:
 
 **Note:** The query must be valid against the schema. Root fields in the query (e.g., `vehicle`) must exist in the `Query` type of the schema.
 
-#### Retaining Unreferenced Definitions
+#### Picking Unreferenced Definitions
 
-Filtering keeps only the definitions the selected fields reach, so a scalar nobody selected, or a directive that does not appear on the retained slice, is dropped. The `@retainedDefinitions` directive on the selection query keeps them anyway, and selects which values of an enum to keep.
+Filtering keeps only the definitions the selected fields reach, so a scalar nobody selected, or a directive that does not appear on the retained slice, is dropped. The `@pick` directive on the selection query keeps them anyway.
 
 ```graphql
 query Selection
-  @retainedDefinitions(
-    enums: { SeatMaterial: [CLOTH, LEATHER] }
+  @pick(
+    enums: ["FuelType", "VehicleStatus"]
     scalars: ["DateTime"]
-    directives: ["cardinality"]
+    directives: ["constraint"]
   ) {
   vehicle {
-    cabin {
-      seats {
-        isOccupied
-      }
-    }
+    id
+    model
   }
 }
 ```
@@ -2632,35 +2629,11 @@ Each argument accepts three forms:
 - An empty list, such as `scalars: []`: every definition of that kind is kept.
 - A list of names: those definitions are kept in addition to the referenced ones.
 
-Selecting a directive retains its definition only. It does not apply the directive to any field or type.
+An enum is always kept whole. There is no way to select a subset of its values, so filtering never changes what an enum means. Use `@instanceTag(exclude: ...)` in the model to steer which instances an instance tag unfolds into.
 
-##### Enum Values
+Selecting a directive keeps its definition only. It does not apply the directive to any field or type.
 
-An entry in `enums` maps an enum name to the values to keep. An empty list keeps every value, which is how to retain an enum that nothing references.
-
-```graphql
-enums: {
-  FuelType: []                        # kept with all of its values
-  VehicleStatus: [ACTIVE, INACTIVE]   # the remaining values are dropped
-}
-```
-
-Removing a value that a retained default or directive argument still needs is refused:
-
-```text
-@retainedDefinitions removes enum values that are still in use:
-  - Vehicle.averageSpeed(unit:) defaults to 'KILOM_PER_HR'
-```
-
-That default belongs to a selected field. Had `averageSpeed` not been selected, the field and its default would have been filtered out and the value could be removed.
-
-##### Enum Values and Instance Tags
-
-An instance tag dimension is an enum, so selecting its values changes how many instances are generated. A seat list expanded over `RowEnum` and `PositionEnum` produces one branch per combination, and narrowing `PositionEnum` to two values produces two branches at that level.
-
-When a value is removed, the `@instanceTag(exclude: ...)` entries naming it are dropped as well, since they can no longer match an instance. Entries naming no removed value continue to apply. Given a model that excludes `ROW1.MIDDLE` and `ROW2.LEFT`, a selection of `PositionEnum: [LEFT, RIGHT]` produces `ROW1` with `LEFT` and `RIGHT`, and `ROW2` with `RIGHT` alone.
-
-**Note:** `@retainedDefinitions` is defined by s2dm rather than by the model, and is removed from the query before the query is validated against the schema. A GraphQL tool that does not know about it reports an unknown directive for a selection query that uses it.
+**Note:** `@pick` is defined by s2dm rather than by the model, and is removed from the query before the query is validated against the schema. A GraphQL tool that does not know about it reports an unknown directive for a selection query that uses it.
 
 ### Root Type Filtering
 
