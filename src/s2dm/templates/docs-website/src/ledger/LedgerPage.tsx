@@ -48,7 +48,7 @@ const VIEW_PANELS: Record<LedgerViewId, () => ReactNode> = {
 	raw: () => <RawTablesView />,
 	explore: () => <ExploreView />,
 	query: () => <QueryView />,
-	// The diagram is a view of its own, so the overview leaves it out.
+	// The overview leaves the diagram out, since the diagram is a view of its own.
 	structure: () => <LedgerOverview relationships={null} />,
 	diagram: () => <LedgerErdDiagram fit className="p-6" />,
 };
@@ -71,6 +71,7 @@ function LedgerContent() {
 	const error = useLedgerSelector(selectLedgerError);
 	const status = useLedgerSelector(selectLedgerStatus);
 	const view = useLedgerSelector(selectLedgerView);
+	const isSchemaView = SCHEMA_VIEWS.includes(view);
 	const rows = useLedgerSelector(selectLedgerRows);
 	const urlView = ledgerViewOfPath(location.pathname, ledgerRootUrl);
 	const reconciledView = useRef<LedgerViewId | null>(null);
@@ -134,9 +135,7 @@ function LedgerContent() {
 					    with the document, so it scrolls inside instead. */}
 					<div
 						className={
-							SCHEMA_VIEWS.includes(view)
-								? styles.schemaWorkspace
-								: styles.workspace
+							isSchemaView ? styles.schemaWorkspace : styles.workspace
 						}
 					>
 						<LedgerViewPanel />
@@ -146,7 +145,7 @@ function LedgerContent() {
 				{/* Only the views that list records: a schema view has nothing to
 				    select, so neither the details nor an invitation to select
 				    belongs under it. A selection made elsewhere survives. */}
-				{!SCHEMA_VIEWS.includes(view) &&
+				{!isSchemaView &&
 					(detail ? (
 						<section className="mt-6 overflow-hidden rounded-lg border border-border bg-card">
 							<LedgerDetailsContent
