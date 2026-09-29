@@ -61,6 +61,10 @@ QUDT_QUANTITY_KINDS_TTL_URL_TEMPLATE: str = (
 
 QUDT_GITHUB_API_URL: str = "https://api.github.com/repos/qudt/qudt-public-repo/tags"
 
+# Subdirectory holding the generated GraphQL enum files, keeping them separate from
+# the root-level README.md/CHANGELOG.md (e.g. `<units_root>/spec/VelocityUnit.graphql`).
+UNITS_SPEC_DIRNAME: str = "spec"
+
 # README file stored in the units directory root (replaces metadata.json)
 UNITS_README_FILENAME: str = "README.md"
 UNITS_README_VERSION_PATTERN: str = r"<!-- qudt-version: (\S+) -->"
@@ -79,6 +83,22 @@ def _extract_uri_segment(uri: str) -> str:
         The last segment of the URI (after the final '/')
     """
     return uri.rsplit("/", 1)[-1]
+
+
+def _clean_whitespace(text: str) -> str:
+    """Collapse runs of whitespace (including newlines) into single spaces.
+
+    QUDT's `dcterms:description` literals are often wrapped across multiple lines
+    with inconsistent indentation in the source TTL; this normalizes them into a
+    single readable line suitable for a GraphQL docstring.
+
+    Args:
+        text: Raw text to normalize
+
+    Returns:
+        The text with all whitespace runs collapsed to single spaces and trimmed
+    """
+    return re.sub(r"\s+", " ", text).strip()
 
 
 # Precompiled regex utilities to keep transformations DRY.
@@ -204,9 +224,14 @@ def _query_units(g: rdflib.Graph) -> list[UnitRow]:
     WHERE {{
       ?unit a qudt:Unit .
       # QUDT renamed the unit-to-quantity-kind predicate from "hasQuantityKind" to
-      # "unitForQuantityKind" around v3.4.0. Match either so both older and newer
-      # catalog versions resolve units to quantity kinds.
-      ?unit (qudt:hasQuantityKind|qudt:unitForQuantityKind) ?qk .
+      # "unitForQuantityKind" around v3.4.0. "categorizedByQuantityKind" is a third,
+      # separate predicate QUDT uses for units whose quantity kind is otherwise
+      # ambiguous (e.g. unit:DeciB-MilliW -> quantitykind:Unknown) or purely a count
+      # (-> quantitykind:Count); it is not a legacy/renamed alias of the other two,
+      # so it must be matched in addition to them, not instead of them. Without it,
+      # units only linked via this predicate (446 in QUDT's main branch, none
+      # deprecated) are silently dropped from the generated enums.
+      ?unit (qudt:hasQuantityKind|qudt:unitForQuantityKind|qudt:categorizedByQuantityKind) ?qk .
 
       # Filter out deprecated units (e.g., unit:Standard which is replaced by unit:STANDARD)
       # This prevents duplicate GraphQL enum symbols from deprecated/replacement unit pairs
@@ -322,6 +347,39 @@ def _query_quantity_kind_labels(g: rdflib.Graph) -> dict[str, str]:
         iri = str(row[0])  # type: ignore[index]
         labels[iri] = str(row[1]) if row[1] else _extract_uri_segment(iri)  # type: ignore[index]
     return labels
+
+
+def _query_quantity_kind_descriptions(g: rdflib.Graph) -> dict[str, str]:
+    """Fetch a human-readable `dcterms:description` for each quantity kind, if any.
+
+    Unlike units (whose enum values are kept compact with just a label and UCUM
+    code), quantity kind enum *types* get a richer docstring combining the label
+    with this description, since it's the only place that explanatory text can be
+    attached in the generated SDL.
+
+    Args:
+        g: RDFLib graph containing the QUDT quantity kinds catalog
+
+    Returns:
+        Mapping of quantity kind IRI to its whitespace-normalized description.
+        Quantity kinds without a `dcterms:description` are omitted.
+    """
+    query = f"""
+    PREFIX qudt: <{QUDT_NS}>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+
+    SELECT DISTINCT ?qk ?description
+    WHERE {{
+      ?qk a qudt:QuantityKind ;
+          dcterms:description ?description .
+      FILTER(lang(?description) = "en" || lang(?description) = "en-US" || lang(?description) = "")
+    }}
+    """
+    descriptions: dict[str, str] = {}
+    for row in g.query(query):
+        iri = str(row[0])  # type: ignore[index]
+        descriptions[iri] = _clean_whitespace(str(row[1]))  # type: ignore[index]
+    return descriptions
 
 
 def _query_commensurability_closure(g: rdflib.Graph) -> list[tuple[str, str]]:
@@ -574,7 +632,13 @@ def _query_deprecated_elements(g: rdflib.Graph) -> list[DeprecatedRow]:
     return list(seen.values())
 
 
-def _emit_enum_sdl(quantity_kind_name: str, quantity_kind_iri: str, unit_rows: Iterable[UnitRow]) -> str:
+def _emit_enum_sdl(
+    quantity_kind_name: str,
+    quantity_kind_iri: str,
+    unit_rows: Iterable[UnitRow],
+    quantity_kind_label: str | None = None,
+    quantity_kind_description: str | None = None,
+) -> str:
     """Build GraphQL SDL content for a quantity kind enum.
 
     Uses URI-based enum values with description strings containing human-readable labels.
@@ -595,6 +659,11 @@ def _emit_enum_sdl(quantity_kind_name: str, quantity_kind_iri: str, unit_rows: I
             possibly-colliding `rdfs:label`
         quantity_kind_iri: QUDT IRI for the quantity kind
         unit_rows: Unit data for enum values
+        quantity_kind_label: Human-readable `rdfs:label` for the enum type's
+            docstring (e.g., "Force Per Area"). Falls back to `quantity_kind_name`
+            if not provided.
+        quantity_kind_description: `dcterms:description` for the enum type's
+            docstring, appended after the label when available
 
     Returns:
         Valid GraphQL SDL string with custom @reference directives
@@ -604,12 +673,19 @@ def _emit_enum_sdl(quantity_kind_name: str, quantity_kind_iri: str, unit_rows: I
     """
     enum_type = _quantity_kind_to_enum_type(quantity_kind_name)
 
+    type_description_parts = [quantity_kind_label or quantity_kind_name]
+    if quantity_kind_description:
+        type_description_parts.append(quantity_kind_description)
+    type_description = " | ".join(type_description_parts)
+
     lines = [
         "# Generated by S2DM from the QUDT unit vocabulary. See README.md in this directory for the QUDT version used.",
         "# Source data: QUDT Public Repository (https://github.com/qudt/qudt-public-repo)",
         "# © QUDT.org — Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)",
         "# License: https://creativecommons.org/licenses/by/4.0/",
         "# Changes: vocabulary terms transformed to GraphQL SDL enum format by S2DM (https://github.com/COVESA/s2dm)",
+        "",
+        f'"""{type_description}"""',
         f'enum {enum_type} @reference(uri: "{quantity_kind_iri}") {{',
     ]
 
@@ -750,11 +826,11 @@ at the [QUDT `{qudt_version}` release page](https://github.com/qudt/qudt-public-
 
 ## Directory Structure
 
-Enum files are nested to mirror QUDT's `qudt:specializationOf` hierarchy between
-quantity kinds (most generic first). A quantity kind inherits every unit of its
-ancestors, in addition to any units attached to it directly (e.g. units on
-`ForcePerArea` are also available on `Pressure`, since Pressure specializes
-ForcePerArea).
+All generated enum files live under `spec/`. Within it, enum files are nested to
+mirror QUDT's `qudt:specializationOf` hierarchy between quantity kinds (most
+generic first). A quantity kind inherits every unit of its ancestors, in addition
+to any units attached to it directly (e.g. units on `ForcePerArea` are also
+available on `Pressure`, since Pressure specializes ForcePerArea).
 
 ## Quantity Kinds Treated as Roots (Multiple Specializations)
 
@@ -930,11 +1006,14 @@ def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) ->
     still keeps its own position (or becomes its own root) in the specialization tree,
     just with duplicated enum content. A quantity kind only gets its own directory if
     it is the `specializationOf` parent of at least one other emitted quantity kind;
-    otherwise its file is written directly into its parent's directory (or the units
-    root, if it has no parent), avoiding a directory that would otherwise wrap a
-    single file. Directory and enum type names are both derived from each quantity
-    kind's unique URI segment rather than its `rdfs:label`, since QUDT labels are not
-    guaranteed unique across distinct quantity kinds.
+    otherwise its file is written directly into its parent's directory (or the
+    `spec/` root, if it has no parent), avoiding a directory that would otherwise
+    wrap a single file. Directory and enum type names are both derived from each
+    quantity kind's unique URI segment rather than its `rdfs:label`, since QUDT
+    labels are not guaranteed unique across distinct quantity kinds. All generated
+    enum files are written under a `spec/` subdirectory of `units_root`, keeping
+    them separate from the root-level README.md/CHANGELOG.md
+    (e.g. `<units_root>/spec/VelocityUnit.graphql`).
 
     Elements that QUDT marks as deprecated in that release (units or their quantity
     kind) are intentionally not mapped and are ignored. Quantity kinds with no
@@ -971,6 +1050,7 @@ def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) ->
     immediate_parents = _query_immediate_parents(g)
     multi_parent_roots = _query_multi_parent_quantity_kinds(g)
     qk_labels = _query_quantity_kind_labels(g)
+    qk_descriptions = _query_quantity_kind_descriptions(g)
 
     unioned_units = _build_inherited_units(explicit_rows, closure)
     target_iris = sorted(unioned_units.keys())
@@ -983,22 +1063,29 @@ def sync_qudt_units(units_root: Path, version: str, *, dry_run: bool = False) ->
     # a directory named after itself wrapping a single file.
     parents_with_children = {immediate_parents[iri] for iri in target_iris if iri in immediate_parents}
 
+    spec_root = units_root / UNITS_SPEC_DIRNAME
     written: list[Path] = []
 
     for qk_iri in target_iris:
         qk_name = _extract_uri_segment(qk_iri)
         items = list(unioned_units[qk_iri].values())
-        sdl = _emit_enum_sdl(qk_name, qk_iri, items)
+        sdl = _emit_enum_sdl(
+            qk_name,
+            qk_iri,
+            items,
+            quantity_kind_label=qk_labels.get(qk_iri),
+            quantity_kind_description=qk_descriptions.get(qk_iri),
+        )
         path_segments = paths[qk_iri]
         dir_segments = path_segments if qk_iri in parents_with_children else path_segments[:-1]
 
         if dry_run:
             # Simulate the file path that would be written without actually writing
             enum_type = _quantity_kind_to_enum_type(qk_name)
-            target_file = units_root.joinpath(*dir_segments, f"{enum_type}.graphql")
+            target_file = spec_root.joinpath(*dir_segments, f"{enum_type}.graphql")
             written.append(target_file)
         else:
-            written.append(_write_units(units_root, dir_segments, qk_name, sdl))
+            written.append(_write_units(spec_root, dir_segments, qk_name, sdl))
 
     if not dry_run:
         # Quantity kinds with no explicit or inherited units at all (per point 5:
