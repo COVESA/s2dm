@@ -26,22 +26,23 @@ type LedgerLink = { type: "link"; label: string; href: string };
 type LedgerCategory = { type: "category"; label: string; items: LedgerLink[] };
 
 // A section opens a category and the views after it join the one above, so the
-// order in LEDGER_VIEWS is the order the sidebar shows.
+// order in LEDGER_VIEWS is the order the sidebar shows. The accumulator is built
+// in place; every branch adds to it rather than replacing it.
 export const ledgerSidebar = LEDGER_VIEWS.reduce<(LedgerLink | LedgerCategory)[]>((items, view) => {
   const link: LedgerLink = {
     type: "link",
     label: view.label,
     href: ledgerViewPath(view.id),
   };
+  const previousItem = items.at(-1);
   if (view.section === null) {
-    return [...items, link];
+    items.push(link);
+  } else if (previousItem?.type === "category" && previousItem.label === view.section) {
+    previousItem.items.push(link);
+  } else {
+    items.push({ type: "category", label: view.section, items: [link] });
   }
-  const last = items.at(-1);
-  if (last?.type === "category" && last.label === view.section) {
-    last.items.push(link);
-    return items;
-  }
-  return [...items, { type: "category", label: view.section, items: [link] }];
+  return items;
 }, []);
 
 const sidebars: SidebarsConfig = {
