@@ -22,11 +22,27 @@ export const insightsSidebar = INSIGHTS_SECTIONS.map((section) => ({
   })),
 }));
 
-export const ledgerSidebar = LEDGER_VIEWS.map((view) => ({
-  type: "link" as const,
-  label: view.label,
-  href: ledgerViewPath(view.id),
-}));
+type LedgerLink = { type: "link"; label: string; href: string };
+type LedgerCategory = { type: "category"; label: string; items: LedgerLink[] };
+
+// A section opens a category and the views after it join the one above, so the
+// order in LEDGER_VIEWS is the order the sidebar shows.
+export const ledgerSidebar = LEDGER_VIEWS.reduce<(LedgerLink | LedgerCategory)[]>((items, view) => {
+  const link: LedgerLink = {
+    type: "link",
+    label: view.label,
+    href: ledgerViewPath(view.id),
+  };
+  if (view.section === null) {
+    return [...items, link];
+  }
+  const last = items.at(-1);
+  if (last?.type === "category" && last.label === view.section) {
+    last.items.push(link);
+    return items;
+  }
+  return [...items, { type: "category", label: view.section, items: [link] }];
+}, []);
 
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
