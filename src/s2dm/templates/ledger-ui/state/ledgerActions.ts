@@ -6,7 +6,7 @@ import type {
 } from "@ledger-ui/data/types";
 import { createAction } from "@reduxjs/toolkit";
 
-export type LedgerView = "raw" | "explore" | "query" | "schema";
+export type LedgerView = "raw" | "explore" | "query" | "structure" | "diagram";
 
 // Actions more than one slice reacts to. Declared here so no slice imports
 // another, which would put action creators in an import cycle.

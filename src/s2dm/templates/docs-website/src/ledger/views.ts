@@ -1,10 +1,22 @@
 // The ledger's views in sidebar order. The links, the routes made from them and
-// the view the page renders all read this.
+// the view the page renders all read this. Consecutive views sharing a section
+// become one sidebar category; the view without a segment is served at the root.
 export const LEDGER_VIEWS = [
-	{ id: "schema", label: "Schema", segment: null },
-	{ id: "raw", label: "Raw Tables", segment: "raw" },
-	{ id: "explore", label: "Explore", segment: "explore" },
-	{ id: "query", label: "Query", segment: "query" },
+	{ id: "raw", label: "Raw Tables", segment: null, section: null },
+	{ id: "explore", label: "Explore", segment: "explore", section: null },
+	{ id: "query", label: "Query", segment: "query", section: null },
+	{
+		id: "structure",
+		label: "Structure",
+		segment: "schema/structure",
+		section: "Schema",
+	},
+	{
+		id: "diagram",
+		label: "Diagram",
+		segment: "schema/diagram",
+		section: "Schema",
+	},
 ] as const;
 
 export type LedgerViewId = (typeof LEDGER_VIEWS)[number]["id"];
