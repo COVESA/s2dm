@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 const require = createRequire(import.meta.url);
 const sourceDirectory = fileURLToPath(new URL("./src", import.meta.url));
 const insightsUiDirectory = fileURLToPath(new URL("./src/insights-ui", import.meta.url));
+const ledgerUiDirectory = fileURLToPath(new URL("./src/ledger-ui", import.meta.url));
 
 function addBaseUrlToSidebar(items: PropSidebar, baseUrl: string): PropSidebar {
   const addBaseUrl = (href: string) =>
@@ -40,29 +41,47 @@ function getSidebarLinks(items: PropSidebar): string[] {
   });
 }
 
+// Each workspace renders one page against its own docs sidebar, with a route per
+// sidebar link so the sidebar highlights the current view the way the docs do.
+const SIDEBAR_PAGES = [
+  { sidebar: "insightsSidebar", data: "insights-sidebar.json", component: "@site/src/insights/InsightsPage.tsx" },
+  { sidebar: "ledgerSidebar", data: "ledger-sidebar.json", component: "@site/src/ledger/LedgerPage.tsx" },
+];
+
 const insightsPlugin = ({ baseUrl }: LoadContext) => ({
   name: "s2dm-insights",
   async allContentLoaded({ allContent, actions }) {
     const docsContent = allContent["docusaurus-plugin-content-docs"]?.default as LoadedContent | undefined;
     const version = docsContent?.loadedVersions.find((candidate) => candidate.isLast);
-    const sidebarItems = version?.sidebars.insightsSidebar as PropSidebar | undefined;
-    if (!sidebarItems) {
-      throw new Error("The insightsSidebar definition is missing from sidebars.ts");
-    }
 
-    const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
-    const sidebarData = await actions.createData("insights-sidebar.json", sidebar);
-    for (const path of getSidebarLinks(sidebar)) {
-      actions.addRoute({
-        path,
-        component: "@site/src/insights/InsightsPage.tsx",
-        exact: true,
-        modules: { sidebar: sidebarData },
-      });
+    for (const page of SIDEBAR_PAGES) {
+      const sidebarItems = version?.sidebars[page.sidebar] as PropSidebar | undefined;
+      if (!sidebarItems) {
+        throw new Error(`The ${page.sidebar} definition is missing from sidebars.ts`);
+      }
+
+      const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
+      const sidebarData = await actions.createData(page.data, sidebar);
+      for (const path of getSidebarLinks(sidebar)) {
+        actions.addRoute({
+          path,
+          component: page.component,
+          exact: true,
+          modules: { sidebar: sidebarData },
+        });
+      }
     }
   },
   configureWebpack() {
-    return { resolve: { alias: { "@": sourceDirectory, "@insights-ui": insightsUiDirectory } } };
+    return {
+      resolve: {
+        alias: {
+          "@": sourceDirectory,
+          "@insights-ui": insightsUiDirectory,
+          "@ledger-ui": ledgerUiDirectory,
+        },
+      },
+    };
   },
   configurePostCss(options) {
     options.plugins.push(require("@tailwindcss/postcss"));
@@ -98,6 +117,7 @@ const config: Config = {
         { type: "docSidebar", sidebarId: "tutorialSidebar", position: "left", label: "Docs" },
         { to: "/visualizer", label: "Visualizer", position: "left" },
         { to: "/insights", label: "Insights", position: "left" },
+        { to: "/ledger", label: "Ledger", position: "left" },
         { href: "$github_repo_url", label: "GitHub", position: "right" },
       ],
     },

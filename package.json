@@ -2,7 +2,8 @@
   "private": true,
   "workspaces": [
     "playground",
-    "src/s2dm/templates/insights-ui"
+    "src/s2dm/templates/insights-ui",
+    "src/s2dm/templates/ledger-ui"
   ],
   "devDependencies": {
     "@graphql-inspector/cli": "^6.0.5",

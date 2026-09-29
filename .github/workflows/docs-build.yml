@@ -80,6 +80,15 @@ on:
           Example: "spec" or "spec/core spec/extensions/seat.graphql"
         required: true
         type: string
+      ledger_source:
+        description: >
+          Path to a ModL ledger SQLite database, relative to the repo root.
+          Copied to `dist/ledger.db`, which the website build turns into
+          `static/ledger.db` for the Ledger page. Omit if the model has no
+          ledger; the page then reports that none was supplied.
+        required: false
+        type: string
+        default: ""
       s2dm_version:
         description: "s2dm version to install (e.g. '0.22.0'). Omit to use the latest release."
         required: false
@@ -138,6 +147,14 @@ jobs:
         run: |
           mkdir -p dist
           s2dm compose ${{ steps.sources.outputs.flags }} -o dist/model.graphql
+
+      # The ledger reaches the site the same way the schema does: staged in
+      # dist/, then copied into static/ by `npm run doc`.
+      - name: Stage ledger
+        if: inputs.ledger_source != ''
+        run: |
+          mkdir -p dist
+          cp "${{ inputs.ledger_source }}" dist/ledger.db
 
       # Scaffold the Docusaurus website into ./website using the template
       # bundled with s2dm.  No website files need to be checked into the repo.

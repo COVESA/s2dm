@@ -10,7 +10,8 @@
     "noEmit": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@insights-ui/*": ["./src/insights-ui/*", "../insights-ui/*"]
+      "@insights-ui/*": ["./src/insights-ui/*", "../insights-ui/*"],
+      "@ledger-ui/*": ["./src/ledger-ui/*", "../ledger-ui/*"]
     }
   },
   "exclude": [".docusaurus", "build"]
