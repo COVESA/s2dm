@@ -2605,6 +2605,43 @@ The filtered schema will include:
 
 **Note:** The query must be valid against the schema. Root fields in the query (e.g., `vehicle`) must exist in the `Query` type of the schema.
 
+#### Picking Unreferenced Definitions
+
+Filtering keeps only the definitions the selected fields reach, so a scalar nobody selected, or a directive that does not appear on the retained slice, is dropped. The `@pick` directive on the selection query keeps them anyway.
+
+```graphql
+query Selection
+  @pick(
+    enums: ["FuelType", "VehicleStatus"]
+    scalars: ["DateTime"]
+    directives: ["constraint"]
+  ) {
+  vehicle {
+    id
+    model
+  }
+}
+```
+
+Each argument accepts three forms:
+
+- Absent: only referenced definitions are kept, so a query without the directive filters exactly as it did before.
+- An empty list, such as `scalars: []`: every definition of that kind is kept.
+- A list of names: those definitions are kept in addition to the referenced ones.
+
+An enum is always kept whole. There is no way to select a subset of its values, so filtering never changes what an enum means. Use `@instanceTag(exclude: ...)` in the model to steer which instances an instance tag unfolds into.
+
+Selecting a directive keeps its definition only. It does not apply the directive to any field or type.
+
+A query that only picks definitions has no fields to name. Leave the selection set empty and s2dm reads it as selecting nothing, which is the usual case for a schema of units, enums or shared directives.
+
+```graphql
+query Selection
+  @pick(enums: ["Weekday", "MonthOfYear"], directives: []) {}
+```
+
+**Note:** `@pick` is defined by s2dm rather than by the model, and is removed from the query before the query is validated against the schema. A GraphQL tool that does not know about it reports an unknown directive for a selection query that uses it.
+
 ### Root Type Filtering
 
 All export commands and the compose command support the `--root-type` flag to filter the schema to only a specific type and its transitive dependencies.

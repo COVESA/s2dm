@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from graphql import DocumentNode, parse
+from graphql import DocumentNode
 from pydantic import ValidationError
 
 from s2dm.deps import DEPENDENCY_LOCK_FILENAME, clean_resolved_dependencies, resolve_dependencies
@@ -26,6 +26,7 @@ from s2dm.deps.resolve.errors import DependencyConfigError, DependencySourceErro
 from s2dm.deps.resolve.providers import RemoteIdentityProvider
 from s2dm.deps.resolve.resolve import validate_cached_dependency
 from s2dm.deps.resolve.warnings import WarningCollector
+from s2dm.exporters.utils.pick import parse_selection_query
 from s2dm.exporters.utils.schema_loader import build_schema_str_with_optional_source_map
 from s2dm.utils.compose import SchemaDefinition, SharedDefinitionResolver
 from s2dm.utils.file import temp_file_from_content, temp_files_from_contents
@@ -115,7 +116,9 @@ def load_vendored_dependency_schema_inputs(
 
         resolved_schema_path = schema_path.resolve()
         if dependency.selection is not None:
-            selection_by_schema_path[resolved_schema_path] = parse(dependency.selection.read_text(encoding="utf-8"))
+            selection_by_schema_path[resolved_schema_path] = parse_selection_query(
+                dependency.selection.read_text(encoding="utf-8")
+            )
 
         try:
             schema_content, _ = build_schema_str_with_optional_source_map(
