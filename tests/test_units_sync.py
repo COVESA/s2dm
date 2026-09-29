@@ -17,7 +17,7 @@ from s2dm.units.sync import (
     _uri_to_enum_symbol,
     sync_qudt_units,
 )
-from tests.conftest import MOCK_QUDT_VERSION, QUDT_UNIT_BASE, create_test_unit_row
+from tests.conftest import MOCK_QUDT_VERSION, QUDT_QK_BASE, QUDT_UNIT_BASE, create_test_unit_row
 
 
 @pytest.mark.parametrize(
@@ -85,13 +85,38 @@ def test_uri_to_enum_symbol_invalid(invalid_uri: str, expected_message_key: str)
 
 @pytest.fixture
 def mock_sync_setup() -> Iterator[tuple[Mock, Mock]]:
-    """Set up common mocks for sync tests."""
+    """Set up common mocks for sync tests.
+
+    Only `_query_units` and `_load_merged_graph_from_urls` are configured directly by
+    tests. The commensurability-closure and label mocks derive their results from
+    whatever `_query_units` is set to return, so a test only needs to set one thing
+    (`mock_query_units.return_value`) for the whole pipeline to stay consistent.
+    """
     with (
-        patch("s2dm.units.sync._load_graph_from_url") as mock_load_graph,
+        patch("s2dm.units.sync._load_merged_graph_from_urls") as mock_load_graph,
         patch("s2dm.units.sync._query_units") as mock_query_units,
+        patch("s2dm.units.sync._query_deprecated_elements", return_value=[]),
+        patch("s2dm.units.sync._query_commensurability_closure") as mock_closure,
+        patch("s2dm.units.sync._query_immediate_parents", return_value={}),
+        patch("s2dm.units.sync._query_multi_parent_quantity_kinds", return_value=set()),
+        patch("s2dm.units.sync._query_quantity_kind_labels") as mock_labels,
+        patch("s2dm.units.sync._query_parents_for_iris", return_value={}),
     ):
         mock_graph = Mock()
         mock_load_graph.return_value = mock_graph
+
+        def _closure_side_effect(_g: object) -> list[tuple[str, str]]:
+            # No specializationOf relationships in these tests: every quantity kind
+            # is its own (reflexive) ancestor only.
+            qk_iris = {row.quantity_kind_iri for row in mock_query_units.return_value}
+            return [(iri, iri) for iri in qk_iris]
+
+        def _labels_side_effect(_g: object) -> dict[str, str]:
+            return {row.quantity_kind_iri: row.quantity_kind_label for row in mock_query_units.return_value}
+
+        mock_closure.side_effect = _closure_side_effect
+        mock_labels.side_effect = _labels_side_effect
+
         yield mock_query_units, mock_load_graph
 
 
@@ -153,16 +178,40 @@ def test_sync_qudt_units_path_generation(
     single_unit: list[UnitRow],
     tmp_path: Path,
 ) -> None:
-    """Test that sync generates correct file paths."""
+    """Test that a leaf quantity kind (no specializationOf children) is written directly
+    into its parent directory rather than into a directory wrapping just its own file."""
     mock_query_units, mock_load_graph = mock_sync_setup
     mock_query_units.return_value = single_unit
 
     units_root = tmp_path / "units"
     result_paths = sync_qudt_units(units_root, MOCK_QUDT_VERSION, dry_run=True)
 
-    # Should generate path based on quantity kind
+    # No self-named wrapping directory since Length has no specializationOf children
     expected_path = units_root / "LengthUnit.graphql"
     assert expected_path in result_paths
+
+
+def test_sync_qudt_units_path_generation_with_children(
+    mock_sync_setup: tuple[Mock, Mock],
+    sample_units: list[UnitRow],
+    tmp_path: Path,
+) -> None:
+    """Test that a quantity kind with a specializationOf child gets its own directory,
+    holding both its own file and the child's."""
+    mock_query_units, mock_load_graph = mock_sync_setup
+    mock_query_units.return_value = sample_units
+
+    velocity_iri = f"{QUDT_QK_BASE}/Velocity"
+    mass_iri = f"{QUDT_QK_BASE}/Mass"
+    with patch("s2dm.units.sync._query_immediate_parents", return_value={mass_iri: velocity_iri}):
+        units_root = tmp_path / "units"
+        result_paths = sync_qudt_units(units_root, MOCK_QUDT_VERSION, dry_run=True)
+
+    # Velocity is Mass's parent, so Velocity gets its own directory holding its own
+    # file; Mass has no children of its own, so its file also lands in Velocity's
+    # directory rather than a wrapping "Mass" subdirectory.
+    assert units_root / "Velocity" / "VelocityUnit.graphql" in result_paths
+    assert units_root / "Velocity" / "MassUnit.graphql" in result_paths
 
 
 def test_sync_with_cleanup(
