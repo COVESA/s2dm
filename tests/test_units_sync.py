@@ -100,6 +100,7 @@ def mock_sync_setup() -> Iterator[tuple[Mock, Mock]]:
         patch("s2dm.units.sync._query_immediate_parents", return_value={}),
         patch("s2dm.units.sync._query_multi_parent_quantity_kinds", return_value=set()),
         patch("s2dm.units.sync._query_quantity_kind_labels") as mock_labels,
+        patch("s2dm.units.sync._query_quantity_kind_descriptions", return_value={}),
         patch("s2dm.units.sync._query_parents_for_iris", return_value={}),
     ):
         mock_graph = Mock()
@@ -163,9 +164,9 @@ def test_sync_qudt_units(
         metadata_file = units_root / "README.md"
         assert metadata_file.exists(), "Normal run should create README.md"
 
-        # Check that at least one enum file exists and has expected content
-        enum_files = list(units_root.rglob("*.graphql"))
-        assert len(enum_files) >= 1, "Normal run should create enum files"
+        # Check that at least one enum file exists under spec/ and has expected content
+        enum_files = list((units_root / "spec").rglob("*.graphql"))
+        assert len(enum_files) >= 1, "Normal run should create enum files under spec/"
 
         # Verify content of first enum file
         first_enum = enum_files[0]
@@ -186,8 +187,9 @@ def test_sync_qudt_units_path_generation(
     units_root = tmp_path / "units"
     result_paths = sync_qudt_units(units_root, MOCK_QUDT_VERSION, dry_run=True)
 
-    # No self-named wrapping directory since Length has no specializationOf children
-    expected_path = units_root / "LengthUnit.graphql"
+    # No self-named wrapping directory since Length has no specializationOf children;
+    # enum files live under spec/
+    expected_path = units_root / "spec" / "LengthUnit.graphql"
     assert expected_path in result_paths
 
 
@@ -209,9 +211,9 @@ def test_sync_qudt_units_path_generation_with_children(
 
     # Velocity is Mass's parent, so Velocity gets its own directory holding its own
     # file; Mass has no children of its own, so its file also lands in Velocity's
-    # directory rather than a wrapping "Mass" subdirectory.
-    assert units_root / "Velocity" / "VelocityUnit.graphql" in result_paths
-    assert units_root / "Velocity" / "MassUnit.graphql" in result_paths
+    # directory rather than a wrapping "Mass" subdirectory. Enum files live under spec/.
+    assert units_root / "spec" / "Velocity" / "VelocityUnit.graphql" in result_paths
+    assert units_root / "spec" / "Velocity" / "MassUnit.graphql" in result_paths
 
 
 def test_sync_with_cleanup(
