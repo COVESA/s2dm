@@ -45,12 +45,17 @@ const LEDGER_FILE = "/ledger.db";
 
 // A view added to LEDGER_VIEWS without a panel here does not compile.
 const VIEW_PANELS: Record<LedgerViewId, () => ReactNode> = {
-	// The diagram gets its own card below, so the overview leaves it out.
-	schema: () => <LedgerOverview relationships={null} />,
 	raw: () => <RawTablesView />,
 	explore: () => <ExploreView />,
 	query: () => <QueryView />,
+	// The diagram is a view of its own, so the overview leaves it out.
+	structure: () => <LedgerOverview relationships={null} />,
+	diagram: () => <LedgerErdDiagram fit className="p-6" />,
 };
+
+// Neither schema view lists records, so they grow with the page and have
+// nothing for the details panel to describe.
+const SCHEMA_VIEWS: readonly LedgerViewId[] = ["structure", "diagram"];
 
 function LedgerViewPanel() {
 	const view = useLedgerSelector(selectLedgerView);
@@ -129,25 +134,19 @@ function LedgerContent() {
 					    with the document, so it scrolls inside instead. */}
 					<div
 						className={
-							view === "schema" ? styles.schemaWorkspace : styles.workspace
+							SCHEMA_VIEWS.includes(view)
+								? styles.schemaWorkspace
+								: styles.workspace
 						}
 					>
 						<LedgerViewPanel />
 					</div>
 				</section>
 
-				{/* Its own card rather than a dialog: there is room for it on a page,
-				    and it scales to the width instead of scrolling. */}
-				{view === "schema" && (
-					<section className={`${styles.workspaceCard} mt-6`}>
-						<LedgerErdDiagram fit className="p-6" />
-					</section>
-				)}
-
-				{/* Only the views that list records: the schema view has nothing to
+				{/* Only the views that list records: a schema view has nothing to
 				    select, so neither the details nor an invitation to select
 				    belongs under it. A selection made elsewhere survives. */}
-				{view !== "schema" &&
+				{!SCHEMA_VIEWS.includes(view) &&
 					(detail ? (
 						<section className="mt-6 overflow-hidden rounded-lg border border-border bg-card">
 							<LedgerDetailsContent
