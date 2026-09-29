@@ -72,6 +72,16 @@ For example, `source: "https://github.com/owner/repo"`, `version: "1.0.0"`, and 
 https://github.com/owner/repo/releases/download/1.0.0/schema.graphql
 ```
 
+#### Versions and Releases
+
+A dependency's `version` is both the release tag it is downloaded from and the version `metadata.yaml` must declare, so every artifact published in one release carries the same version.
+
+One release per artifact keeps versions independent. A consumer pins that artifact's own version, and both the manifest and the lock file record it.
+
+Several artifacts in one release requires archives, since a release cannot hold two files named `schema.graphql`. Consumers then pin the release tag, and the version of each bundled artifact is implicit: it is declared inside the archive, but it is the release tag, so neither the manifest nor the lock file records anything narrower.
+
+Neither layout is wrong. The choice decides what a consumer is able to pin.
+
 #### Identity File
 
 For authenticated remote dependencies, `deps resolve` can read tokens from a dependency identity file.
