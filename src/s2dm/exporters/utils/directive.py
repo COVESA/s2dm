@@ -17,6 +17,7 @@ from graphql import (
     GraphQLUnionType,
     IntValueNode,
     ListValueNode,
+    ObjectValueNode,
 )
 from graphql.language.printer import print_ast
 
@@ -52,6 +53,21 @@ def get_type_directive_location(graphql_type: GraphQLType) -> DirectiveLocation 
     return None
 
 
+def _parse_value_node(node: Any) -> Any:
+    """Recursively convert a GraphQL AST value node to a plain Python value."""
+    if isinstance(node, IntValueNode):
+        return int(node.value)
+    if isinstance(node, FloatValueNode):
+        return float(node.value)
+    if isinstance(node, ListValueNode):
+        return [_parse_value_node(v) for v in node.values]
+    if isinstance(node, ObjectValueNode):
+        return {f.name.value: _parse_value_node(f.value) for f in node.fields}
+    if hasattr(node, "value"):
+        return node.value
+    return node
+
+
 def get_directive_arguments(element: DirectiveElement, directive_name: str) -> dict[str, Any]:
     """
     Extracts the arguments of a specified directive from a GraphQL element.
@@ -60,34 +76,14 @@ def get_directive_arguments(element: DirectiveElement, directive_name: str) -> d
         directive_name: The name of the directive whose arguments are to be extracted.
     Returns:
         dict[str, Any]: A dictionary containing the directive arguments with proper type conversion.
+                        List and object argument values are recursively converted to plain Python
+                        lists and dicts.
     """
     if not has_given_directive(element, directive_name) or not element.ast_node:
         return {}
 
     directive = next(d for d in element.ast_node.directives if d.name.value == directive_name)
-    args: dict[str, Any] = {}
-
-    def convert_value(value_node: Any) -> Any:
-        if isinstance(value_node, IntValueNode):
-            return int(value_node.value)
-
-        if isinstance(value_node, FloatValueNode):
-            return float(value_node.value)
-
-        if isinstance(value_node, ListValueNode):
-            return [convert_value(item) for item in value_node.values]
-
-        raw_value = getattr(value_node, "value", None)
-        if raw_value is not None:
-            return raw_value
-
-        return value_node
-
-    for arg in directive.arguments:
-        arg_name = arg.name.value
-        args[arg_name] = convert_value(arg.value)
-
-    return args
+    return {arg.name.value: _parse_value_node(arg.value) for arg in directive.arguments}
 
 
 def has_given_directive(element: DirectiveElement, directive_name: str) -> bool:
