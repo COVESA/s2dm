@@ -19,9 +19,18 @@ type SchemaVisualizerProps = {
 	schema: string;
 };
 
-// Material UI renders menus, popovers and tooltips into their own portals at the body.
+// Material UI renders menus, popovers and tooltips into portals at the body.
 const MUI_PORTAL_SELECTOR =
 	".MuiModal-root, .MuiPopover-root, .MuiPopper-root, .MuiTooltip-popper";
+
+// A click in a portalled menu is inside the dialog, as the user sees it.
+function keepOpenForPortalledMenus(event: Event) {
+	const target = event.target instanceof Element ? event.target : null;
+	const portal = target?.closest(MUI_PORTAL_SELECTOR);
+	if (portal) {
+		event.preventDefault();
+	}
+}
 
 export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 	const [graphqlSchema, setGraphqlSchema] = useState<GraphQLSchema | null>(
@@ -103,21 +112,13 @@ export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 			>
 				Open Visualizer
 			</Button>
-			{/* Non-modal: Voyager's root selector is a Material UI Select, which portals its
-			    menu outside this dialog. Two focus traps in disjoint subtrees pass focus back
-			    and forth until the stack overflows, and the modal pointer-events lock swallows
-			    the clicks. The overlay is not rendered when non-modal, so the backdrop goes. */}
+			{/* Non-modal: a modal dialog traps focus and locks pointer events on the body,
+			    which the portalled Material UI menu fights until the stack overflows. The
+			    backdrop goes with it, since Radix drops the overlay when non-modal. */}
 			<Dialog modal={false} open={isFullscreen} onOpenChange={setIsFullscreen}>
 				<DialogContent
 					className="flex h-[90vh] w-[90vw] max-w-none flex-col p-0 sm:max-w-none"
-					onInteractOutside={(event) => {
-						// A click inside a portalled MUI menu is inside the dialog as far as the
-						// user is concerned, so it must not close it.
-						const target = event.target as HTMLElement | null;
-						if (target?.closest(MUI_PORTAL_SELECTOR)) {
-							event.preventDefault();
-						}
-					}}
+					onInteractOutside={keepOpenForPortalledMenus}
 				>
 					<DialogHeader className="shrink-0 border-b px-6 py-4">
 						<DialogTitle>Schema Visualizer</DialogTitle>
