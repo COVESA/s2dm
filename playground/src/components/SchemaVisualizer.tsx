@@ -19,6 +19,10 @@ type SchemaVisualizerProps = {
 	schema: string;
 };
 
+// Material UI renders menus, popovers and tooltips into their own portals at the body.
+const MUI_PORTAL_SELECTOR =
+	".MuiModal-root, .MuiPopover-root, .MuiPopper-root, .MuiTooltip-popper";
+
 export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 	const [graphqlSchema, setGraphqlSchema] = useState<GraphQLSchema | null>(
 		null,
@@ -99,8 +103,22 @@ export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 			>
 				Open Visualizer
 			</Button>
-			<Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-				<DialogContent className="flex h-[90vh] w-[90vw] max-w-none flex-col p-0 sm:max-w-none">
+			{/* Non-modal: Voyager's root selector is a Material UI Select, which portals its
+			    menu outside this dialog. Two focus traps in disjoint subtrees pass focus back
+			    and forth until the stack overflows, and the modal pointer-events lock swallows
+			    the clicks. The overlay is not rendered when non-modal, so the backdrop goes. */}
+			<Dialog modal={false} open={isFullscreen} onOpenChange={setIsFullscreen}>
+				<DialogContent
+					className="flex h-[90vh] w-[90vw] max-w-none flex-col p-0 sm:max-w-none"
+					onInteractOutside={(event) => {
+						// A click inside a portalled MUI menu is inside the dialog as far as the
+						// user is concerned, so it must not close it.
+						const target = event.target as HTMLElement | null;
+						if (target?.closest(MUI_PORTAL_SELECTOR)) {
+							event.preventDefault();
+						}
+					}}
+				>
 					<DialogHeader className="shrink-0 border-b px-6 py-4">
 						<DialogTitle>Schema Visualizer</DialogTitle>
 					</DialogHeader>
