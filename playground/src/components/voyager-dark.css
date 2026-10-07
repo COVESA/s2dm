@@ -4,121 +4,121 @@
 
 /* Docs Panel - using theme variables */
 .dark .doc-panel {
-	background: hsl(var(--card));
-	color: hsl(var(--card-foreground));
+	background: var(--card);
+	color: var(--card-foreground);
 }
 
 .dark .doc-panel > .contents {
-	background: hsl(var(--card));
-	color: hsl(var(--card-foreground));
+	background: var(--card);
+	color: var(--card-foreground);
 }
 
 .dark .doc-wrapper {
-	background: hsl(var(--card));
-	color: hsl(var(--card-foreground));
+	background: var(--card);
+	color: var(--card-foreground);
 }
 
 .dark .doc-navigation {
-	background: hsl(var(--background));
-	border-bottom: 1px solid hsl(var(--border));
+	background: var(--background);
+	border-bottom: 1px solid var(--border);
 }
 
 .dark .doc-navigation > .back {
-	color: hsl(var(--muted-foreground));
+	color: var(--muted-foreground);
 }
 
 .dark .doc-navigation > .back:hover {
-	color: hsl(var(--foreground));
-	background: hsl(var(--accent));
+	color: var(--foreground);
+	background: var(--accent);
 }
 
 .dark .doc-navigation > .active {
-	color: hsl(var(--foreground));
+	color: var(--foreground);
 }
 
 .dark .doc-navigation > .header {
-	color: hsl(var(--foreground));
+	color: var(--foreground);
 }
 
 .dark .doc-category {
-	color: hsl(var(--card-foreground));
+	color: var(--card-foreground);
 }
 
 .dark .doc-category > .title {
-	color: hsl(var(--muted-foreground));
+	color: var(--muted-foreground);
 }
 
 .dark .doc-category > .item {
-	color: hsl(var(--foreground));
+	color: var(--foreground);
 }
 
 .dark .doc-category > .item:hover {
-	background: hsl(var(--accent));
+	background: var(--accent);
 }
 
 .dark .doc-category > .item.-selected {
-	background: hsl(var(--accent));
+	background: var(--accent);
 }
 
 .dark .type-doc {
-	background: hsl(var(--card));
-	color: hsl(var(--card-foreground));
+	background: var(--card);
+	color: var(--card-foreground);
 }
 
 .dark .type-doc > .scroll-area {
-	background: hsl(var(--card));
+	background: var(--card);
 }
 
 .dark .description-box {
-	color: hsl(var(--card-foreground));
+	color: var(--card-foreground);
 }
 
 .dark .doc-alert-text {
-	color: hsl(var(--muted-foreground));
+	color: var(--muted-foreground);
 }
 
 .dark .doc-panel .MuiBox-root {
-	background: hsl(var(--card));
+	background: var(--card);
 }
 
 .dark .doc-panel .MuiInputBase-root {
-	color: hsl(var(--foreground));
-	background: hsl(var(--background));
+	color: var(--foreground);
+	background: var(--background);
 }
 
 .dark .doc-panel .MuiInput-underline:before {
-	border-bottom-color: hsl(var(--border)) !important;
+	border-bottom-color: var(--border) !important;
 }
 
 .dark .doc-panel .MuiInput-underline:after {
-	border-bottom-color: hsl(var(--primary)) !important;
+	border-bottom-color: var(--primary) !important;
 }
 
 .dark .doc-panel .MuiInput-underline:hover:not(.Mui-disabled):before {
-	border-bottom-color: hsl(var(--foreground)) !important;
+	border-bottom-color: var(--foreground) !important;
 }
 
 .dark .doc-panel .MuiInputBase-input {
-	color: hsl(var(--foreground));
+	color: var(--foreground);
 }
 
 .dark .doc-panel .MuiInputBase-input::placeholder {
-	color: hsl(var(--muted-foreground));
+	color: var(--muted-foreground);
 	opacity: 1;
 }
 
 /* HTML/Material-UI components - using theme variables */
 .dark .graphql-voyager > .menu-content {
-	background: hsl(var(--card));
-	color: hsl(var(--card-foreground));
+	background: var(--card);
+	color: var(--card-foreground);
 }
 
 .dark .MuiInputBase-root.root-selector {
-	color: hsl(var(--foreground));
+	color: var(--foreground);
 }
 
 .dark .MuiInputBase-root.root-selector::before {
-	border-bottom: 1px solid hsl(var(--border));
+	border-bottom: 1px solid var(--border);
 }
 
 .dark
@@ -126,28 +126,28 @@
 		.Mui-disabled,
 		.Mui-error
 	)::before {
-	border-bottom: 1px solid hsl(var(--foreground));
+	border-bottom: 1px solid var(--foreground);
 }
 
 .dark .MuiInputBase-root svg {
-	fill: hsl(var(--foreground));
+	fill: var(--foreground);
 }
 
 .dark .MuiButtonBase-root svg {
-	fill: hsl(var(--foreground));
+	fill: var(--foreground);
 }
 
 .dark .MuiPaper-root {
-	background: hsl(var(--card)) !important;
-	color: hsl(var(--card-foreground)) !important;
+	background: var(--card) !important;
+	color: var(--card-foreground) !important;
 }
 
 .dark .MuiButtonBase-root.Mui-selected {
-	background-color: hsl(var(--background)) !important;
+	background-color: var(--background) !important;
 }
 
 .dark li.MuiButtonBase-root.MuiMenuItem-root:hover {
-	background: hsl(var(--accent)) !important;
+	background: var(--accent) !important;
 }
 
 .dark .MuiCheckbox-root svg {
@@ -159,7 +159,7 @@
 }
 
 .dark .MuiFormControlLabel-root {
-	color: hsl(var(--foreground));
+	color: var(--foreground);
 }
 
 /* SVG graph elements - using hardcoded zinc colors for SVG compatibility */

@@ -87,13 +87,13 @@ body.graphiql-dark [data-radix-popper-content-wrapper] {
 .graphiql-doc-explorer-title {
 	font-weight: 700 !important;
 	padding-bottom: 1rem !important;
-	border-bottom: 1px solid hsl(var(--border)) !important;
+	border-bottom: 1px solid var(--border) !important;
 	margin-bottom: 1.5rem !important;
 	font-size: 1.5rem !important;
 }
 
 .graphiql-doc-explorer-section-title {
-	color: hsl(var(--foreground)) !important;
+	color: var(--foreground) !important;
 	font-weight: 600 !important;
 	font-size: 0.875rem !important;
 	padding: 1rem 0 0.75rem 0 !important;
@@ -105,7 +105,7 @@ body.graphiql-dark [data-radix-popper-content-wrapper] {
 } */
 
 .graphiql-markdown-description {
-	color: hsl(var(--muted-foreground)) !important;
+	color: var(--muted-foreground) !important;
 	font-size: 0.875rem !important;
 	line-height: 1.6 !important;
 	margin: 0.75rem 0 1.5rem 0 !important;
@@ -117,7 +117,7 @@ body.graphiql-dark [data-radix-popper-content-wrapper] {
 }
 
 .graphiql-doc-explorer-root-type {
-	color: hsl(var(--muted-foreground)) !important;
+	color: var(--muted-foreground) !important;
 	font-weight: 400 !important;
 }
 
@@ -130,12 +130,16 @@ body.graphiql-dark [data-radix-popper-content-wrapper] {
 }
 
 .graphiql-doc-explorer::-webkit-scrollbar-thumb {
-	background: hsl(var(--muted)) !important;
+	background: var(--muted) !important;
 	border-radius: 0.25rem !important;
 }
 
 .graphiql-doc-explorer::-webkit-scrollbar-thumb:hover {
-	background: hsl(var(--muted-foreground) / 0.3) !important;
+	background: color-mix(
+		in oklab,
+		var(--muted-foreground) 30%,
+		transparent
+	) !important;
 }
 
 .graphiql-editor,
