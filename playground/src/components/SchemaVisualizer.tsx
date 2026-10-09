@@ -112,9 +112,11 @@ export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 			>
 				Open Visualizer
 			</Button>
-			{/* Non-modal: a modal dialog traps focus and locks pointer events on the body,
-			    which the portalled Material UI menu fights until the stack overflows. The
-			    backdrop goes with it, since Radix drops the overlay when non-modal. */}
+			{/* Non-modal: a modal dialog's focus trap and pointer-events lock fight the
+			    portalled Material UI menu. Radix drops its overlay too, so this stands in. */}
+			{isFullscreen && (
+				<div aria-hidden className="fixed inset-0 z-40 bg-black/50" />
+			)}
 			<Dialog modal={false} open={isFullscreen} onOpenChange={setIsFullscreen}>
 				<DialogContent
 					className="flex h-[90vh] w-[90vw] max-w-none flex-col p-0 sm:max-w-none"
