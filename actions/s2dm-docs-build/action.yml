@@ -92,6 +92,29 @@ runs:
         mkdir -p dist
         s2dm compose ${{ steps.sources.outputs.flags }} -o dist/model.graphql
 
+    - name: Fetch ledger.db from latest release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        mkdir -p dist
+        asset_id=$(curl -sS \
+          -H "Authorization: Bearer $GH_TOKEN" \
+          -H "Accept: application/vnd.github+json" \
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/latest" \
+          | jq -r '.assets[]? | select(.name == "ledger.db") | .id')
+
+        if [ -z "$asset_id" ]; then
+          echo "No ledger.db asset in the latest release; skipping."
+          exit 0
+        fi
+
+        curl -sSL \
+          -H "Authorization: Bearer $GH_TOKEN" \
+          -H "Accept: application/octet-stream" \
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" \
+          -o dist/ledger.db
+
     # Scaffold the Docusaurus website into ./website using the template
     # bundled with s2dm. No website files need to be checked into the repo.
     - name: Scaffold Docusaurus website
