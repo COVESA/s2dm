@@ -2,9 +2,10 @@ import type { GraphQLSchema } from "graphql";
 import { buildSchema } from "graphql";
 import { Voyager } from "graphql-voyager";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Component, type ReactNode, useEffect, useState } from "react";
 import "graphql-voyager/dist/voyager.css";
 import "@/components/voyager-dark.css";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -29,6 +30,30 @@ function keepOpenForPortalledMenus(event: Event) {
 	const portal = target?.closest(MUI_PORTAL_SELECTOR);
 	if (portal) {
 		event.preventDefault();
+	}
+}
+
+const VISUALIZER_FAILURE_MESSAGE = "The schema graph could not be displayed.";
+
+/**
+ * Catches errors that Voyager throws while rendering the schema graph and
+ * shows an error message in place of the visualizer.
+ */
+class VoyagerErrorBoundary extends Component<
+	{ children: ReactNode },
+	{ hasFailed: boolean }
+> {
+	state = { hasFailed: false };
+
+	static getDerivedStateFromError() {
+		return { hasFailed: true };
+	}
+
+	render() {
+		if (this.state.hasFailed) {
+			return <ErrorDisplay error={VISUALIZER_FAILURE_MESSAGE} />;
+		}
+		return this.props.children;
 	}
 }
 
@@ -74,31 +99,33 @@ export function SchemaVisualizer({ schema }: SchemaVisualizerProps) {
 		}
 
 		return (
-			<div className="relative h-full w-full">
-				<Voyager
-					introspection={graphqlSchema}
-					displayOptions={{
-						skipRelay: true,
-						skipDeprecated: true,
-						showLeafFields: true,
-					}}
-					hideDocs={isDocsHidden}
-					hideSettings={false}
-				/>
-				<Button
-					variant="outline"
-					size="icon"
-					className="absolute bottom-2 left-2 z-10 !bg-background hover:!bg-muted"
-					onClick={() => setIsDocsHidden((previous) => !previous)}
-					title={isDocsHidden ? "Show docs" : "Hide docs"}
-				>
-					{isDocsHidden ? (
-						<PanelLeftOpen className="h-4 w-4" />
-					) : (
-						<PanelLeftClose className="h-4 w-4" />
-					)}
-				</Button>
-			</div>
+			<VoyagerErrorBoundary key={schema}>
+				<div className="relative h-full w-full">
+					<Voyager
+						introspection={graphqlSchema}
+						displayOptions={{
+							skipRelay: true,
+							skipDeprecated: true,
+							showLeafFields: true,
+						}}
+						hideDocs={isDocsHidden}
+						hideSettings={false}
+					/>
+					<Button
+						variant="outline"
+						size="icon"
+						className="absolute bottom-2 left-2 z-10 !bg-background hover:!bg-muted"
+						onClick={() => setIsDocsHidden((previous) => !previous)}
+						title={isDocsHidden ? "Show docs" : "Hide docs"}
+					>
+						{isDocsHidden ? (
+							<PanelLeftOpen className="h-4 w-4" />
+						) : (
+							<PanelLeftClose className="h-4 w-4" />
+						)}
+					</Button>
+				</div>
+			</VoyagerErrorBoundary>
 		);
 	};
 
