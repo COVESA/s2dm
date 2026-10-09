@@ -1,6 +1,7 @@
 import {
 	type ArgumentNode,
 	type DirectiveNode,
+	type DocumentNode,
 	extendSchema,
 	type FieldNode,
 	type GraphQLSchema,
@@ -55,6 +56,35 @@ export function withPickDirective(schema: GraphQLSchema): GraphQLSchema {
 
 	const pickDirectiveDocument = parse(PICK_DIRECTIVE_DEFINITION);
 	return extendSchema(schema, pickDirectiveDocument);
+}
+
+// GraphQL rejects an empty selection set, so a selection query the server accepts does
+// not parse here untouched.
+const EMPTY_SELECTION_SET = /\{\s*\}\s*$/;
+const NOTHING_SELECTED = "{ __typename }";
+
+/**
+ * Parses a selection query, reading an empty selection set as selecting no
+ * fields.
+ *
+ * A query that only picks definitions has no fields to name. Such a query is
+ * read as selecting `__typename`, which every type carries and which names
+ * nothing in the model.
+ *
+ * @param text The selection query.
+ * @returns The parsed document.
+ */
+export function parseSelectionQuery(text: string): DocumentNode {
+	try {
+		return parse(text);
+	} catch (error) {
+		const stripped = text.trimEnd();
+		const repaired = stripped.replace(EMPTY_SELECTION_SET, NOTHING_SELECTED);
+		if (repaired === stripped) {
+			throw error;
+		}
+		return parse(repaired);
+	}
 }
 
 export function findPickDirective(
