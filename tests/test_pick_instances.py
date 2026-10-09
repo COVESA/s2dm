@@ -232,6 +232,30 @@ def test_extract_returns_a_document_without_pick_as_is() -> None:
     assert picked.instances == {}
 
 
+def test_extract_reads_pick_on_the_operation_and_on_fields() -> None:
+    schema = build_schema(SCHEMA)
+    document = parse(
+        """
+        query @pick(directives: ["instanceTag"]) {
+          vehicle {
+            doors {
+              position @pick(instances: ["ROW1.LEFT"]) {
+                row
+                side
+              }
+            }
+          }
+        }
+        """
+    )
+
+    stripped_document, picked = extract_and_validate_picks(schema, document)
+
+    assert picked.directives == ["instanceTag"]
+    assert picked.instances == {("Door", "position"): ["ROW1.LEFT"]}
+    assert Directive.PICK.value not in _applied_directive_names(stripped_document)
+
+
 def test_extract_accepts_the_same_pick_on_every_occurrence_of_a_field() -> None:
     schema = build_schema(SCHEMA)
     document = parse(

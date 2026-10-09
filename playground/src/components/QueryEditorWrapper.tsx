@@ -1,5 +1,5 @@
 import { QueryEditor, useEditorContext, useGraphiQL } from "@graphiql/react";
-import { type DocumentNode, parse, validate } from "graphql";
+import { type DocumentNode, validate } from "graphql";
 import {
 	forwardRef,
 	type MutableRefObject,
@@ -7,6 +7,7 @@ import {
 	useImperativeHandle,
 	useRef,
 } from "react";
+import { parseSelectionQuery } from "@/utils/selectionQuery/pick";
 
 /**
  * A selection query that passed validation.
@@ -112,7 +113,7 @@ export const QueryEditorWrapper = forwardRef<
 
 			let document: DocumentNode;
 			try {
-				document = parse(query);
+				document = parseSelectionQuery(query);
 			} catch {
 				onValidated(null);
 				return;

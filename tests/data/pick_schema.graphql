@@ -1,0 +1,26 @@
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+directive @confidential on FIELD_DEFINITION
+
+scalar DateTime
+
+enum SeatMaterial { CLOTH LEATHER VINYL }
+enum VelocityUnit { KILOM_PER_HR MI_PER_HR M_PER_SEC }
+
+type Seat {
+  isOccupied: Boolean
+  material: SeatMaterial
+  lastAdjusted: DateTime
+}
+
+type Cabin {
+  seats: [Seat]
+}
+
+type Vehicle {
+  cabin: Cabin
+  averageSpeed(unit: VelocityUnit = KILOM_PER_HR): Float @range(min: 0, max: 300)
+}
+
+type Query {
+  vehicle: Vehicle
+}
