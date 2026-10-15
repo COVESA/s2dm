@@ -3,7 +3,6 @@ import {
 	useDocExplorerActions,
 } from "@graphiql/plugin-doc-explorer";
 import { useGraphiQL } from "@graphiql/react";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import {
 	type GraphQLObjectType,
 	type GraphQLSchema,
@@ -22,10 +21,8 @@ import { PickGroupItem } from "@/components/explore/PickGroupItem";
 import { PickNameItem } from "@/components/explore/PickNameItem";
 import { RecursionDepthStepper } from "@/components/explore/RecursionDepthStepper";
 import { SelectionTreeItem } from "@/components/explore/SelectionTreeItem";
-import {
-	TREE_ROW_HEIGHT_PX,
-	TreeExpandSpacer,
-} from "@/components/explore/TreeRowParts";
+import { TreeRowList } from "@/components/explore/TreeRowList";
+import { TreeExpandSpacer } from "@/components/explore/TreeRowParts";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
 import type { ValidatedQuery } from "@/components/QueryEditorWrapper";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,10 +55,7 @@ import {
 	normalizeSearchTerm,
 	searchTree,
 } from "@/utils/selectionQuery/searchTree";
-import {
-	buildTreeRows,
-	getStickyRowIndexes,
-} from "@/utils/selectionQuery/treeRows";
+import { buildTreeRows } from "@/utils/selectionQuery/treeRows";
 
 const PICK_GROUP_LABELS: Record<PickArgumentName, string> = {
 	enums: "Enums",
@@ -73,8 +67,6 @@ const PICK_GROUPS = PICK_ARGUMENT_NAMES.map((argumentName) => ({
 	argumentName,
 	label: PICK_GROUP_LABELS[argumentName],
 }));
-
-const OVERSCAN_ROW_COUNT = 10;
 
 type SelectionTreeProps = {
 	selectionQuery: string;
@@ -178,13 +170,6 @@ function SelectionTreeContent({
 			),
 		[rootNode, pickGroups, expandedKeys, search, maxRecursionDepth],
 	);
-	const rowVirtualizer = useVirtualizer({
-		count: rows.length,
-		getScrollElement: () => scrollContainerRef.current,
-		estimateSize: () => TREE_ROW_HEIGHT_PX,
-		getItemKey: (index) => rows[index].key,
-		overscan: OVERSCAN_ROW_COUNT,
-	});
 
 	const isValidationPending = validatedQuery.text !== selectionQuery;
 	const isTreeDisabled = hasQueryErrors || isValidationPending || isUpdating;
@@ -200,14 +185,6 @@ function SelectionTreeContent({
 		allCounts.selectedCount,
 		allCounts.totalCount,
 	);
-
-	const scrollOffset = rowVirtualizer.scrollOffset ?? 0;
-	const firstVisibleIndex = Math.floor(scrollOffset / TREE_ROW_HEIGHT_PX);
-	const stickyRowIndexes = getStickyRowIndexes(rows, firstVisibleIndex);
-	const stickyHeight = stickyRowIndexes.length * TREE_ROW_HEIGHT_PX;
-	const stickyOverlap = -stickyHeight;
-	const virtualRows = rowVirtualizer.getVirtualItems();
-	const totalHeight = rowVirtualizer.getTotalSize();
 
 	const applyTreeEdit = async (buildPatchedQuery: () => string) => {
 		if (isTreeDisabled) {
@@ -368,32 +345,11 @@ function SelectionTreeContent({
 	let treeContent: ReactNode = <EmptyState title={"No matches"} />;
 	if (!hasNoMatches) {
 		treeContent = (
-			<>
-				{stickyRowIndexes.length > 0 && (
-					<div
-						className={"sticky top-0 z-10 bg-background shadow-sm"}
-						style={{ height: stickyHeight, marginBottom: stickyOverlap }}
-					>
-						{stickyRowIndexes.map((rowIndex) => (
-							<div key={rows[rowIndex].key}>{renderRow(rowIndex)}</div>
-						))}
-					</div>
-				)}
-				<div className={"relative"} style={{ height: totalHeight }}>
-					{virtualRows.map((virtualRow) => {
-						const rowTransform = `translateY(${virtualRow.start}px)`;
-						return (
-							<div
-								key={virtualRow.key}
-								className={"absolute top-0 left-0 w-full"}
-								style={{ height: virtualRow.size, transform: rowTransform }}
-							>
-								{renderRow(virtualRow.index)}
-							</div>
-						);
-					})}
-				</div>
-			</>
+			<TreeRowList
+				rows={rows}
+				scrollContainerRef={scrollContainerRef}
+				renderRow={renderRow}
+			/>
 		);
 	}
 
