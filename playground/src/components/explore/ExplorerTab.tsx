@@ -4,6 +4,7 @@ import { buildSchema, execute, GraphQLError, parse } from "graphql";
 import { Columns2, Download, FileCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
+import { CycleDepthWarning } from "@/components/explore/CycleDepthWarning";
 import { DocsPanel } from "@/components/explore/DocsPanel";
 import { type IconTabOption, IconTabs } from "@/components/explore/IconTabs";
 import { SelectionTree } from "@/components/explore/SelectionTree";
@@ -48,10 +49,25 @@ import { cn } from "@/utils/cn";
 import { downloadTextFile } from "@/utils/download";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { withPickDirective } from "@/utils/selectionQuery/pick";
+import { readSelection } from "@/utils/selectionQuery/readSelection";
+import {
+	createRootNode,
+	DEFAULT_RECURSION_DEPTH,
+	findNodesBeyondDepth,
+	getNodePathSegments,
+} from "@/utils/selectionQuery/schemaTree";
 import "@graphiql/react/style.css";
 import "@/components/graphiql-theme.css";
 
 type SelectionMode = "text" | "split";
+
+type SelectionAction = "apply" | "reapply" | "unapply";
+
+const SELECTION_ACTION_LABELS: Record<SelectionAction, string> = {
+	apply: "Apply Selection",
+	reapply: "Re-apply Selection",
+	unapply: "Unapply Selection",
+};
 
 const SELECTION_MODES: IconTabOption<SelectionMode>[] = [
 	{ value: "split", label: "Split", icon: Columns2 },
@@ -92,12 +108,17 @@ export function ExplorerTab() {
 	const queryEditorRef = useRef<QueryEditorHandle>(null);
 	const treeResize = useTreeResize();
 	const [selectionMode, setSelectionMode] = useState<SelectionMode>("split");
+	const [maxRecursionDepth, setMaxRecursionDepth] = useState(
+		DEFAULT_RECURSION_DEPTH,
+	);
 	const [isDocsOpen, setIsDocsOpen] = useState(false);
 	const docExplorerActions = useDocExplorerActions();
 	const isSelectionQueryRequired =
 		selectedExporter?.requiresSelectionQuery ?? false;
 	const hasAppliedSelection = appliedSelectionQuery.trim().length > 0;
 	const hasSelectionText = selectionQuery.trim().length > 0;
+	const isAppliedQueryCurrent =
+		selectionQuery.trim() === appliedSelectionQuery.trim();
 
 	const graphqlSchema = useMemo(() => {
 		if (!originalSchema?.trim()) return undefined;
@@ -108,6 +129,26 @@ export function ExplorerTab() {
 			return undefined;
 		}
 	}, [originalSchema]);
+
+	const selection = useMemo(
+		() => readSelection(lastValidatedQuery.document),
+		[lastValidatedQuery.document],
+	);
+
+	const pathsBeyondDepth = useMemo(() => {
+		const queryType = graphqlSchema?.getQueryType();
+		if (!queryType) {
+			return [];
+		}
+
+		const rootNode = createRootNode(queryType);
+		const nodesBeyondDepth = findNodesBeyondDepth(
+			rootNode,
+			selection,
+			maxRecursionDepth,
+		);
+		return nodesBeyondDepth.map(getNodePathSegments);
+	}, [graphqlSchema, selection, maxRecursionDepth]);
 
 	const fetcher = useMemo(() => {
 		if (!graphqlSchema) return undefined;
@@ -173,8 +214,15 @@ export function ExplorerTab() {
 		queryEditorRef.current?.replaceQuery(text);
 	};
 
+	let selectionAction: SelectionAction = "apply";
+	if (hasAppliedSelection && isAppliedQueryCurrent) {
+		selectionAction = "unapply";
+	} else if (hasAppliedSelection) {
+		selectionAction = "reapply";
+	}
+
 	const handleSelectionAction = () => {
-		if (hasAppliedSelection) {
+		if (selectionAction === "unapply") {
 			dispatch(clearAppliedSelection());
 			return;
 		}
@@ -182,10 +230,7 @@ export function ExplorerTab() {
 		dispatch(pruningStart(selectionQuery));
 	};
 
-	let selectionActionLabel = "Apply Selection";
-	if (hasAppliedSelection) {
-		selectionActionLabel = "Unapply Selection";
-	}
+	const selectionActionLabel = SELECTION_ACTION_LABELS[selectionAction];
 
 	let resetDescription =
 		"This will clear the selection text and remove the applied filtering.";
@@ -195,11 +240,12 @@ export function ExplorerTab() {
 	}
 
 	let isSelectionActionDisabled = false;
-	if (!hasAppliedSelection) {
+	if (selectionAction !== "unapply") {
 		isSelectionActionDisabled = !hasSelectionText || queryHasErrors;
 	}
 
 	const isTreeHidden = selectionMode === "text";
+	const isDepthWarningShown = !queryHasErrors && pathsBeyondDepth.length > 0;
 
 	let content: React.ReactNode;
 	if (!graphqlSchema || !fetcher) {
@@ -233,9 +279,17 @@ export function ExplorerTab() {
 											build the Selection Query by checking fields in a tree
 											beside the editor, or write it as text only.
 										</HelpItem>
-										<HelpItem term="Apply or Unapply Selection">
-											apply or remove schema filtering using the current
-											selection text.
+										<HelpItem term="Apply, Re-apply or Unapply Selection">
+											apply schema filtering using the current selection text.
+											Once applied, editing the text offers to re-apply it;
+											unapply is available while the text matches what was
+											applied.
+										</HelpItem>
+										<HelpItem term="Cycle Depth Warning">
+											shown beside Apply Selection when the selection text goes
+											deeper into cyclic fields than the tree's cycle depth
+											allows. Click it to see those paths; applying still uses
+											the text as written.
 										</HelpItem>
 										<HelpItem term="Schema Visualizer">
 											view the current original or filtered schema as a graph.
@@ -250,13 +304,23 @@ export function ExplorerTab() {
 										</HelpItem>
 									</HelpButton>
 									<SchemaVisualizer schema={filteredSchema} />
-									<Button
-										onClick={handleSelectionAction}
-										disabled={isSelectionActionDisabled}
-										loading={isPruning && !hasAppliedSelection}
-									>
-										{selectionActionLabel}
-									</Button>
+									<div className={"flex items-center"}>
+										{isDepthWarningShown && (
+											<CycleDepthWarning
+												paths={pathsBeyondDepth}
+												maxRecursionDepth={maxRecursionDepth}
+												className={"rounded-r-none border-r-0"}
+											/>
+										)}
+										<Button
+											onClick={handleSelectionAction}
+											disabled={isSelectionActionDisabled}
+											loading={isPruning && selectionAction !== "unapply"}
+											className={cn({ "rounded-l-none": isDepthWarningShown })}
+										>
+											{selectionActionLabel}
+										</Button>
+									</div>
 									<ConfirmActionDialog
 										trigger={
 											<Button
@@ -305,9 +369,12 @@ export function ExplorerTab() {
 								<SelectionTree
 									selectionQuery={selectionQuery}
 									validatedQuery={lastValidatedQuery}
+									selection={selection}
 									hasQueryErrors={queryHasErrors}
+									maxRecursionDepth={maxRecursionDepth}
 									onTreeEdit={handleTreeEdit}
 									onOpenDocs={handleOpenDocs}
+									onRecursionDepthChange={setMaxRecursionDepth}
 								/>
 							</div>
 							<TreeResizeHandle

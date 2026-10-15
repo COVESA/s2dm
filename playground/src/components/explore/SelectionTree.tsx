@@ -43,10 +43,9 @@ import {
 	PICK_ARGUMENT_NAMES,
 	type PickArgumentName,
 } from "@/utils/selectionQuery/pick";
-import { readSelection } from "@/utils/selectionQuery/readSelection";
+import type { SelectionIndex } from "@/utils/selectionQuery/readSelection";
 import {
 	createRootNode,
-	DEFAULT_RECURSION_DEPTH,
 	type SchemaTreeNode,
 } from "@/utils/selectionQuery/schemaTree";
 import {
@@ -71,9 +70,12 @@ const PICK_GROUPS = PICK_ARGUMENT_NAMES.map((argumentName) => ({
 type SelectionTreeProps = {
 	selectionQuery: string;
 	validatedQuery: ValidatedQuery;
+	selection: SelectionIndex;
 	hasQueryErrors: boolean;
+	maxRecursionDepth: number;
 	onTreeEdit: (text: string) => void;
 	onOpenDocs: () => void;
+	onRecursionDepthChange: (maxRecursionDepth: number) => void;
 };
 
 export function SelectionTree(props: SelectionTreeProps) {
@@ -96,9 +98,12 @@ type SelectionTreeContentProps = SelectionTreeProps & {
 function SelectionTreeContent({
 	selectionQuery,
 	validatedQuery,
+	selection,
 	hasQueryErrors,
+	maxRecursionDepth,
 	onTreeEdit,
 	onOpenDocs,
+	onRecursionDepthChange,
 	schema,
 	queryType,
 }: SelectionTreeContentProps) {
@@ -107,16 +112,9 @@ function SelectionTreeContent({
 		() => new Set(),
 	);
 	const [searchTerm, setSearchTerm] = useState("");
-	const [maxRecursionDepth, setMaxRecursionDepth] = useState(
-		DEFAULT_RECURSION_DEPTH,
-	);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const docExplorerActions = useDocExplorerActions();
 
-	const selection = useMemo(
-		() => readSelection(validatedQuery.document),
-		[validatedQuery.document],
-	);
 	const countLeaves = useMemo(() => createLeafCounter(selection), [selection]);
 	const rootNode = useMemo(() => createRootNode(queryType), [queryType]);
 
@@ -397,7 +395,7 @@ function SelectionTreeContent({
 					<div className={"ml-auto"}>
 						<RecursionDepthStepper
 							value={maxRecursionDepth}
-							onChange={setMaxRecursionDepth}
+							onChange={onRecursionDepthChange}
 						/>
 					</div>
 				</div>
@@ -424,7 +422,9 @@ function SelectionTreeHelp() {
 				fields whose type already appears higher up the branch. Checking one
 				adds a single level. The ↻ cycle depth stepper sets how many cyclic
 				fields deep a branch can be expanded; type a number or use − and +.
-				Cyclic fields beyond it are greyed out and can't be selected.
+				Cyclic fields beyond it are greyed out and can't be selected. Lowering
+				it leaves the query unchanged; selections deeper than it are flagged on
+				Apply Selection.
 			</HelpItem>
 			<HelpItem term={"Enums, Scalars and Directives"}>
 				add names to the query's @pick directive. Checking a whole group writes

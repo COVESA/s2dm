@@ -8,6 +8,7 @@ import {
 	isObjectType,
 	isUnionType,
 } from "graphql";
+import type { SelectionIndex } from "@/utils/selectionQuery/readSelection";
 
 export type SchemaTreeSegment =
 	| { kind: "field"; name: string }
@@ -61,6 +62,24 @@ export function joinPathKey(
 	}
 
 	return `${parentKey}/${segmentKey}`;
+}
+
+/**
+ * Lists the segment keys of a node's path from the root, for display.
+ *
+ * @param node The node.
+ * @returns The segment keys, for example `["vehicle", "cabin", "on Door"]`;
+ * empty for the root.
+ */
+export function getNodePathSegments(node: SchemaTreeNode): string[] {
+	const chain = getNodeChain(node);
+	return chain.flatMap((chainNode) => {
+		if (!chainNode.segment) {
+			return [];
+		}
+
+		return [getSegmentKey(chainNode.segment)];
+	});
 }
 
 export function createRootNode(queryType: GraphQLObjectType): SchemaTreeNode {
@@ -229,6 +248,35 @@ export function getSelectableChildNodes(
 	return childNodes.filter((childNode) =>
 		hasLeafWithinDepth(childNode, maxRecursionDepth),
 	);
+}
+
+/**
+ * Finds the selected nodes that pass through more recursive fields than a
+ * cycle depth allows. Only selected paths are followed, and each branch stops
+ * at its first such node.
+ *
+ * @param node The node to search below.
+ * @param selection The index of the current text.
+ * @param maxRecursionDepth The highest recursion depth a selected node may
+ * have.
+ * @returns The outermost selected nodes beyond the depth, in schema order.
+ */
+export function findNodesBeyondDepth(
+	node: SchemaTreeNode,
+	selection: SelectionIndex,
+	maxRecursionDepth: number,
+): SchemaTreeNode[] {
+	const childNodes = getChildNodes(node);
+	const selectedChildNodes = childNodes.filter((childNode) =>
+		selection.occurrencesByKey.has(childNode.key),
+	);
+	return selectedChildNodes.flatMap((childNode) => {
+		if (childNode.recursionDepth > maxRecursionDepth) {
+			return [childNode];
+		}
+
+		return findNodesBeyondDepth(childNode, selection, maxRecursionDepth);
+	});
 }
 
 /**
