@@ -1,21 +1,89 @@
 import { QueryEditor, useEditorContext, useGraphiQL } from "@graphiql/react";
-import { parse, validate } from "graphql";
-import { useEffect, useRef } from "react";
+import { type DocumentNode, parse, validate } from "graphql";
+import {
+	forwardRef,
+	type MutableRefObject,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+} from "react";
+
+/**
+ * A selection query that passed validation.
+ *
+ * `text` is the text that was validated. `document` is its parsed form, or
+ * `null` when the text is empty, which counts as valid.
+ */
+export type ValidatedQuery = {
+	text: string;
+	document: DocumentNode | null;
+};
+
+export type QueryEditorHandle = {
+	replaceQuery: (text: string) => void;
+};
 
 type QueryEditorWrapperProps = {
 	selectionQuery: string;
 	onSelectionQueryChange: (value: string) => void;
-	onValidationChange?: (hasErrors: boolean) => void;
+	/** Called after each validation; `null` when the query doesn't parse or validate. */
+	onValidated?: (validatedQuery: ValidatedQuery | null) => void;
 };
 
-export function QueryEditorWrapper({
-	selectionQuery,
-	onSelectionQueryChange,
-	onValidationChange,
-}: QueryEditorWrapperProps) {
+const TYPING_VALIDATION_DELAY_MS = 500;
+
+/**
+ * Applies an editor change that does not come from typing, with the flag set
+ * for its duration so the change listener skips the typing debounce. The flag
+ * is reset even when the change throws.
+ *
+ * @param isProgrammaticChangeRef The flag the change listener reads; mutated.
+ * @param applyChange The editor change to apply.
+ */
+function runProgrammaticChange(
+	isProgrammaticChangeRef: MutableRefObject<boolean>,
+	applyChange: () => void,
+) {
+	isProgrammaticChangeRef.current = true;
+	try {
+		applyChange();
+	} finally {
+		isProgrammaticChangeRef.current = false;
+	}
+}
+
+export const QueryEditorWrapper = forwardRef<
+	QueryEditorHandle,
+	QueryEditorWrapperProps
+>(function QueryEditorWrapper(
+	{ selectionQuery, onSelectionQueryChange, onValidated },
+	ref,
+) {
 	const { queryEditor } = useEditorContext();
 	const schema = useGraphiQL((state) => state.schema);
 	const validationTimeoutRef = useRef<number | null>(null);
+	const isProgrammaticChangeRef = useRef(false);
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			replaceQuery: (text: string) => {
+				const model = queryEditor?.getModel();
+				if (!queryEditor || !model) {
+					return;
+				}
+
+				const fullRange = model.getFullModelRange();
+				runProgrammaticChange(isProgrammaticChangeRef, () => {
+					queryEditor.executeEdits("selection-tree", [
+						{ range: fullRange, text },
+					]);
+					queryEditor.pushUndoStop();
+				});
+			},
+		}),
+		[queryEditor],
+	);
 
 	useEffect(() => {
 		if (!queryEditor) return;
@@ -23,30 +91,42 @@ export function QueryEditorWrapper({
 		queryEditor.updateOptions({ contextmenu: false });
 
 		if (selectionQuery !== queryEditor.getValue()) {
-			queryEditor.setValue(selectionQuery);
+			runProgrammaticChange(isProgrammaticChangeRef, () =>
+				queryEditor.setValue(selectionQuery),
+			);
 		}
 	}, [queryEditor, selectionQuery]);
 
 	useEffect(() => {
-		if (!queryEditor || !onValidationChange) return;
+		if (!queryEditor) return;
 
 		const validateQuery = (query: string) => {
-			if (!query.trim()) {
-				onValidationChange(false);
+			if (!onValidated) {
 				return;
 			}
 
-			try {
-				const document = parse(query);
-				if (schema) {
-					const errors = validate(schema, document);
-					onValidationChange(errors.length > 0);
-				} else {
-					onValidationChange(false);
-				}
-			} catch {
-				onValidationChange(true);
+			if (!query.trim()) {
+				onValidated({ text: query, document: null });
+				return;
 			}
+
+			let document: DocumentNode;
+			try {
+				document = parse(query);
+			} catch {
+				onValidated(null);
+				return;
+			}
+
+			if (schema) {
+				const errors = validate(schema, document);
+				if (errors.length > 0) {
+					onValidated(null);
+					return;
+				}
+			}
+
+			onValidated({ text: query, document });
 		};
 
 		const disposable = queryEditor.onDidChangeModelContent(() => {
@@ -57,12 +137,18 @@ export function QueryEditorWrapper({
 				clearTimeout(validationTimeoutRef.current);
 			}
 
+			if (isProgrammaticChangeRef.current) {
+				validateQuery(value);
+				return;
+			}
+
 			validationTimeoutRef.current = setTimeout(() => {
 				validateQuery(value);
-			}, 500);
+			}, TYPING_VALIDATION_DELAY_MS);
 		});
 
-		validateQuery(queryEditor.getValue());
+		const currentValue = queryEditor.getValue();
+		validateQuery(currentValue);
 
 		return () => {
 			disposable.dispose();
@@ -70,11 +156,11 @@ export function QueryEditorWrapper({
 				clearTimeout(validationTimeoutRef.current);
 			}
 		};
-	}, [queryEditor, onSelectionQueryChange, onValidationChange, schema]);
+	}, [queryEditor, onSelectionQueryChange, onValidated, schema]);
 
 	return (
 		<div className="relative flex-1 min-h-0 overflow-hidden">
 			<QueryEditor />
 		</div>
 	);
-}
+});
