@@ -1,0 +1,77 @@
+diff --git a/node_modules/@graphql-markdown/printer-legacy/dist/printer.js b/node_modules/@graphql-markdown/printer-legacy/dist/printer.js
+index 067fd5d..9d59906 100644
+--- a/node_modules/@graphql-markdown/printer-legacy/dist/printer.js
++++ b/node_modules/@graphql-markdown/printer-legacy/dist/printer.js
+@@ -110,6 +110,7 @@ class Printer {
+     static _eventEmitter;
+     static _options;
+     static _mdxDeclaration;
++    static _relationSchemaMaps = new WeakMap();
+     /**
+      * Global printer configuration options
+      */
+@@ -151,6 +152,8 @@ class Printer {
+      * @param eventEmitter - Optional event emitter for print events interception
+      */
+     static async init(schema, baseURL = "schema", linkRoot = "/", { customDirectives, deprecated, groups, meta, metatags, onlyDocDirectives, printTypeOptions, skipDocDirectives, sectionHeaderId, } = DEFAULT_INIT_OPTIONS, formatter, mdxDeclaration, eventEmitter) {
++        // Each documentation generation gets fresh maps, even if a schema object is reused.
++        Printer._relationSchemaMaps = new WeakMap();
+         // Always update eventEmitter regardless of initialization state
+         Printer.eventEmitter = eventEmitter ?? null;
+         if (Printer.options === undefined) {
+@@ -330,7 +333,15 @@ class Printer {
+      * @returns Formatted relations section as MDX or plain string
+      */
+     static printRelations = (type, options) => {
+-        return (0, relation_1.printRelations)(type, options);
++        if (!options.schema || !(0, graphql_1.isNamedType)(type) || (0, graphql_1.isOperation)(type)) {
++            return "";
++        }
++        let schemaMap = Printer._relationSchemaMaps.get(options.schema);
++        if (!schemaMap) {
++            schemaMap = (0, graphql_1.getSchemaMap)(options.schema);
++            Printer._relationSchemaMaps.set(options.schema, schemaMap);
++        }
++        return (0, relation_1.printRelations)(type, options, schemaMap);
+     };
+     /**
+      * Prints HTML meta tags for the documentation
+diff --git a/node_modules/@graphql-markdown/printer-legacy/dist/relation.js b/node_modules/@graphql-markdown/printer-legacy/dist/relation.js
+index 5538d1f..1e7cb78 100644
+--- a/node_modules/@graphql-markdown/printer-legacy/dist/relation.js
++++ b/node_modules/@graphql-markdown/printer-legacy/dist/relation.js
+@@ -43,14 +43,14 @@ exports.getRootTypeLocaleFromString = getRootTypeLocaleFromString;
+  * const mdx = printRelationOf(type, "Member Of", getRelationOfField, options);
+  * ```
+  */
+-const printRelationOf = (type, section, getRelation, options) => {
++const printRelationOf = (type, section, getRelation, options, cachedSchemaMap) => {
+     if (!(0, graphql_1.isNamedType)(type) ||
+         (0, graphql_1.isOperation)(type) ||
+         !options.schema ||
+         typeof getRelation !== "function") {
+         return "";
+     }
+-    const schemaMap = (0, graphql_1.getSchemaMap)(options.schema);
++    const schemaMap = cachedSchemaMap ?? (0, graphql_1.getSchemaMap)(options.schema);
+     const relations = getRelation(type, schemaMap);
+     if (!relations) {
+         return "";
+@@ -92,7 +92,7 @@ exports.printRelationOf = printRelationOf;
+  * const relations = printRelations(myType, { schema, formatMDXBullet: () => "* " });
+  * ```
+  */
+-const printRelations = (type, options) => {
++const printRelations = (type, options, cachedSchemaMap) => {
+     const relations = {
+         returnedBy: { section: "Returned By", getRelation: graphql_1.getRelationOfReturn },
+         memberOf: { section: "Member Of", getRelation: graphql_1.getRelationOfField },
+@@ -102,7 +102,7 @@ const printRelations = (type, options) => {
+         },
+     };
+     const relationResults = Object.values(relations).map(({ section, getRelation }) => {
+-        return (0, exports.printRelationOf)(type, section, getRelation, options);
++        return (0, exports.printRelationOf)(type, section, getRelation, options, cachedSchemaMap);
+     });
+     return relationResults.join("");
+ };
