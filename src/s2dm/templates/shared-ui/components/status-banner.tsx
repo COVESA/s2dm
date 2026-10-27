@@ -1,4 +1,4 @@
-import { cn } from "@/utils/cn";
+import { cn } from "@shared-ui/utils/cn";
 
 const VARIANT_CLASSES = {
 	info: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",

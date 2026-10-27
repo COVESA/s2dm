@@ -1,6 +1,7 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { Layers } from "lucide-react";
 import { CliCommandDisplay } from "@/components/CliCommandDisplay";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormLabel } from "@/components/ui/form-label";
 import { selectHasComposedDependenciesSchema } from "@/store/deps/compose/composeSlice";
@@ -14,7 +15,6 @@ import {
 	selectIsValidating,
 	validateAndCompose,
 } from "@/store/validation/validationSlice";
-import { cn } from "@/utils/cn";
 
 export function ComposeSection() {
 	const dispatch = useAppDispatch();

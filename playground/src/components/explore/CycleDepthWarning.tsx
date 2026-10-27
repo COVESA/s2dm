@@ -1,9 +1,9 @@
 import { EvidenceRow } from "@insights-ui/components/EvidenceRow";
 import { PagedList } from "@insights-ui/components/PagedList";
 import { TypePathBreadcrumb } from "@insights-ui/components/TypePathBreadcrumb";
+import { Button } from "@shared-ui/components/button";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,

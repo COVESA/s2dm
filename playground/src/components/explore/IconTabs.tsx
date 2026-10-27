@@ -1,5 +1,5 @@
+import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import type { LucideIcon } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type IconTabOption<T extends string> = {
 	value: T;

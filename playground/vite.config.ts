@@ -13,6 +13,10 @@ export default defineConfig({
 		alias: [
 			{ find: "@", replacement: path.resolve(__dirname, "./src") },
 			{
+				find: "@shared-ui",
+				replacement: path.resolve(__dirname, "../src/s2dm/templates/shared-ui"),
+			},
+			{
 				find: "@insights-ui",
 				replacement: path.resolve(
 					__dirname,

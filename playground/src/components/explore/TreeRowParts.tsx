@@ -1,8 +1,8 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { HighlightedText } from "@/components/explore/HighlightedText";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
 
 export const TREE_ROW_HEIGHT_PX = 24;
 

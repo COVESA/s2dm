@@ -2,6 +2,7 @@
   "private": true,
   "workspaces": [
     "playground",
+    "src/s2dm/templates/shared-ui",
     "src/s2dm/templates/insights-ui"
   ],
   "devDependencies": {

@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 
 interface CollapsibleSectionProps {
 	title: string;

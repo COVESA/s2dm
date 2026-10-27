@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { Fragment } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "@shared-ui/utils/cn";
 
 type BreadcrumbTone = "default" | "emphasis";
 

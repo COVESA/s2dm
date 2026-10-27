@@ -61,6 +61,20 @@ def test_scaffold_includes_insights_page_and_generation_pipeline(tmp_path: Path)
     assert "static/insights.json" in package_json
 
 
+def test_scaffold_includes_shared_ui(tmp_path: Path) -> None:
+    """The generated website vendors the shared primitives and theme."""
+    output = tmp_path / "website"
+    runner = CliRunner()
+    result = _run_scaffold(runner, SAMPLE_OPTS + ["--output", str(output)])
+
+    assert result.exit_code == 0, result.output
+    assert (output / "src/shared-ui/components/input.tsx").exists()
+    assert (output / "src/shared-ui/components/tabs.tsx").exists()
+    assert (output / "src/shared-ui/utils/cn.ts").exists()
+    assert (output / "src/shared-ui/theme.css").exists()
+    assert not (output / "src/shared-ui/package.json").exists()
+
+
 def test_scaffold_substitutes_placeholders(tmp_path: Path) -> None:
     """Placeholder substitution in docusaurus.config.ts produces expected strings."""
     output = tmp_path / "website"

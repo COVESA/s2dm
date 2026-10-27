@@ -1,7 +1,7 @@
+import { Button } from "@shared-ui/components/button";
+import { Input } from "@shared-ui/components/input";
 import { Minus, Plus, Repeat } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const MIN_RECURSION_DEPTH = 0;
 const DEPTH_PATTERN = /^\d+$/;

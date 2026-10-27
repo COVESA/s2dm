@@ -3,6 +3,8 @@ import {
 	useDocExplorerActions,
 } from "@graphiql/plugin-doc-explorer";
 import { useGraphiQL } from "@graphiql/react";
+import { Input } from "@shared-ui/components/input";
+import { StatusBanner } from "@shared-ui/components/status-banner";
 import {
 	type GraphQLObjectType,
 	type GraphQLSchema,
@@ -31,8 +33,6 @@ import { HelpButton, HelpItem } from "@/components/HelpButton";
 import type { ValidatedQuery } from "@/components/QueryEditorWrapper";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
-import { StatusBanner } from "@/components/ui/status-banner";
 import { formatSelection } from "@/utils/selectionQuery/formatSelection";
 import { useAppSelector } from "@/store/hooks";
 import {

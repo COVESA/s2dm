@@ -1,5 +1,9 @@
 import { useDocExplorerActions } from "@graphiql/plugin-doc-explorer";
 import { GraphiQLProvider, useGraphiQLActions } from "@graphiql/react";
+import { Button } from "@shared-ui/components/button";
+import { StatusBanner } from "@shared-ui/components/status-banner";
+import { TabsContent } from "@shared-ui/components/tabs";
+import { cn } from "@shared-ui/utils/cn";
 import { buildSchema, execute, GraphQLError, parse } from "graphql";
 import { Columns2, Download, FileCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,10 +23,7 @@ import {
 	type ValidatedQuery,
 } from "@/components/QueryEditorWrapper";
 import { SchemaVisualizer } from "@/components/SchemaVisualizer";
-import { Button } from "@/components/ui/button";
 import { FormLabel } from "@/components/ui/form-label";
-import { StatusBanner } from "@/components/ui/status-banner";
-import { TabsContent } from "@/components/ui/tabs";
 import { SELECTION_QUERY_FILENAME } from "@/constants";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -45,7 +46,6 @@ import {
 	selectSelectionQuery,
 	setSelectionQuery,
 } from "@/store/selection/selectionSlice";
-import { cn } from "@/utils/cn";
 import { downloadTextFile } from "@/utils/download";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { withPickDirective } from "@/utils/selectionQuery/pick";

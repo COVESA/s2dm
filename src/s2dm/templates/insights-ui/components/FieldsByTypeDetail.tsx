@@ -11,7 +11,7 @@ import {
 } from "@insights-ui/state/hooks";
 import { pushInsightDetail } from "@insights-ui/state/insightDetailSlice";
 import type { ReactNode } from "react";
-import { Heading } from "@/components/ui/heading";
+import { Heading } from "@shared-ui/components/heading";
 
 function EvidenceSubsection({
 	title,

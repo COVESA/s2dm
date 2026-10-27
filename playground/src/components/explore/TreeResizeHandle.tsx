@@ -1,5 +1,5 @@
+import { cn } from "@shared-ui/utils/cn";
 import { useRef, useState } from "react";
-import { cn } from "@/utils/cn";
 
 const DEFAULT_TREE_WIDTH_PERCENT = 25;
 const MIN_TREE_WIDTH_PERCENT = 25;

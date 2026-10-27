@@ -1,3 +1,5 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import {
 	PanelLeftClose,
 	PanelLeftOpen,
@@ -5,8 +7,6 @@ import {
 	PanelRightOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
 
 type PaneProps = {
 	children: React.ReactNode;
