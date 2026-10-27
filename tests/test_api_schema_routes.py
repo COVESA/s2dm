@@ -1,6 +1,19 @@
 """API tests for schema and query validation routes."""
 
+from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
+
+from s2dm.api.services import schema_store
+
+
+@pytest.fixture(autouse=True)
+def api_workspace(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+    """Keep schemas stored by the validate route out of the real API workspace."""
+    monkeypatch.setattr(schema_store, "get_api_workspace", lambda: tmp_path)
+    return tmp_path
+
 
 INVALID_ENUM_DEFAULT_SCHEMA = """
 enum DriveMode { ECO SPORT }

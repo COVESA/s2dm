@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { SchemaReference } from "@/api/types";
 import {
 	fetchDependenciesConfigSuccess,
 	removeDependency,
@@ -8,6 +9,7 @@ import type { DependencyDraft } from "@/types/dependency";
 
 export type DependencyExplorationSnapshot = {
 	originalSchema: string;
+	originalSchemaReference: SchemaReference | null;
 	filteredSchema: string;
 	selectionQuery: string;
 	appliedSelectionQuery: string;

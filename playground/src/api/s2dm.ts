@@ -15,6 +15,7 @@ import type {
 	SaveDependenciesConfigRequest,
 	SchemaInput,
 	ValidateSchemaRequest,
+	ValidateSchemaResponse,
 } from "@/api/types";
 import { getAxiosErrorMessage } from "@/utils/getErrorMessage";
 
@@ -51,10 +52,10 @@ function isNotFoundError(error: unknown): boolean {
 
 export async function validateSchemas(
 	schemas: SchemaInput[],
-): Promise<ExportResponse> {
+): Promise<ValidateSchemaResponse> {
 	try {
 		const request: ValidateSchemaRequest = { schemas };
-		return await apiClient.post<ExportResponse>(
+		return await apiClient.post<ValidateSchemaResponse>(
 			"/api/v1/schema/validate",
 			request,
 		);
