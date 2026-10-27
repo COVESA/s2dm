@@ -1,6 +1,7 @@
 import type { PickArgumentName, PickGroup } from "@/utils/selectionQuery/pick";
 import {
 	getChildNodes,
+	getSegmentKey,
 	isExpandableNode,
 	type SchemaTreeNode,
 } from "@/utils/selectionQuery/schemaTree";
@@ -47,18 +48,46 @@ export function getPickGroupKey(argumentName: PickArgumentName): string {
 }
 
 /**
+ * Picks the text to highlight in a row's label.
+ *
+ * @param label The row's label.
+ * @param isMatch Whether the row matched the search, rather than being shown
+ * to reveal a match.
+ * @param search The search that shows the row, or `null` for none.
+ * @returns The search term; the whole lower-cased label for a match under a
+ * search that highlights whole matches; or empty for no highlight.
+ */
+function getHighlightTerm(
+	label: string,
+	isMatch: boolean,
+	search: TreeSearch | null,
+): string {
+	if (!search) {
+		return "";
+	}
+	if (!search.highlightsWholeMatch) {
+		return search.term;
+	}
+	if (!isMatch) {
+		return "";
+	}
+
+	return label.toLowerCase();
+}
+
+/**
  * Lists the `@pick` group rows and, for expanded groups, their name rows.
  *
  * @param pickGroups The `@pick` groups with their names and, under search,
  * the names that match.
  * @param expandedKeys The keys of the rows the user expanded.
- * @param highlightTerm The search term to highlight; empty when not searching.
+ * @param search The current search, or `null` when not searching.
  * @returns The rows, in display order; each knows the index of its parent row.
  */
 function buildPickRows(
 	pickGroups: PickGroupRowSource[],
 	expandedKeys: Set<string>,
-	highlightTerm: string,
+	search: TreeSearch | null,
 ): TreeRow[] {
 	const rows: TreeRow[] = [];
 	for (const { argumentName, names, matchingNames } of pickGroups) {
@@ -87,6 +116,7 @@ function buildPickRows(
 			if (isSearching && !matchingNames.has(name)) {
 				continue;
 			}
+			const highlightTerm = getHighlightTerm(name, isSearching, search);
 			rows.push({
 				kind: "pickName",
 				key: `${groupKey}:${name}`,
@@ -125,8 +155,7 @@ export function buildTreeRows(
 	search: TreeSearch | null,
 	maxRecursionDepth: number,
 ): TreeRow[] {
-	const pickHighlightTerm = search?.term ?? "";
-	const rows = buildPickRows(pickGroups, expandedKeys, pickHighlightTerm);
+	const rows = buildPickRows(pickGroups, expandedKeys, search);
 
 	const appendFieldRows = (
 		parentNode: SchemaTreeNode,
@@ -135,12 +164,17 @@ export function buildTreeRows(
 		levelSearch: TreeSearch | null,
 	) => {
 		const childNodes = getChildNodes(parentNode);
-		const highlightTerm = levelSearch?.term ?? "";
 		for (const childNode of childNodes) {
 			if (levelSearch && !levelSearch.visibleKeys.has(childNode.key)) {
 				continue;
 			}
 
+			let label = "";
+			if (childNode.segment) {
+				label = getSegmentKey(childNode.segment);
+			}
+			const isMatch = levelSearch?.matchedKeys.has(childNode.key) ?? false;
+			const highlightTerm = getHighlightTerm(label, isMatch, levelSearch);
 			const isExpandedBySearch =
 				levelSearch?.expandedKeys.has(childNode.key) ?? false;
 			const isBeyondCycleDepth = childNode.recursionDepth > maxRecursionDepth;

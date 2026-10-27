@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc -b && vite build",
-		"lint": "biome check --write . ../src/s2dm/templates/insights-ui",
+		"lint": "biome check --write . ../src/s2dm/templates/shared-ui ../src/s2dm/templates/insights-ui ../src/s2dm/templates/search-ui",
 		"preview": "vite preview",
 		"test": "node --test \"tests/**/*.test.ts\""
 	},

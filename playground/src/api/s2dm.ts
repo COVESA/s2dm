@@ -7,6 +7,10 @@ import { apiClient } from "@/api/client";
 import type {
 	DependenciesIdentities,
 	DependenciesStatusResponse,
+	EmbeddingsBuildResponse,
+	EmbeddingsRequest,
+	EmbeddingsSearchHit,
+	EmbeddingsSearchRequest,
 	ExportResponse,
 	FilterSchemaRequest,
 	GetDependenciesConfigResponse,
@@ -17,6 +21,7 @@ import type {
 	ValidateSchemaRequest,
 	ValidateSchemaResponse,
 } from "@/api/types";
+import { NO_TIMEOUT } from "@/config/api";
 import { getAxiosErrorMessage } from "@/utils/getErrorMessage";
 
 type DependenciesWarningsResponse = {
@@ -225,4 +230,53 @@ export async function getSchemaQualityIssues(
 	schemas: SchemaInput[],
 ): Promise<QualityResponse> {
 	return postSchemas<QualityResponse>("/api/v1/insights/quality", schemas);
+}
+
+/**
+ * Builds the embeddings of a schema. The request can take tens of seconds,
+ * so it has no timeout.
+ *
+ * @param schemas The schema inputs to compose.
+ * @returns The embeddings id, used to search them.
+ */
+export async function buildEmbeddings(schemas: SchemaInput[]): Promise<string> {
+	try {
+		const request: EmbeddingsRequest = { schemas };
+		const response = await apiClient.post<EmbeddingsBuildResponse>(
+			"/api/v1/embeddings/build",
+			request,
+			NO_TIMEOUT,
+		);
+		return response.embeddings_id;
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+/**
+ * Runs a semantic search over the embeddings of a schema.
+ *
+ * @param embeddingsId The id returned by `buildEmbeddings`.
+ * @param query The free-text query.
+ * @param limit The maximum number of results.
+ * @returns The best-matching elements, best first.
+ */
+export async function searchEmbeddings(
+	embeddingsId: string,
+	query: string,
+	limit: number,
+): Promise<EmbeddingsSearchHit[]> {
+	try {
+		const request: EmbeddingsSearchRequest = {
+			embeddings_id: embeddingsId,
+			query,
+			limit,
+		};
+		return await apiClient.post<EmbeddingsSearchHit[]>(
+			"/api/v1/embeddings/search",
+			request,
+		);
+	} catch (error) {
+		return handleApiError(error);
+	}
 }

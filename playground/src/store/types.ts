@@ -10,6 +10,7 @@ import type { ExportState } from "@/store/export/exportSlice";
 import type { InstanceTagsState } from "@/store/instanceTags/instanceTagsSlice";
 import type { SchemaState } from "@/store/schema/schemaSlice";
 import type { SelectionState } from "@/store/selection/selectionSlice";
+import type { SemanticSearchState } from "@/store/semanticSearch/semanticSearchSlice";
 import type { UIState } from "@/store/ui/uiSlice";
 import type { ValidationState } from "@/store/validation/validationSlice";
 
@@ -28,4 +29,5 @@ export interface RootState {
 	insights: InsightsState;
 	insightDetail: InsightDetailState;
 	instanceTags: InstanceTagsState;
+	semanticSearch: SemanticSearchState;
 }
