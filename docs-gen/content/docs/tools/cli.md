@@ -461,6 +461,80 @@ type Car @modl(concept: "http://example/concepts/0", contract: "http://example/c
 
 **Note:** The ledger directory must contain the modl `concepts.csv`, `contracts.csv`, `revisions.csv`, and `bindings.csv` files. If the schema and ledger do not describe the same set of elements, the schema is composed without `@modl` annotations.
 
+## Embeddings Commands
+
+### Build
+
+The `embeddings build` command embeds every schema element for semantic search and writes them to one JSON file.
+
+#### Usage
+
+```bash
+s2dm embeddings build -s <schema_path> -o <output_file> [--model REPO] [--revision SHA] [--full-size] [--verbose-embeddings]
+```
+
+#### Options
+
+- `-s, --schema`: GraphQL schema file, directory, or URL (required, repeatable)
+- `-o, --output OUTPUT`: Output path of the embeddings JSON file (required)
+- `--model REPO`: Hugging Face repo of the embedding model (default: `MongoDB/mdbr-leaf-ir`)
+- `--revision SHA`: Repo revision of the embedding model; required with `--model` (default: a pinned commit of the default model). The revision is recorded in the embeddings file and loaded again for search, so use a commit sha, not a branch name.
+- `--full-size`: Use the model's full-precision ONNX file instead of its 8-bit one
+- `--verbose-embeddings`: Also store each element's kind and description, e.g. for inspecting search results
+
+#### Behavior
+
+- Embeds every object and interface type, field, enum, and enum value. Introspection types and the root types (`Query`, `Mutation`, `Subscription`) are skipped.
+- Each element is embedded as one sentence built from its name, its parent type, its field type, and its description. Enum values also include their enum's description.
+- Downloads the model from the Hugging Face Hub on first use into `~/.s2dm/models/<repo>/<revision>/` and reuses it afterwards. No token is needed for public models; `HF_TOKEN` is used when set.
+- Any model works whose repo publishes an ONNX file, `tokenizer.json`, and either a `sentence_embedding` output or a pooling module listed in `modules.json` (whose `config.json` sets CLS or mean pooling). Query and document prompts are read from `config_sentence_transformers.json` when present.
+- Writes the element ids, the model, and one normalized vector per element, stored as base64 float16. The model is recorded as its `source` (for example `{"kind": "huggingface", "repo": "MongoDB/mdbr-leaf-ir", "revision": "<sha>"}`) and the `settings` read from its files. With `--verbose-embeddings`, each element also carries its kind and description.
+- Exits with an error when the model cannot be downloaded or does not publish what is needed.
+
+#### Examples
+
+##### Build with the Default Model
+
+```bash
+s2dm embeddings build -s spec -o embeddings.json
+```
+
+##### Build with Another Model
+
+```bash
+s2dm embeddings build -s spec -o embeddings.json --model <model_name> --revision <commit_sha> --full-size
+```
+
+### Search
+
+The `search semantic` command finds schema elements by meaning in an embeddings file written by `embeddings build`.
+
+#### Usage
+
+```bash
+s2dm search semantic -e <embeddings_file> -q "<query>" [-l COUNT]
+```
+
+#### Options
+
+- `-e, --embeddings`: Embeddings file written by `s2dm embeddings build` (required)
+- `-q, --query`: Free-text search query (required)
+- `-l, --limit COUNT`: Maximum number of results, at least 1 (default: 10)
+
+#### Behavior
+
+- Embeds the query with the model recorded in the embeddings file and ranks every element by cosine similarity.
+- Prints the results as JSON, best first: `rank`, `score`, and `id`, plus `kind` and `description` when the file was built with `--verbose-embeddings`.
+- Exits with an error when the query is empty, the file cannot be read, the recorded model's source kind is not supported, or the recorded model is unavailable or no longer matches the file.
+
+#### Example
+
+```bash
+s2dm search semantic -e embeddings.json -q "is the driver's door ajar" -l 5
+```
+
+The query shares no word with a field such as `isOpen`; the match is by meaning.
+
 ## Export Commands
 
 ### JSON Schema
