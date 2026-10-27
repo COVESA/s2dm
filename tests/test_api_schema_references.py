@@ -9,6 +9,7 @@ from graphql import print_schema
 from s2dm.api.models.base import ContentInput, DependencyInput, SchemaIdInput
 from s2dm.api.services import schema_service, schema_store
 from s2dm.deps.resolve.common import SCHEMA_FILENAME, VENDOR_DIRECTORY
+from s2dm.utils.hashing import sha256_hex
 
 VEHICLE_SCHEMA = """
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
@@ -67,7 +68,7 @@ class TestSchemaStore:
     ) -> None:
         composed_schema, schema_id = _validate(test_client, VEHICLE_SCHEMA)
 
-        assert schema_id == schema_store.schema_text_id(composed_schema)
+        assert schema_id == sha256_hex(composed_schema)
         stored_path = api_workspace / schema_store.SCHEMA_STORE_DIRECTORY / f"{schema_id}.graphql"
         assert stored_path.read_text() == composed_schema
 
