@@ -77,7 +77,7 @@ function getSegmentText(node: SchemaTreeNode): string {
  *
  * @param node The node to render.
  * @param maxRecursionDepth The highest recursion depth a descendant may have.
- * @returns The selection text, for example `cabin { door { isOpen } }`; for
+ * @returns The selection text, for example `a { b { c } }`; for
  * the root, only the selections inside the operation's braces.
  */
 function renderSubtree(

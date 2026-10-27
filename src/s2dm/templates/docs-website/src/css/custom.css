@@ -5,6 +5,7 @@
 @source "../components";
 @source "../shared-ui";
 @source "../insights-ui";
+@source "../search-ui";
 
 /**
  * Any CSS included here will be global. The classic template
@@ -35,6 +36,23 @@
 	--ifm-color-primary-lighter: #32d8b4;
 	--ifm-color-primary-lightest: #4fddbf;
 	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* The heading a link's `#anchor` points at, e.g. a search result, and the description below it. */
+.markdown [data-linked-heading],
+.markdown [data-linked-heading] + p {
+	border-left: 4px solid var(--ifm-color-primary);
+	background: color-mix(in srgb, var(--ifm-color-primary) 10%, transparent);
+	padding: 0.25rem 0.75rem;
+}
+
+.markdown [data-linked-heading]:has(+ p) {
+	margin-bottom: 0;
+}
+
+.markdown [data-linked-heading] + p {
+	margin-top: 0;
+	padding-bottom: 0.5rem;
 }
 
 .s2dm-insights {

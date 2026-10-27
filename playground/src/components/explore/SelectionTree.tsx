@@ -4,6 +4,11 @@ import {
 } from "@graphiql/plugin-doc-explorer";
 import { useGraphiQL } from "@graphiql/react";
 import { SearchBar, type SearchMode } from "@search-ui/components/SearchBar";
+import { SEMANTIC_SEARCH_LIMIT } from "@search-ui/constants";
+import {
+	matchesSearchTerm,
+	normalizeSearchTerm,
+} from "@search-ui/utils/textSearch";
 import { StatusBanner } from "@shared-ui/components/status-banner";
 import {
 	type GraphQLObjectType,
@@ -36,7 +41,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	clearSemanticSearch,
-	SEMANTIC_SEARCH_LIMIT,
 	selectEmbeddingsError,
 	selectEmbeddingsStatus,
 	selectMatchedElementIds,
@@ -76,8 +80,6 @@ import {
 import {
 	groupElementIds,
 	listSearchableNodes,
-	matchesSearchTerm,
-	normalizeSearchTerm,
 	searchTree,
 	searchTreeByElements,
 } from "@/utils/selectionQuery/searchTree";

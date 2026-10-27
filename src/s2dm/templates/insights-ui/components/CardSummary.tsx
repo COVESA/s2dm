@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { cn } from "@shared-ui/utils/cn";
+import type { ReactNode } from "react";
 
 type CardSummaryProps = {
 	children: ReactNode;

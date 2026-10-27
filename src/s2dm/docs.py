@@ -16,16 +16,24 @@ INSIGHTS_UI_DIR = Path(__file__).parent / "templates" / "insights-ui"
 
 TEMPLATED_FILES = {"docusaurus.config.ts", "package-lock.json", "package.json"}
 
-# `insights-ui/package.json` only exists to make the directory an npm workspace member of this
-# repository. The scaffolded site reaches the vendored copy through a path alias instead.
-INSIGHTS_UI_EXCLUDED_FILES = {"package.json"}
+# Host-agnostic search components shared with the playground, vendored like `insights-ui` and
+# reachable through `@search-ui`.
+SEARCH_UI_DIR = Path(__file__).parent / "templates" / "search-ui"
 
-# UI primitives and theme tokens that the playground and `insights-ui` build on,
+# UI primitives and theme tokens that the playground, `insights-ui` and `search-ui` build on,
 # vendored like `insights-ui` and reachable through `@shared-ui`.
 SHARED_UI_DIR = Path(__file__).parent / "templates" / "shared-ui"
 
-# Like `insights-ui/package.json`, only present for the npm workspace.
-SHARED_UI_EXCLUDED_FILES = {"package.json"}
+# Packages vendored into the scaffolded site at `src/<name>`.
+VENDORED_PACKAGE_DIRS = {
+    "shared-ui": SHARED_UI_DIR,
+    "insights-ui": INSIGHTS_UI_DIR,
+    "search-ui": SEARCH_UI_DIR,
+}
+
+# The `package.json` of each vendored package only exists to make the directory an npm workspace
+# member of this repository. The scaffolded site reaches the vendored copies through path aliases.
+WORKSPACE_PACKAGE_FILES = {"package.json"}
 
 
 def copy_template_tree(
@@ -127,18 +135,13 @@ def scaffold(
     }
 
     copy_template_tree(TEMPLATE_DIR, output, substitutions)
-    copy_template_tree(
-        SHARED_UI_DIR,
-        output / "src" / "shared-ui",
-        substitutions,
-        excluded_files=SHARED_UI_EXCLUDED_FILES,
-    )
-    copy_template_tree(
-        INSIGHTS_UI_DIR,
-        output / "src" / "insights-ui",
-        substitutions,
-        excluded_files=INSIGHTS_UI_EXCLUDED_FILES,
-    )
+    for package_name, package_dir in VENDORED_PACKAGE_DIRS.items():
+        copy_template_tree(
+            package_dir,
+            output / "src" / package_name,
+            substitutions,
+            excluded_files=WORKSPACE_PACKAGE_FILES,
+        )
 
     log.success(
         f"Website scaffolded to '{output}/'.\n"

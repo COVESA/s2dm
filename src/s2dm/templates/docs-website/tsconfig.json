@@ -8,9 +8,12 @@
     "ignoreDeprecations": "6.0",
     "strict": true,
     "noEmit": true,
+    "lib": ["ES2022", "ES2025.Float16", "DOM"],
     "paths": {
       "@/*": ["./src/*"],
-      "@insights-ui/*": ["./src/insights-ui/*", "../insights-ui/*"]
+      "@shared-ui/*": ["./src/shared-ui/*", "../shared-ui/*"],
+      "@insights-ui/*": ["./src/insights-ui/*", "../insights-ui/*"],
+      "@search-ui/*": ["./src/search-ui/*", "../search-ui/*"]
     }
   },
   "exclude": [".docusaurus", "build"]

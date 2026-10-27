@@ -1,7 +1,7 @@
+import { cn } from "@shared-ui/utils/cn";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import type * as React from "react";
-import { cn } from "@shared-ui/utils/cn";
 
 const headingVariants = cva("font-bold text-foreground", {
 	variants: {

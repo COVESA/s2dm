@@ -17,8 +17,8 @@ import {
 	useInsightsSelector,
 } from "@insights-ui/state/hooks";
 import { pushInsightDetail } from "@insights-ui/state/insightDetailSlice";
-import type { ReactNode } from "react";
 import { Heading } from "@shared-ui/components/heading";
+import type { ReactNode } from "react";
 
 const SAMPLE_SIZE = 3;
 

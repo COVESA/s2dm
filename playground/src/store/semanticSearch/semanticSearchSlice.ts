@@ -3,9 +3,6 @@ import type { RootState } from "@/store/types";
 
 export type EmbeddingsStatus = "idle" | "preparing" | "ready" | "failed";
 
-/** The maximum number of elements a semantic search returns. */
-export const SEMANTIC_SEARCH_LIMIT = 10;
-
 export interface SemanticSearchState {
 	embeddingsId: string | null;
 	embeddingsStatus: EmbeddingsStatus;
