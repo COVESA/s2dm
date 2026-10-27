@@ -1,7 +1,9 @@
 """Tests for the `s2dm docs scaffold` command."""
 
+import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner, Result
 
 from s2dm.docs import scaffold
@@ -24,13 +26,19 @@ def _run_scaffold(runner: CliRunner, args: list[str]) -> Result:
     return runner.invoke(scaffold, args, catch_exceptions=False)
 
 
-def test_scaffold_creates_output_directory(tmp_path: Path) -> None:
-    """Happy path: the output directory is created and contains expected files."""
-    output = tmp_path / "website"
+@pytest.fixture(scope="module")
+def scaffolded_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Scaffold one website with the sample options, shared by the tests that only read it."""
+    output = tmp_path_factory.mktemp("scaffold") / "website"
     runner = CliRunner()
     result = _run_scaffold(runner, SAMPLE_OPTS + ["--output", str(output)])
-
     assert result.exit_code == 0, result.output
+    return output
+
+
+def test_scaffold_creates_output_directory(scaffolded_site: Path) -> None:
+    """Happy path: the output directory is created and contains expected files."""
+    output = scaffolded_site
     assert output.is_dir()
     assert (output / "docusaurus.config.ts").exists()
     assert (output / "package.json").exists()
@@ -39,13 +47,9 @@ def test_scaffold_creates_output_directory(tmp_path: Path) -> None:
     assert (output / "custom-mdx.cjs").exists()
 
 
-def test_scaffold_includes_insights_page_and_generation_pipeline(tmp_path: Path) -> None:
+def test_scaffold_includes_insights_page_and_generation_pipeline(scaffolded_site: Path) -> None:
     """The generated website includes the self-contained Insights feature."""
-    output = tmp_path / "website"
-    runner = CliRunner()
-    result = _run_scaffold(runner, SAMPLE_OPTS + ["--output", str(output)])
-
-    assert result.exit_code == 0, result.output
+    output = scaffolded_site
     assert (output / "src/insights/InsightsPage.tsx").exists()
     assert (output / "src/insights/insights.module.css").exists()
     assert (output / "src/insights-ui/components/ConceptsBreakdown.tsx").exists()
@@ -61,27 +65,38 @@ def test_scaffold_includes_insights_page_and_generation_pipeline(tmp_path: Path)
     assert "static/insights.json" in package_json
 
 
-def test_scaffold_includes_shared_ui(tmp_path: Path) -> None:
-    """The generated website vendors the shared primitives and theme."""
-    output = tmp_path / "website"
-    runner = CliRunner()
-    result = _run_scaffold(runner, SAMPLE_OPTS + ["--output", str(output)])
-
-    assert result.exit_code == 0, result.output
+def test_scaffold_includes_search_ui_and_shared_ui(scaffolded_site: Path) -> None:
+    """The generated website vendors the shared search bar and the shared primitives and theme."""
+    output = scaffolded_site
+    assert (output / "src/search-ui/components/SearchBar.tsx").exists()
+    assert not (output / "src/search-ui/package.json").exists()
+    assert (output / "src/shared-ui/components/icon-tabs.tsx").exists()
     assert (output / "src/shared-ui/components/input.tsx").exists()
     assert (output / "src/shared-ui/components/tabs.tsx").exists()
     assert (output / "src/shared-ui/utils/cn.ts").exists()
     assert (output / "src/shared-ui/theme.css").exists()
     assert not (output / "src/shared-ui/package.json").exists()
 
+    package_json = json.loads((output / "package.json").read_text())
+    assert "@radix-ui/react-tabs" in package_json["dependencies"]
 
-def test_scaffold_substitutes_placeholders(tmp_path: Path) -> None:
+
+def test_scaffold_includes_semantic_search_and_generation_pipeline(scaffolded_site: Path) -> None:
+    """The generated website includes the search code and builds embeddings."""
+    output = scaffolded_site
+    assert (output / "src/semantic-search/createSemanticSearch.ts").exists()
+    assert (output / "src/semantic-search/embedQuery.worker.ts").exists()
+    assert (output / "src/theme/DocSidebar/Desktop/Content/index.tsx").exists()
+    assert (output / "src/clientModules/markLinkedHeading.ts").exists()
+
+    package_json = json.loads((output / "package.json").read_text())
+    assert "s2dm embeddings build -s ../dist/model.graphql -o static/embeddings.json" in package_json["scripts"]["doc"]
+    assert "@huggingface/transformers" in package_json["dependencies"]
+
+
+def test_scaffold_substitutes_placeholders(scaffolded_site: Path) -> None:
     """Placeholder substitution in docusaurus.config.ts produces expected strings."""
-    output = tmp_path / "website"
-    runner = CliRunner()
-    result = _run_scaffold(runner, SAMPLE_OPTS + ["--output", str(output)])
-
-    assert result.exit_code == 0, result.output
+    output = scaffolded_site
     config = (output / "docusaurus.config.ts").read_text()
     assert "My Model" in config
     assert "myorg" in config

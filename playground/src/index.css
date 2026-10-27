@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "../../src/s2dm/templates/shared-ui/theme.css";
+@import "@shared-ui/theme.css";
 
 @source "../../src/s2dm/templates/shared-ui";
 @source "../../src/s2dm/templates/insights-ui";

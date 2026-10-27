@@ -37,6 +37,8 @@ import { InsightsDetailsPane } from "@/components/InsightsDetailsPane";
 import type { InsightsBundle } from "@/insights/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createInsightsStore, type InsightsStore } from "@/store/store";
+import { fetchJson } from "@/utils/fetchJson";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 import styles from "./insights.module.css";
 
 type CardDefinition = {
@@ -198,17 +200,12 @@ export default function InsightsPage({
 
 	useEffect(() => {
 		const controller = new AbortController();
-		fetch(insightsUrl, { signal: controller.signal })
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}`);
-				}
-				return response.json() as Promise<InsightsBundle>;
-			})
+		fetchJson<InsightsBundle>(insightsUrl, { signal: controller.signal })
 			.then((bundle) => setStore(createInsightsStore(bundle)))
 			.catch((reason: unknown) => {
 				if (!controller.signal.aborted) {
-					setError(reason instanceof Error ? reason.message : "Unknown error");
+					const message = getErrorMessage(reason);
+					setError(message);
 				}
 			});
 		return () => controller.abort();

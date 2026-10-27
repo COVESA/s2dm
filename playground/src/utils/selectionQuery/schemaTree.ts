@@ -50,7 +50,7 @@ export function getSegmentKey(segment: SchemaTreeSegment): string {
  *
  * @param parentKey The parent's path key; the root's key is empty.
  * @param segment The child segment.
- * @returns The child's path key, for example `vehicle/cabin/on Door/isOpen`.
+ * @returns The child's path key, for example `a/b/on Base/c`.
  */
 export function joinPathKey(
 	parentKey: string,
@@ -68,7 +68,7 @@ export function joinPathKey(
  * Lists the segment keys of a node's path from the root, for display.
  *
  * @param node The node.
- * @returns The segment keys, for example `["vehicle", "cabin", "on Door"]`;
+ * @returns The segment keys, for example `["a", "b", "on Base"]`;
  * empty for the root.
  */
 export function getNodePathSegments(node: SchemaTreeNode): string[] {

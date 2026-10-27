@@ -1,3 +1,5 @@
+import { splitElementId, toElementId } from "@search-ui/utils/elementId";
+import { matchesSearchTerm } from "@search-ui/utils/textSearch";
 import { type GraphQLSchema, isEnumType } from "graphql";
 import {
 	getChildNodes,
@@ -17,19 +19,6 @@ export type TreeSearch = {
 	/** Whether matched labels are highlighted whole instead of at `term`. */
 	highlightsWholeMatch: boolean;
 };
-
-export function normalizeSearchTerm(term: string): string {
-	const trimmedTerm = term.trim();
-	return trimmedTerm.toLowerCase();
-}
-
-export function matchesSearchTerm(
-	text: string,
-	normalizedTerm: string,
-): boolean {
-	const normalizedText = text.toLowerCase();
-	return normalizedText.includes(normalizedTerm);
-}
 
 /**
  * Lists every node below the root that search can reach. Recursive nodes are
@@ -151,16 +140,10 @@ export function groupElementIds(
 	const fieldIds = new Set<string>();
 	const typeNames = new Set<string>();
 	for (const elementId of elementIds) {
-		const separatorIndex = elementId.indexOf(".");
-		if (separatorIndex === -1) {
-			typeNames.add(elementId);
-			continue;
-		}
-
-		const parentName = elementId.slice(0, separatorIndex);
-		const parentType = schema.getType(parentName);
-		if (isEnumType(parentType)) {
-			typeNames.add(parentName);
+		const { typeName, memberName } = splitElementId(elementId);
+		const parentType = schema.getType(typeName);
+		if (memberName === undefined || isEnumType(parentType)) {
+			typeNames.add(typeName);
 			continue;
 		}
 		fieldIds.add(elementId);
@@ -192,7 +175,7 @@ export function searchTreeByElements(
 			if (segment.kind !== "field" || !node.parent) {
 				return false;
 			}
-			const fieldId = `${node.parent.type.name}.${segment.name}`;
+			const fieldId = toElementId(node.parent.type.name, segment.name);
 			return matches.fieldIds.has(fieldId);
 		},
 		"",

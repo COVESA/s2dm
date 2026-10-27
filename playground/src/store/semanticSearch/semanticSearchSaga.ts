@@ -1,5 +1,9 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import {
+	SEMANTIC_SEARCH_DEBOUNCE_MS,
+	SEMANTIC_SEARCH_LIMIT,
+} from "@search-ui/constants";
+import {
 	call,
 	debounce,
 	put,
@@ -24,14 +28,11 @@ import {
 	runSemanticSearch,
 	runSemanticSearchFailure,
 	runSemanticSearchSuccess,
-	SEMANTIC_SEARCH_LIMIT,
 	selectEmbeddingsId,
 	selectSemanticQuery,
 	semanticQueryChanged,
 } from "@/store/semanticSearch/semanticSearchSlice";
 import { getErrorMessage } from "@/utils/getErrorMessage";
-
-const SEMANTIC_SEARCH_DEBOUNCE_MS = 600;
 
 function* prepareEmbeddingsWorker(
 	action: PayloadAction<OriginalSchemaPayload>,
