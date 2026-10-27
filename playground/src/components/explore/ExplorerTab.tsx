@@ -1,6 +1,7 @@
 import { useDocExplorerActions } from "@graphiql/plugin-doc-explorer";
 import { GraphiQLProvider, useGraphiQLActions } from "@graphiql/react";
 import { Button } from "@shared-ui/components/button";
+import { type IconTabOption, IconTabs } from "@shared-ui/components/icon-tabs";
 import { StatusBanner } from "@shared-ui/components/status-banner";
 import { TabsContent } from "@shared-ui/components/tabs";
 import { cn } from "@shared-ui/utils/cn";
@@ -10,7 +11,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { CycleDepthWarning } from "@/components/explore/CycleDepthWarning";
 import { DocsPanel } from "@/components/explore/DocsPanel";
-import { type IconTabOption, IconTabs } from "@/components/explore/IconTabs";
 import { SelectionTree } from "@/components/explore/SelectionTree";
 import {
 	TreeResizeHandle,

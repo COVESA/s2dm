@@ -4,6 +4,7 @@
 
 @source "../../src/s2dm/templates/shared-ui";
 @source "../../src/s2dm/templates/insights-ui";
+@source "../../src/s2dm/templates/search-ui";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -3,7 +3,7 @@ import {
 	useDocExplorerActions,
 } from "@graphiql/plugin-doc-explorer";
 import { useGraphiQL } from "@graphiql/react";
-import { Input } from "@shared-ui/components/input";
+import { SearchBar, type SearchMode } from "@search-ui/components/SearchBar";
 import { StatusBanner } from "@shared-ui/components/status-banner";
 import {
 	type GraphQLObjectType,
@@ -11,8 +11,8 @@ import {
 	isInterfaceType,
 	isObjectType,
 } from "graphql";
-import { Search } from "lucide-react";
 import {
+	type ChangeEvent,
 	type ReactNode,
 	useDeferredValue,
 	useMemo,
@@ -33,6 +33,16 @@ import { HelpButton, HelpItem } from "@/components/HelpButton";
 import type { ValidatedQuery } from "@/components/QueryEditorWrapper";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+	clearSemanticSearch,
+	SEMANTIC_SEARCH_LIMIT,
+	selectEmbeddingsError,
+	selectEmbeddingsStatus,
+	selectMatchedElementIds,
+	selectSemanticSearchError,
+	semanticQueryChanged,
+} from "@/store/semanticSearch/semanticSearchSlice";
 import { formatSelection } from "@/utils/selectionQuery/formatSelection";
 import { useAppSelector } from "@/store/hooks";
 import {
@@ -64,10 +74,12 @@ import {
 	type SchemaTreeNode,
 } from "@/utils/selectionQuery/schemaTree";
 import {
+	groupElementIds,
 	listSearchableNodes,
 	matchesSearchTerm,
 	normalizeSearchTerm,
 	searchTree,
+	searchTreeByElements,
 } from "@/utils/selectionQuery/searchTree";
 import { buildTreeRows } from "@/utils/selectionQuery/treeRows";
 
@@ -127,8 +139,14 @@ function SelectionTreeContent({
 		() => new Set(),
 	);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [searchMode, setSearchMode] = useState<SearchMode>("text");
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const docExplorerActions = useDocExplorerActions();
+	const dispatch = useAppDispatch();
+	const embeddingsStatus = useAppSelector(selectEmbeddingsStatus);
+	const embeddingsError = useAppSelector(selectEmbeddingsError);
+	const matchedElementIds = useAppSelector(selectMatchedElementIds);
+	const semanticSearchError = useAppSelector(selectSemanticSearchError);
 
 	const tagFields = useAppSelector(selectInstanceTagFields);
 	const instanceTagsError = useAppSelector(selectInstanceTagsError);
@@ -142,7 +160,17 @@ function SelectionTreeContent({
 
 	const deferredSearchTerm = useDeferredValue(searchTerm);
 	const normalizedSearchTerm = normalizeSearchTerm(deferredSearchTerm);
-	const isSearching = normalizedSearchTerm.length > 0;
+	const isSemanticMode = searchMode === "semantic";
+	let isSearching = normalizedSearchTerm.length > 0;
+	if (isSemanticMode) {
+		isSearching = matchedElementIds !== null;
+	}
+	const elementMatches = useMemo(() => {
+		if (!isSemanticMode || matchedElementIds === null) {
+			return null;
+		}
+		return groupElementIds(matchedElementIds, schema);
+	}, [isSemanticMode, matchedElementIds, schema]);
 	const searchableNodes = useMemo(() => {
 		if (!isSearching) {
 			return [];
@@ -153,8 +181,11 @@ function SelectionTreeContent({
 		if (!isSearching) {
 			return null;
 		}
+		if (elementMatches) {
+			return searchTreeByElements(searchableNodes, elementMatches);
+		}
 		return searchTree(searchableNodes, normalizedSearchTerm);
-	}, [searchableNodes, normalizedSearchTerm, isSearching]);
+	}, [searchableNodes, normalizedSearchTerm, isSearching, elementMatches]);
 
 	const pickGroupNames = useMemo(
 		() =>
@@ -168,7 +199,12 @@ function SelectionTreeContent({
 		() =>
 			pickGroupNames.map((pickGroup) => {
 				let matchingNames: Set<string> | null = null;
-				if (isSearching) {
+				if (elementMatches) {
+					const matchingNameList = pickGroup.names.filter((name) =>
+						elementMatches.typeNames.has(name),
+					);
+					matchingNames = new Set(matchingNameList);
+				} else if (isSearching) {
 					const matchingNameList = pickGroup.names.filter((name) =>
 						matchesSearchTerm(name, normalizedSearchTerm),
 					);
@@ -176,7 +212,7 @@ function SelectionTreeContent({
 				}
 				return { ...pickGroup, matchingNames };
 			}),
-		[pickGroupNames, isSearching, normalizedSearchTerm],
+		[pickGroupNames, isSearching, normalizedSearchTerm, elementMatches],
 	);
 
 	const rows = useMemo(
@@ -288,6 +324,23 @@ function SelectionTreeContent({
 		});
 	};
 
+	const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+		const nextSearchTerm = event.target.value;
+		setSearchTerm(nextSearchTerm);
+		if (isSemanticMode) {
+			dispatch(semanticQueryChanged(nextSearchTerm));
+		}
+	};
+
+	const handleSearchModeChange = (nextSearchMode: SearchMode) => {
+		setSearchMode(nextSearchMode);
+		if (nextSearchMode === "semantic") {
+			dispatch(semanticQueryChanged(searchTerm));
+			return;
+		}
+		dispatch(clearSemanticSearch());
+	};
+
 	const showInDocs = (navItem: DocExplorerNavStackItem) => {
 		onOpenDocs();
 		docExplorerActions.push(navItem);
@@ -389,6 +442,14 @@ function SelectionTreeContent({
 		);
 	};
 
+	const semanticSearchUnavailableMessage = `Semantic search is unavailable: ${embeddingsError}`;
+	let semanticModeHint: string | undefined;
+	if (embeddingsStatus === "preparing") {
+		semanticModeHint = "Preparing semantic search…";
+	} else if (embeddingsStatus === "failed") {
+		semanticModeHint = semanticSearchUnavailableMessage;
+	}
+
 	let treeContent: ReactNode = <EmptyState title={"No matches"} />;
 	if (!hasNoMatches) {
 		treeContent = (
@@ -404,23 +465,29 @@ function SelectionTreeContent({
 		<div className={"flex min-h-0 flex-1 flex-col"}>
 			<div className={"px-4 pt-4 pb-2"}>
 				<div className={"flex items-center gap-2"}>
-					<div className={"relative flex-1"}>
-						<Search
-							className={
-								"pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-							}
-						/>
-						<Input
-							type={"search"}
-							value={searchTerm}
-							onChange={(event) => setSearchTerm(event.target.value)}
-							placeholder={"Search"}
-							aria-label={"Search the schema tree"}
-							className={"pl-8"}
-						/>
-					</div>
+					<SearchBar
+						value={searchTerm}
+						onChange={handleSearchChange}
+						searchMode={searchMode}
+						onSearchModeChange={handleSearchModeChange}
+						ariaLabel={"Search the schema tree"}
+						isSemanticModeDisabled={embeddingsStatus !== "ready"}
+						isSemanticModeLoading={embeddingsStatus === "preparing"}
+						semanticModeHint={semanticModeHint}
+						className={"flex-1"}
+					/>
 					<SelectionTreeHelp />
 				</div>
+				{isSemanticMode && embeddingsStatus === "failed" && (
+					<StatusBanner variant={"destructive"} className={"mt-2"}>
+						{semanticSearchUnavailableMessage}
+					</StatusBanner>
+				)}
+				{isSemanticMode && semanticSearchError && (
+					<StatusBanner variant={"destructive"} className={"mt-2"}>
+						{semanticSearchError}
+					</StatusBanner>
+				)}
 				{hasQueryErrors && (
 					<StatusBanner variant={"destructive"} className={"mt-2"}>
 						The selection query must be valid before visual editing.
@@ -496,8 +563,10 @@ function SelectionTreeHelp() {
 				uncheck what to exclude.
 			</HelpItem>
 			<HelpItem term={"Search"}>
-				filter the tree to the fields and @pick names whose name contains the
-				search text.
+				text search filters the tree to the fields and @pick names whose name
+				contains the search text. Semantic search finds the{" "}
+				{SEMANTIC_SEARCH_LIMIT} schema elements closest in meaning to what you
+				type.
 			</HelpItem>
 			<HelpItem term={"Docs"}>
 				click a field, enum or scalar name to open its documentation on the

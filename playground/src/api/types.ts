@@ -110,6 +110,24 @@ export type ValidateSchemaResponse = ExportResponse & {
 	schema_id: string;
 };
 
+export type EmbeddingsRequest = SchemasRequest;
+
+export type EmbeddingsBuildResponse = {
+	embeddings_id: string;
+};
+
+export type EmbeddingsSearchRequest = {
+	embeddings_id: string;
+	query: string;
+	limit: number;
+};
+
+export type EmbeddingsSearchHit = {
+	rank: number;
+	score: number;
+	id: string;
+};
+
 export type FilterSchemaRequest = SchemasWithSelectionQueryRequest;
 
 export type OpenAPIPath = {

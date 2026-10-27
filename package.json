@@ -3,7 +3,8 @@
   "workspaces": [
     "playground",
     "src/s2dm/templates/shared-ui",
-    "src/s2dm/templates/insights-ui"
+    "src/s2dm/templates/insights-ui",
+    "src/s2dm/templates/search-ui"
   ],
   "devDependencies": {
     "@graphql-inspector/cli": "^6.0.5",

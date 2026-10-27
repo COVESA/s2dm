@@ -23,6 +23,10 @@ export default defineConfig({
 					"../src/s2dm/templates/insights-ui",
 				),
 			},
+			{
+				find: "@search-ui",
+				replacement: path.resolve(__dirname, "../src/s2dm/templates/search-ui"),
+			},
 		],
 		dedupe: ["monaco-editor", "react", "react-dom", "react-redux"],
 	},
