@@ -4,7 +4,6 @@ Schema text is stored under its hash. Resolved dependencies are already on disk 
 directory. Both are referenced by schema inputs and loaded as already composed.
 """
 
-import hashlib
 from pathlib import Path
 
 from s2dm.api.config import get_api_workspace
@@ -12,13 +11,9 @@ from s2dm.api.errors import ResourceNotFoundError
 from s2dm.api.models.base import SchemaReferenceInput
 from s2dm.deps.resolve.common import SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.utils.file import write_text_atomically
+from s2dm.utils.hashing import sha256_hex
 
 SCHEMA_STORE_DIRECTORY = "schemas"
-
-
-def schema_text_id(schema_text: str) -> str:
-    """Return the id of schema text: its SHA-256."""
-    return hashlib.sha256(schema_text.encode()).hexdigest()
 
 
 def _stored_schema_path(schema_id: str) -> Path:
@@ -34,7 +29,7 @@ def store_schema_text(schema_text: str) -> str:
     Returns:
         The schema id, used to refer to the stored text.
     """
-    schema_id = schema_text_id(schema_text)
+    schema_id = sha256_hex(schema_text)
     stored_path = _stored_schema_path(schema_id)
     if not stored_path.is_file():
         # TODO: add a cleanup policy for stored schemas
