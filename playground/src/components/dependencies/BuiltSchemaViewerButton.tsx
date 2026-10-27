@@ -1,8 +1,8 @@
+import { Button } from "@shared-ui/components/button";
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import { TextEditor } from "@/components/TextEditor";
 import { TextEditorDialog } from "@/components/TextEditorDialog";
-import { Button } from "@/components/ui/button";
 import { selectComposedDependenciesSchema } from "@/store/deps/compose/composeSlice";
 import { useAppSelector } from "@/store/hooks";
 

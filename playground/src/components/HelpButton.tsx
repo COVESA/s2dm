@@ -1,5 +1,5 @@
+import { Button } from "@shared-ui/components/button";
 import { type ReactNode, useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,

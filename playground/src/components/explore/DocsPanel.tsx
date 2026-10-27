@@ -3,10 +3,10 @@ import {
 	type DocExplorerNavStack,
 	useDocExplorer,
 } from "@graphiql/plugin-doc-explorer";
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
 
 /** The root page that `reset` leaves, plus the one page the tree opens. */
 const FIRST_DOCS_PAGE_STACK_LENGTH = 2;

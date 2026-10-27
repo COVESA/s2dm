@@ -1,7 +1,7 @@
 import { EvidenceList } from "@insights-ui/components/EvidenceList";
 import { MiniStackedBar } from "@insights-ui/components/MiniStackedBar";
 import type { BreakdownGroup } from "@insights-ui/selectors/concepts";
-import { cn } from "@/utils/cn";
+import { cn } from "@shared-ui/utils/cn";
 
 const COLUMN_CLASS: Record<number, string> = {
 	1: "md:grid-cols-1",

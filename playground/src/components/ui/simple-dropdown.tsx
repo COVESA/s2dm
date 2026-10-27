@@ -1,3 +1,4 @@
+import { cn } from "@shared-ui/utils/cn";
 import {
 	Children,
 	cloneElement,
@@ -9,7 +10,6 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { cn } from "@/utils/cn";
 
 type DropdownProps = {
 	trigger: ReactNode;

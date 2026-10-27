@@ -10,7 +10,7 @@ import {
 } from "@insights-ui/state/hooks";
 import { pushInsightDetail } from "@insights-ui/state/insightDetailSlice";
 import { formatPathSegments } from "@insights-ui/utils/formatPathSegments";
-import { Heading } from "@/components/ui/heading";
+import { Heading } from "@shared-ui/components/heading";
 
 const PATHS_PER_GROUP = 3;
 

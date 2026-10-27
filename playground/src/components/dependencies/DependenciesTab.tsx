@@ -1,3 +1,6 @@
+import { Button } from "@shared-ui/components/button";
+import { StatusBanner } from "@shared-ui/components/status-banner";
+import { TabsContent } from "@shared-ui/components/tabs";
 import { Plus, Upload } from "lucide-react";
 import { useCallback } from "react";
 import { DependencyModal } from "@/components/DependencyModal";
@@ -6,11 +9,8 @@ import { BuiltSchemaViewerButton } from "@/components/dependencies/BuiltSchemaVi
 import { DependencyImportDialog } from "@/components/dependencies/DependencyImportDialog";
 import { EntryList } from "@/components/dependencies/EntryList";
 import { useEditModal } from "@/components/dependencies/useEditModal";
-import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { SplitActionButton } from "@/components/ui/split-action-button";
-import { StatusBanner } from "@/components/ui/status-banner";
-import { TabsContent } from "@/components/ui/tabs";
 import { useDependencyConfigImportController } from "@/hooks/useDependencyConfigImportController";
 import {
 	composeDependencies,

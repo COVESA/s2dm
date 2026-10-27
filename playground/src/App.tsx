@@ -1,4 +1,5 @@
 import { InsightsHostDefaults } from "@insights-ui/hostDefaults";
+import { Heading } from "@shared-ui/components/heading";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
@@ -6,7 +7,6 @@ import { ExplorePane } from "@/components/ExplorePane";
 import { InputPane } from "@/components/InputPane";
 import { InsightsDetailsPane } from "@/components/InsightsDetailsPane";
 import { ResultPane } from "@/components/ResultPane";
-import { Heading } from "@/components/ui/heading";
 import { appStartup } from "@/store/app/appSlice";
 import { selectIsLoadingCapabilities } from "@/store/capabilities/capabilitiesSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";

@@ -1,3 +1,4 @@
+import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { Eye, Hammer, Layers, Package, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
@@ -8,7 +9,6 @@ import { TextEditor } from "@/components/TextEditor";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	FILTERED_SCHEMA_FILENAME,
 	ORIGINAL_SCHEMA_FILENAME,
