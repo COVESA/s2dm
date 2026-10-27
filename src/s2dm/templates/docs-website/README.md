@@ -47,6 +47,24 @@ Running `npm run doc` generates both static schema artifacts before the API docu
 - `static/introspection.json` for the visualizer
 - `static/insights.json` for the Insights page
 
+## GraphQL-Markdown performance patch
+
+`npm ci` and `npm install` apply the versioned patch in `patches/` through
+`patch-package --error-on-fail`. The printer dependency is pinned to `1.16.0`
+in `package.json` so an upgrade cannot silently change the patch target.
+
+The patch reuses the schema map when printing relation sections. Without it,
+the printer rebuilds the full map three times per type page. Maps are keyed by
+schema object and reset on each `Printer.init()` call. The schema must remain
+unchanged while its pages are generated; formatter hooks should change output,
+not the schema.
+
+Run `npm run test:patch` to check relation output, schema isolation, and cache
+reset. This test is explicit and does not run during normal documentation builds.
+When upgrading GraphQL-Markdown, review the patch, run this test, and compare
+the generated pages. Remove the patch and its install hook once an upstream
+release includes an equivalent fix.
+
 ## Using it as GitHub page
 
 To deploy this website to GitHub Pages, configure the following in your repository before running `s2dm docs scaffold`:
