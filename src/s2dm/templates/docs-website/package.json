@@ -23,25 +23,25 @@
     "@docusaurus/faster": "3.10.2",
     "@docusaurus/preset-classic": "3.10.2",
     "@docusaurus/theme-mermaid": "3.10.2",
-    "@graphql-markdown/docusaurus": "^1.35.0",
-    "@graphql-markdown/utils": "1.12.0",
-    "@graphql-tools/graphql-file-loader": "^8.1.16",
-    "@graphql-tools/load": "^8.1.13",
-    "@huggingface/transformers": "4.2.0",
-    "@mdx-js/react": "^3.0.0",
+    "@graphql-markdown/docusaurus": "1.39.0",
+    "@graphql-markdown/utils": "1.14.0",
+    "@graphql-tools/graphql-file-loader": "8.1.24",
+    "@graphql-tools/load": "8.1.21",
+    "@huggingface/transformers": "4.3.1",
+    "@mdx-js/react": "3.1.1",
     "@radix-ui/react-slot": "1.2.4",
     "@radix-ui/react-tabs": "1.1.13",
     "@reduxjs/toolkit": "2.11.2",
     "class-variance-authority": "0.7.1",
-    "clsx": "^2.0.0",
-    "graphql": "^16.14.0",
-    "graphql-voyager": "^2.1.0",
+    "clsx": "2.1.1",
+    "graphql": "16.14.0",
+    "graphql-voyager": "2.1.0",
     "lucide-react": "0.563.0",
     "patch-package": "8.0.1",
     "pluralize": "8.0.0",
-    "prism-react-renderer": "^2.3.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "prism-react-renderer": "2.4.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-redux": "9.2.0",
     "recharts": "3.9.1",
     "tailwind-merge": "3.4.0"
@@ -52,12 +52,18 @@
     "@docusaurus/types": "3.10.2",
     "@tailwindcss/postcss": "4.1.18",
     "@types/pluralize": "0.0.33",
-    "@types/react": "^19.0.0",
+    "@types/react": "19.2.17",
     "tailwindcss": "4.1.18",
-    "typescript": "~6.0.2"
+    "typescript": "6.0.3"
   },
   "overrides": {
-    "@graphql-markdown/printer-legacy": "1.16.0"
+    "@graphql-markdown/printer-legacy": "1.19.2",
+    "@graphql-tools/utils": "12.1.0",
+    "serialize-javascript": "7.1.4",
+    "sockjs": {
+      "uuid": "11.1.1"
+    },
+    "tinypool": "2.2.0"
   },
   "browserslist": {
     "production": [
