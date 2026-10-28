@@ -50,7 +50,7 @@ Running `npm run doc` generates both static schema artifacts before the API docu
 ## GraphQL-Markdown performance patch
 
 `npm ci` and `npm install` apply the versioned patch in `patches/` through
-`patch-package --error-on-fail`. The printer dependency is pinned to `1.16.0`
+`patch-package --error-on-fail`. The printer dependency is pinned to `1.19.2`
 in `package.json` so an upgrade cannot silently change the patch target.
 
 The patch reuses the schema map when printing relation sections. Without it,
