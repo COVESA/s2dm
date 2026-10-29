@@ -1,7 +1,9 @@
 from collections.abc import Callable
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
+from graphql import build_schema
 
 from s2dm.deps import DEPENDENCY_LOCK_FILENAME
 from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
@@ -51,6 +53,42 @@ class TestDepsBuildRoute:
         assert data["metadata"]["result_format"] == "graphql"
         assert "type Vehicle" in data["result"][0]
         assert "vin: String" in data["result"][0]
+
+    @pytest.mark.parametrize(
+        ("build_payload", "expected_query_type"),
+        [({"auto_prefix": False}, False), ({"auto_prefix": False, "preserve_query_type": True}, True)],
+    )
+    def test_build_dependencies_omits_query_type_unless_preserved(
+        self,
+        test_client: TestClient,
+        dependency_source_factory: DependencySourceFactory,
+        dependencies_config_payload_factory: DependenciesConfigPayloadFactory,
+        build_payload: dict[str, bool],
+        expected_query_type: bool,
+    ) -> None:
+        source_directory = dependency_source_factory(
+            "source",
+            name="DemoDependency",
+            version="1.0.0",
+            schema="type Query { vehicle: Vehicle }\ntype Vehicle { vin: String }\n",
+            metadata_id="urn:test:demo",
+        )
+        test_client.post(
+            "/api/v1/deps/config",
+            json=dependencies_config_payload_factory(
+                [source_directory.resolve()],
+                names=["DemoDependency"],
+                versions=["1.0.0"],
+            ),
+        )
+        test_client.post("/api/v1/deps/resolve", json={"clean": False})
+
+        response = test_client.post("/api/v1/deps/build", json=build_payload)
+
+        assert response.status_code == 200
+        built_schema = build_schema(response.json()["result"][0])
+        assert "Vehicle" in built_schema.type_map
+        assert ("Query" in built_schema.type_map) == expected_query_type
 
     def test_build_dependencies_applies_dependency_selection(
         self,

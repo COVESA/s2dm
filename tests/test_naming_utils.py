@@ -18,6 +18,7 @@ from graphql import (
 from s2dm.exporters.shacl import translate_to_shacl
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema
 from s2dm.exporters.utils.naming import (
+    apply_naming_to_instance_values,
     apply_naming_to_schema,
     convert_enum_values,
     convert_field_names,
@@ -61,6 +62,26 @@ class TestConvertName:
         """Test conversion with empty string input."""
         result = convert_name("", CaseFormat.CAMEL_CASE)
         assert result == ""
+
+    def test_convert_name_exception_overrides_case_conversion(self) -> None:
+        """Test that an exact match in exceptions bypasses case conversion."""
+        result = convert_name("AI", CaseFormat.PASCAL_CASE, {"AI": "AI"})
+        assert result == "AI"
+
+    def test_convert_name_exception_supports_arbitrary_mapping(self) -> None:
+        """Test that exceptions can map a name to an arbitrary literal, not just itself."""
+        result = convert_name("PwfStatus", CaseFormat.PASCAL_CASE, {"PwfStatus": "PWFStatus"})
+        assert result == "PWFStatus"
+
+    def test_convert_name_non_matching_exception_falls_back_to_case_conversion(self) -> None:
+        """Test that names not present in exceptions are converted normally."""
+        result = convert_name("hello_world", CaseFormat.PASCAL_CASE, {"AI": "AI"})
+        assert result == "HelloWorld"
+
+    def test_convert_name_none_exceptions_falls_back_to_case_conversion(self) -> None:
+        """Test that a None exceptions mapping behaves like no exceptions provided."""
+        result = convert_name("hello_world", CaseFormat.PASCAL_CASE, None)
+        assert result == "HelloWorld"
 
 
 class TestGetCaseForElement:
@@ -190,6 +211,40 @@ class TestApplyNamingToSchema:
         test_object_type = original_schema.type_map["TestObject"]
         assert isinstance(test_object_type, GraphQLObjectType)
         assert "TestField" in test_object_type.fields
+
+    def test_apply_naming_exceptions_preserve_acronym_names(self) -> None:
+        """Test that names listed in exceptions bypass case conversion for types, fields, and enum values."""
+        enum_type = GraphQLEnumType(name="pwf_status", values={"ai_vin": GraphQLEnumValue("ai_vin")})
+        object_type = GraphQLObjectType(name="vin_info", fields={"ai_score": GraphQLField(GraphQLString)})
+
+        query_type = GraphQLObjectType(name="Query", fields={"test": GraphQLField(object_type)})
+        schema = GraphQLSchema(query=query_type, types=[object_type, enum_type])
+
+        naming_config = NamingConventionConfig(
+            type=TypeNamingConfig(object=CaseFormat.PASCAL_CASE, enum=CaseFormat.PASCAL_CASE),
+            field=FieldNamingConfig(object=CaseFormat.PASCAL_CASE),
+            enum_value=CaseFormat.PASCAL_CASE,
+            instance_tag=CaseFormat.PASCAL_CASE,
+            exceptions={
+                "vin_info": "VINInfo",
+                "pwf_status": "PWFStatus",
+                "ai_score": "AIScore",
+                "ai_vin": "AIVIN",
+            },
+        )
+
+        apply_naming_to_schema(schema, naming_config)
+
+        assert "VINInfo" in schema.type_map
+        assert "PWFStatus" in schema.type_map
+
+        vin_info_type = schema.type_map["VINInfo"]
+        assert isinstance(vin_info_type, GraphQLObjectType)
+        assert "AIScore" in vin_info_type.fields
+
+        pwf_status_type = schema.type_map["PWFStatus"]
+        assert isinstance(pwf_status_type, GraphQLEnumType)
+        assert "AIVIN" in pwf_status_type.values
 
     def test_apply_naming_routes_instancetag_enums_to_instancetag_case(self) -> None:
         """Enums inside @instanceTag types get instanceTag case; other enums get enumValue case."""
@@ -461,6 +516,30 @@ class TestInstanceTagConversion:
         # DoorPosition has row: RowEnum (ROW1, ROW2) and side: SideEnum (DRIVERSIDE, PASSENGERSIDE)
         # instanceTag: PascalCase -> Row1, Row2, Driverside, Passengerside
         assert sh_in_values == {"Row1", "Row2", "Driverside", "Passengerside"}
+
+
+class TestApplyNamingToInstanceValues:
+    """Test applying naming conversion (including exceptions) to instance tag values."""
+
+    def test_apply_naming_to_instance_values_converts_case(self) -> None:
+        """Test that instance values are converted using the configured instanceTag case."""
+        naming_config = NamingConventionConfig(instance_tag=CaseFormat.PASCAL_CASE)
+        result = apply_naming_to_instance_values(["front_left", "front_right"], naming_config)
+        assert result == ["FrontLeft", "FrontRight"]
+
+    def test_apply_naming_to_instance_values_honors_exceptions(self) -> None:
+        """Test that exceptions bypass case conversion for instance tag values."""
+        naming_config = NamingConventionConfig(
+            instance_tag=CaseFormat.PASCAL_CASE,
+            exceptions={"ai_vin": "AIVIN"},
+        )
+        result = apply_naming_to_instance_values(["ai_vin", "front_right"], naming_config)
+        assert result == ["AIVIN", "FrontRight"]
+
+    def test_apply_naming_to_instance_values_no_config_returns_unchanged(self) -> None:
+        """Test that a None naming_config leaves instance values unchanged."""
+        result = apply_naming_to_instance_values(["front_left"], None)
+        assert result == ["front_left"]
 
 
 if __name__ == "__main__":

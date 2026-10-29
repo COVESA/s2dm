@@ -161,12 +161,14 @@ export async function resolveDependencies(clean: boolean): Promise<string[]> {
 
 export async function composeDependencies(
 	autoPrefix: boolean,
+	preserveQueryType: boolean,
 ): Promise<string> {
 	try {
 		const response = await apiClient.post<ExportResponse>(
 			"/api/v1/deps/build",
 			{
 				auto_prefix: autoPrefix,
+				preserve_query_type: preserveQueryType,
 			},
 		);
 		return response.result[0] ?? "";

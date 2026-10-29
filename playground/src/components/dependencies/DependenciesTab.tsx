@@ -1,6 +1,7 @@
 import { Plus, Upload } from "lucide-react";
 import { useCallback } from "react";
 import { DependencyModal } from "@/components/DependencyModal";
+import { BuildOptionsPopover } from "@/components/dependencies/BuildOptionsPopover";
 import { BuiltSchemaViewerButton } from "@/components/dependencies/BuiltSchemaViewerButton";
 import { DependencyImportDialog } from "@/components/dependencies/DependencyImportDialog";
 import { EntryList } from "@/components/dependencies/EntryList";
@@ -131,11 +132,7 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 	}, [dispatch]);
 
 	const handleCompose = useCallback(() => {
-		dispatch(composeDependencies({ autoPrefix: false }));
-	}, [dispatch]);
-
-	const handleComposeWithAutoPrefix = useCallback(() => {
-		dispatch(composeDependencies({ autoPrefix: true }));
+		dispatch(composeDependencies());
 	}, [dispatch]);
 
 	const isAnySaveInProgress =
@@ -254,20 +251,20 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 							{ label: "Clean and Resolve", onClick: handleCleanResolve },
 						]}
 					/>
-					<SplitActionButton
-						label="Build"
-						onClick={handleCompose}
-						loading={isDependenciesComposing}
-						disabled={isComposeDisabled}
-						title="Build dependencies"
-						optionsTitle="Build options"
-						options={[
-							{
-								label: "Build and Auto-prefix",
-								onClick: handleComposeWithAutoPrefix,
-							},
-						]}
-					/>
+					<div className={"flex items-center"}>
+						<Button
+							variant={"outline"}
+							size={"sm"}
+							onClick={handleCompose}
+							loading={isDependenciesComposing}
+							disabled={isComposeDisabled}
+							title={"Build dependencies"}
+							className={"rounded-r-none"}
+						>
+							Build
+						</Button>
+						<BuildOptionsPopover disabled={isComposeDisabled} />
+					</div>
 					<Button
 						onClick={handleSave}
 						loading={isDependenciesSaving}

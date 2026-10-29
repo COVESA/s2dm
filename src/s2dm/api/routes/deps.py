@@ -132,6 +132,6 @@ def build_dependencies(request: BuildDependenciesRequest) -> ApiResponse:
     """Compose vendored dependencies in the API-managed workspace."""
 
     def process_request() -> list[str]:
-        return [build_api_dependencies(request.auto_prefix)]
+        return [build_api_dependencies(request.auto_prefix, request.preserve_query_type)]
 
     return execute_and_respond(executor=process_request, result_format="graphql")

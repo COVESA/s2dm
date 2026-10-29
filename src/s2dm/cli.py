@@ -26,6 +26,7 @@ from s2dm import __version__, log
 from s2dm.concept.services import iter_all_concepts
 from s2dm.deps.helpers import (
     build_resolver_context,
+    compose_dependency_schemas,
     get_dependency_config_path,
     get_dependency_identity_path,
     load_dependency_config,
@@ -595,8 +596,20 @@ def deps_resolve(config_path: Path | None, identity_path: Path | None, clean: bo
     help="Prefix conflicting dependency types using preferred_prefix, falling back to metadata id.",
 )
 @merge_shared_definitions_option
+@click.option(
+    "--preserve-query-type",
+    is_flag=True,
+    default=False,
+    help="Keep the composed Query type in the output instead of omitting it.",
+)
 @output_option
-def deps_build(config_path: Path | None, auto_prefix: bool, merge_shared_definitions: bool, output: Path) -> None:
+def deps_build(
+    config_path: Path | None,
+    auto_prefix: bool,
+    merge_shared_definitions: bool,
+    preserve_query_type: bool,
+    output: Path,
+) -> None:
     """Compose all vendored dependency schemas into a single output file."""
     working_directory = Path.cwd()
     resolved_config_path = config_path or get_dependency_config_path(working_directory)
@@ -615,13 +628,7 @@ def deps_build(config_path: Path | None, auto_prefix: bool, merge_shared_definit
             merge_shared_definitions=merge_shared_definitions,
         )
 
-        composed_schema_str = compose_schemas_to_string(
-            schemas=schema_paths,
-            root_type=None,
-            selection_query=None,
-            naming_config=None,
-            expanded_instances=False,
-        )
+        composed_schema_str = compose_dependency_schemas(schema_paths, preserve_query_type)
         output.write_text(composed_schema_str)
         log.success(f"Successfully composed schema to {output}")
     except (OSError, RuntimeError, TypeError, ValueError, GraphQLError, ValidationError, yaml.YAMLError) as error:
@@ -650,7 +657,8 @@ def units() -> None:
     type=str,
     required=False,
     help=(
-        "QUDT version tag (e.g., 3.1.6). Defaults to the latest tag, falls back to 'main' when tags are unavailable."
+        "QUDT version tag, including the leading 'v' (e.g., v3.1.6), matching a tag in the "
+        "qudt-public-repo. Defaults to the latest tag, falls back to 'main' when tags are unavailable."
     ),
 )
 @units_directory_option
@@ -660,7 +668,13 @@ def units() -> None:
     help="Show what would be generated without actually writing files",
 )
 def units_sync(version: str | None, directory: Path, dry_run: bool) -> None:
-    """Fetch QUDT quantity kinds and generate GraphQL enums under the specified directory.
+    """Fetch a specific QUDT release and generate GraphQL enums under the specified directory.
+
+    Reads the given QUDT release and maps it onto GraphQL SDL enum structures: each
+    enum type corresponds to a specific quantity kind (e.g. `VelocityUnit`), and each
+    enum value is a possible unit for that quantity kind (e.g. `M_PER_SEC`). Elements
+    that are deprecated in the QUDT release (units or their quantity kind) are
+    intentionally not mapped and are ignored.
 
     Args:
         version: QUDT version tag. Defaults to the latest tag.

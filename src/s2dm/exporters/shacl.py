@@ -37,7 +37,20 @@ class Namespaces:
 
 
 # Datatype mapping from GraphQL to XSD
-GRAPHQL_SCALAR_TO_XSD = {"Int": "integer", "Float": "float", "String": "string", "Boolean": "boolean", "ID": "string"}
+GRAPHQL_SCALAR_TO_XSD = {
+    "Int": "integer",
+    "Float": "float",
+    "String": "string",
+    "Boolean": "boolean",
+    "ID": "string",
+    "Int8": "byte",
+    "UInt8": "unsignedByte",
+    "Int16": "short",
+    "UInt16": "unsignedShort",
+    "UInt32": "unsignedInt",
+    "Int64": "long",
+    "UInt64": "unsignedLong",
+}
 
 
 def get_xsd_datatype(scalar: GraphQLScalarType) -> URIRef:

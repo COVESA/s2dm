@@ -1,6 +1,13 @@
+from pathlib import Path
+
 from graphql import build_schema
 
-from s2dm.exporters.utils.naming_config import CaseFormat, NamingConventionConfig, ValidationMode
+from s2dm.exporters.utils.naming_config import (
+    CaseFormat,
+    NamingConventionConfig,
+    ValidationMode,
+    load_naming_convention_config,
+)
 from s2dm.tools.naming_checker import check_naming_conventions
 
 
@@ -21,6 +28,28 @@ def test_type_name_violations() -> None:
     errors = check_naming_conventions(schema, config)
 
     assert len(errors) == 2
+
+
+def test_type_name_exception_is_not_a_violation() -> None:
+    """A type name listed in exceptions is treated as compliant, even if it wouldn't match the target case."""
+    schema = build_schema("""
+        type AI {
+            field: String
+        }
+
+        type another_type {
+            field: String
+        }
+    """)
+
+    config = NamingConventionConfig.model_validate(
+        {"type": {"object": CaseFormat.PASCAL_CASE}, "exceptions": {"AI": "AI"}},
+        context={"mode": ValidationMode.CHECK},
+    )
+    errors = check_naming_conventions(schema, config)
+
+    assert len(errors) == 1
+    assert "another_type" in errors[0]
 
 
 def test_interface_name_violations() -> None:
@@ -161,3 +190,16 @@ def test_multiple_violation_types() -> None:
     errors = check_naming_conventions(schema, config)
 
     assert len(errors) == 7
+
+
+def test_load_naming_convention_config_parses_exceptions(tmp_path: Path) -> None:
+    """load_naming_convention_config parses the top-level exceptions key from YAML."""
+    config_path = tmp_path / "naming.yaml"
+    config_path.write_text(
+        "type:\n" "  object: PascalCase\n" "exceptions:\n" "  AI: AI\n" "  VIN: VIN\n" "  PwfStatus: PWFStatus\n"
+    )
+
+    config = load_naming_convention_config(config_path)
+
+    assert config is not None
+    assert config.exceptions == {"AI": "AI", "VIN": "VIN", "PwfStatus": "PWFStatus"}

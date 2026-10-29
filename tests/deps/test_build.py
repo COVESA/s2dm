@@ -1,11 +1,12 @@
 import pytest
+from graphql import ObjectTypeDefinitionNode, parse
 
 from s2dm.deps.compose import (
     DependencyCompositionError,
     DependencySchemaBuilder,
     DependencySchemaInput,
 )
-from s2dm.deps.helpers import prepare_dependency_schemas_for_composition
+from s2dm.deps.helpers import compose_dependency_schemas, prepare_dependency_schemas_for_composition
 from s2dm.deps.models import DependencyMetadata
 from s2dm.exporters.utils.schema_loader import compose_schemas_to_string
 from tests.deps.helpers import dependency_identities
@@ -238,3 +239,236 @@ def test_merge_shared_definitions_uses_superset_directive_and_scalar_definitions
 def _write_auto_prefixed_schema_content(dependency_schema_contents: list[DependencySchemaInput]) -> str:
     schema_paths = DependencySchemaBuilder(dependency_schema_contents).write_auto_prefixed_schema_files()
     return "\n".join(schema_path.read_text(encoding="utf-8") for schema_path in schema_paths)
+
+
+def test_directives_only_dependency_composes_with_type_bearing_dependency() -> None:
+    directives_only_schema = """
+        directive @metadata(comment: String) on FIELD_DEFINITION
+    """
+    body_schema = """
+        type Query {
+            body: Body
+        }
+        type Body {
+            color: String @metadata(comment: "exterior paint")
+        }
+    """
+    dependency_schema_contents = [
+        DependencySchemaInput(
+            schema_content=directives_only_schema,
+            metadata=DependencyMetadata(name="DirectivesModel", id="urn:test:directives", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content=body_schema,
+            metadata=DependencyMetadata(name="BodyModel", id="urn:test:body", version="1.0.0"),
+        ),
+    ]
+
+    schema_paths = prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=False)
+
+    composed_schema = compose_schemas_to_string(
+        schemas=schema_paths,
+        root_type=None,
+        selection_query=None,
+        naming_config=None,
+        expanded_instances=False,
+    )
+
+    assert "directive @metadata(comment: String) on FIELD_DEFINITION" in composed_schema
+    assert "type Body" in composed_schema
+
+
+def test_directive_and_enums_only_dependency_composes_with_type_bearing_dependency() -> None:
+    directive_and_enums_schema = """
+        directive @metadata(comment: String) on FIELD_DEFINITION
+        enum Color {
+            RED
+            BLUE
+        }
+    """
+    body_schema = """
+        type Query {
+            body: Body
+        }
+        type Body {
+            color: String
+        }
+    """
+    dependency_schema_contents = [
+        DependencySchemaInput(
+            schema_content=directive_and_enums_schema,
+            metadata=DependencyMetadata(name="EnumsModel", id="urn:test:enums", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content=body_schema,
+            metadata=DependencyMetadata(name="BodyModel", id="urn:test:body", version="1.0.0"),
+        ),
+    ]
+
+    schema_paths = prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=False)
+
+    composed_schema = compose_schemas_to_string(
+        schemas=schema_paths,
+        root_type=None,
+        selection_query=None,
+        naming_config=None,
+        expanded_instances=False,
+    )
+
+    assert "enum Color" in composed_schema
+    assert "RED" in composed_schema
+    assert "type Body" in composed_schema
+
+
+def test_only_shared_definition_dependencies_compose_without_type_bearing_dependency() -> None:
+    directives_only_schema = """
+        directive @metadata(comment: String) on FIELD_DEFINITION
+    """
+    enums_only_schema = """
+        enum Color {
+            RED
+            BLUE
+        }
+    """
+    dependency_schema_contents = [
+        DependencySchemaInput(
+            schema_content=directives_only_schema,
+            metadata=DependencyMetadata(name="DirectivesModel", id="urn:test:directives", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content=enums_only_schema,
+            metadata=DependencyMetadata(name="EnumsModel", id="urn:test:enums", version="1.0.0"),
+        ),
+    ]
+
+    schema_paths = prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=False)
+
+    composed_schema = compose_schemas_to_string(
+        schemas=schema_paths,
+        root_type=None,
+        selection_query=None,
+        naming_config=None,
+        expanded_instances=False,
+    )
+
+    assert "directive @metadata(comment: String) on FIELD_DEFINITION" in composed_schema
+    assert "enum Color" in composed_schema
+
+
+def test_shared_only_dependency_does_not_hide_type_name_conflicts() -> None:
+    directives_only_schema = """
+        directive @metadata(comment: String) on FIELD_DEFINITION
+    """
+    dependency_schema_contents = [
+        DependencySchemaInput(
+            schema_content=directives_only_schema,
+            metadata=DependencyMetadata(name="DirectivesModel", id="urn:test:directives", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content="type Vehicle { vin: String }\n",
+            metadata=DependencyMetadata(name="BodyModel", id="urn:test:body", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content="type Vehicle { speed: Float }\n",
+            metadata=DependencyMetadata(name="PowertrainModel", id="urn:test:powertrain", version="2.0.0"),
+        ),
+    ]
+
+    with pytest.raises(DependencyCompositionError):
+        prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=False)
+
+
+def test_shared_only_dependency_composes_with_auto_prefixed_conflicting_types() -> None:
+    directives_only_schema = """
+        directive @metadata(comment: String) on FIELD_DEFINITION
+    """
+    dependency_schema_contents = [
+        DependencySchemaInput(
+            schema_content=directives_only_schema,
+            metadata=DependencyMetadata(name="DirectivesModel", id="urn:test:directives", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content="type Vehicle { vin: String }\n",
+            metadata=DependencyMetadata(name="BodyModel", id="urn:test:body", version="1.0.0", preferred_prefix="body"),
+        ),
+        DependencySchemaInput(
+            schema_content="type Vehicle { speed: Float }\n",
+            metadata=DependencyMetadata(
+                name="PowertrainModel", id="urn:test:powertrain", version="2.0.0", preferred_prefix="powertrain"
+            ),
+        ),
+    ]
+
+    schema_paths = prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=True)
+
+    composed_schema = compose_schemas_to_string(
+        schemas=schema_paths,
+        root_type=None,
+        selection_query=None,
+        naming_config=None,
+        expanded_instances=False,
+    )
+
+    assert "directive @metadata(comment: String) on FIELD_DEFINITION" in composed_schema
+    assert "type body_Vehicle" in composed_schema
+    assert "type powertrain_Vehicle" in composed_schema
+
+
+def _query_type_dependency_schema_contents() -> list[DependencySchemaInput]:
+    body_schema = """
+        type Query {
+            body: Body
+        }
+        type Body {
+            color: String
+        }
+    """
+    powertrain_schema = """
+        type Query {
+            powertrain: Powertrain
+        }
+        type Powertrain {
+            horsepower: Int
+        }
+    """
+    return [
+        DependencySchemaInput(
+            schema_content=body_schema,
+            metadata=DependencyMetadata(name="BodyModel", id="urn:test:body", version="1.0.0"),
+        ),
+        DependencySchemaInput(
+            schema_content=powertrain_schema,
+            metadata=DependencyMetadata(name="PowertrainModel", id="urn:test:powertrain", version="2.0.0"),
+        ),
+    ]
+
+
+def _object_type_definitions_by_name(schema_content: str) -> dict[str, ObjectTypeDefinitionNode]:
+    document = parse(schema_content)
+    return {
+        definition.name.value: definition
+        for definition in document.definitions
+        if isinstance(definition, ObjectTypeDefinitionNode)
+    }
+
+
+def test_compose_dependency_schemas_omits_query_type_by_default() -> None:
+    dependency_schema_contents = _query_type_dependency_schema_contents()
+    schema_paths = prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=False)
+
+    composed_schema = compose_dependency_schemas(schema_paths, preserve_query_type=False)
+
+    object_type_definitions = _object_type_definitions_by_name(composed_schema)
+    assert set(object_type_definitions) == {"Body", "Powertrain"}
+
+
+def test_compose_dependency_schemas_preserves_merged_query_type() -> None:
+    dependency_schema_contents = _query_type_dependency_schema_contents()
+    schema_paths = prepare_dependency_schemas_for_composition(dependency_schema_contents, auto_prefix=False)
+
+    composed_schema = compose_dependency_schemas(schema_paths, preserve_query_type=True)
+
+    object_type_definitions = _object_type_definitions_by_name(composed_schema)
+    query_field_names = {field.name.value for field in object_type_definitions["Query"].fields}
+    assert set(object_type_definitions) == {"Query", "Body", "Powertrain"}
+    assert query_field_names == {"body", "powertrain"}

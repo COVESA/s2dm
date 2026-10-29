@@ -158,13 +158,14 @@ The `deps build` command composes vendored dependency schemas into a single Grap
 #### Usage
 
 ```bash
-s2dm deps build [--config CONFIG_PATH] [--auto-prefix] --output <output_file>
+s2dm deps build [--config CONFIG_PATH] [--auto-prefix] [--preserve-query-type] --output <output_file>
 ```
 
 #### Options
 
 - `--config CONFIG_PATH`: Path to the dependency manifest YAML file (optional, defaults to `s2dm.deps.yaml` in the current working directory)
 - `--auto-prefix`: Prefix conflicting dependency types using `preferred_prefix`, falling back to the dependency metadata `id`
+- `--preserve-query-type`: Keep the composed `Query` type in the output instead of omitting it
 - `-o, --output OUTPUT`: Output file path for the composed schema (required)
 
 #### Behavior
@@ -175,6 +176,7 @@ s2dm deps build [--config CONFIG_PATH] [--auto-prefix] --output <output_file>
 - Detects duplicate type definitions across vendored dependencies.
 - Fails when duplicate type names are found and `--auto-prefix` is not used.
 - With `--auto-prefix`, rewrites conflicting type definitions and references before composing the final schema.
+- Validates the composed schema, then omits its `Query` type from the output unless `--preserve-query-type` is used.
 - Writes a single composed schema to the requested output path.
 
 #### Prerequisites
@@ -198,6 +200,14 @@ Compose vendored schemas and automatically rename conflicting types:
 
 ```bash
 s2dm deps build --output composed.graphql --auto-prefix
+```
+
+##### Build and Keep the Query Type
+
+Compose vendored schemas and keep the merged `Query` type in the output:
+
+```bash
+s2dm deps build --output composed.graphql --preserve-query-type
 ```
 
 ##### Build with a Custom Manifest

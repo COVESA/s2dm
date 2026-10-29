@@ -3,6 +3,7 @@ import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import type * as React from "react";
+import { forwardRef } from "react";
 
 import { cn } from "@/utils/cn";
 
@@ -40,24 +41,30 @@ const buttonVariants = cva(
 	},
 );
 
-function Button({
-	className,
-	variant = "default",
-	size = "default",
-	asChild = false,
-	loading = false,
-	children,
-	disabled,
-	...props
-}: React.ComponentProps<"button"> &
+type ButtonProps = React.ComponentPropsWithoutRef<"button"> &
 	VariantProps<typeof buttonVariants> & {
 		asChild?: boolean;
 		loading?: boolean;
-	}) {
+	};
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+	{
+		className,
+		variant = "default",
+		size = "default",
+		asChild = false,
+		loading = false,
+		children,
+		disabled,
+		...props
+	},
+	ref,
+) {
 	const Comp = asChild ? Slot : "button";
 
 	return (
 		<Comp
+			ref={ref}
 			data-slot="button"
 			data-variant={variant}
 			data-size={size}
@@ -69,6 +76,6 @@ function Button({
 			<Slottable>{children}</Slottable>
 		</Comp>
 	);
-}
+});
 
 export { Button };

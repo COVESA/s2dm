@@ -88,6 +88,10 @@ class BuildDependenciesRequest(BaseModel):
         default=False,
         description="Whether to prefix conflicting dependency types automatically during composition",
     )
+    preserve_query_type: bool = Field(
+        default=False,
+        description="Whether to keep the composed Query type in the output instead of omitting it",
+    )
 
 
 class DependenciesApiResponse(BaseModel):

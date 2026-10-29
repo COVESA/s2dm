@@ -19,6 +19,7 @@ from s2dm.api.models.deps import (
 from s2dm.deps.compose import DependencyCompositionError
 from s2dm.deps.helpers import (
     build_resolver_context,
+    compose_dependency_schemas,
     delete_dependency_identity_config,
     get_dependency_config_path,
     get_dependency_identity_path,
@@ -37,7 +38,6 @@ from s2dm.deps.models.deps_file import GRAPHQL_FILE_EXTENSIONS
 from s2dm.deps.resolve.common import DEPENDENCY_LOCK_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
 from s2dm.deps.resolve.errors import DependencyConfigError
 from s2dm.deps.resolve.warnings import ListWarningCollector
-from s2dm.exporters.utils.schema_loader import compose_schemas_to_string
 
 
 def save_dependencies_config(config: SaveDependenciesConfigRequest) -> None:
@@ -132,7 +132,7 @@ def resolve_api_dependencies(clean: bool) -> list[str]:
     return warnings
 
 
-def build_api_dependencies(auto_prefix: bool) -> str:
+def build_api_dependencies(auto_prefix: bool, preserve_query_type: bool) -> str:
     """Compose vendored dependency schemas in the API-managed workspace."""
     api_workspace = get_api_workspace()
     dependency_config = _load_stored_dependency_config(api_workspace)
@@ -149,13 +149,7 @@ def build_api_dependencies(auto_prefix: bool) -> str:
         raise ResponseError(
             format_error_list("Dependency build failed due to conflicting definitions", list(error.messages))
         ) from error
-    return compose_schemas_to_string(
-        schemas=schema_paths,
-        root_type=None,
-        selection_query=None,
-        naming_config=None,
-        expanded_instances=False,
-    )
+    return compose_dependency_schemas(schema_paths, preserve_query_type)
 
 
 def _build_dependency_config(config: SaveDependenciesConfigRequest, api_workspace: Path) -> DependencyConfig:

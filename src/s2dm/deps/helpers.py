@@ -4,6 +4,7 @@ from typing import Literal
 
 import yaml
 from graphql import DocumentNode
+from graphql import DocumentNode, ObjectTypeDefinitionNode, parse, print_ast
 from pydantic import ValidationError
 
 from s2dm.deps import DEPENDENCY_LOCK_FILENAME, clean_resolved_dependencies, resolve_dependencies
@@ -27,8 +28,9 @@ from s2dm.deps.resolve.providers import RemoteIdentityProvider
 from s2dm.deps.resolve.resolve import validate_cached_dependency
 from s2dm.deps.resolve.warnings import WarningCollector
 from s2dm.exporters.utils.pick import parse_selection_query
-from s2dm.exporters.utils.schema_loader import build_schema_str_with_optional_source_map
+from s2dm.exporters.utils.schema_loader import build_schema_str_with_optional_source_map, compose_schemas_to_string
 from s2dm.utils.compose import SchemaDefinition, SharedDefinitionResolver
+from s2dm.utils.compose.resolver import QUERY_TYPE_NAME
 from s2dm.utils.file import temp_file_from_content, temp_files_from_contents
 
 DependencyStatus = Literal["not_configured", "unresolved", "resolved", "invalid"]
@@ -174,6 +176,12 @@ def prepare_dependency_schemas_for_composition(
 
     schema_input_pairs = zip(dependency_schema_inputs, type_only_schema_definitions, strict=True)
     for dependency_schema_input, type_only_schema_definition in schema_input_pairs:
+        if not type_only_schema_definition.content.strip():
+            # Dependency only contributed shared definitions (directives/scalars/enums/Query) and
+            # defines no object/interface/input/union types of its own, so there is nothing left to
+            # hand to the type-name-conflict builder. Its shared definitions are still captured by
+            # `resolver.resolved_definitions_sdl()` below.
+            continue
         type_only_input = DependencySchemaInput(
             schema_content=type_only_schema_definition.content,
             metadata=dependency_schema_input.metadata,
@@ -200,6 +208,41 @@ def prepare_dependency_schemas_for_composition(
         return type_schema_files
     resolved_definitions_file = temp_file_from_content(resolved_definitions_sdl)
     return [resolved_definitions_file, *type_schema_files]
+
+
+def compose_dependency_schemas(schema_paths: list[Path], preserve_query_type: bool) -> str:
+    """Compose prepared dependency schema files into a single GraphQL schema string.
+
+    The composed schema is validated with its ``Query`` type, which is then omitted from the output
+    unless ``preserve_query_type`` is set.
+
+    Args:
+        schema_paths: Schema files returned by ``prepare_dependency_schemas_for_composition``.
+        preserve_query_type: Whether to keep the ``Query`` type definition in the output.
+
+    Returns:
+        str: The composed GraphQL SDL.
+    """
+    composed_schema = compose_schemas_to_string(
+        schemas=schema_paths,
+        root_type=None,
+        selection_query=None,
+        naming_config=None,
+        expanded_instances=False,
+    )
+    if preserve_query_type:
+        return composed_schema
+    return _remove_query_type_definition(composed_schema)
+
+
+def _remove_query_type_definition(schema_content: str) -> str:
+    document = parse(schema_content)
+    definitions = tuple(
+        definition
+        for definition in document.definitions
+        if not (isinstance(definition, ObjectTypeDefinitionNode) and definition.name.value == QUERY_TYPE_NAME)
+    )
+    return print_ast(DocumentNode(definitions=definitions))
 
 
 def _type_conflict_messages(type_name_conflicts: tuple[DependencyTypeNameConflict, ...]) -> list[str]:

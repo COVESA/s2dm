@@ -15,6 +15,8 @@ export interface DepsComposeState {
 	composedSchema: string | null;
 	message: string | null;
 	error: string | null;
+	autoPrefix: boolean;
+	preserveQueryType: boolean;
 }
 
 const initialState: DepsComposeState = {
@@ -22,19 +24,24 @@ const initialState: DepsComposeState = {
 	composedSchema: null,
 	message: null,
 	error: null,
+	autoPrefix: false,
+	preserveQueryType: false,
 };
 
 const composeSlice = createSlice({
 	name: "depsCompose",
 	initialState,
 	reducers: {
-		composeDependencies: (
-			state,
-			_action: PayloadAction<{ autoPrefix: boolean }>,
-		) => {
+		composeDependencies: (state) => {
 			state.isComposing = true;
 			state.message = null;
 			state.error = null;
+		},
+		setAutoPrefix: (state, action: PayloadAction<boolean>) => {
+			state.autoPrefix = action.payload;
+		},
+		setPreserveQueryType: (state, action: PayloadAction<boolean>) => {
+			state.preserveQueryType = action.payload;
 		},
 		composeDependenciesSuccess: (state, action: PayloadAction<string>) => {
 			state.isComposing = false;
@@ -70,6 +77,8 @@ export const {
 	composeDependenciesSuccess,
 	composeDependenciesFailure,
 	clearComposeMessage,
+	setAutoPrefix,
+	setPreserveQueryType,
 } = composeSlice.actions;
 
 export const selectIsComposing = (state: RootState) =>
@@ -81,5 +90,9 @@ export const selectHasComposedDependenciesSchema = (state: RootState) =>
 export const selectComposeMessage = (state: RootState) =>
 	state.depsCompose.message;
 export const selectComposeError = (state: RootState) => state.depsCompose.error;
+export const selectAutoPrefix = (state: RootState) =>
+	state.depsCompose.autoPrefix;
+export const selectPreserveQueryType = (state: RootState) =>
+	state.depsCompose.preserveQueryType;
 
 export default composeSlice.reducer;

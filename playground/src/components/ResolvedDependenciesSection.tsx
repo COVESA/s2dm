@@ -3,8 +3,9 @@ import { Hammer } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { DependencyEntry } from "@/components/DependencyEntry";
+import { BuildOptionsPopover } from "@/components/dependencies/BuildOptionsPopover";
 import { BuiltSchemaViewerButton } from "@/components/dependencies/BuiltSchemaViewerButton";
-import { SplitActionButton } from "@/components/ui/split-action-button";
+import { Button } from "@/components/ui/button";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { useDependencyExploration } from "@/hooks/useDependencyExploration";
 import {
@@ -54,11 +55,7 @@ export function ResolvedDependenciesSection() {
 	} = useDependencyExploration(resolvedDependencies);
 
 	const handleCompose = useCallback(() => {
-		dispatch(composeDependencies({ autoPrefix: false }));
-	}, [dispatch]);
-
-	const handleComposeWithAutoPrefix = useCallback(() => {
-		dispatch(composeDependencies({ autoPrefix: true }));
+		dispatch(composeDependencies());
 	}, [dispatch]);
 
 	if (dependencyStatus !== "resolved" || resolvedDependencies.length === 0) {
@@ -90,23 +87,21 @@ export function ResolvedDependenciesSection() {
 			</CollapsibleSection>
 			<div className="px-2 space-y-2">
 				<div className="flex gap-2">
-					<SplitActionButton
-						label="Build"
-						icon={<Hammer />}
-						onClick={handleCompose}
-						loading={isComposing}
-						disabled={isComposeDisabled}
-						title="Build dependencies"
-						optionsTitle="Build options"
-						options={[
-							{
-								label: "Build and Auto-prefix",
-								onClick: handleComposeWithAutoPrefix,
-							},
-						]}
-						className="flex-1"
-						stretchMainButton={true}
-					/>
+					<div className={"flex flex-1 items-center"}>
+						<Button
+							variant={"outline"}
+							size={"sm"}
+							onClick={handleCompose}
+							loading={isComposing}
+							disabled={isComposeDisabled}
+							title={"Build dependencies"}
+							className={"flex-1 rounded-r-none"}
+						>
+							<Hammer />
+							Build
+						</Button>
+						<BuildOptionsPopover disabled={isComposeDisabled} />
+					</div>
 					<BuiltSchemaViewerButton />
 				</div>
 				{composeError && (
