@@ -23,7 +23,6 @@ from graphql import (
     is_interface_type,
     is_object_type,
     is_union_type,
-    parse,
     print_schema,
 )
 from graphql import validate as graphql_validate
@@ -53,6 +52,12 @@ from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema, is_valid_instance_tag_field
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
+from s2dm.exporters.utils.pick import (
+    extract_and_validate_picks,
+    parse_selection_query,
+    picked_directive_names,
+    picked_type_names,
+)
 from s2dm.exporters.utils.violations import ConstraintViolation, Severity
 from s2dm.ledger import Ledger, annotate_schema_with_ledger
 from s2dm.tools.constraint_checker import ConstraintChecker
@@ -346,8 +351,39 @@ def print_schema_with_directives_preserved(schema: GraphQLSchema, source_map: di
                 existing_directives.append(f'@reference(source: "{source_filename}")')
                 directive_map[type_name] = existing_directives
 
-    base_schema = print_schema(schema)
+    base_schema = _print_schema_without_empty_query_type(schema)
     return add_directives_to_schema(base_schema, directive_map)
+
+
+def _print_schema_without_empty_query_type(schema: GraphQLSchema) -> str:
+    """Print the schema, leaving out a query root that was left with no fields.
+
+    Selecting only definitions leaves nothing on the query root, and an object type with no
+    fields is invalid. The remaining definitions compose into a model that has one. The root is
+    dropped before printing rather than after, so its description and the schema block naming it
+    go with it.
+
+    Args:
+        schema: The schema to print.
+
+    Returns:
+        The printed schema, without an empty query root.
+    """
+    query_type = schema.query_type
+    if query_type is None or query_type.fields:
+        return print_schema(schema)
+
+    remaining_types = [
+        type_definition
+        for type_name, type_definition in schema.type_map.items()
+        if type_definition is not query_type and not is_introspection_type(type_name)
+    ]
+    rootless_schema = GraphQLSchema(
+        types=remaining_types,
+        directives=schema.directives,
+        description=schema.description,
+    )
+    return print_schema(rootless_schema)
 
 
 def compose_schemas_to_string(
@@ -374,7 +410,7 @@ def compose_schemas_to_string(
 
     query_document = None
     if selection_query:
-        query_document = parse(selection_query.read_text())
+        query_document = parse_selection_query(selection_query.read_text())
 
     naming_config_dict = load_naming_config(naming_config)
     annotated_schema = process_schema(
@@ -574,7 +610,9 @@ def prune_schema_using_query_selection(
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
 
-    _validate_schema(schema, document)
+    stripped_document, picked = extract_and_validate_picks(schema, document)
+
+    _validate_schema(schema, stripped_document)
 
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
@@ -705,7 +743,7 @@ def prune_schema_using_query_selection(
 
     query_operations = [
         definition
-        for definition in document.definitions
+        for definition in stripped_document.definitions
         if isinstance(definition, OperationDefinitionNode) and definition.operation.value == "query"
     ]
 
@@ -716,6 +754,11 @@ def prune_schema_using_query_selection(
 
     query_operation = query_operations[0]
     collect_selections(schema.query_type.name, query_operation.selection_set)
+
+    for type_name in picked_type_names(schema, picked):
+        keep_type(type_name)
+    for directive_name in picked_directive_names(schema, picked):
+        keep_directive(directive_name)
 
     while pending_types:
         type_name = pending_types.pop()
@@ -866,7 +909,7 @@ def load_and_process_schema(
 
     query_document = None
     if selection_query_path:
-        query_document = parse(selection_query_path.read_text())
+        query_document = parse_selection_query(selection_query_path.read_text())
 
     annotated_schema = process_schema(schema, source_map, naming_config, query_document, root_type, expanded_instances)
 
