@@ -48,6 +48,7 @@ def test_scaffold_includes_insights_page_and_generation_pipeline(tmp_path: Path)
     assert result.exit_code == 0, result.output
     assert (output / "src/insights/InsightsPage.tsx").exists()
     assert (output / "src/insights/insights.module.css").exists()
+    assert (output / "src/insights/cards.ts").exists()
     assert (output / "src/insights-ui/components/ConceptsBreakdown.tsx").exists()
     assert (output / "src/insights-ui/hostDefaults.tsx").exists()
     assert (output / "src/components/InsightsDetailsPane.tsx").exists()
@@ -59,6 +60,34 @@ def test_scaffold_includes_insights_page_and_generation_pipeline(tmp_path: Path)
     package_json = (output / "package.json").read_text()
     assert "s2dm insights export" in package_json
     assert "static/insights.json" in package_json
+
+
+def test_scaffold_includes_ledger_page_and_staging_scripts(tmp_path: Path) -> None:
+    """The generated website includes the self-contained Ledger feature."""
+    output = tmp_path / "website"
+    runner = CliRunner()
+    result = _run_scaffold(runner, SAMPLE_OPTS + ["--output", str(output)])
+
+    assert result.exit_code == 0, result.output
+    assert (output / "src/ledger/LedgerPage.tsx").exists()
+    assert (output / "src/ledger/ledger.module.css").exists()
+    assert (output / "src/ledger/views.ts").exists()
+    assert (output / "src/ledger-ui/components/RawTablesView.tsx").exists()
+    assert (output / "src/ledger-ui/data/schema.ts").exists()
+    # The database runs on a worker thread, which needs its own entry point.
+    assert (output / "src/ledger-ui/data/ledgerWorker.ts").exists()
+    assert (output / "src/ledger-ui/data/ledgerClient.ts").exists()
+    assert (output / "src/ledger-ui/state/ledgerSaga.ts").exists()
+    assert (output / "src/store/ledgerStore.ts").exists()
+
+    # The database and the WebAssembly binary are staged by these two scripts.
+    assert (output / "scripts/copy-ledger.js").exists()
+    assert (output / "scripts/copy-sql-wasm.js").exists()
+
+    package_json = (output / "package.json").read_text()
+    assert "scripts/copy-ledger.js" in package_json
+    assert "scripts/copy-sql-wasm.js" in package_json
+    assert "sql.js" in package_json
 
 
 def test_scaffold_substitutes_placeholders(tmp_path: Path) -> None:

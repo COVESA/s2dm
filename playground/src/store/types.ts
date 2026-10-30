@@ -1,5 +1,10 @@
 import type { InsightDetailState } from "@insights-ui/state/insightDetailSlice";
 import type { InsightsState } from "@insights-ui/state/insightsSlice";
+import type { LedgerDetailState } from "@ledger-ui/state/ledgerDetailSlice";
+import type { LedgerExploreState } from "@ledger-ui/state/ledgerExploreSlice";
+import type { LedgerFileState } from "@ledger-ui/state/ledgerFileSlice";
+import type { LedgerQueryState } from "@ledger-ui/state/ledgerQuerySlice";
+import type { LedgerTableState } from "@ledger-ui/state/ledgerTableSlice";
 import type { CapabilitiesState } from "@/store/capabilities/capabilitiesSlice";
 import type { DepsComposeState } from "@/store/deps/compose/composeSlice";
 import type { DependencyExplorationState } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
@@ -19,6 +24,11 @@ export interface RootState {
 	depsResolve: DepsResolveState;
 	depsCompose: DepsComposeState;
 	schema: SchemaState;
+	ledgerFile: LedgerFileState;
+	ledgerTable: LedgerTableState;
+	ledgerExplore: LedgerExploreState;
+	ledgerQuery: LedgerQueryState;
+	ledgerDetail: LedgerDetailState;
 	selection: SelectionState;
 	validation: ValidationState;
 	ui: UIState;

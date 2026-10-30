@@ -5,13 +5,14 @@ import { Provider } from "react-redux";
 import { ExplorePane } from "@/components/ExplorePane";
 import { InputPane } from "@/components/InputPane";
 import { InsightsDetailsPane } from "@/components/InsightsDetailsPane";
+import { LedgerDetailsPane } from "@/components/ledger/LedgerDetailsPane";
 import { ResultPane } from "@/components/ResultPane";
 import { Heading } from "@/components/ui/heading";
 import { appStartup } from "@/store/app/appSlice";
 import { selectIsLoadingCapabilities } from "@/store/capabilities/capabilitiesSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { store } from "@/store/store";
-import { selectExploreTab } from "@/store/ui/uiSlice";
+import { selectExploreTab, selectWorkspace } from "@/store/ui/uiSlice";
 
 declare module "react" {
 	interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
@@ -22,6 +23,7 @@ declare module "react" {
 function AppContent() {
 	const dispatch = useAppDispatch();
 	const isLoadingCapabilities = useAppSelector(selectIsLoadingCapabilities);
+	const workspace = useAppSelector(selectWorkspace);
 	const exploreTab = useAppSelector(selectExploreTab);
 
 	useEffect(() => {
@@ -38,7 +40,9 @@ function AppContent() {
 	}
 
 	let rightPane = <ResultPane position="right" collapsible />;
-	if (exploreTab === "insights") {
+	if (workspace === "ledger") {
+		rightPane = <LedgerDetailsPane position="right" collapsible />;
+	} else if (exploreTab === "insights") {
 		rightPane = <InsightsDetailsPane position="right" collapsible />;
 	}
 

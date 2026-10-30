@@ -34,6 +34,12 @@ import type { ComponentType, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
 import { InsightsDetailsPane } from "@/components/InsightsDetailsPane";
+import {
+	INSIGHTS_ROOT_PATH,
+	type InsightsCardId,
+	insightsCardOfPath,
+	insightsCardPath,
+} from "@/insights/cards";
 import type { InsightsBundle } from "@/insights/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createInsightsStore, type InsightsStore } from "@/store/store";
@@ -87,32 +93,14 @@ const CARD_DEFINITIONS = {
 		component: MissingUnitsCard,
 		detail: { kind: "missingUnits" },
 	},
-} satisfies Record<string, CardDefinition>;
-
-type CardId = keyof typeof CARD_DEFINITIONS;
-
-const DEFAULT_CARD_ID: CardId = "elements-breakdown";
-
-function getCardId(pathname: string): CardId {
-	const pathSegment = pathname.split("/").filter(Boolean).at(-1);
-	if (!pathSegment || pathSegment === "insights") {
-		return DEFAULT_CARD_ID;
-	}
-	return pathSegment in CARD_DEFINITIONS
-		? (pathSegment as CardId)
-		: DEFAULT_CARD_ID;
-}
-
-function getCardPath(cardId: CardId, insightsRootUrl: string): string {
-	return cardId === DEFAULT_CARD_ID
-		? insightsRootUrl
-		: `${insightsRootUrl.replace(/\/$/, "")}/${cardId}`;
-}
+	// Every card has a definition: one added to INSIGHTS_SECTIONS without a
+	// component here, or one here that no longer exists there, does not compile.
+} satisfies Record<InsightsCardId, CardDefinition>;
 
 function cardForNavigation(
 	section: InsightsSubTab,
 	detail: InsightDetail | null,
-): CardId {
+): InsightsCardId {
 	if (detail?.kind === "unused") {
 		return "unused-elements";
 	}
@@ -132,30 +120,42 @@ function InsightsContent() {
 	const dispatch = useAppDispatch();
 	const history = useHistory();
 	const location = useLocation();
-	const insightsRootUrl = useBaseUrl("/insights");
+	const insightsRootUrl = useBaseUrl(INSIGHTS_ROOT_PATH);
 	const requestedSection = useAppSelector(selectInsightsSubTab);
 	const detail = useAppSelector(selectInsightDetail);
-	const selectedCardId = getCardId(location.pathname);
-	const selectedCard: CardDefinition = CARD_DEFINITIONS[selectedCardId];
-	const SelectedCard = selectedCard.component;
+	const selectedCardId = insightsCardOfPath(location.pathname, insightsRootUrl);
+	const selectedCard: CardDefinition | null = selectedCardId
+		? CARD_DEFINITIONS[selectedCardId]
+		: null;
 
 	useEffect(() => {
-		if (selectedCard.detail) {
+		if (selectedCard?.detail) {
 			dispatch(openInsightDetail(selectedCard.detail));
 			return;
 		}
 		dispatch(closeInsightDetail());
-	}, [dispatch, selectedCard.detail]);
+	}, [dispatch, selectedCard?.detail]);
 
 	useEffect(() => {
 		if (!requestedSection) {
 			return;
 		}
 		const cardId = cardForNavigation(requestedSection, detail);
-		history.push(getCardPath(cardId, insightsRootUrl));
+		history.push(insightsCardPath(cardId, insightsRootUrl));
 		dispatch(clearInsightsSubTab());
 	}, [detail, dispatch, history, insightsRootUrl, requestedSection]);
 
+	if (!selectedCard) {
+		return (
+			<article className={`${styles.content} s2dm-insights`}>
+				<div className={styles.status} role="alert">
+					This address names no insight.
+				</div>
+			</article>
+		);
+	}
+
+	const SelectedCard = selectedCard.component;
 	return (
 		<article className={`${styles.content} s2dm-insights`}>
 			<SelectedCard />

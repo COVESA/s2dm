@@ -46,6 +46,9 @@ export default function Home(): ReactNode {
 					<Link className="button button--secondary button--lg" to="/insights">
 						Insights
 					</Link>
+					<Link className="button button--secondary button--lg" to="/ledger">
+						Ledger
+					</Link>
 				</div>
 				<ul className={styles.toolList}>
 					<li>
@@ -69,6 +72,16 @@ export default function Home(): ReactNode {
 						</a>
 					</li>
 					<li>Insights generated from the composed schema</li>
+					<li>
+						Ledger read in your browser with{" "}
+						<a
+							href="https://sql.js.org"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							sql.js
+						</a>
+					</li>
 				</ul>
 			</main>
 		</Layout>

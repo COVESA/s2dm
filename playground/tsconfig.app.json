@@ -13,7 +13,8 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
-			"@insights-ui/*": ["../src/s2dm/templates/insights-ui/*"]
+			"@insights-ui/*": ["../src/s2dm/templates/insights-ui/*"],
+			"@ledger-ui/*": ["../src/s2dm/templates/ledger-ui/*"]
 		},
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,

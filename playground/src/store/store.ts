@@ -2,6 +2,12 @@ import insightDetailReducer, {
 	type InsightDetailState,
 } from "@insights-ui/state/insightDetailSlice";
 import insightsReducer from "@insights-ui/state/insightsSlice";
+import ledgerDetailReducer from "@ledger-ui/state/ledgerDetailSlice";
+import ledgerExploreReducer from "@ledger-ui/state/ledgerExploreSlice";
+import ledgerFileReducer from "@ledger-ui/state/ledgerFileSlice";
+import ledgerQueryReducer from "@ledger-ui/state/ledgerQuerySlice";
+import { ledgerSaga } from "@ledger-ui/state/ledgerSaga";
+import ledgerTableReducer from "@ledger-ui/state/ledgerTableSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import { all } from "redux-saga/effects";
@@ -42,6 +48,7 @@ function* rootSaga() {
 		exportSaga(),
 		capabilitiesSaga(),
 		insightsSaga(),
+		ledgerSaga(),
 	]);
 }
 
@@ -61,6 +68,11 @@ export const store = configureStore({
 		depsResolve: depsResolveReducer,
 		depsCompose: depsComposeReducer,
 		schema: schemaReducer,
+		ledgerFile: ledgerFileReducer,
+		ledgerTable: ledgerTableReducer,
+		ledgerExplore: ledgerExploreReducer,
+		ledgerQuery: ledgerQueryReducer,
+		ledgerDetail: ledgerDetailReducer,
 		selection: selectionReducer,
 		validation: validationReducer,
 		ui: uiReducer,

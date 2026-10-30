@@ -142,6 +142,7 @@ export function ResultPane({
 			className={className}
 			position={position}
 			collapsible={collapsible}
+			hasContent={Boolean(filteredSchema?.trim())}
 		>
 			<div className="flex gap-2 p-4 items-center justify-center">
 				<Select

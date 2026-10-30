@@ -10,6 +10,8 @@
 /docs/api/
 /static/introspection.json
 /static/insights.json
+/static/sql-wasm.wasm
+/static/ledger.db
 
 # Misc
 .DS_Store
