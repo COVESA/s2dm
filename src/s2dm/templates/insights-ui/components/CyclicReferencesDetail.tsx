@@ -6,7 +6,7 @@ import { selectCycleGroups } from "@insights-ui/selectors/relationships";
 import { useInsightsSelector } from "@insights-ui/state/hooks";
 import type { CyclicReference } from "@insights-ui/types/relationships";
 import { formatPathSegments } from "@insights-ui/utils/formatPathSegments";
-import { Heading } from "@/components/ui/heading";
+import { Heading } from "@shared-ui/components/heading";
 
 function CycleRow({ cycle }: { cycle: CyclicReference }) {
 	const segmentLabels = formatPathSegments(cycle.segments);

@@ -5,7 +5,15 @@ from pathlib import Path
 from graphql import DocumentNode, GraphQLSchema
 
 from s2dm.api.errors import ResponseError, format_error_list, to_response_error
-from s2dm.api.models.base import BaseInput, ConfigInput, FileContentInput, SchemaInput
+from s2dm.api.models.base import (
+    BaseInput,
+    ConfigInput,
+    DependencyInput,
+    FileContentInput,
+    SchemaIdInput,
+    SchemaInput,
+)
+from s2dm.api.services.schema_store import resolve_schema_reference
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.schema_loader import (
     check_correct_schema,
@@ -16,9 +24,11 @@ from s2dm.utils.file import temp_file_from_content
 
 
 def process_schema_input(schema_input: SchemaInput) -> Path:
-    """Process schema input (path, URL, or content) and return Path object."""
+    """Process schema input (path, URL, content, or schema reference) and return Path object."""
     if schema_input.type == "url":
         return download_schema_to_temp(str(schema_input.url))
+    if isinstance(schema_input, SchemaIdInput | DependencyInput):
+        return resolve_schema_reference(schema_input)
     return path_for_content(schema_input, "schema", ".graphql")
 
 

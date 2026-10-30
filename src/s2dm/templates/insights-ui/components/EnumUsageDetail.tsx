@@ -14,7 +14,7 @@ import {
 	pushInsightDetail,
 	setInsightsSubTab,
 } from "@insights-ui/state/insightDetailSlice";
-import { Heading } from "@/components/ui/heading";
+import { Heading } from "@shared-ui/components/heading";
 
 export function EnumUsageDetail() {
 	const dispatch = useInsightsDispatch();

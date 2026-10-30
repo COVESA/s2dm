@@ -5,14 +5,14 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import "graphql-voyager/dist/voyager.css";
 import "@/components/voyager-dark.css";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared-ui/components/button";
+import { Heading } from "@shared-ui/components/heading";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Heading } from "@/components/ui/heading";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
 type SchemaVisualizerProps = {

@@ -29,6 +29,7 @@ class TestSchemaData:
 
     TESTS_DATA_DIR: Path = Path(__file__).parent / "data"
     INSIGHTS_SCHEMA: Path = TESTS_DATA_DIR / "insights.graphql"
+    EMBEDDINGS_SCHEMA: Path = TESTS_DATA_DIR / "embeddings.graphql"
     SCHEMA1: Path = TESTS_DATA_DIR / "schema1.graphql"
     SCHEMA2: Path = TESTS_DATA_DIR / "schema2.graphql"
     SCHEMA3: Path = TESTS_DATA_DIR / "schema3.graphql"
@@ -94,6 +95,17 @@ def insights_schema_path() -> Path:
 @pytest.fixture(scope="session")
 def insights_schema_sdl(insights_schema_path: Path) -> str:
     return insights_schema_path.read_text(encoding="utf-8")
+
+
+@pytest.fixture(scope="session")
+def embeddings_schema_path() -> Path:
+    return TestSchemaData.EMBEDDINGS_SCHEMA
+
+
+@pytest.fixture(scope="session")
+def embeddings_schema(embeddings_schema_path: Path) -> GraphQLSchema:
+    schema_sdl = embeddings_schema_path.read_text(encoding="utf-8")
+    return build_schema(schema_sdl)
 
 
 @dataclass

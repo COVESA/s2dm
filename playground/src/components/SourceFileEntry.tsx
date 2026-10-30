@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Button } from "@shared-ui/components/button";
 import { FileText, GripVertical, Link, Trash2 } from "lucide-react";
 import { FileListRow } from "@/components/FileListRow";
-import { Button } from "@/components/ui/button";
 import type { ImportedFile } from "@/types/importedFile";
 
 type SourceFileEntryProps = {

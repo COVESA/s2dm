@@ -1,9 +1,9 @@
 import type { Monaco } from "@monaco-editor/react";
 import Editor from "@monaco-editor/react";
+import { Button } from "@shared-ui/components/button";
 import { Download, Maximize } from "lucide-react";
 import { useCallback, useState } from "react";
 import { TextEditorDialog } from "@/components/TextEditorDialog";
-import { Button } from "@/components/ui/button";
 import { useMonacoTheme } from "@/hooks/useMonacoTheme";
 import { registerTurtle } from "@/language-support/turtleMonaco";
 import { downloadTextFile } from "@/utils/download";

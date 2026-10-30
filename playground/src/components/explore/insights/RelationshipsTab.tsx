@@ -1,7 +1,7 @@
 import { CyclicReferencesCard } from "@insights-ui/components/CyclicReferencesCard";
 import { DeepestPathsCard } from "@insights-ui/components/DeepestPathsCard";
 import { ReferencesCountCard } from "@insights-ui/components/ReferencesCountCard";
-import { TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@shared-ui/components/tabs";
 
 export function RelationshipsTab() {
 	return (

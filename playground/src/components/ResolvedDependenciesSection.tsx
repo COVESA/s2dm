@@ -1,12 +1,12 @@
 import { CollapsibleSection } from "@insights-ui/components/CollapsibleSection";
+import { Button } from "@shared-ui/components/button";
+import { StatusBanner } from "@shared-ui/components/status-banner";
 import { Hammer } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { DependencyEntry } from "@/components/DependencyEntry";
 import { BuildOptionsPopover } from "@/components/dependencies/BuildOptionsPopover";
 import { BuiltSchemaViewerButton } from "@/components/dependencies/BuiltSchemaViewerButton";
-import { Button } from "@/components/ui/button";
-import { StatusBanner } from "@/components/ui/status-banner";
 import { useDependencyExploration } from "@/hooks/useDependencyExploration";
 import {
 	composeDependencies,

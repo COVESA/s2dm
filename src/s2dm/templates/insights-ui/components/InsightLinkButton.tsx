@@ -1,5 +1,5 @@
+import { cn } from "@shared-ui/utils/cn";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { cn } from "@/utils/cn";
 
 type InsightLinkButtonProps = {
 	label: string;

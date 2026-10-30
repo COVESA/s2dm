@@ -8,7 +8,7 @@ import {
 	useInsightsSelector,
 } from "@insights-ui/state/hooks";
 import { pushInsightDetail } from "@insights-ui/state/insightDetailSlice";
-import { Heading } from "@/components/ui/heading";
+import { Heading } from "@shared-ui/components/heading";
 
 const ELEMENTS_PER_KIND = 3;
 

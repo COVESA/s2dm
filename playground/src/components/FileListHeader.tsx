@@ -1,9 +1,9 @@
+import { Button } from "@shared-ui/components/button";
 import { Folder, Link, Package, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { AddUrlDialog } from "@/components/AddUrlDialog";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { DependencyManagerDialog } from "@/components/DependencyManagerDialog";
-import { Button } from "@/components/ui/button";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useImportSources } from "@/hooks/useImportSources";
 import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";

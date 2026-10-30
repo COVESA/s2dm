@@ -2,11 +2,16 @@
   "private": true,
   "workspaces": [
     "playground",
-    "src/s2dm/templates/insights-ui"
+    "src/s2dm/templates/shared-ui",
+    "src/s2dm/templates/insights-ui",
+    "src/s2dm/templates/search-ui"
   ],
   "devDependencies": {
     "@graphql-inspector/cli": "^6.0.5",
     "@graphql-inspector/core": "^7.1.0",
     "graphql": "^16.12.0"
+  },
+  "overrides": {
+    "@babel/core": "7.29.7"
   }
 }

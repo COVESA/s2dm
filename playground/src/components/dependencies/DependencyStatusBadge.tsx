@@ -1,7 +1,7 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { RefreshCw } from "lucide-react";
 import type { DependencyStatus } from "@/api/types";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
 
 type DependencyStatusBadgeProps = {
 	status: DependencyStatus | null;

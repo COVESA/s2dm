@@ -25,6 +25,8 @@ import { insightsSaga } from "@/store/insights/insightsSaga";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";
+import { semanticSearchSaga } from "@/store/semanticSearch/semanticSearchSaga";
+import semanticSearchReducer from "@/store/semanticSearch/semanticSearchSlice";
 import uiReducer from "@/store/ui/uiSlice";
 import { validationSaga } from "@/store/validation/validationSaga";
 import validationReducer from "@/store/validation/validationSlice";
@@ -42,6 +44,7 @@ function* rootSaga() {
 		exportSaga(),
 		capabilitiesSaga(),
 		insightsSaga(),
+		semanticSearchSaga(),
 	]);
 }
 
@@ -68,6 +71,7 @@ export const store = configureStore({
 		capabilities: capabilitiesReducer,
 		insights: insightsReducer,
 		insightDetail: insightDetailReducer,
+		semanticSearch: semanticSearchReducer,
 	},
 	preloadedState: { insightDetail: preloadedInsightDetail },
 	middleware: (getDefaultMiddleware) =>

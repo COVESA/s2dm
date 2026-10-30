@@ -1,0 +1,25 @@
+"""A vehicle door."""
+type Vehicle_Cabin_Door {
+  """Is the door open or closed."""
+  isOpen: Boolean
+  position: Int
+}
+
+interface Node {
+  id: ID
+}
+
+"""Door state."""
+enum HVDoorState {
+  """Fully open."""
+  OPEN
+  CLOSED
+}
+
+enum Side {
+  LEFT
+}
+
+type Query {
+  door: Vehicle_Cabin_Door
+}

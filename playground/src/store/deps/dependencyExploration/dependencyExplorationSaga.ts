@@ -1,5 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { put, select, takeLatest } from "redux-saga/effects";
+import type { SchemaReference } from "@/api/types";
 import {
 	type DependencyExplorationSnapshot,
 	exitDependencyExploration,
@@ -10,6 +11,7 @@ import {
 import {
 	selectFilteredSchema,
 	selectOriginalSchema,
+	selectOriginalSchemaReference,
 	setFilteredSchema,
 	setOriginalSchema,
 } from "@/store/schema/schemaSlice";
@@ -47,6 +49,9 @@ function* startDependencyExplorationWorker(
 
 	if (!existingSnapshot) {
 		const originalSchema: string = yield select(selectOriginalSchema);
+		const originalSchemaReference: SchemaReference | null = yield select(
+			selectOriginalSchemaReference,
+		);
 		const filteredSchema: string = yield select(selectFilteredSchema);
 		const selectionQuery: string = yield select(selectSelectionQuery);
 		const appliedSelectionQuery: string = yield select(
@@ -56,6 +61,7 @@ function* startDependencyExplorationWorker(
 		yield put(
 			setDependencyExplorationSnapshot({
 				originalSchema,
+				originalSchemaReference,
 				filteredSchema,
 				selectionQuery,
 				appliedSelectionQuery,
@@ -63,8 +69,20 @@ function* startDependencyExplorationWorker(
 		);
 	}
 
+	// TODO: build this from the name and version the server sent with `schemaContent`, not the
+	// editable draft: an unsaved name or version edit makes it name a different dependency.
+	const dependencyReference: SchemaReference = {
+		type: "dependency",
+		name: dependency.name,
+		version: dependency.version,
+	};
 	yield put(clearValidationErrors());
-	yield put(setOriginalSchema(dependency.schemaContent));
+	yield put(
+		setOriginalSchema({
+			schema: dependency.schemaContent,
+			reference: dependencyReference,
+		}),
+	);
 	yield put(setSelectionQuery(dependency.selectionContent ?? ""));
 	yield put(setAppliedSelectionQuery(""));
 }
@@ -79,7 +97,12 @@ function* exitDependencyExplorationWorker() {
 	}
 
 	yield put(clearValidationErrors());
-	yield put(setOriginalSchema(snapshot.originalSchema));
+	yield put(
+		setOriginalSchema({
+			schema: snapshot.originalSchema,
+			reference: snapshot.originalSchemaReference,
+		}),
+	);
 	yield put(setFilteredSchema(snapshot.filteredSchema));
 	yield put(setSelectionQuery(snapshot.selectionQuery));
 	yield put(setAppliedSelectionQuery(snapshot.appliedSelectionQuery));

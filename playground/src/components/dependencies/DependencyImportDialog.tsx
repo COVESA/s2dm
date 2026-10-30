@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared-ui/components/button";
+import { Input } from "@shared-ui/components/input";
 import {
 	Dialog,
 	DialogContent,
@@ -8,7 +9,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { FormLabel } from "@/components/ui/form-label";
-import { Input } from "@/components/ui/input";
 
 type DependencyImportDialogProps = {
 	open: boolean;

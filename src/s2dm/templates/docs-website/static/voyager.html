@@ -11,23 +11,124 @@
       #voyager {
         height: 100vh;
       }
+      /* Mirrors the playground's ErrorDisplay, with the shared-ui theme tokens and the
+         Tailwind preflight defaults it relies on. */
+      :root {
+        --radius: 0.625rem;
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.141 0.005 285.823);
+        --destructive: oklch(0.577 0.245 27.325);
+      }
+      :root[data-theme="dark"] {
+        --background: oklch(0.141 0.005 285.823);
+        --foreground: oklch(0.985 0 0);
+        --destructive: oklch(0.704 0.191 22.216);
+      }
+      /* The visualizer dialog's content area: flex-1 min-h-0 overflow-hidden px-6 pb-6. */
+      .error-frame {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 1.5rem;
+        overflow: hidden;
+        background: var(--background);
+        color: var(--foreground);
+        font-family:
+          ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol", "Noto Color Emoji";
+        line-height: 1.5;
+      }
+      /* flex-1 flex flex-col p-4 bg-destructive/10 rounded-lg border border-destructive overflow-hidden */
+      .error-display {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        border: 1px solid var(--destructive);
+        border-radius: var(--radius);
+        background: color-mix(in oklab, var(--destructive) 10%, transparent);
+        overflow: hidden;
+      }
+      /* Heading h3 with text-destructive mb-4 */
+      .error-display h3 {
+        margin: 0 0 1rem;
+        color: var(--destructive);
+        font-size: 1.125rem;
+        font-weight: 700;
+        line-height: 1.75rem;
+      }
+      /* flex-1 overflow-auto p-4 bg-destructive/5 rounded text-sm */
+      .error-display pre {
+        flex: 1;
+        margin: 0;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        background: color-mix(in oklab, var(--destructive) 5%, transparent);
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        overflow: auto;
+      }
     </style>
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/graphql-voyager@2/dist/voyager.css"
+      href="https://cdn.jsdelivr.net/npm/graphql-voyager@2.1.0/dist/voyager.css"
     />
   </head>
   <body>
     <div id="voyager"></div>
-    <script src="https://cdn.jsdelivr.net/npm/graphql-voyager@2/dist/voyager.standalone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/graphql-voyager@2.1.0/dist/voyager.standalone.js"></script>
     <script>
-      fetch(new URL("introspection.json", document.baseURI).href)
-        .then((r) => r.json())
+      const container = document.getElementById("voyager");
+      const siteRoot = window.parent.document.documentElement;
+
+      // Follows the docs site's light/dark toggle, which sets data-theme on its root element.
+      function syncTheme() {
+        document.documentElement.dataset.theme = siteRoot.dataset.theme ?? "light";
+      }
+      syncTheme();
+      const themeObserver = new MutationObserver(syncTheme);
+      themeObserver.observe(siteRoot, { attributes: true, attributeFilter: ["data-theme"] });
+
+      // Same message as the playground shows when Voyager fails to render.
+      const VISUALIZER_FAILURE_MESSAGE = "The schema graph could not be displayed.";
+
+      function showError(message) {
+        const heading = document.createElement("h3");
+        heading.textContent = "Error:";
+        const details = document.createElement("pre");
+        details.textContent = message;
+        const errorDisplay = document.createElement("div");
+        errorDisplay.className = "error-display";
+        errorDisplay.append(heading, details);
+        const errorFrame = document.createElement("div");
+        errorFrame.className = "error-frame";
+        errorFrame.append(errorDisplay);
+        container.replaceChildren(errorFrame);
+      }
+
+      // Voyager unmounts its whole tree on a render error, so an empty container marks a crash.
+      window.addEventListener("error", () => {
+        if (!container.hasChildNodes()) {
+          showError(VISUALIZER_FAILURE_MESSAGE);
+        }
+      });
+
+      const introspectionUrl = new URL("introspection.json", document.baseURI).href;
+      fetch(introspectionUrl)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`introspection.json returned HTTP ${response.status}`);
+          }
+          return response.json();
+        })
         .then((introspection) => {
-          GraphQLVoyager.renderVoyager(document.getElementById("voyager"), {
-            introspection,
-          });
-        });
+          GraphQLVoyager.renderVoyager(container, { introspection });
+        })
+        .catch((error) => showError(error.message));
     </script>
   </body>
 </html>

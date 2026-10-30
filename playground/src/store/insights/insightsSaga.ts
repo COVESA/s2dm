@@ -14,16 +14,28 @@ import {
 	getSchemaQualityIssues,
 	getSchemaRelationships,
 } from "@/api/s2dm";
-import type { SchemaInput } from "@/api/types";
-import { selectFilteredSchema } from "@/store/schema/schemaSlice";
+import { composedSchemaInputs } from "@/api/schemaInputs";
+import type { SchemaReference } from "@/api/types";
+import {
+	selectFilteredSchema,
+	selectOriginalSchema,
+	selectOriginalSchemaReference,
+} from "@/store/schema/schemaSlice";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
 function* fetchInsightsWorker() {
 	try {
 		const filteredSchema: string = yield select(selectFilteredSchema);
-		const schemas: SchemaInput[] = [
-			{ type: "content", content: filteredSchema },
-		];
+		const originalSchema: string = yield select(selectOriginalSchema);
+		const originalReference: SchemaReference | null = yield select(
+			selectOriginalSchemaReference,
+		);
+		// The reference names the unfiltered schema, so it only stands in while nothing is filtered.
+		let reference: SchemaReference | null = null;
+		if (filteredSchema === originalSchema) {
+			reference = originalReference;
+		}
+		const schemas = composedSchemaInputs(filteredSchema, reference);
 
 		const [concepts, relationships, coverage, quality]: [
 			ConceptsResponse,

@@ -1,4 +1,4 @@
-import { StatusBanner } from "@/components/ui/status-banner";
+import { StatusBanner } from "@shared-ui/components/status-banner";
 
 export function RootTypesExcludedNote() {
 	return (

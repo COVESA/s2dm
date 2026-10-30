@@ -28,6 +28,12 @@ dependencies = [
     "uvicorn[standard]>=0.30.0",
     "linkml-runtime>=1.10.0",
     "ddmodl",
+    "onnxruntime>=1.31.0",
+    "tokenizers>=0.23.3",
+    "huggingface-hub>=1.16.1",
+    "httpx>=0.28.0",
+    "numpy>=2.4.6",
+    "boltons>=26.2.0",
 ]
 requires-python = ">=3.11"
 
@@ -67,6 +73,8 @@ dev = [
     "types-pyyaml>=6.0.12.20250516",
     "gitlint>=0.20.0.dev48",
     "httpx>=0.28.0",
+    "onnx>=1.23.2",
+    "types-boltons>=26.1.0.20261021",
 ]
 
 [tool.mypy]

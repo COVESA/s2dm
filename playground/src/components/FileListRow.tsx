@@ -1,9 +1,9 @@
+import { cn } from "@shared-ui/utils/cn";
 import {
 	type ComponentPropsWithoutRef,
 	forwardRef,
 	type ReactNode,
 } from "react";
-import { cn } from "@/utils/cn";
 
 type FileListRowProps = ComponentPropsWithoutRef<"li"> & {
 	label: string;

@@ -1,5 +1,5 @@
+import { cn } from "@shared-ui/utils/cn";
 import { Loader2 } from "lucide-react";
-import { cn } from "@/utils/cn";
 
 type EmptyStateProps = {
 	title?: string;

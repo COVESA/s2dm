@@ -1,7 +1,7 @@
 import type { CheckedState } from "@radix-ui/react-checkbox";
+import { Button } from "@shared-ui/components/button";
 import { ChevronUp } from "lucide-react";
 import { useId } from "react";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormLabel } from "@/components/ui/form-label";
 import {

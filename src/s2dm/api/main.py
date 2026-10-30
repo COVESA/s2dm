@@ -12,6 +12,7 @@ from s2dm.api.models.base import ErrorResponse
 from s2dm.api.routes import (
     avro,
     deps,
+    embeddings,
     filter,
     insights,
     jsonschema,
@@ -167,6 +168,7 @@ app.include_router(avro.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(protobuf.router, prefix="/api/v1/export", tags=["export"])
 app.include_router(deps.router, prefix="/api/v1/deps", tags=["deps"])
 app.include_router(insights.router, prefix="/api/v1/insights", tags=["insights"])
+app.include_router(embeddings.router, prefix="/api/v1/embeddings", tags=["embeddings"])
 app.include_router(filter.router, prefix="/api/v1/schema", tags=["schema"])
 app.include_router(validate.router, prefix="/api/v1/schema", tags=["schema"])
 app.include_router(query_validate.router, prefix="/api/v1/query", tags=["query"])

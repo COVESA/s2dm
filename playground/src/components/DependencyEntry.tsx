@@ -1,8 +1,8 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { Package, PackageSearch, X } from "lucide-react";
 import { FileListRow } from "@/components/FileListRow";
-import { Button } from "@/components/ui/button";
 import type { DependencyDraft } from "@/types/dependency";
-import { cn } from "@/utils/cn";
 
 type DependencyEntryProps = {
 	dependency: DependencyDraft;

@@ -1,4 +1,4 @@
-import { cn } from "@/utils/cn";
+import { cn } from "@shared-ui/utils/cn";
 
 const SPECTRUM_GRADIENT =
 	"linear-gradient(to right, hsl(0, 80%, 45%) 0%, hsl(30, 80%, 45%) 25%, hsl(60, 80%, 45%) 50%, hsl(90, 80%, 45%) 75%, hsl(120, 80%, 45%) 100%)";

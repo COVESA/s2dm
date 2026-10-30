@@ -32,9 +32,28 @@ class FileContentInput(BaseModel):
     content: str = Field(description="Inline file content as string")
 
 
+SHA256_ID_PATTERN = r"^[0-9a-f]{64}$"
+
+
+class SchemaIdInput(BaseModel):
+    """Input referencing a composed schema stored by the validate endpoint."""
+
+    type: Literal["schema_id"] = Field(description="Input type discriminator")
+    id: str = Field(pattern=SHA256_ID_PATTERN, description="Schema id returned by the validate endpoint")
+
+
+class DependencyInput(BaseModel):
+    """Input referencing the schema of a resolved dependency."""
+
+    type: Literal["dependency"] = Field(description="Input type discriminator")
+    name: str = Field(description="Dependency name")
+    version: str = Field(description="Dependency version")
+
+
 BaseInput = PathInput | ContentInput
 ConfigInput = BaseInput
-SchemaInput = BaseInput | FileContentInput | UrlInput
+SchemaReferenceInput = SchemaIdInput | DependencyInput
+SchemaInput = BaseInput | FileContentInput | UrlInput | SchemaReferenceInput
 
 ErrorCode: TypeAlias = Literal[
     "BadRequest",

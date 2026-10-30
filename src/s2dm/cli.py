@@ -83,6 +83,17 @@ from s2dm.registry.concept_uris import create_concept_uri_model
 from s2dm.registry.search import NO_LIMIT_KEYWORDS, SearchResult, SKOSSearchService
 from s2dm.tools.constraint_checker import ConstraintChecker
 from s2dm.tools.diff_parser import DiffChange
+from s2dm.tools.embeddings.errors import EmbeddingsFileError, ModelResolutionError
+from s2dm.tools.embeddings.file import EmbeddingsFile, build_embeddings_file
+from s2dm.tools.embeddings.model import MODEL_CACHE_ROOT, load_model
+from s2dm.tools.embeddings.onnx_embedder import OnnxEmbedder, load_query_embedder
+from s2dm.tools.embeddings.search import rank_elements
+from s2dm.tools.embeddings.sources.factory import ModelSourceFactory
+from s2dm.tools.embeddings.sources.huggingface_source import (
+    DEFAULT_MODEL_REPO,
+    DEFAULT_MODEL_REVISION,
+    HuggingFaceReference,
+)
 from s2dm.tools.graphql_inspector import GraphQLInspector, requires_graphql_inspector
 from s2dm.tools.insights.concepts import compute_concepts
 from s2dm.tools.insights.coverage import compute_coverage
@@ -104,6 +115,7 @@ from s2dm.units.sync import (
 )
 from s2dm.utils.download import download_url_to_temp
 from s2dm.utils.json_output import format_json_output
+from s2dm.utils.pydantic_file import read_json_model
 from s2dm.utils.url import is_url
 
 S2DM_HOME = Path.home() / ".s2dm"
@@ -746,6 +758,12 @@ def stats() -> None:
 @click.group()
 def insights() -> None:
     """Schema insights: concept composition, relationships, coverage, and quality."""
+    pass
+
+
+@click.group()
+def embeddings() -> None:
+    """Semantic search embeddings for schema elements."""
     pass
 
 
@@ -2088,6 +2106,42 @@ def search_skos(ttl_file: Path, term: str, case_insensitive: bool, limit: str) -
     display_search_results(results, term, limit_value, total_count)
 
 
+@search.command(name="semantic")
+@click.option(
+    "--embeddings",
+    "-e",
+    "embeddings_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Embeddings file written by `s2dm embeddings build`.",
+)
+@click.option("--query", "-q", required=True, help="Free-text search query.")
+@click.option(
+    "--limit", "-l", type=click.IntRange(min=1), default=10, show_default=True, help="Maximum number of results."
+)
+def search_semantic(embeddings_path: Path, query: str, limit: int) -> None:
+    """Find schema elements by meaning, ranked by cosine similarity to the query.
+
+    The query is embedded with the same model that built the embeddings file. Prints the ranked
+    results as JSON: rank, score, and id, plus kind and description when the file was built with
+    --verbose-embeddings.
+    """
+    if not query.strip():
+        log.error("The query is empty")
+        sys.exit(1)
+    try:
+        embeddings_file = read_json_model(embeddings_path, EmbeddingsFile)
+        embedder = load_query_embedder(embeddings_file)
+        query_vector = embedder.embed_query(query)
+        hits = rank_elements(embeddings_file, query_vector, limit)
+    except (OSError, ValidationError, ModelResolutionError, EmbeddingsFileError) as error:
+        log.error(f"Semantic search failed: {error}")
+        sys.exit(1)
+    hit_rows = [hit.model_dump(exclude_none=True) for hit in hits]
+    hits_json = format_json_output(hit_rows)
+    click.echo(hits_json)
+
+
 # similar -> graphql
 @similar.command(name="graphql")
 @schema_option
@@ -2223,6 +2277,73 @@ def insights_export(schemas: list[Path], output: Path) -> None:
     log.success(f"Insights written to {output}")
 
 
+@embeddings.command(name="build")
+@schema_option
+@click.option(
+    "--output",
+    "-o",
+    required=True,
+    type=click.Path(path_type=Path, dir_okay=False),
+    help="Write the embeddings file to this JSON path.",
+)
+@click.option(
+    "--model",
+    "model_repo",
+    default=DEFAULT_MODEL_REPO,
+    show_default=True,
+    help="Hugging Face repo of the embedding model. It must publish an ONNX file, tokenizer.json, and pooling info.",
+)
+@click.option(
+    "--revision",
+    help="Repo revision (commit sha) of the embedding model. Required with --model; the default model is pinned.",
+)
+@click.option(
+    "--full-size",
+    is_flag=True,
+    default=False,
+    help="Use the full-precision ONNX file instead of the 8-bit one.",
+)
+@click.option(
+    "--verbose-embeddings",
+    is_flag=True,
+    default=False,
+    help="Also store each element's kind and description, e.g. for inspecting search results.",
+)
+def embeddings_build(
+    schemas: list[Path],
+    output: Path,
+    model_repo: str,
+    revision: str | None,
+    full_size: bool,
+    verbose_embeddings: bool,
+) -> None:
+    """Embed every type, field, enum, and enum value of the schema for semantic search.
+
+    By default each element is stored by its id only. Use --verbose-embeddings to also store its kind and description.
+    The revision is recorded in the embeddings file and used again for search, so another model needs a pinned one.
+    """
+    if revision is None and model_repo != DEFAULT_MODEL_REPO:
+        raise click.UsageError("Provide --revision with --model.")
+
+    model_revision = revision or DEFAULT_MODEL_REVISION
+    graphql_schema = load_schema(schemas)
+    model_reference = HuggingFaceReference(repo=model_repo, revision=model_revision)
+    source_reference = model_reference.to_source_reference()
+    try:
+        source = ModelSourceFactory.create_source(source_reference, MODEL_CACHE_ROOT)
+        model = load_model(source, full_size)
+    except ModelResolutionError as error:
+        log.error(f"Embedding model unavailable: {error}")
+        sys.exit(1)
+    embedder = OnnxEmbedder(model)
+    embeddings_file = build_embeddings_file(graphql_schema, embedder, verbose_embeddings)
+    embeddings_json = embeddings_file.to_json()
+    element_count = len(embeddings_file.elements)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(embeddings_json + "\n")
+    log.success(f"Embeddings for {element_count} elements written to {output}")
+
+
 # ---------------------------------------------------------------------------
 # Query commands (SPARQL-based schema traversal)
 # ---------------------------------------------------------------------------
@@ -2296,6 +2417,7 @@ cli.add_command(check)
 cli.add_command(compose)
 cli.add_command(deps)
 cli.add_command(diff)
+cli.add_command(embeddings)
 
 export.add_command(avro)
 cli.add_command(export)

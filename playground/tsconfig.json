@@ -8,7 +8,9 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
-			"@insights-ui/*": ["../src/s2dm/templates/insights-ui/*"]
+			"@shared-ui/*": ["../src/s2dm/templates/shared-ui/*"],
+			"@insights-ui/*": ["../src/s2dm/templates/insights-ui/*"],
+			"@search-ui/*": ["../src/s2dm/templates/search-ui/*"]
 		}
 	}
 }

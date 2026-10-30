@@ -1,5 +1,6 @@
+import { Button } from "@shared-ui/components/button";
+import { Input } from "@shared-ui/components/input";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -8,7 +9,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isValidUrl } from "@/utils/validation";
 

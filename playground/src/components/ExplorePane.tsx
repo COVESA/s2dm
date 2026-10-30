@@ -1,8 +1,8 @@
 import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
+import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { ExplorerTab } from "@/components/explore/ExplorerTab";
 import { InsightsTab } from "@/components/explore/InsightsTab";
 import { Pane } from "@/components/Pane";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectHasSchema } from "@/store/schema/schemaSlice";
 import {

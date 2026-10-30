@@ -3,11 +3,14 @@ import type { LoadedContent, PropSidebar, PropSidebarItem } from "@docusaurus/pl
 import type { Config, LoadContext, Plugin } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 import { createRequire } from "module";
+import path from "path";
 import { fileURLToPath } from "url";
 
 const require = createRequire(import.meta.url);
 const sourceDirectory = fileURLToPath(new URL("./src", import.meta.url));
-const insightsUiDirectory = fileURLToPath(new URL("./src/insights-ui", import.meta.url));
+const sharedUiDirectory = path.join(sourceDirectory, "shared-ui");
+const insightsUiDirectory = path.join(sourceDirectory, "insights-ui");
+const searchUiDirectory = path.join(sourceDirectory, "search-ui");
 
 function addBaseUrlToSidebar(items: PropSidebar, baseUrl: string): PropSidebar {
   const addBaseUrl = (href: string) =>
@@ -62,7 +65,16 @@ const insightsPlugin = ({ baseUrl }: LoadContext) => ({
     }
   },
   configureWebpack() {
-    return { resolve: { alias: { "@": sourceDirectory, "@insights-ui": insightsUiDirectory } } };
+    return {
+      resolve: {
+        alias: {
+          "@": sourceDirectory,
+          "@shared-ui": sharedUiDirectory,
+          "@insights-ui": insightsUiDirectory,
+          "@search-ui": searchUiDirectory,
+        },
+      },
+    };
   },
   configurePostCss(options) {
     options.plugins.push(require("@tailwindcss/postcss"));
@@ -80,6 +92,7 @@ const config: Config = {
   organizationName: "$org_name",
   projectName: "$project_name",
   onBrokenLinks: "throw",
+  clientModules: [require.resolve("./src/clientModules/markLinkedHeading.ts")],
   i18n: { defaultLocale: "en", locales: ["en"] },
   presets: [[
     "classic",

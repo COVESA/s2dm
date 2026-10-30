@@ -1,8 +1,8 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { ChevronDown } from "lucide-react";
 import type * as React from "react";
-import { Button } from "@/components/ui/button";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
-import { cn } from "@/utils/cn";
 
 type SplitActionOption = {
 	label: string;

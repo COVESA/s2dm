@@ -1,5 +1,5 @@
+import { Button } from "@shared-ui/components/button";
 import { ChevronRight, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type EntryRowProps = {
 	primary: string;

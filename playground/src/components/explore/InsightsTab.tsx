@@ -11,15 +11,20 @@ import {
 	selectInsightsRelationships,
 	selectIsLoadingInsights,
 } from "@insights-ui/state/insightsSlice";
+import { Button } from "@shared-ui/components/button";
+import { StatusBanner } from "@shared-ui/components/status-banner";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@shared-ui/components/tabs";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CompositionTab } from "@/components/explore/insights/CompositionTab";
 import { OverviewTab } from "@/components/explore/insights/OverviewTab";
 import { QualityTab } from "@/components/explore/insights/QualityTab";
 import { RelationshipsTab } from "@/components/explore/insights/RelationshipsTab";
-import { Button } from "@/components/ui/button";
-import { StatusBanner } from "@/components/ui/status-banner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectFilteredSchema } from "@/store/schema/schemaSlice";
 import { selectExploreTab } from "@/store/ui/uiSlice";

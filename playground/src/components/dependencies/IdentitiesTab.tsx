@@ -1,11 +1,11 @@
+import { Button } from "@shared-ui/components/button";
+import { TabsContent } from "@shared-ui/components/tabs";
 import { Plus, Upload } from "lucide-react";
 import { useCallback } from "react";
 import { DependencyIdentityModal } from "@/components/DependencyIdentityModal";
 import { EntryList } from "@/components/dependencies/EntryList";
 import { useEditModal } from "@/components/dependencies/useEditModal";
-import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { TabsContent } from "@/components/ui/tabs";
 import { useFileImport } from "@/hooks/useFileImport";
 import { selectIsSavingDependenciesConfig } from "@/store/deps/depsSlice";
 import { parseDependenciesIdentitiesYaml } from "@/store/deps/identities/identitiesMappers";

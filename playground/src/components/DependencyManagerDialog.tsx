@@ -1,3 +1,4 @@
+import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { Eye, Plus, RefreshCw, Upload } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { DependenciesTab } from "@/components/dependencies/DependenciesTab";
@@ -10,7 +11,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	fetchDependenciesConfig,
 	fetchDependenciesStatus,

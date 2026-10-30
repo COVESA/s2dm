@@ -7,7 +7,7 @@ import {
 	selectContainerTypeFieldCounts,
 } from "@insights-ui/selectors/concepts";
 import { useInsightsSelector } from "@insights-ui/state/hooks";
-import { cn } from "@/utils/cn";
+import { cn } from "@shared-ui/utils/cn";
 
 export function ContainerTypeRow({
 	type,

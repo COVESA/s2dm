@@ -19,7 +19,24 @@ type UrlInput = {
 	url: string;
 };
 
-export type SchemaInput = ContentInput | FileContentInput | UrlInput;
+export type SchemaIdInput = {
+	type: "schema_id";
+	id: string;
+};
+
+export type DependencyInput = {
+	type: "dependency";
+	name: string;
+	version: string;
+};
+
+export type SchemaReference = SchemaIdInput | DependencyInput;
+
+export type SchemaInput =
+	| ContentInput
+	| FileContentInput
+	| UrlInput
+	| SchemaReference;
 export type QueryInput = ContentInput;
 
 type SchemasRequest = {
@@ -80,6 +97,28 @@ export type ExportResponse = {
 };
 
 export type ValidateSchemaRequest = SchemasRequest;
+
+export type ValidateSchemaResponse = ExportResponse & {
+	schema_id: string;
+};
+
+export type EmbeddingsRequest = SchemasRequest;
+
+export type EmbeddingsBuildResponse = {
+	embeddings_id: string;
+};
+
+export type EmbeddingsSearchRequest = {
+	embeddings_id: string;
+	query: string;
+	limit: number;
+};
+
+export type EmbeddingsSearchHit = {
+	rank: number;
+	score: number;
+	id: string;
+};
 
 export type FilterSchemaRequest = SchemasWithSelectionQueryRequest;
 

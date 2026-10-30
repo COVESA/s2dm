@@ -1,5 +1,5 @@
+import { cn } from "@shared-ui/utils/cn";
 import type { ReactNode } from "react";
-import { cn } from "@/utils/cn";
 
 type EvidenceListProps = {
 	children: ReactNode;

@@ -1,10 +1,10 @@
+import { Button } from "@shared-ui/components/button";
 import { useCallback } from "react";
 import { CliCommandDisplay } from "@/components/CliCommandDisplay";
 import { DetailsPane } from "@/components/DetailsPane";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { ExportConfig } from "@/components/ExportConfig";
 import { TextEditor } from "@/components/TextEditor";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Select,

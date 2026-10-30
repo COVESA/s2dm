@@ -1,6 +1,6 @@
+import { cn } from "@shared-ui/utils/cn";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import type * as React from "react";
-import { cn } from "@/utils/cn";
 
 function Popover({
 	...props

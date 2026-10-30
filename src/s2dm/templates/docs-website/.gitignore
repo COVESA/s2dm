@@ -10,6 +10,7 @@
 /docs/api/
 /static/introspection.json
 /static/insights.json
+/static/embeddings.json
 
 # Misc
 .DS_Store
