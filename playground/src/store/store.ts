@@ -22,6 +22,8 @@ import depsResolveReducer from "@/store/deps/resolve/resolveSlice";
 import { exportSaga } from "@/store/export/exportSaga";
 import exportReducer from "@/store/export/exportSlice";
 import { insightsSaga } from "@/store/insights/insightsSaga";
+import { instanceTagsSaga } from "@/store/instanceTags/instanceTagsSaga";
+import instanceTagsReducer from "@/store/instanceTags/instanceTagsSlice";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";
@@ -42,6 +44,7 @@ function* rootSaga() {
 		exportSaga(),
 		capabilitiesSaga(),
 		insightsSaga(),
+		instanceTagsSaga(),
 	]);
 }
 
@@ -68,6 +71,7 @@ export const store = configureStore({
 		capabilities: capabilitiesReducer,
 		insights: insightsReducer,
 		insightDetail: insightDetailReducer,
+		instanceTags: instanceTagsReducer,
 	},
 	preloadedState: { insightDetail: preloadedInsightDetail },
 	middleware: (getDefaultMiddleware) =>

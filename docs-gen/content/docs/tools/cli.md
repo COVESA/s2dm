@@ -2615,6 +2615,74 @@ The filtered schema will include:
 
 **Note:** The query must be valid against the schema. Root fields in the query (e.g., `vehicle`) must exist in the `Query` type of the schema.
 
+#### Picking Instances
+
+An instance tag field (see [Expanded Instances](#expanded-instances)) expands into every combination of its dimensions, except the ones the model excludes with `@instanceTag(exclude: ...)` (see [Excluding Instance Combinations](#excluding-instance-combinations)). Use `@pick` in the selection query to keep only some of these instances. Only the filtered schema changes. The model stays the same. This works for `--selection-query` and for the `selection` query of a dependency.
+
+`@pick` can go on the instance tag field, with a list of whole instances:
+
+```graphql
+query Selection {
+  vehicle {
+    doors {
+      position @pick(instances: ["ROW1.LEFT", "ROW1.RIGHT"]) {
+        row
+        side
+      }
+    }
+  }
+}
+```
+
+Or it can go on the dimensions, with a list of values:
+
+```graphql
+query Selection {
+  vehicle {
+    doors {
+      position {
+        row @pick(instances: ["ROW1"])
+        side
+      }
+    }
+  }
+}
+```
+
+Both queries keep `ROW1.LEFT` and `ROW1.RIGHT`.
+
+- On the instance tag field, write each instance like an `exclude` entry, for example `"ROW1.LEFT"`.
+- On a dimension, write values of its enum, for example `"ROW1"`. A dimension without `@pick` keeps all its values. The result has every combination of the kept values, except the combinations that the model already excludes. For example, `row @pick(instances: ["ROW1", "ROW2"])` with `side @pick(instances: ["LEFT"])` keeps `ROW1.LEFT` and `ROW2.LEFT`. To keep `ROW1.LEFT` and `ROW2.RIGHT` only, put `@pick` on the instance tag field.
+
+In the filtered schema, the instances that are not picked are added to the `exclude` list of the instance tag field:
+
+```graphql
+type Door {
+  position: DoorPosition @instanceTag(exclude: ["ROW2.LEFT", "ROW2.RIGHT"])
+}
+```
+
+The `exclude` list on the `@instanceTag` type does not change. Other fields that use the same type keep all their instances.
+
+The `instances` argument of `@pick` takes:
+
+- A list: s2dm keeps only the instances or values in the list.
+- An empty list (`instances: []`): s2dm keeps all instances, the same as without `@pick`.
+
+s2dm stops with an error when:
+
+- `@pick` is on a field that is not an instance tag field or one of its dimensions.
+- `@pick` is on an instance tag field and also on its dimensions. Use only one of the two.
+- Two `@pick` on the same instance tag field, or on the same dimension, have different lists. For example, if `Vehicle.doors` and `Cabin.doors` both have the type `[Door]`, then `vehicle.doors.position` and `vehicle.cabin.doors.position` both lead to `Door.position`, so their lists must be the same.
+- An instance on the instance tag field does not exist, or the model already excludes it.
+- A value in the `@pick` list of a dimension is not a value of the dimension enum.
+- The `@pick` lists of the dimensions keep no instance, because the model already excludes every combination of the picked values.
+- The query does not select every dimension of the instance tag type. The filtered schema keeps only the selected dimensions, so the `exclude` entries would not match the instances. An empty list (`instances: []`) excludes nothing, so it does not need every dimension.
+
+**Note:** `@pick` changes the output instances only when the command expands instances (`--expanded-instances`). Without the flag, it only adds the instances that are not picked to the `exclude` list of the instance tag field.
+
+**Note:** `@pick` comes from s2dm, not from the model. s2dm removes it from the query before it checks the query against the schema. Other GraphQL tools do not know `@pick` and report it as an unknown directive.
+
 ### Root Type Filtering
 
 All export commands and the compose command support the `--root-type` flag to filter the schema to only a specific type and its transitive dependencies.
@@ -2888,7 +2956,7 @@ enum SideEnum {
 }
 ```
 
-An instance tag can be backed either by an object type (`DoorPosition`, whose enum fields form a multi-dimensional cartesian product) or directly by an enum (`MirrorPosition`, a single dimension marked with `@instanceTag` on the enum itself).
+An instance tag can be backed either by an object type (`DoorPosition`, whose enum fields are its dimensions and form a multi-dimensional cartesian product) or directly by an enum (`MirrorPosition`, a single dimension marked with `@instanceTag` on the enum itself). A field with `@instanceTag` whose type is an instance tag, such as `Door.doorPosition` or `Mirror.position`, is an instance tag field.
 
 **Without `--expanded-instances` (default):**
 

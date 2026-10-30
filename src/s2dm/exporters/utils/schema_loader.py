@@ -53,6 +53,7 @@ from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type, is_
 from s2dm.exporters.utils.instance_tag import expand_instances_in_schema, is_valid_instance_tag_field
 from s2dm.exporters.utils.naming import apply_naming_to_schema, convert_name, load_naming_config
 from s2dm.exporters.utils.naming_config import ContextType, ElementType, NamingConventionConfig, get_case_for_element
+from s2dm.exporters.utils.pick import apply_picks, extract_and_validate_picks
 from s2dm.exporters.utils.violations import ConstraintViolation, Severity
 from s2dm.ledger import Ledger, annotate_schema_with_ledger
 from s2dm.tools.constraint_checker import ConstraintChecker
@@ -574,7 +575,9 @@ def prune_schema_using_query_selection(
     if not schema.query_type:
         raise ValueError("Schema has no query type defined")
 
-    _validate_schema(schema, document)
+    stripped_document, picked = extract_and_validate_picks(schema, document)
+
+    _validate_schema(schema, stripped_document)
 
     fields_to_keep: dict[str, set[str]] = {}
     types_to_keep: set[str] = set()
@@ -705,7 +708,7 @@ def prune_schema_using_query_selection(
 
     query_operations = [
         definition
-        for definition in document.definitions
+        for definition in stripped_document.definitions
         if isinstance(definition, OperationDefinitionNode) and definition.operation.value == "query"
     ]
 
@@ -721,6 +724,8 @@ def prune_schema_using_query_selection(
         type_name = pending_types.pop()
         for directive_name in directives_on_type(type_name):
             keep_directive(directive_name)
+
+    apply_picks(schema, picked)
 
     for type_name, fields_to_keep_set in fields_to_keep.items():
         type_obj = schema.type_map.get(type_name)

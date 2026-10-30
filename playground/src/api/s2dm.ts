@@ -10,6 +10,7 @@ import type {
 	ExportResponse,
 	FilterSchemaRequest,
 	GetDependenciesConfigResponse,
+	InstanceTagsResponse,
 	QueryInput,
 	SaveDependenciesConfigRequest,
 	SchemaInput,
@@ -177,7 +178,16 @@ export async function composeDependencies(
 	}
 }
 
-async function postInsights<TResponse>(
+export async function getInstanceTags(
+	schemas: SchemaInput[],
+): Promise<InstanceTagsResponse> {
+	return postSchemas<InstanceTagsResponse>(
+		"/api/v1/schema/instance-tags",
+		schemas,
+	);
+}
+
+async function postSchemas<TResponse>(
 	endpoint: string,
 	schemas: SchemaInput[],
 ): Promise<TResponse> {
@@ -192,13 +202,13 @@ async function postInsights<TResponse>(
 export async function getSchemaConcepts(
 	schemas: SchemaInput[],
 ): Promise<ConceptsResponse> {
-	return postInsights<ConceptsResponse>("/api/v1/insights/concepts", schemas);
+	return postSchemas<ConceptsResponse>("/api/v1/insights/concepts", schemas);
 }
 
 export async function getSchemaRelationships(
 	schemas: SchemaInput[],
 ): Promise<RelationshipsResponse> {
-	return postInsights<RelationshipsResponse>(
+	return postSchemas<RelationshipsResponse>(
 		"/api/v1/insights/relationships",
 		schemas,
 	);
@@ -207,11 +217,11 @@ export async function getSchemaRelationships(
 export async function getSchemaCoverage(
 	schemas: SchemaInput[],
 ): Promise<CoverageResponse> {
-	return postInsights<CoverageResponse>("/api/v1/insights/coverage", schemas);
+	return postSchemas<CoverageResponse>("/api/v1/insights/coverage", schemas);
 }
 
 export async function getSchemaQualityIssues(
 	schemas: SchemaInput[],
 ): Promise<QualityResponse> {
-	return postInsights<QualityResponse>("/api/v1/insights/quality", schemas);
+	return postSchemas<QualityResponse>("/api/v1/insights/quality", schemas);
 }

@@ -1,3 +1,4 @@
+from copy import copy
 from itertools import product
 from typing import Any, NamedTuple, cast
 
@@ -12,6 +13,15 @@ from graphql import (
     is_list_type,
     is_non_null_type,
 )
+from graphql.language.ast import (
+    ConstArgumentNode,
+    ConstDirectiveNode,
+    ConstListValueNode,
+    FieldDefinitionNode,
+    NameNode,
+    StringValueNode,
+)
+from pydantic import BaseModel, Field
 
 from s2dm import log
 from s2dm.constants.directive import Directive, DirectiveArgument
@@ -52,6 +62,33 @@ class _ResolvedInstanceTag(NamedTuple):
 
     field_name: str
     source_type: InstanceTagSource
+
+
+def join_instance(instance: tuple[str, ...]) -> str:
+    """
+    Join the dimension values of an instance into a dotted name, such as `A.B`.
+
+    Args:
+        instance: The instance, as a tuple of dimension values.
+
+    Returns:
+        str: The dotted name.
+    """
+    return ".".join(instance)
+
+
+def get_field_coordinate(type_name: str, field_name: str) -> str:
+    """
+    Join a type name and a field name into a coordinate, such as `Type.field`.
+
+    Args:
+        type_name: The type that declares the field.
+        field_name: The field.
+
+    Returns:
+        str: The coordinate.
+    """
+    return f"{type_name}.{field_name}"
 
 
 def is_instance_tag_field(field: GraphQLField) -> bool:
@@ -163,6 +200,22 @@ def get_instance_tag_case(naming_config: NamingConventionConfig | None) -> CaseF
     return get_case_for_element(ElementType.INSTANCE_TAG, None, naming_config)
 
 
+def _read_exclude_entries(tag_field: GraphQLField, source_type: InstanceTagSource) -> tuple[list[str], list[str]]:
+    """
+    Read the `exclude` lists of the @instanceTag on a tag field and on its source type.
+
+    Args:
+        tag_field: The tag field.
+        source_type: The source type of the tag field.
+
+    Returns:
+        tuple[list[str], list[str]]: The dotted entries on the field, and the dotted entries on the source type.
+    """
+    field_exclude = get_argument_content(tag_field, Directive.INSTANCE_TAG, DirectiveArgument.EXCLUDE) or []
+    source_exclude = get_argument_content(source_type, Directive.INSTANCE_TAG, DirectiveArgument.EXCLUDE) or []
+    return field_exclude, source_exclude
+
+
 def collect_expandable_fields(schema: GraphQLSchema) -> list[_ExpandableField]:
     """Find every list field whose item type carries a valid instanceTag, without touching the schema."""
     expandable_fields = []
@@ -181,10 +234,7 @@ def collect_expandable_fields(schema: GraphQLSchema) -> list[_ExpandableField]:
             item_type = unwrapped.of_type
 
             tag_field = base_type.fields[resolved.field_name]
-            field_exclude = get_argument_content(tag_field, Directive.INSTANCE_TAG, DirectiveArgument.EXCLUDE) or []
-            source_exclude = (
-                get_argument_content(resolved.source_type, Directive.INSTANCE_TAG, DirectiveArgument.EXCLUDE) or []
-            )
+            field_exclude, source_exclude = _read_exclude_entries(tag_field, resolved.source_type)
             exclude = list(dict.fromkeys([*field_exclude, *source_exclude]))
 
             expandable_fields.append(
@@ -228,26 +278,252 @@ def included_instances(
     if not expandable.exclude:
         return instances
 
+    included, unmatched = _instances_not_named(instances, expandable.exclude, instance_tag_case)
+    if unmatched:
+        field_coordinate = get_field_coordinate(expandable.parent_type.name, expandable.field_name)
+        supported_names = sorted(join_instance(instance) for instance in instances)
+        raise ValueError(
+            f"@instanceTag exclude entries {sorted(unmatched)} on "
+            f"'{field_coordinate}' match no instance; "
+            f"supported instances are {supported_names}"
+        )
+
+    return included
+
+
+def _instances_not_named(
+    instances: list[tuple[str, ...]],
+    entries: list[str],
+    instance_tag_case: CaseFormat | None,
+) -> tuple[list[tuple[str, ...]], list[str]]:
+    """
+    Return the instances that no dotted entry names.
+
+    Entries use the enum values as written in the schema. If a naming convention renamed the values,
+    each part of an entry is renamed the same way before matching.
+
+    Args:
+        instances: The instances, as tuples of dimension values.
+        entries: Dotted entries, such as `A.B`.
+        instance_tag_case: The case of instanceTag values, or None if not configured.
+
+    Returns:
+        tuple[list[tuple[str, ...]], list[str]]: The instances that no entry names, in the same order,
+        and the entries that name no instance.
+    """
+
     def normalize(entry: str) -> tuple[str, ...]:
         segments = entry.split(".")
         if instance_tag_case:
             segments = [convert_name(segment, instance_tag_case) for segment in segments]
         return tuple(segments)
 
-    unmatched = {normalize(entry): entry for entry in expandable.exclude}
-    included: list[tuple[str, ...]] = []
+    unmatched = {normalize(entry): entry for entry in entries}
+    remaining: list[tuple[str, ...]] = []
     for instance in instances:
         if unmatched.pop(instance, None) is None:
-            included.append(instance)
+            remaining.append(instance)
 
-    if unmatched:
-        raise ValueError(
-            f"@instanceTag exclude entries {sorted(unmatched.values())} on "
-            f"'{expandable.parent_type.name}.{expandable.field_name}' match no instance; "
-            f"supported instances are {sorted('.'.join(instance) for instance in instances)}"
-        )
+    unmatched_values = unmatched.values()
+    unmatched_entries = list(unmatched_values)
+    return remaining, unmatched_entries
 
-    return included
+
+class _DefinedInstances(NamedTuple):
+    """A tag field and the instances it defines before a query narrows them."""
+
+    tag_field: GraphQLField
+    dimensions: dict[str, list[str]]
+    field_exclude: list[str]
+    instances: list[tuple[str, ...]]
+
+    @property
+    def names(self) -> list[str]:
+        """The defined instances as dotted names, such as `A.B`, in the order of the dimension product."""
+        return [join_instance(instance) for instance in self.instances]
+
+
+def _read_defined_instances(schema: GraphQLSchema, object_type_name: str, tag_field_name: str) -> _DefinedInstances:
+    """
+    Find a tag field and the instances it defines after its own `exclude` lists.
+
+    Entries that name no instance are ignored here. Expansion reports them.
+
+    Args:
+        schema: The schema.
+        object_type_name: The type that declares the tag field.
+        tag_field_name: The tag field.
+
+    Returns:
+        _DefinedInstances: The field, its dimensions, the `exclude` list on the field, and the defined instances.
+    """
+    named_type = schema.get_type(object_type_name)
+    object_type = cast(GraphQLObjectType, named_type)
+    tag_field = object_type.fields[tag_field_name]
+    tag_type = get_instance_tag_type(tag_field, schema)
+    source_type = cast(InstanceTagSource, tag_type)
+    dimensions = _tag_dimensions_from_source(tag_field_name, source_type)
+    field_exclude, source_exclude = _read_exclude_entries(tag_field, source_type)
+    dimension_values = dimensions.values()
+    combinations = product(*dimension_values)
+    all_instances = list(combinations)
+    defined_instances, _ = _instances_not_named(all_instances, [*field_exclude, *source_exclude], None)
+    return _DefinedInstances(tag_field, dimensions, field_exclude, defined_instances)
+
+
+def _exclude_instances(defined_instances: _DefinedInstances, newly_excluded: list[tuple[str, ...]]) -> None:
+    """
+    Add instances to the `exclude` list of the tag field's @instanceTag.
+
+    The schema is printed from the AST nodes. So this replaces the field's AST node with a copy that
+    has the longer `exclude` list. This changes the field in place.
+
+    Args:
+        defined_instances: The tag field and its current `exclude` list.
+        newly_excluded: The instances to add.
+    """
+    if not newly_excluded:
+        return
+
+    newly_excluded_names = [join_instance(instance) for instance in newly_excluded]
+    exclude_entries = [*defined_instances.field_exclude, *newly_excluded_names]
+    exclude_values = tuple(StringValueNode(value=entry) for entry in exclude_entries)
+    exclude_name = NameNode(value=DirectiveArgument.EXCLUDE.value)
+    exclude_list = ConstListValueNode(values=exclude_values)
+    exclude_argument = ConstArgumentNode(name=exclude_name, value=exclude_list)
+
+    field_node = cast(FieldDefinitionNode, defined_instances.tag_field.ast_node)
+    directives: list[ConstDirectiveNode] = []
+    for directive in field_node.directives:
+        if directive.name.value != Directive.INSTANCE_TAG.value:
+            directives.append(directive)
+            continue
+        other_arguments = [
+            argument for argument in directive.arguments if argument.name.value != DirectiveArgument.EXCLUDE.value
+        ]
+        narrowed_directive = copy(directive)
+        narrowed_directive.arguments = (*other_arguments, exclude_argument)
+        directives.append(narrowed_directive)
+
+    narrowed_field_node = copy(field_node)
+    narrowed_field_node.directives = tuple(directives)
+    defined_instances.tag_field.ast_node = narrowed_field_node
+
+
+def get_defined_instance_names(schema: GraphQLSchema, object_type_name: str, tag_field_name: str) -> list[str]:
+    """
+    Return the instances that a tag field defines, as dotted names such as `A.B`.
+
+    Args:
+        schema: The schema.
+        object_type_name: The type that declares the tag field.
+        tag_field_name: The tag field.
+
+    Returns:
+        list[str]: The defined instances, in the order of the dimension product.
+    """
+    defined_instances = _read_defined_instances(schema, object_type_name, tag_field_name)
+    return defined_instances.names
+
+
+class InstanceTagFieldInfo(BaseModel):
+    """The dimensions and instances that @pick can name on an instance tag field."""
+
+    dimensions: dict[str, list[str]] = Field(description="The enum values of each dimension, in schema order")
+    instances: list[str] = Field(
+        description="The defined instances as dotted names, without the entries of the exclude lists"
+    )
+
+
+def get_instance_tag_fields(schema: GraphQLSchema) -> dict[str, InstanceTagFieldInfo]:
+    """
+    Index every instance tag field of the schema by `Type.field`, with its dimensions and defined instances.
+
+    The defined instances are the ones that @pick can name: the product of the dimensions, without
+    the entries in the `exclude` lists of the field and of the tag type.
+
+    Args:
+        schema: The schema.
+
+    Returns:
+        dict[str, InstanceTagFieldInfo]: The instance tag fields by `Type.field`, in schema order.
+    """
+    tag_fields: dict[str, InstanceTagFieldInfo] = {}
+    object_types = get_all_object_types(schema)
+    for object_type in object_types:
+        for field_name, field in object_type.fields.items():
+            if not is_valid_instance_tag_field(field, schema):
+                continue
+
+            defined_instances = _read_defined_instances(schema, object_type.name, field_name)
+            coordinate = get_field_coordinate(object_type.name, field_name)
+            tag_fields[coordinate] = InstanceTagFieldInfo(
+                dimensions=defined_instances.dimensions, instances=defined_instances.names
+            )
+
+    return tag_fields
+
+
+def pick_instances(schema: GraphQLSchema, object_type_name: str, tag_field_name: str, entries: list[str]) -> None:
+    """
+    Keep only the named instances of a tag field, by excluding the other defined instances.
+
+    Entries that name no defined instance are ignored here; `extract_and_validate_picks` reports them.
+    This changes the field in place.
+
+    Args:
+        schema: The schema.
+        object_type_name: The type that declares the tag field.
+        tag_field_name: The tag field.
+        entries: Dotted entries for the instances to keep, such as `A.B`.
+    """
+    defined_instances = _read_defined_instances(schema, object_type_name, tag_field_name)
+    newly_excluded, _ = _instances_not_named(defined_instances.instances, entries, None)
+    _exclude_instances(defined_instances, newly_excluded)
+
+
+def _picked_combinations(
+    defined_instances: _DefinedInstances, values_by_dimension: dict[str, list[str]]
+) -> set[tuple[str, ...]]:
+    """
+    Return every combination of the picked dimension values.
+
+    A dimension with no picked values keeps all its values.
+
+    Args:
+        defined_instances: The tag field and its dimensions.
+        values_by_dimension: The values to keep, for each picked dimension.
+
+    Returns:
+        set[tuple[str, ...]]: The combinations, as tuples of dimension values.
+    """
+    picked_values = [
+        values_by_dimension.get(dimension, values) for dimension, values in defined_instances.dimensions.items()
+    ]
+    combinations = product(*picked_values)
+    return set(combinations)
+
+
+def get_kept_instance_names(
+    schema: GraphQLSchema, object_type_name: str, tag_field_name: str, values_by_dimension: dict[str, list[str]]
+) -> list[str]:
+    """
+    Return the defined instances that the picked dimension values keep, as dotted names such as `A.B`.
+
+    A dimension with no picked values keeps all its values.
+
+    Args:
+        schema: The schema.
+        object_type_name: The type that declares the tag field.
+        tag_field_name: The tag field.
+        values_by_dimension: The values to keep, for each picked dimension.
+
+    Returns:
+        list[str]: The kept instances, in the order of the dimension product.
+    """
+    defined_instances = _read_defined_instances(schema, object_type_name, tag_field_name)
+    picked_combinations = _picked_combinations(defined_instances, values_by_dimension)
+    return [join_instance(instance) for instance in defined_instances.instances if instance in picked_combinations]
 
 
 def _build_instance_types(
@@ -334,7 +610,7 @@ def _apply_expansion(
     new_field_name = convert_name(expandable.base_type.name, field_case) if field_case else expandable.base_type.name
 
     field_metadata[(expandable.parent_type.name, new_field_name)] = FieldMetadata(
-        resolved_names=[f"{new_field_name}.{'.'.join(instance)}" for instance in instances],
+        resolved_names=[f"{new_field_name}.{join_instance(instance)}" for instance in instances],
         resolved_type=expandable.base_type.name,
         is_expanded=True,
         original_field=expandable.original_field,

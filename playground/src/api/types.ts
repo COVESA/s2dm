@@ -81,6 +81,14 @@ export type ExportResponse = {
 
 export type ValidateSchemaRequest = SchemasRequest;
 
+type InstanceTagField = {
+	dimensions: Record<string, string[]>;
+	instances: string[];
+};
+
+/** The instance tag fields, by `Type.field`. */
+export type InstanceTagsResponse = Partial<Record<string, InstanceTagField>>;
+
 export type FilterSchemaRequest = SchemasWithSelectionQueryRequest;
 
 export type OpenAPIPath = {

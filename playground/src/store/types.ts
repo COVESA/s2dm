@@ -7,6 +7,7 @@ import type { DepsState } from "@/store/deps/depsSlice";
 import type { DepsIdentitiesState } from "@/store/deps/identities/identitiesSlice";
 import type { DepsResolveState } from "@/store/deps/resolve/resolveSlice";
 import type { ExportState } from "@/store/export/exportSlice";
+import type { InstanceTagsState } from "@/store/instanceTags/instanceTagsSlice";
 import type { SchemaState } from "@/store/schema/schemaSlice";
 import type { SelectionState } from "@/store/selection/selectionSlice";
 import type { UIState } from "@/store/ui/uiSlice";
@@ -26,4 +27,5 @@ export interface RootState {
 	capabilities: CapabilitiesState;
 	insights: InsightsState;
 	insightDetail: InsightDetailState;
+	instanceTags: InstanceTagsState;
 }
