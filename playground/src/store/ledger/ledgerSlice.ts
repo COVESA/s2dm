@@ -1,0 +1,81 @@
+// The ledger's state is five slices, one per concern. This module re-exports
+// their actions, selectors and types so callers need not know which is which.
+export type { LedgerView } from "@/store/ledger/ledgerActions";
+export {
+	closeLedger,
+	openLedger,
+	openLedgerFailure,
+	openLedgerSuccess,
+	openTableWithSearch,
+	setLedgerView,
+	setSearchOptions,
+	showRecordInTable,
+} from "@/store/ledger/ledgerActions";
+export {
+	clearLedgerChain,
+	closeLedgerDetail,
+	type LedgerCell,
+	type LedgerDetail,
+	openLedgerDetail,
+	popLedgerDetail,
+	pushLedgerDetail,
+	resolveChainFailure,
+	resolveChainSuccess,
+	selectCanGoBackLedgerDetail,
+	selectIsLoadingLedgerChain,
+	selectLedgerChain,
+	selectLedgerChainError,
+	selectLedgerDetail,
+	viewLedgerRecord,
+} from "@/store/ledger/ledgerDetailSlice";
+export {
+	exploreLedger,
+	exploreLedgerFailure,
+	exploreLedgerSuccess,
+	selectExploreError,
+	selectExploreMatches,
+	selectExploreQuery,
+	selectHasExplored,
+	selectIsExploring,
+	setExploreQuery,
+} from "@/store/ledger/ledgerExploreSlice";
+export {
+	selectHasLedger,
+	selectIsLoadingLedger,
+	selectLedgerError,
+	selectLedgerFileName,
+	selectLedgerTables,
+	selectLedgerView,
+	selectSearchOptions,
+} from "@/store/ledger/ledgerFileSlice";
+export {
+	applyPredefinedQuery,
+	runLedgerQuery,
+	runLedgerQueryFailure,
+	runLedgerQuerySuccess,
+	selectIsRunningLedgerQuery,
+	selectLedgerQueryError,
+	selectLedgerQueryResult,
+	selectLedgerSql,
+	selectPredefinedQueryLabel,
+	setLedgerSql,
+} from "@/store/ledger/ledgerQuerySlice";
+export {
+	chooseLedgerTable,
+	loadLedgerRows,
+	loadLedgerRowsFailure,
+	loadLedgerRowsSuccess,
+	selectIsLoadingLedgerRows,
+	selectLedgerFilterOptions,
+	selectLedgerFilters,
+	selectLedgerPage,
+	selectLedgerRows,
+	selectLedgerRowsError,
+	selectLedgerRowsTotal,
+	selectLedgerSearch,
+	selectSelectedLedgerTable,
+	setLedgerFilter,
+	setLedgerFilterOptions,
+	setLedgerPage,
+	setLedgerSearch,
+} from "@/store/ledger/ledgerTableSlice";
