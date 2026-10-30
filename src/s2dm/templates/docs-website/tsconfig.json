@@ -13,7 +13,9 @@
       "@/*": ["./src/*"],
       "@shared-ui/*": ["./src/shared-ui/*", "../shared-ui/*"],
       "@insights-ui/*": ["./src/insights-ui/*", "../insights-ui/*"],
-      "@search-ui/*": ["./src/search-ui/*", "../search-ui/*"]
+      "@search-ui/*": ["./src/search-ui/*", "../search-ui/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"]
     }
   },
   "exclude": [".docusaurus", "build"]

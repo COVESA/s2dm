@@ -1,4 +1,5 @@
 import { CollapsibleSection } from "@insights-ui/components/CollapsibleSection";
+import { Button } from "@shared-ui/components/button";
 import { StatusBanner } from "@shared-ui/components/status-banner";
 import { Hammer } from "lucide-react";
 import { useCallback, useMemo } from "react";
