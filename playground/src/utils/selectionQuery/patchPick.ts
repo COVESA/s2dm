@@ -8,38 +8,47 @@ import {
 import {
 	applyEdits,
 	createNodeRemoval,
+	createNodeReplacement,
 	createOperationAppend,
+	createSelectionSetPrefix,
 	hasOnlyPlaceholder,
 	NEW_OPERATION_NAME,
 	PLACEHOLDER_FIELD,
 	type TextEdit,
 } from "@/utils/selectionQuery/patchSelection";
 import {
+	findPickArgument,
 	findPickDirective,
 	getStringValues,
 	PICK_DIRECTIVE_NAME,
 	type PickArgumentName,
 	resolvePickedNames,
+	toggleNames,
 } from "@/utils/selectionQuery/pick";
 import type { SelectionIndex } from "@/utils/selectionQuery/readSelection";
 
-function renderNames(names: string[]): string {
+export function renderNames(names: string[]): string {
 	const quotedNames = names.map((name) => JSON.stringify(name));
 	return quotedNames.join(", ");
 }
 
-function findPickArgument(
-	selection: SelectionIndex,
-	argumentName: PickArgumentName,
-): ArgumentNode | undefined {
-	const { operation } = selection;
-	if (!operation) {
-		return undefined;
-	}
+export function renderPickDirective(argumentText: string): string {
+	return `@${PICK_DIRECTIVE_NAME}(${argumentText})`;
+}
 
-	const pickDirective = findPickDirective(operation);
-	return pickDirective?.arguments?.find(
-		(argument) => argument.name.value === argumentName,
+/**
+ * Tells whether an operation is written in the shorthand form `{ ... }`,
+ * which has no `query` keyword, so no name or directive can be added to it
+ * without the keyword.
+ *
+ * @param operation The query operation.
+ * @returns Whether the operation starts at its selection set.
+ */
+function isShorthandOperation(operation: OperationDefinitionNode): boolean {
+	const selectionSetStart = operation.selectionSet.loc?.start;
+	return (
+		selectionSetStart !== undefined &&
+		operation.loc?.start === selectionSetStart
 	);
 }
 
@@ -58,7 +67,7 @@ function createArgumentInsertion(
 	selection: SelectionIndex,
 	argumentText: string,
 ): TextEdit[] {
-	const directiveText = `@${PICK_DIRECTIVE_NAME}(${argumentText})`;
+	const directiveText = renderPickDirective(argumentText);
 	const { operation } = selection;
 	if (!operation) {
 		const operationAppend = createOperationAppend(
@@ -71,17 +80,11 @@ function createArgumentInsertion(
 
 	const pickDirective = findPickDirective(operation);
 	if (!pickDirective) {
-		const selectionSetStart = operation.selectionSet.loc?.start;
-		if (selectionSetStart === undefined) {
-			return [];
+		let insertedText = directiveText;
+		if (isShorthandOperation(operation)) {
+			insertedText = `query ${NEW_OPERATION_NAME} ${directiveText}`;
 		}
-		let insertedText = `${directiveText} `;
-		if (operation.loc?.start === selectionSetStart) {
-			insertedText = `query ${NEW_OPERATION_NAME} ${insertedText}`;
-		}
-		return [
-			{ start: selectionSetStart, end: selectionSetStart, text: insertedText },
-		];
+		return createSelectionSetPrefix(operation, insertedText);
 	}
 
 	const directiveEnd = pickDirective.loc?.end;
@@ -203,14 +206,17 @@ export function patchPick(
 		argumentName,
 		pickableNames,
 	);
-	const targetNames = pickableNames.filter((name) => {
-		if (toggledNames.includes(name)) {
-			return isChecked;
-		}
-		return pickedNames.has(name);
-	});
+	const targetNames = toggleNames(
+		pickableNames,
+		pickedNames,
+		toggledNames,
+		isChecked,
+	);
 	const { operation } = selection;
-	const argument = findPickArgument(selection, argumentName);
+	let argument: ArgumentNode | undefined;
+	if (operation) {
+		argument = findPickArgument(operation, argumentName);
+	}
 
 	let edits: TextEdit[] = [];
 	if (targetNames.length === 0) {
@@ -239,9 +245,7 @@ export function patchPick(
 		argument.value.kind !== Kind.LIST ||
 		argument.value.values.length === 0
 	) {
-		edits = [
-			{ start: valueLocation.start, end: valueLocation.end, text: valueText },
-		];
+		edits = createNodeReplacement(argument.value, valueText);
 	} else {
 		edits = createListItemEdits(
 			selectionQuery,

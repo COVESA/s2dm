@@ -11,6 +11,23 @@ from s2dm.exporters.utils.naming_config import CaseFormat
 from s2dm.exporters.utils.schema_loader import load_and_process_schema
 
 
+def _write_pick_query(tmp_path: Path, instances: str) -> Path:
+    query_file = tmp_path / "query.graphql"
+    query_file.write_text(f"""
+        query {{
+            cabin {{
+                doors {{
+                    doorPosition @pick(instances: {instances}) {{
+                        row
+                        side
+                    }}
+                }}
+            }}
+        }}
+    """)
+    return query_file
+
+
 class TestLoadAndProcessSchema:
     @pytest.fixture
     def expanded_schema_path(self, spec_directory: Path) -> list[Path]:
@@ -42,6 +59,40 @@ class TestLoadAndProcessSchema:
                 {"type": {"object": CaseFormat.MACRO_CASE.value}, "field": {"object": CaseFormat.SNAKE_CASE.value}}
             )
         )
+        return config_file
+
+    @pytest.fixture
+    def instance_tag_schema_path(self, tmp_path: Path) -> Path:
+        schema_file = tmp_path / "instance_tag.graphql"
+        schema_file.write_text("""
+        directive @instanceTag(exclude: [String!]) on OBJECT | FIELD_DEFINITION | ENUM
+
+        enum RowEnum { ROW1 ROW2 }
+        enum SideEnum { LEFT RIGHT }
+
+        type DoorPosition @instanceTag {
+          row: RowEnum!
+          side: SideEnum!
+        }
+
+        type Door {
+          doorPosition: DoorPosition @instanceTag
+        }
+
+        type Cabin {
+          doors: [Door]
+        }
+
+        type Query {
+          cabin: Cabin
+        }
+        """)
+        return schema_file
+
+    @pytest.fixture
+    def instance_tag_naming_config_path(self, tmp_path: Path) -> Path:
+        config_file = tmp_path / "instance_tag_naming_config.json"
+        config_file.write_text(json.dumps({"instanceTag": CaseFormat.PASCAL_CASE.value}))
         return config_file
 
     def test_load_with_selection_query(self, schema_path: list[Path], valid_query_path: Path) -> None:
@@ -177,6 +228,28 @@ class TestLoadAndProcessSchema:
 
         with pytest.raises(ValueError):
             load_and_process_schema([schema_path], None, None, None, expanded_instances=True)
+
+    def test_load_with_pick_reads_source_names_before_naming(
+        self, instance_tag_schema_path: Path, instance_tag_naming_config_path: Path, tmp_path: Path
+    ) -> None:
+        query_file = _write_pick_query(tmp_path, '["ROW1.LEFT", "ROW2.RIGHT"]')
+
+        annotated_schema, _, _ = load_and_process_schema(
+            [instance_tag_schema_path], instance_tag_naming_config_path, query_file, None, expanded_instances=True
+        )
+
+        field_meta = annotated_schema.field_metadata[("Cabin", "Door")]
+        assert field_meta.resolved_names == ["Door.Row1.Left", "Door.Row2.Right"]
+
+    def test_load_with_pick_rejects_converted_names(
+        self, instance_tag_schema_path: Path, instance_tag_naming_config_path: Path, tmp_path: Path
+    ) -> None:
+        query_file = _write_pick_query(tmp_path, '["Row1.Left"]')
+
+        with pytest.raises(ValueError):
+            load_and_process_schema(
+                [instance_tag_schema_path], instance_tag_naming_config_path, query_file, None, expanded_instances=True
+            )
 
     def test_load_with_expanded_instances_does_not_expand_non_list_field(self, tmp_path: Path) -> None:
         schema_path = tmp_path / "non_list_instance_tag.graphql"

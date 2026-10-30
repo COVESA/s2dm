@@ -17,10 +17,12 @@ import {
 } from "@/utils/selectionQuery/schemaTree";
 import type { FieldTreeRow } from "@/utils/selectionQuery/treeRows";
 
-type SelectionTreeItemProps = {
+export type SelectionTreeItemProps = {
 	row: FieldTreeRow;
 	countLeaves: (node: SchemaTreeNode) => LeafCounts;
 	isDisabled: boolean;
+	/** A control shown after the field name. */
+	labelAccessory?: ReactNode;
 	onToggle: (node: SchemaTreeNode, isChecked: boolean) => void;
 	onToggleExpanded: (key: string) => void;
 	onShowDocs: (node: SchemaTreeNode) => void;
@@ -30,6 +32,7 @@ export function SelectionTreeItem({
 	row,
 	countLeaves,
 	isDisabled,
+	labelAccessory,
 	onToggle,
 	onToggleExpanded,
 	onShowDocs,
@@ -83,6 +86,7 @@ export function SelectionTreeItem({
 				highlightTerm={highlightTerm}
 				onClick={() => onShowDocs(node)}
 			/>
+			{labelAccessory}
 			<span
 				className={"min-w-0 truncate font-mono text-xs text-muted-foreground"}
 				title={node.typeLabel}

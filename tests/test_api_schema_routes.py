@@ -8,6 +8,27 @@ input VehicleFilter { mode: DriveMode = COMFORT }
 type Query { vehicle(filter: VehicleFilter): String }
 """
 
+PICK_DOOR_SCHEMA = """
+directive @instanceTag(exclude: [String!]) on OBJECT | FIELD_DEFINITION | ENUM
+
+type Query {
+  doors: [Door]
+}
+
+type Door {
+  position: DoorPosition @instanceTag
+}
+
+type DoorPosition @instanceTag {
+  side: Side
+}
+
+enum Side {
+  LEFT
+  RIGHT
+}
+"""
+
 
 class TestSchemaFilterRoute:
     """Test /api/v1/schema/filter route behavior."""
@@ -178,6 +199,51 @@ class TestSchemaValidateRoute:
         assert 'type Vehicle @reference(source: "vehicle.graphql")' in data["result"][0]
 
 
+class TestSchemaInstanceTagsRoute:
+    """Test /api/v1/schema/instance-tags route behavior."""
+
+    def test_instance_tags_indexes_the_tag_fields(self, test_client: TestClient) -> None:
+        """Each instance tag field comes with its dimensions and the instances left after exclude."""
+        schema_content = """
+        directive @instanceTag(exclude: [String!]) on OBJECT | FIELD_DEFINITION | ENUM
+        type Query { doors: [Door] }
+        type Door { position: DoorPosition @instanceTag(exclude: ["ROW2.RIGHT"]) }
+        type DoorPosition @instanceTag { row: Row side: Side }
+        enum Row { ROW1 ROW2 }
+        enum Side { LEFT RIGHT }
+        """
+        response = test_client.post(
+            "/api/v1/schema/instance-tags",
+            json={"schemas": [{"type": "content", "content": schema_content}]},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "Door.position": {
+                "dimensions": {"row": ["ROW1", "ROW2"], "side": ["LEFT", "RIGHT"]},
+                "instances": ["ROW1.LEFT", "ROW1.RIGHT", "ROW2.LEFT"],
+            }
+        }
+
+    def test_instance_tags_without_tag_fields_returns_an_empty_index(self, test_client: TestClient) -> None:
+        """A schema without instance tags returns no tag fields."""
+        schema_content = "type Query { vehicle: Vehicle } type Vehicle { id: ID }"
+        response = test_client.post(
+            "/api/v1/schema/instance-tags",
+            json={"schemas": [{"type": "content", "content": schema_content}]},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {}
+
+    def test_instance_tags_missing_required_field_returns_400(self, test_client: TestClient) -> None:
+        """Missing required fields returns BadRequest."""
+        response = test_client.post("/api/v1/schema/instance-tags", json={})
+
+        assert response.status_code == 400
+        assert response.json()["error"] == "BadRequest"
+
+
 class TestQueryValidateRoute:
     """Test /api/v1/query/validate route behavior."""
 
@@ -201,6 +267,33 @@ class TestQueryValidateRoute:
         assert data["metadata"]["result_format"] == "graphql"
         assert len(data["result"]) == 1
         assert "type Query" in data["result"][0]
+
+    def test_validate_query_accepts_pick_on_an_instance_tag_field(self, test_client: TestClient) -> None:
+        """A query with @pick on an instance tag field is valid."""
+        selection_query = 'query Selection { doors { position @pick(instances: ["LEFT"]) { side } } }'
+        response = test_client.post(
+            "/api/v1/query/validate",
+            json={
+                "schemas": [{"type": "content", "content": PICK_DOOR_SCHEMA}],
+                "selection_query": {"type": "content", "content": selection_query},
+            },
+        )
+
+        assert response.status_code == 200
+
+    def test_validate_query_rejects_a_pick_the_tag_does_not_define_returns_422(self, test_client: TestClient) -> None:
+        """A query whose @pick names an instance the tag does not define is invalid."""
+        selection_query = 'query Selection { doors { position @pick(instances: ["MIDDLE"]) { side } } }'
+        response = test_client.post(
+            "/api/v1/query/validate",
+            json={
+                "schemas": [{"type": "content", "content": PICK_DOOR_SCHEMA}],
+                "selection_query": {"type": "content", "content": selection_query},
+            },
+        )
+
+        assert response.status_code == 422
+        assert response.json()["error"] == "ValidationError"
 
     def test_validate_query_missing_required_field_returns_400(self, test_client: TestClient) -> None:
         """Missing required fields returns BadRequest."""

@@ -1,6 +1,8 @@
 import {
+	type ArgumentNode,
 	type DirectiveNode,
 	extendSchema,
+	type FieldNode,
 	type GraphQLSchema,
 	isEnumType,
 	isIntrospectionType,
@@ -25,10 +27,18 @@ export type PickGroup = {
 	names: string[];
 };
 
-const pickArgumentDefinitions = PICK_ARGUMENT_NAMES.map(
+const pickGroupArgumentDefinitions = PICK_ARGUMENT_NAMES.map(
 	(argumentName) => `${argumentName}: [String!]`,
 );
-const PICK_DIRECTIVE_DEFINITION = `directive @${PICK_DIRECTIVE_NAME}(${pickArgumentDefinitions.join(", ")}) on QUERY`;
+// The field-level form, which picks instances on an instance tag field. It is not a selection tree
+// group, so it stays out of PICK_ARGUMENT_NAMES.
+export const PICK_INSTANCES_ARGUMENT_NAME = "instances";
+const PICK_INSTANCES_ARGUMENT_DEFINITION = `${PICK_INSTANCES_ARGUMENT_NAME}: [String!]`;
+const pickArgumentDefinitions = [
+	...pickGroupArgumentDefinitions,
+	PICK_INSTANCES_ARGUMENT_DEFINITION,
+];
+const PICK_DIRECTIVE_DEFINITION = `directive @${PICK_DIRECTIVE_NAME}(${pickArgumentDefinitions.join(", ")}) on QUERY | FIELD`;
 
 /**
  * Declares the `@pick` directive on a schema that lacks it, so selection
@@ -48,10 +58,20 @@ export function withPickDirective(schema: GraphQLSchema): GraphQLSchema {
 }
 
 export function findPickDirective(
-	operation: OperationDefinitionNode,
+	node: OperationDefinitionNode | FieldNode,
 ): DirectiveNode | undefined {
-	return operation.directives?.find(
+	return node.directives?.find(
 		(directive) => directive.name.value === PICK_DIRECTIVE_NAME,
+	);
+}
+
+export function findPickArgument(
+	node: OperationDefinitionNode | FieldNode,
+	argumentName: string,
+): ArgumentNode | undefined {
+	const pickDirective = findPickDirective(node);
+	return pickDirective?.arguments?.find(
+		(argument) => argument.name.value === argumentName,
 	);
 }
 
@@ -126,6 +146,71 @@ export function resolvePickedNames(
 	}
 
 	return listedNames;
+}
+
+/**
+ * Reads the names listed in the `instances` argument of a field's `@pick`.
+ *
+ * @param field The query field.
+ * @returns The listed names; `undefined` when the field has no `@pick` or its
+ * `@pick` has no `instances` argument.
+ */
+export function readListedInstances(field: FieldNode): Set<string> | undefined {
+	const instancesArgument = findPickArgument(
+		field,
+		PICK_INSTANCES_ARGUMENT_NAME,
+	);
+	if (!instancesArgument) {
+		return undefined;
+	}
+
+	const stringValues = getStringValues(instancesArgument.value);
+	const names = stringValues.map((stringValue) => stringValue.value);
+	return new Set(names);
+}
+
+/**
+ * Resolves which instances, or dimension values, a field-level `@pick` keeps.
+ * Unlike the query-level arguments, a field without `@pick` keeps everything.
+ *
+ * @param listedNames The listed names; `undefined` when the field has no
+ * `@pick`.
+ * @param pickableNames Every name the field can take.
+ * @returns The kept names; every pickable name when the list is missing or
+ * empty.
+ */
+export function resolveFieldPickedNames(
+	listedNames: Set<string> | undefined,
+	pickableNames: string[],
+): Set<string> {
+	if (!listedNames || listedNames.size === 0) {
+		return new Set(pickableNames);
+	}
+
+	return listedNames;
+}
+
+/**
+ * Applies a toggle to the picked names.
+ *
+ * @param pickableNames Every name that can be picked, in display order.
+ * @param pickedNames The names picked now.
+ * @param toggledNames The names to toggle.
+ * @param isChecked Whether the names are being picked or unpicked.
+ * @returns The names picked after the toggle, in display order.
+ */
+export function toggleNames(
+	pickableNames: string[],
+	pickedNames: Set<string>,
+	toggledNames: string[],
+	isChecked: boolean,
+): string[] {
+	return pickableNames.filter((name) => {
+		if (toggledNames.includes(name)) {
+			return isChecked;
+		}
+		return pickedNames.has(name);
+	});
 }
 
 /**

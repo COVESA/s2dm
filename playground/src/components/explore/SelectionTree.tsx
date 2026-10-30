@@ -17,10 +17,14 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { InstanceTagTreeItem } from "@/components/explore/InstanceTagTreeItem";
 import { PickGroupItem } from "@/components/explore/PickGroupItem";
 import { PickNameItem } from "@/components/explore/PickNameItem";
 import { RecursionDepthStepper } from "@/components/explore/RecursionDepthStepper";
-import { SelectionTreeItem } from "@/components/explore/SelectionTreeItem";
+import {
+	SelectionTreeItem,
+	type SelectionTreeItemProps,
+} from "@/components/explore/SelectionTreeItem";
 import { TreeRowList } from "@/components/explore/TreeRowList";
 import { TreeExpandSpacer } from "@/components/explore/TreeRowParts";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
@@ -30,12 +34,22 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { formatSelection } from "@/utils/selectionQuery/formatSelection";
+import { useAppSelector } from "@/store/hooks";
+import {
+	selectInstanceTagFields,
+	selectInstanceTagsError,
+} from "@/store/instanceTags/instanceTagsSlice";
+import {
+	getInstancePickTarget,
+	type InstancePickTarget,
+} from "@/utils/selectionQuery/instanceTag";
 import {
 	countPickSelection,
 	createLeafCounter,
 	getCheckedState,
 } from "@/utils/selectionQuery/leafCounts";
 import { patchAll } from "@/utils/selectionQuery/patchAll";
+import { patchInstancePick } from "@/utils/selectionQuery/patchInstancePick";
 import { patchPick } from "@/utils/selectionQuery/patchPick";
 import { patchSelection } from "@/utils/selectionQuery/patchSelection";
 import {
@@ -43,6 +57,7 @@ import {
 	PICK_ARGUMENT_NAMES,
 	type PickArgumentName,
 } from "@/utils/selectionQuery/pick";
+import { readInstancePicks } from "@/utils/selectionQuery/readInstancePick";
 import type { SelectionIndex } from "@/utils/selectionQuery/readSelection";
 import {
 	createRootNode,
@@ -115,8 +130,15 @@ function SelectionTreeContent({
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const docExplorerActions = useDocExplorerActions();
 
+	const tagFields = useAppSelector(selectInstanceTagFields);
+	const instanceTagsError = useAppSelector(selectInstanceTagsError);
+
 	const countLeaves = useMemo(() => createLeafCounter(selection), [selection]);
 	const rootNode = useMemo(() => createRootNode(queryType), [queryType]);
+	const instancePicks = useMemo(
+		() => readInstancePicks(schema, tagFields, validatedQuery.document),
+		[schema, tagFields, validatedQuery.document],
+	);
 
 	const deferredSearchTerm = useDeferredValue(searchTerm);
 	const normalizedSearchTerm = normalizeSearchTerm(deferredSearchTerm);
@@ -227,6 +249,22 @@ function SelectionTreeContent({
 			),
 		);
 
+	const handleInstancePickToggle = (
+		pickTarget: InstancePickTarget,
+		toggledNames: string[],
+		isChecked: boolean,
+	) =>
+		applyTreeEdit(() =>
+			patchInstancePick(
+				validatedQuery.text,
+				schema,
+				tagFields,
+				pickTarget,
+				toggledNames,
+				isChecked,
+			),
+		);
+
 	const handleToggleAll = () =>
 		applyTreeEdit(() =>
 			patchAll(
@@ -282,16 +320,27 @@ function SelectionTreeContent({
 	const renderRow = (rowIndex: number) => {
 		const row = rows[rowIndex];
 		if (row.kind === "field") {
-			return (
-				<SelectionTreeItem
-					row={row}
-					countLeaves={countLeaves}
-					isDisabled={isTreeDisabled}
-					onToggle={handleToggle}
-					onToggleExpanded={handleToggleExpanded}
-					onShowDocs={handleShowDocs}
-				/>
-			);
+			const itemProps: SelectionTreeItemProps = {
+				row,
+				countLeaves,
+				isDisabled: isTreeDisabled,
+				onToggle: handleToggle,
+				onToggleExpanded: handleToggleExpanded,
+				onShowDocs: handleShowDocs,
+			};
+			const pickTarget = getInstancePickTarget(row.node, tagFields);
+			if (pickTarget) {
+				return (
+					<InstanceTagTreeItem
+						{...itemProps}
+						pickTarget={pickTarget}
+						instancePicks={instancePicks}
+						onInstancePickToggle={handleInstancePickToggle}
+					/>
+				);
+			}
+
+			return <SelectionTreeItem {...itemProps} />;
 		}
 
 		const pickGroup = pickGroups.find(
@@ -377,6 +426,11 @@ function SelectionTreeContent({
 						The selection query must be valid before visual editing.
 					</StatusBanner>
 				)}
+				{instanceTagsError && (
+					<StatusBanner variant={"destructive"} className={"mt-2"}>
+						Instance tags could not be loaded: {instanceTagsError}
+					</StatusBanner>
+				)}
 				<div className={"flex items-center gap-1.5 pt-2"}>
 					{!isSearching && (
 						<>
@@ -429,6 +483,12 @@ function SelectionTreeHelp() {
 			<HelpItem term={"Enums, Scalars and Directives"}>
 				add names to the query's @pick directive. Checking a whole group writes
 				an empty list, which picks all of them.
+			</HelpItem>
+			<HelpItem term={"Instances"}>
+				the filter button picks the instances of an instance tag field, or the
+				values of one of its dimensions. Use one of the two per field. @pick adds
+				the instances that are not picked to the field's exclude list. The
+				instances themselves change only when they are expanded.
 			</HelpItem>
 			<HelpItem term={"Select All"}>
 				select every @pick name and every field, including cyclic fields up to

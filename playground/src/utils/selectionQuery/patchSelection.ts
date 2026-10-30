@@ -1,4 +1,9 @@
-import { type ASTNode, Kind, type OperationDefinitionNode } from "graphql";
+import {
+	type ASTNode,
+	type FieldNode,
+	Kind,
+	type OperationDefinitionNode,
+} from "graphql";
 import { findPickDirective } from "@/utils/selectionQuery/pick";
 import type {
 	SelectionIndex,
@@ -197,6 +202,51 @@ export function createNodeRemoval(
 }
 
 /**
+ * Builds the edit that replaces an AST node's range with new text.
+ *
+ * @param node The node to replace.
+ * @param text The replacement text.
+ * @returns The replacement, or an empty list when the node has no location.
+ */
+export function createNodeReplacement(node: ASTNode, text: string): TextEdit[] {
+	const location = node.loc;
+	if (!location) {
+		return [];
+	}
+	const replacement: TextEdit = {
+		start: location.start,
+		end: location.end,
+		text,
+	};
+	return [replacement];
+}
+
+/**
+ * Builds the edit that inserts text, followed by a space, just before the
+ * selection set of an operation or a field, for example a directive.
+ *
+ * @param node The operation or field.
+ * @param text The text to insert.
+ * @returns The insertion, or an empty list when the node has no selection set
+ * or no location.
+ */
+export function createSelectionSetPrefix(
+	node: OperationDefinitionNode | FieldNode,
+	text: string,
+): TextEdit[] {
+	const selectionSetStart = node.selectionSet?.loc?.start;
+	if (selectionSetStart === undefined) {
+		return [];
+	}
+	const prefix: TextEdit = {
+		start: selectionSetStart,
+		end: selectionSetStart,
+		text: `${text} `,
+	};
+	return [prefix];
+}
+
+/**
  * Inserts every selectable descendant of a node that the text does not select
  * yet into the node's existing occurrence. The missing children of one
  * occurrence share a single insertion, so they keep schema order.
@@ -371,17 +421,10 @@ function createPlaceholderRemovals(
 function createPlaceholderReplacement(
 	operation: OperationDefinitionNode,
 ): TextEdit[] {
-	const selectionSetLocation = operation.selectionSet.loc;
-	if (!selectionSetLocation) {
-		return [];
-	}
-
-	const placeholderReplacement: TextEdit = {
-		start: selectionSetLocation.start,
-		end: selectionSetLocation.end,
-		text: `{\n${PLACEHOLDER_FIELD}\n}`,
-	};
-	return [placeholderReplacement];
+	return createNodeReplacement(
+		operation.selectionSet,
+		`{\n${PLACEHOLDER_FIELD}\n}`,
+	);
 }
 
 /**
