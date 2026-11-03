@@ -1,8 +1,8 @@
+import { Button } from "@shared-ui/components/button";
+import { cn } from "@shared-ui/utils/cn";
 import { ListFilter } from "lucide-react";
 import { type ComponentPropsWithoutRef, forwardRef } from "react";
 import type { InstancePickPopoverProps } from "@/components/explore/instancePick/InstancePickPopover";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
 
 type InstancePickTriggerProps = ComponentPropsWithoutRef<"button"> &
 	Pick<InstancePickPopoverProps, "isDisabled"> & {
