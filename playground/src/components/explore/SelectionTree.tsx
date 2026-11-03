@@ -40,6 +40,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+	selectInstanceTagFields,
+	selectInstanceTagsError,
+} from "@/store/instanceTags/instanceTagsSlice";
+import {
 	clearSemanticSearch,
 	selectEmbeddingsError,
 	selectEmbeddingsStatus,
@@ -48,11 +52,6 @@ import {
 	semanticQueryChanged,
 } from "@/store/semanticSearch/semanticSearchSlice";
 import { formatSelection } from "@/utils/selectionQuery/formatSelection";
-import { useAppSelector } from "@/store/hooks";
-import {
-	selectInstanceTagFields,
-	selectInstanceTagsError,
-} from "@/store/instanceTags/instanceTagsSlice";
 import {
 	getInstancePickTarget,
 	type InstancePickTarget,
@@ -555,8 +554,8 @@ function SelectionTreeHelp() {
 			</HelpItem>
 			<HelpItem term={"Instances"}>
 				the filter button picks the instances of an instance tag field, or the
-				values of one of its dimensions. Use one of the two per field. @pick adds
-				the instances that are not picked to the field's exclude list. The
+				values of one of its dimensions. Use one of the two per field. @pick
+				adds the instances that are not picked to the field's exclude list. The
 				instances themselves change only when they are expanded.
 			</HelpItem>
 			<HelpItem term={"Select All"}>

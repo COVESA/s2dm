@@ -67,8 +67,7 @@ export function getInstancePickTarget(
 		return null;
 	}
 
-	const dimensionValues =
-		tagFields[parentCoordinate]?.dimensions[segment.name];
+	const dimensionValues = tagFields[parentCoordinate]?.dimensions[segment.name];
 	if (!dimensionValues) {
 		return null;
 	}

@@ -11,7 +11,10 @@ import {
 } from "@/utils/selectionQuery/readInstancePick";
 import { getSegmentKey } from "@/utils/selectionQuery/schemaTree";
 
-type InstanceTagTreeItemProps = Omit<SelectionTreeItemProps, "labelAccessory"> & {
+type InstanceTagTreeItemProps = Omit<
+	SelectionTreeItemProps,
+	"labelAccessory"
+> & {
 	pickTarget: InstancePickTarget;
 	instancePicks: InstancePicks;
 	onInstancePickToggle: (
