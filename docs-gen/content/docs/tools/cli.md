@@ -2326,7 +2326,7 @@ s2dm playground init
 
 - Validates that the `playground/` directory exists.
 - Validates that `playground/package.json` exists.
-- Runs `npm install` in `playground/`.
+- Runs `npm install` at the repository root. The root is an npm workspace, so the playground's dependencies are installed in the root `node_modules/`.
 - Runs `npm run build` in `playground/`.
 
 #### Example
@@ -2348,7 +2348,7 @@ s2dm playground start
 #### Behavior
 
 - Validates that the `playground/` directory exists.
-- Validates that `playground/node_modules/` exists (run `s2dm playground init` first).
+- Validates that `node_modules/` exists at the repository root (run `s2dm playground init` first).
 - Allocates free local ports for the API server and React dev server.
 - Starts FastAPI with `uvicorn s2dm.api.main:app --reload`.
 - Starts the React dev server with `npm run dev -- --port <port> --strictPort`.

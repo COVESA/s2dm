@@ -20,7 +20,7 @@ export default defineConfig({
 				),
 			},
 		],
-		dedupe: ["monaco-editor"],
+		dedupe: ["monaco-editor", "react", "react-dom", "react-redux"],
 	},
 	server: {
 		fs: {
