@@ -764,7 +764,8 @@ def playground() -> None:
 @playground.command(name="init")
 def playground_init() -> None:
     """Initialize the GUI playground by installing its dependencies and building it."""
-    playground_dir = Path.cwd() / "playground"
+    repository_dir = Path.cwd()
+    playground_dir = repository_dir / "playground"
 
     if not playground_dir.exists():
         log.error(f"Playground directory not found at {playground_dir}")
@@ -776,9 +777,10 @@ def playground_init() -> None:
 
     log.info("Installing playground dependencies...")
     try:
+        # The repository root is the npm workspace root that holds the playground's dependencies.
         subprocess.run(
             ["npm", "install"],
-            cwd=playground_dir,
+            cwd=repository_dir,
             check=True,
         )
         log.success("Dependencies installed successfully")
@@ -807,13 +809,14 @@ def playground_init() -> None:
 @playground.command(name="start")
 def playground_start() -> None:
     """Launch the GUI playground."""
-    playground_dir = Path.cwd() / "playground"
+    repository_dir = Path.cwd()
+    playground_dir = repository_dir / "playground"
 
     if not playground_dir.exists():
         log.error(f"Playground directory not found at {playground_dir}")
         sys.exit(1)
 
-    if not (playground_dir / "node_modules").exists():
+    if not (repository_dir / "node_modules").exists():
         log.error("node_modules not found. Run 's2dm playground init' first.")
         sys.exit(1)
 
