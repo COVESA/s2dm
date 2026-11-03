@@ -1,4 +1,4 @@
-import "@graphiql/react/setup-workers/esm.sh";
+import "@/language-support/monacoWorkers";
 
 import { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
