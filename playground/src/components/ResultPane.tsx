@@ -1,11 +1,11 @@
 import { Button } from "@shared-ui/components/button";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { useCallback } from "react";
 import { CliCommandDisplay } from "@/components/CliCommandDisplay";
 import { DetailsPane } from "@/components/DetailsPane";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { ExportConfig } from "@/components/ExportConfig";
 import { TextEditor } from "@/components/TextEditor";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Select,
 	SelectContent,

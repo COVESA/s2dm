@@ -5,9 +5,9 @@ import {
 	selectCanGoBackInsightDetail,
 	selectInsightDetail,
 } from "@insights-ui/state/insightDetailSlice";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { DetailsPane } from "@/components/DetailsPane";
 import { DetailsPaneShell } from "@/components/DetailsPaneShell";
-import { EmptyState } from "@/components/ui/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectFilteredSchema } from "@/store/schema/schemaSlice";
 import { collapseResultPane } from "@/store/ui/uiSlice";

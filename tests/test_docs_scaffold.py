@@ -71,8 +71,10 @@ def test_scaffold_includes_search_ui_and_shared_ui(scaffolded_site: Path) -> Non
     output = scaffolded_site
     assert (output / "src/search-ui/components/SearchBar.tsx").exists()
     assert not (output / "src/search-ui/package.json").exists()
+    assert (output / "src/shared-ui/components/empty-state.tsx").exists()
     assert (output / "src/shared-ui/components/icon-tabs.tsx").exists()
     assert (output / "src/shared-ui/components/input.tsx").exists()
+    assert (output / "src/shared-ui/components/table.tsx").exists()
     assert (output / "src/shared-ui/components/tabs.tsx").exists()
     assert (output / "src/shared-ui/utils/cn.ts").exists()
     assert (output / "src/shared-ui/theme.css").exists()

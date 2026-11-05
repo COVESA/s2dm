@@ -148,7 +148,8 @@
 }
 
 /* Infima styles every table on the site and its rules are unlayered, so utility
-   classes cannot outrank them. These restate `ui/table.tsx` via its data-slots. */
+   classes cannot outrank them. These restate shared-ui's `table.tsx` via its
+   data-slots. */
 .s2dm-ledger [data-slot="table"] {
 	border-collapse: collapse;
 	display: table;
@@ -169,7 +170,8 @@
 
 /* Cancelling Infima's stripe above also beats the row's own background classes,
    which are layered and so can never win here. The two states it would have
-   supplied are restated, matching `ui/table.tsx` and `LedgerResultsGrid`. */
+   supplied are restated, matching shared-ui's `table.tsx` and
+   `LedgerResultsGrid`. */
 .s2dm-ledger [data-slot="table-row"]:hover {
 	background-color: color-mix(in oklab, var(--muted) 50%, transparent);
 }

@@ -9,6 +9,14 @@ import type {
 	LedgerValue,
 	QueryResult,
 } from "@ledger-ui/data/types";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@shared-ui/components/table";
 import { cn } from "@shared-ui/utils/cn";
 import {
 	createSortedRowModel,
@@ -21,14 +29,6 @@ import {
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 
 const features = tableFeatures({
 	rowSortingFeature,

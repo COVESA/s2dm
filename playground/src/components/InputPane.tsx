@@ -1,4 +1,5 @@
 import { LedgerOverview } from "@ledger-ui/components/LedgerOverview";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { useEffect, useState } from "react";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
@@ -8,7 +9,6 @@ import { LedgerToolbar } from "@/components/ledger/LedgerHelpButton";
 import { Pane } from "@/components/Pane";
 import { SchemaToolbar } from "@/components/SchemaHelpButton";
 import { TextEditor } from "@/components/TextEditor";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import {
 	FILTERED_SCHEMA_FILENAME,
