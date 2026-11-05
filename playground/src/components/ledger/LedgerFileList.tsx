@@ -3,6 +3,7 @@ import {
 	closeLedger,
 	openLedger,
 	openLedgerFailure,
+	selectIsLoadingLedger,
 	selectLedgerError,
 	selectLedgerFileName,
 } from "@ledger-ui/state/ledgerSlice";
@@ -25,6 +26,7 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 	const dispatch = useAppDispatch();
 	const fileName = useAppSelector(selectLedgerFileName);
 	const error = useAppSelector(selectLedgerError);
+	const isLoading = useAppSelector(selectIsLoadingLedger);
 	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 	// The read happens before the action is dispatched, so ordering and failure
 	// are this component's to handle rather than the saga's.
@@ -52,12 +54,8 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 					if (sequence !== latestImport.current) {
 						return;
 					}
-					dispatch(
-						openLedgerFailure({
-							message: getErrorMessage(error),
-							cleared: false,
-						}),
-					);
+					const message = getErrorMessage(error);
+					dispatch(openLedgerFailure({ message }));
 				});
 		},
 	});
@@ -69,8 +67,13 @@ export function LedgerFileList({ leading }: LedgerFileListProps) {
 				<div className="flex items-center gap-2">
 					<Dropdown
 						trigger={
-							<Button variant="outline" size="icon" title="Add ledger">
-								<Plus className="h-5 w-5" />
+							<Button
+								variant="outline"
+								size="icon"
+								title="Add ledger"
+								loading={isLoading}
+							>
+								{!isLoading && <Plus className="h-5 w-5" />}
 							</Button>
 						}
 						align="end"

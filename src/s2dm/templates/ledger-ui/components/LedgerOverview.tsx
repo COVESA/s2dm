@@ -5,7 +5,7 @@ import { tableIcon } from "@ledger-ui/components/tableIcon";
 import { tableTitle } from "@ledger-ui/data/recordLabel";
 import { useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
-	selectIsLoadingLedger,
+	selectLedgerStatus,
 	selectLedgerTables,
 } from "@ledger-ui/state/ledgerSlice";
 import { EmptyState } from "@shared-ui/components/empty-state";
@@ -19,9 +19,9 @@ type LedgerOverviewProps = {
 
 export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 	const tables = useLedgerSelector(selectLedgerTables);
-	const isLoading = useLedgerSelector(selectIsLoadingLedger);
+	const status = useLedgerSelector(selectLedgerStatus);
 
-	if (isLoading) {
+	if (status === "loading") {
 		return <EmptyState isLoading title="Reading ledger..." />;
 	}
 
