@@ -1,7 +1,7 @@
 import { LedgerErrorBanner } from "@ledger-ui/components/LedgerErrorBanner";
 import { LedgerResultsGrid } from "@ledger-ui/components/LedgerResultsGrid";
 import { LedgerSearchInput } from "@ledger-ui/components/LedgerSearchInput";
-import { capitalise } from "@ledger-ui/data/recordLabel";
+import { tableTitle } from "@ledger-ui/data/recordLabel";
 import { recordValues } from "@ledger-ui/data/resultRow";
 import type { LedgerSearchMatch } from "@ledger-ui/data/types";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
@@ -75,7 +75,7 @@ export function ExploreView() {
 						<section key={match.table} className="flex flex-col gap-2">
 							<div className="flex items-center justify-between gap-2">
 								<div className="flex items-baseline gap-2">
-									<h3 className="font-semibold">{capitalise(match.table)}</h3>
+									<h3 className="font-semibold">{tableTitle(match.table)}</h3>
 									<span className="font-mono text-xs text-muted-foreground">
 										{countLabel}
 									</span>

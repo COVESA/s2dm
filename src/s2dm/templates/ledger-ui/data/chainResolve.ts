@@ -8,11 +8,8 @@ import {
 	type LedgerChain,
 	levelOf,
 } from "@ledger-ui/data/chainSpec";
-import {
-	countRowsWhere,
-	findRows,
-	toRecords,
-} from "@ledger-ui/data/introspect";
+import { findRows, toRecords } from "@ledger-ui/data/rows";
+import { countRowsWhere } from "@ledger-ui/data/schema";
 import type {
 	LedgerRecord,
 	LedgerTable,
@@ -35,24 +32,40 @@ export function findOne(
 	column: string,
 	value: LedgerValue,
 ): LedgerRecord | null {
-	const result: QueryResult = findRows(database, table, column, value, {
-		limit: 1,
-	});
+	const result: QueryResult = findRows(
+		database,
+		table,
+		{ [column]: value },
+		{ limit: 1 },
+	);
 	return toRecords(result)[0] ?? null;
 }
 
-// One level of children under a parent value: the true total by count, and a
-// capped page of records, each expanded by the caller's buildNode.
+/**
+ * Builds one level of children under a parent value: the true total by count,
+ * and a capped page of records, each expanded by `buildNode`.
+ *
+ * @param database - The database to read.
+ * @param table - The table of the children.
+ * @param label - The label of the group.
+ * @param column - The column of the children that holds the parent value.
+ * @param value - The parent value.
+ * @param orderBy - The columns that sort the page.
+ * @param buildNode - Expands one record into its node.
+ * @param onPath - The record at this level on the path to the selection, with
+ *   the identity columns of its table. The capped page can miss it, so the
+ *   group that holds it adds it when the page does not.
+ * @returns The group, or `null` when the value is empty or no record holds it.
+ */
 function buildGroup(
 	database: Database,
 	table: string,
 	label: string,
 	column: string,
 	value: string,
-	orderBy: string | null,
+	orderBy: string[],
 	buildNode: (record: LedgerRecord) => ChainNode,
-	// The path record at this level, which a page of the first hundred can miss.
-	onPath?: { record: LedgerRecord; identityColumn: string | null },
+	onPath?: { record: LedgerRecord; identityColumns: string[] },
 ): ChainGroup | null {
 	if (value === "") {
 		return null;
@@ -63,16 +76,18 @@ function buildGroup(
 		return null;
 	}
 
-	const page = findRows(database, table, column, value, {
-		limit: CHAIN_GROUP_FETCH_LIMIT,
-		orderBy: orderBy ?? undefined,
-	});
+	const page = findRows(
+		database,
+		table,
+		{ [column]: value },
+		{ limit: CHAIN_GROUP_FETCH_LIMIT, orderBy },
+	);
 	const records = toRecords(page);
 	// Every group at this level is offered it; it is a child of only one.
 	if (onPath && String(onPath.record[column] ?? "") === value) {
-		const wanted = identityOf(onPath.record, onPath.identityColumn);
+		const wanted = identityOf(onPath.record, onPath.identityColumns);
 		const present = records.some(
-			(record) => identityOf(record, onPath.identityColumn) === wanted,
+			(record) => identityOf(record, onPath.identityColumns) === wanted,
 		);
 		// Appended, not hoisted: the view opens the group, so order is left alone.
 		if (!present) {
@@ -92,7 +107,7 @@ function buildDescendants(
 	// One record per table down to the selection, which page and budget may drop.
 	path: Map<string, LedgerRecord> = new Map(),
 ): ChainNode {
-	const identity = identityOf(record, level.identityColumn);
+	const identity = identityOf(record, level.identityColumns);
 	const groups: ChainGroup[] = [];
 
 	const children = childLevels(spec, level.table);
@@ -100,20 +115,21 @@ function buildDescendants(
 		if (!child.parent) {
 			continue;
 		}
+		const parentValue = String(record[child.parent.identityColumn] ?? "");
 		const group = buildGroup(
 			database,
 			child.table,
 			child.table,
 			child.parent.column,
-			identityOf(record, child.parent.identityColumn),
-			child.orderColumn,
+			parentValue,
+			child.orderColumns,
 			(childRecord) => {
-				const identity = identityOf(childRecord, child.identityColumn);
+				const identity = identityOf(childRecord, child.identityColumns);
 				const onPath =
 					path.has(child.table) &&
 					identityOf(
 						path.get(child.table) as LedgerRecord,
-						child.identityColumn,
+						child.identityColumns,
 					) === identity;
 				// Expanded whatever the budget: stopping hides the selection.
 				if (budget.remaining <= 0 && !onPath) {
@@ -137,7 +153,7 @@ function buildDescendants(
 			path.has(child.table)
 				? {
 						record: path.get(child.table) as LedgerRecord,
-						identityColumn: child.identityColumn,
+						identityColumns: child.identityColumns,
 					}
 				: undefined,
 		);
@@ -157,19 +173,7 @@ export function resolveChain(
 ): LedgerChain {
 	const spec = deriveChainSpec(tables);
 	const levels = spec.map((level) => level.table);
-	const selectedIndex = spec.findIndex(
-		(level) => level.table === selectedTable,
-	);
-
-	if (selectedIndex === -1) {
-		return {
-			levels,
-			root: null,
-			selected: { table: selectedTable, identity: "" },
-		};
-	}
-
-	const selectedLevel = spec[selectedIndex];
+	const selectedLevel = levelOf(spec, selectedTable);
 	if (!selectedLevel) {
 		return {
 			levels,
@@ -180,7 +184,7 @@ export function resolveChain(
 
 	const selected = {
 		table: selectedTable,
-		identity: identityOf(selectedRecord, selectedLevel.identityColumn),
+		identity: identityOf(selectedRecord, selectedLevel.identityColumns),
 	};
 
 	let anchorLevel: ChainLevel = selectedLevel;

@@ -3,7 +3,7 @@ import { LedgerFilterSelects } from "@ledger-ui/components/LedgerFilterSelects";
 import { LedgerResultsGrid } from "@ledger-ui/components/LedgerResultsGrid";
 import { LedgerSearchInput } from "@ledger-ui/components/LedgerSearchInput";
 import { LedgerTableFooter } from "@ledger-ui/components/LedgerTableFooter";
-import { capitalise } from "@ledger-ui/data/recordLabel";
+import { tableTitle } from "@ledger-ui/data/recordLabel";
 import { recordValues } from "@ledger-ui/data/resultRow";
 import { useLedgerDispatch, useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
@@ -49,6 +49,8 @@ export function RawTablesView() {
 			? recordValues(detail.record, rows.columns)
 			: null;
 	const matchingLabel = search.trim() ? " matching" : "";
+	const tableWords = tableTitle(selectedTable).toLowerCase();
+	const searchLabel = `Search ${tableWords}`;
 
 	let content: React.ReactNode;
 	if (rowsError) {
@@ -82,7 +84,7 @@ export function RawTablesView() {
 				<LedgerSearchInput
 					value={search}
 					onChange={(value) => dispatch(setLedgerSearch(value))}
-					label={`Search ${selectedTable}`}
+					label={searchLabel}
 				/>
 
 				<div className="flex flex-wrap items-center gap-3">
@@ -96,7 +98,7 @@ export function RawTablesView() {
 						<SelectContent>
 							{tables.map((table) => (
 								<SelectItem key={table.name} value={table.name}>
-									<span>{capitalise(table.name)}</span>
+									<span>{tableTitle(table.name)}</span>
 									<span className="ml-2 font-mono text-muted-foreground text-xs">
 										{table.rowCount}
 									</span>

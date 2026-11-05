@@ -1,9 +1,4 @@
-import {
-	ACTIVE_STATUS,
-	applyModlProfile,
-	MODL_TABLES,
-	STATUS_COLUMN,
-} from "@ledger-ui/data/modlProfile";
+import { ACTIVE_STATUS, STATUS_COLUMN } from "@ledger-ui/data/modlProfile";
 import { quoteIdentifier, readAll } from "@ledger-ui/data/sql";
 import type {
 	LedgerColumn,
@@ -32,11 +27,11 @@ export function describeColumns(
 		database,
 		`PRAGMA table_info(${quoteIdentifier(table)})`,
 	);
-	return rows.map(([, name, declaredType, notNull, , primaryKey]) => ({
+	return rows.map(([, name, declaredType, notNull, , keyPosition]) => ({
 		name: String(name),
 		declaredType: String(declaredType ?? ""),
 		notNull: Number(notNull) === 1,
-		primaryKey: Number(primaryKey) > 0,
+		primaryKeyPosition: Number(keyPosition),
 	}));
 }
 
@@ -64,18 +59,45 @@ export function describeForeignKeys(
 		}
 		const [, , referencesTable, column, referencesColumn] = row;
 		const target = String(referencesTable);
+		const targetColumn = resolveReferencedColumn(
+			database,
+			target,
+			referencesColumn,
+		);
 		keys.push({
 			column: String(column),
 			referencesTable: target,
-			// SQLite reports no target column when the key omits one, meaning it
-			// resolves to the parent's primary key.
-			referencesColumn:
-				referencesColumn === null
-					? (primaryKeyColumn(database, target) ?? "rowid")
-					: String(referencesColumn),
+			referencesColumn: targetColumn,
 		});
 	}
 	return keys;
+}
+
+/**
+ * Resolves the parent column that a foreign key references. SQLite reports no
+ * target column when the key omits one, meaning it resolves to the parent's
+ * primary key. A one-column key can only match a parent key of one column, so
+ * any other parent key resolves to rowid.
+ *
+ * @param database - The database that holds the parent table.
+ * @param parentTable - The table that the foreign key references.
+ * @param referencesColumn - The target column as SQLite reports it, `null` when
+ *   the key omits it.
+ * @returns The target column, the parent's one-column primary key, or `rowid`.
+ */
+function resolveReferencedColumn(
+	database: Database,
+	parentTable: string,
+	referencesColumn: LedgerValue,
+): string {
+	if (referencesColumn !== null) {
+		return String(referencesColumn);
+	}
+	const parentKey = primaryKeyColumns(database, parentTable);
+	if (parentKey.length !== 1) {
+		return "rowid";
+	}
+	return parentKey[0];
 }
 
 // Kahn's algorithm: parents before children, alphabetical among equals. Any
@@ -122,26 +144,18 @@ export function orderTablesByDependency<
 	return [...ordered, ...sorted.filter((table) => pending.has(table.name))];
 }
 
-export function primaryKeyColumn(
-	database: Database,
-	table: string,
-): string | null {
-	return orderingColumn(table, describeColumns(database, table));
+export function primaryKeyColumnsOf(columns: LedgerColumn[]): string[] {
+	return columns
+		.filter((column) => column.primaryKeyPosition > 0)
+		.sort(
+			(first, second) => first.primaryKeyPosition - second.primaryKeyPosition,
+		)
+		.map((column) => column.name);
 }
 
-export function orderingColumn(
-	table: string,
-	columns: LedgerColumn[],
-): string | null {
-	const declared = columns.find((column) => column.primaryKey)?.name;
-	if (declared) {
-		return declared;
-	}
-	// Read directly rather than through readSchema, so the profile applies here too.
-	const profile = MODL_TABLES[table];
-	return profile && columns.some((column) => column.name === profile.primaryKey)
-		? profile.primaryKey
-		: null;
+export function primaryKeyColumns(database: Database, table: string): string[] {
+	const columns = describeColumns(database, table);
+	return primaryKeyColumnsOf(columns);
 }
 
 export function countRowsWhere(
@@ -196,7 +210,5 @@ function readTableSchema(database: Database, name: string): LedgerTable {
 export function readSchema(database: Database): LedgerTable[] {
 	const tableNames = listTableNames(database);
 	const tables = tableNames.map((name) => readTableSchema(database, name));
-	// The profile is applied before ordering, which reads the keys it supplies.
-	const profiledTables = applyModlProfile(tables);
-	return orderTablesByDependency(profiledTables);
+	return orderTablesByDependency(tables);
 }

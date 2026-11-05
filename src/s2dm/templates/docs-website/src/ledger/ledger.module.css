@@ -10,7 +10,8 @@
 	overflow: hidden;
 }
 
-/* Four tables grow with the page; only a grid of many rows needs a box. */
+/* The Schema view takes the height of its content. The other views use
+   .workspace below, a fixed-height box for grids of many rows. */
 .schemaWorkspace {
 	display: flex;
 	flex-direction: column;

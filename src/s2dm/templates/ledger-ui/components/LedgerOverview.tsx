@@ -1,7 +1,8 @@
 import { LedgerBadge } from "@ledger-ui/components/LedgerBadge";
 import { LedgerErdButton } from "@ledger-ui/components/LedgerErdButton";
+import { LedgerSchemaWarning } from "@ledger-ui/components/LedgerSchemaWarning";
 import { tableIcon } from "@ledger-ui/components/tableIcon";
-import { capitalise } from "@ledger-ui/data/recordLabel";
+import { tableTitle } from "@ledger-ui/data/recordLabel";
 import { useLedgerSelector } from "@ledger-ui/state/hooks";
 import {
 	selectIsLoadingLedger,
@@ -35,6 +36,8 @@ export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4">
+			<LedgerSchemaWarning tables={tables} />
+
 			<div className="flex items-baseline justify-between gap-2 rounded-md border bg-background/50 px-3 py-2">
 				<span className="text-sm text-muted-foreground">Records</span>
 				<span className="text-sm tabular-nums">{totalRecords}</span>
@@ -48,7 +51,7 @@ export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 							<div className="flex items-center justify-between gap-2">
 								<dt className="flex min-w-0 items-center gap-2 text-sm">
 									<Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-									<span className="truncate">{capitalise(table.name)}</span>
+									<span className="truncate">{tableTitle(table.name)}</span>
 								</dt>
 								<dd className="flex shrink-0 items-center gap-2">
 									{table.activeCount !== null && (
@@ -72,7 +75,7 @@ export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 									>
 										<span className="truncate">
 											{column.name}
-											{column.primaryKey && " ·pk"}
+											{column.primaryKeyPosition > 0 && " ·pk"}
 										</span>
 										<span className="shrink-0 opacity-70">
 											{column.declaredType}

@@ -31,14 +31,22 @@ export function recordLabel(record: LedgerRecord): string {
 	return "";
 }
 
-export function capitalise(value: string): string {
+function capitalise(value: string): string {
 	return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-export function recordTypeName(table: string): string {
-	return capitalise(pluralize.singular(table));
+/**
+ * Writes a table name as words, for example `first_second` as `First second`.
+ *
+ * @param table - The table name.
+ * @returns The name with spaces for underscores and a capital first letter.
+ */
+export function tableTitle(table: string): string {
+	const words = table.replaceAll("_", " ");
+	return capitalise(words);
 }
 
-export function recordStatus(record: LedgerRecord): string {
-	return typeof record.status === "string" ? record.status : "";
+export function recordTypeName(table: string): string {
+	const singular = pluralize.singular(table);
+	return tableTitle(singular);
 }

@@ -2,7 +2,8 @@ export type LedgerColumn = {
 	name: string;
 	declaredType: string;
 	notNull: boolean;
-	primaryKey: boolean;
+	// 1-based position in the primary key, 0 when the column is not part of it.
+	primaryKeyPosition: number;
 };
 
 export type LedgerForeignKey = {

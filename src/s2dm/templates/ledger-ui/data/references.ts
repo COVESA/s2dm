@@ -13,7 +13,7 @@ export function referenceTableOf(
 	value: unknown,
 	tableNames: string[],
 ): string | null {
-	if (typeof value !== "string") {
+	if (typeof value !== "string" || !URL.canParse(value)) {
 		return null;
 	}
 	const type = URI_PATTERN.exec(value)?.[1];

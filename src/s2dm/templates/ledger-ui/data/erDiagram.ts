@@ -1,12 +1,16 @@
-// The documented ModL ledger shape, kept deliberately smaller than the model in
-// modlProfile.ts: the two self-referencing relationships and the two concepts
-// columns they involve are left out, because mermaid draws a self reference as a
-// loop that obscures the four-level chain this diagram exists to show.
+// The documented ModL ledger shape, kept deliberately smaller than the keys
+// that a ModL export declares: the two self-referencing relationships and the
+// two concepts columns they involve are left out, because mermaid draws a self
+// reference as a loop that obscures the four-level chain this diagram exists to
+// show. Of the two keys from contract_references to contracts, only
+// contract_uri is drawn.
 export const LEDGER_ER_DIAGRAM = `erDiagram
     concepts ||--o{ revisions : "tracked by"
     concepts ||--o{ contracts : "realized as"
     revisions ||--o{ contracts : "triggers"
+    revisions ||--o{ revision_aspects : "records changes in"
     contracts ||--o{ bindings : "expanded into"
+    contracts ||--o{ contract_references : "depends on"
 
     concepts {
         int serial PK
@@ -34,7 +38,21 @@ export const LEDGER_ER_DIAGRAM = `erDiagram
         int serial PK
         string binding_uri UK
         string contract_uri FK
-        string instance_label
+        string instance_tags
+        string runtime_path
         string status
+    }
+    revision_aspects {
+        string revision_uri FK
+        string aspect_key
+        string operation
+        string previous_value
+        string newer_value
+        string reason
+    }
+    contract_references {
+        string contract_uri FK
+        string role
+        string target_contract_uri FK
     }
 `;

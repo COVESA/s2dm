@@ -1,6 +1,6 @@
 import { LedgerBadge } from "@ledger-ui/components/LedgerBadge";
 import { StatusBadge } from "@ledger-ui/components/StatusBadge";
-import { Trash2, Upload } from "lucide-react";
+import { ExternalLink, Trash2, Upload } from "lucide-react";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -17,8 +17,18 @@ export function LedgerToolbar() {
 						</>
 					}
 				>
-					import a ModL ledger as a SQLite database. It is read in your browser
-					and never uploaded.
+					import a ModL ledger as a SQLite database, made by the{" "}
+					<code>export sqlite</code> command of{" "}
+					<a
+						href={"https://github.com/COVESA/modl"}
+						target={"_blank"}
+						rel={"noopener noreferrer"}
+						className={"inline-flex items-center gap-1 hover:text-foreground"}
+					>
+						ModL
+						<ExternalLink className={"h-3.5 w-3.5"} />
+					</a>
+					. It is read in your browser and never uploaded.
 				</HelpItem>
 				<HelpItem
 					term={
@@ -39,7 +49,7 @@ export function LedgerToolbar() {
 				</HelpItem>
 				<HelpItem term="Query">
 					run a predefined query or write your own read-only SQL. The database
-					schema is listed here while this view is open.
+					schema is listed in the ledger table summary in the left sidebar.
 				</HelpItem>
 				<HelpItem
 					term={
@@ -49,7 +59,8 @@ export function LedgerToolbar() {
 						</span>
 					}
 				>
-					in the table summary above: active records, then the total.
+					in the ledger table summary in the left sidebar: active records, then
+					the total.
 				</HelpItem>
 				<HelpItem
 					term={

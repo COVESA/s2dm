@@ -62,7 +62,16 @@ Running `npm run doc` generates the static artifacts before the API documentatio
 The Ledger page reads a ModL ledger SQLite database in the browser, with no server.
 The database reaches it the same way the schema does:
 
-1. Stage the database at `../dist/ledger.db`, beside the composed schema.
+1. Stage the database at `../dist/ledger.db`, beside the composed schema. The
+   `export sqlite` command of [ModL](https://github.com/COVESA/modl) makes it from a
+   ledger directory:
+
+   ```sh
+   modl export --ledger-dir <ledger directory> --output ../dist/ledger.db sqlite
+   ```
+
+   The command stops when the file already exists. `--overwrite` after `sqlite`
+   replaces it.
 2. `npm run doc` copies it to `static/ledger.db`.
 3. The page fetches that file at a base-URL-aware path and opens it with sql.js,
    using the `static/sql-wasm.wasm` binary staged on `npm install`.
