@@ -21,7 +21,8 @@ import {
 	setSearchOptions,
 	showRecordInTable,
 } from "@ledger-ui/state/ledgerSlice";
-import { call, debounce, put, select, takeLatest } from "redux-saga/effects";
+import type { UnknownAction } from "@reduxjs/toolkit";
+import { call, delay, put, select, takeLatest } from "redux-saga/effects";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
 function* loadFilterOptionsWorker() {
@@ -46,7 +47,11 @@ function* loadFilterOptionsWorker() {
 	}
 }
 
-function* loadLedgerRowsWorker() {
+function* loadLedgerRowsWorker(action: UnknownAction) {
+	// A keystroke waits for a pause in typing. A newer action cancels the wait.
+	if (setLedgerSearch.match(action)) {
+		yield delay(SEARCH_DEBOUNCE_MS);
+	}
 	try {
 		const table: string = yield select(selectSelectedLedgerTable);
 		if (!table) {
@@ -89,9 +94,24 @@ function* loadLedgerRowsWorker() {
 	}
 }
 
+// The pause in typing before a table search runs.
+const SEARCH_DEBOUNCE_MS = 200;
+
 export function* ledgerTableSaga() {
-	yield takeLatest(chooseLedgerTable.type, loadLedgerRowsWorker);
-	yield takeLatest(loadLedgerRows.type, loadLedgerRowsWorker);
+	// One watcher for every change that reloads the rows, so a newer change
+	// cancels the load still running.
+	yield takeLatest(
+		[
+			chooseLedgerTable.type,
+			loadLedgerRows.type,
+			setLedgerPage.type,
+			setLedgerFilter.type,
+			setLedgerSearch.type,
+			setSearchOptions.type,
+			openTableWithSearch.type,
+		],
+		loadLedgerRowsWorker,
+	);
 	// Only where the table itself changes: the values do not depend on the page,
 	// the needle or the filters.
 	yield takeLatest(
@@ -103,9 +123,4 @@ export function* ledgerTableSaga() {
 		],
 		loadFilterOptionsWorker,
 	);
-	yield takeLatest(setLedgerPage.type, loadLedgerRowsWorker);
-	yield takeLatest(setLedgerFilter.type, loadLedgerRowsWorker);
-	yield takeLatest(setSearchOptions.type, loadLedgerRowsWorker);
-	yield takeLatest(openTableWithSearch.type, loadLedgerRowsWorker);
-	yield debounce(200, setLedgerSearch.type, loadLedgerRowsWorker);
 }
