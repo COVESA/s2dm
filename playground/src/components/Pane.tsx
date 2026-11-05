@@ -8,6 +8,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Room below the content of a side pane, so the collapse button over its bottom
+// corner does not cover the last item.
+export const PANE_BOTTOM_PADDING = "pb-14";
+
 type PaneProps = {
 	children: React.ReactNode;
 	className?: string;

@@ -1,4 +1,6 @@
+import { cn } from "@shared-ui/utils/cn";
 import { ArrowLeft, X } from "lucide-react";
+import { PANE_BOTTOM_PADDING } from "@/components/Pane";
 
 type DetailsPaneShellProps = {
 	title: string;
@@ -53,7 +55,10 @@ export function DetailsPaneShell({
 			</div>
 			<div
 				key={bodyKey}
-				className="flex-1 animate-in overflow-y-auto px-5 pt-5 pb-14 fade-in slide-in-from-right-4 duration-200"
+				className={cn(
+					"flex-1 animate-in overflow-y-auto px-5 pt-5 fade-in slide-in-from-right-4 duration-200",
+					PANE_BOTTOM_PADDING,
+				)}
 			>
 				{children}
 			</div>

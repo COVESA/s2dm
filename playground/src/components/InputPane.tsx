@@ -6,7 +6,7 @@ import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { FileList } from "@/components/FileList";
 import { LedgerFileList } from "@/components/ledger/LedgerFileList";
 import { LedgerToolbar } from "@/components/ledger/LedgerHelpButton";
-import { Pane } from "@/components/Pane";
+import { PANE_BOTTOM_PADDING, Pane } from "@/components/Pane";
 import { SchemaToolbar } from "@/components/SchemaHelpButton";
 import { TextEditor } from "@/components/TextEditor";
 import { Separator } from "@/components/ui/separator";
@@ -127,7 +127,7 @@ export function InputPane({
 		body = (
 			<>
 				<LedgerFileList leading={<LedgerToolbar />} />
-				<LedgerOverview />
+				<LedgerOverview className={PANE_BOTTOM_PADDING} />
 			</>
 		);
 	} else {

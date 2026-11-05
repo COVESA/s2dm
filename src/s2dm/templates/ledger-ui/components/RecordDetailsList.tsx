@@ -47,15 +47,15 @@ export function RecordDetailsList({ cells }: RecordDetailsListProps) {
 				// renders, so the insights row styling applies without losing dl.
 				<EvidenceRow
 					key={`${index}:${cell.column}`}
-					className="flex items-baseline justify-between gap-3"
+					className="flex items-baseline justify-between gap-3 overflow-hidden"
 				>
-					<dt className="shrink-0 font-mono text-muted-foreground text-sm">
+					<dt className="max-w-full shrink-0 truncate font-mono text-muted-foreground text-sm">
 						{cell.column}
 					</dt>
 					{/* The sky tint insights uses for a type path, carried by the value
 					    because that is what a reader scans for. */}
 					<dd
-						className="m-0 min-w-0 truncate rounded-md bg-sky-500/10 px-2 py-1 font-mono text-card-foreground text-sm"
+						className="m-0 min-w-0 overflow-x-auto whitespace-nowrap rounded-md bg-sky-500/10 px-2 py-1 font-mono text-card-foreground text-sm"
 						title={formatValue(cell.value)}
 					>
 						<CellValue cell={cell} />

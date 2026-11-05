@@ -115,6 +115,7 @@ function NodeView({
 
 	const isSelected =
 		node.table === selected.table && node.identity === selected.identity;
+	const typeName = recordTypeName(node.table);
 	const identityColumn = singleIdentityColumnFor(tables, node.table);
 	let displayName = recordLabel(node.record);
 	if (!displayName && identityColumn) {
@@ -154,17 +155,18 @@ function NodeView({
 				onClick={handleClick}
 				style={{ marginLeft: `${depth * 12}px` }}
 				className={cn(
-					"flex w-full cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors",
+					"flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors",
 					isSelected
 						? "border-primary bg-sky-500/10"
 						: "border-transparent hover:bg-muted",
 				)}
 				aria-current={isSelected ? "true" : undefined}
 				aria-expanded={hasChildren ? isOpen : undefined}
+				title={`${typeName} ${displayName}`}
 			>
 				{chevron}
-				<span className="shrink-0 font-mono text-sm text-muted-foreground">
-					{recordTypeName(node.table)}
+				<span className="min-w-0 truncate font-mono text-sm text-muted-foreground">
+					{typeName}
 				</span>
 				<span className="min-w-0 flex-1 truncate font-mono text-sm">
 					{displayName}

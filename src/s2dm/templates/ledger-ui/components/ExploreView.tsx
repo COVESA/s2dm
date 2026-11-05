@@ -58,11 +58,12 @@ export function ExploreView() {
 			</p>
 		);
 	} else {
+		const recordCount = pluralize("record", totalRows, true);
+		const tableCount = pluralize("table", matches.length, true);
 		content = (
 			<div className="flex flex-col gap-6">
 				<p className="text-muted-foreground text-sm">
-					{totalRows} records in {matches.length}{" "}
-					{pluralize("table", matches.length)}
+					{recordCount} in {tableCount}
 				</p>
 
 				{matches.map((match) => {
