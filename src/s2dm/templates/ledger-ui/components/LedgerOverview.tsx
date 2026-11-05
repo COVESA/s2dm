@@ -9,15 +9,21 @@ import {
 	selectLedgerTables,
 } from "@ledger-ui/state/ledgerSlice";
 import { EmptyState } from "@shared-ui/components/empty-state";
+import { cn } from "@shared-ui/utils/cn";
 
 type LedgerOverviewProps = {
 	// How this host offers the relationships diagram. A narrow pane wants the
 	// dialog it defaults to; `null` leaves it out for a host that places the
 	// drawing itself.
 	relationships?: React.ReactNode;
+	// Layout the host's frame needs, such as room for its own controls.
+	className?: string;
 };
 
-export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
+export function LedgerOverview({
+	relationships,
+	className,
+}: LedgerOverviewProps = {}) {
 	const tables = useLedgerSelector(selectLedgerTables);
 	const status = useLedgerSelector(selectLedgerStatus);
 
@@ -35,7 +41,12 @@ export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 	);
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4">
+		<div
+			className={cn(
+				"flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4",
+				className,
+			)}
+		>
 			<LedgerSchemaWarning tables={tables} />
 
 			<div className="flex items-baseline justify-between gap-2 rounded-md border bg-background/50 px-3 py-2">
@@ -43,7 +54,7 @@ export function LedgerOverview({ relationships }: LedgerOverviewProps = {}) {
 				<span className="text-sm tabular-nums">{totalRecords}</span>
 			</div>
 
-			<dl className="flex flex-col divide-y divide-border overflow-hidden rounded-md border">
+			<dl className="flex flex-col divide-y divide-border overflow-y-auto rounded-md border">
 				{tables.map((table) => {
 					const Icon = tableIcon(table.name);
 					return (
