@@ -1,0 +1,105 @@
+import { LedgerBadge } from "@ledger-ui/components/LedgerBadge";
+import { LedgerErdButton } from "@ledger-ui/components/LedgerErdButton";
+import { LedgerSchemaWarning } from "@ledger-ui/components/LedgerSchemaWarning";
+import { tableIcon } from "@ledger-ui/components/tableIcon";
+import { tableTitle } from "@ledger-ui/data/recordLabel";
+import { useLedgerSelector } from "@ledger-ui/state/hooks";
+import {
+	selectLedgerStatus,
+	selectLedgerTables,
+} from "@ledger-ui/state/ledgerSlice";
+import { EmptyState } from "@shared-ui/components/empty-state";
+import { cn } from "@shared-ui/utils/cn";
+
+type LedgerOverviewProps = {
+	// How this host offers the relationships diagram. A narrow pane wants the
+	// dialog it defaults to; `null` leaves it out for a host that places the
+	// drawing itself.
+	relationships?: React.ReactNode;
+	// Layout the host's frame needs, such as room for its own controls.
+	className?: string;
+};
+
+export function LedgerOverview({
+	relationships,
+	className,
+}: LedgerOverviewProps = {}) {
+	const tables = useLedgerSelector(selectLedgerTables);
+	const status = useLedgerSelector(selectLedgerStatus);
+
+	if (status === "loading") {
+		return <EmptyState isLoading title="Reading ledger..." />;
+	}
+
+	if (tables.length === 0) {
+		return <EmptyState title="Nothing to display" />;
+	}
+
+	const totalRecords = tables.reduce(
+		(total, table) => total + table.rowCount,
+		0,
+	);
+
+	return (
+		<div
+			className={cn(
+				"flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4",
+				className,
+			)}
+		>
+			<LedgerSchemaWarning tables={tables} />
+
+			<div className="flex items-baseline justify-between gap-2 rounded-md border bg-background/50 px-3 py-2">
+				<span className="text-sm text-muted-foreground">Records</span>
+				<span className="text-sm tabular-nums">{totalRecords}</span>
+			</div>
+
+			<dl className="flex flex-col divide-y divide-border overflow-y-auto rounded-md border">
+				{tables.map((table) => {
+					const Icon = tableIcon(table.name);
+					return (
+						<div key={table.name} className="bg-background/50 px-3 py-2">
+							<div className="flex items-center justify-between gap-2">
+								<dt className="flex min-w-0 items-center gap-2 text-sm">
+									<Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+									<span className="truncate">{tableTitle(table.name)}</span>
+								</dt>
+								<dd className="flex shrink-0 items-center gap-2">
+									{table.activeCount !== null && (
+										<LedgerBadge
+											tone="active"
+											title={`${table.activeCount} active`}
+										>
+											{table.activeCount}
+										</LedgerBadge>
+									)}
+									<span className="text-sm text-muted-foreground tabular-nums">
+										{table.rowCount}
+									</span>
+								</dd>
+							</div>
+							<ul className="mt-2 flex flex-col">
+								{table.columns.map((column) => (
+									<li
+										key={column.name}
+										className="flex items-baseline justify-between gap-2 font-mono text-xs text-muted-foreground"
+									>
+										<span className="truncate">
+											{column.name}
+											{column.primaryKeyPosition > 0 && " ·pk"}
+										</span>
+										<span className="shrink-0 opacity-70">
+											{column.declaredType}
+										</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					);
+				})}
+			</dl>
+
+			{relationships === undefined ? <LedgerErdButton /> : relationships}
+		</div>
+	);
+}

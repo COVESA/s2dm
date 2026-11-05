@@ -15,6 +15,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true
+		},
+		"domains": {
+			"react": "recommended"
 		}
 	},
 	"javascript": {

@@ -21,7 +21,7 @@ from s2dm.constants.directive import Directive, DirectiveArgument
 from s2dm.exporters.utils.extraction import select_types
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 from s2dm.ledger.models import Ledger, LedgerEntry
-from s2dm.ledger.validation import validate_modl_annotation
+from s2dm.ledger.validation import ModlElement, validate_modl_annotation
 
 _DirectivesNode = ObjectTypeDefinitionNode | EnumTypeDefinitionNode | FieldDefinitionNode | EnumValueDefinitionNode
 
@@ -29,15 +29,16 @@ _DirectivesNode = ObjectTypeDefinitionNode | EnumTypeDefinitionNode | FieldDefin
 def annotate_schema_with_ledger(schema: GraphQLSchema, ledger: Ledger) -> None:
     """Attach ``@modl`` directives to a schema's types and members in place, sourced from the ledger.
 
-    Object and enum types are matched to a ledger concept by name, and their members — fields and
-    enum values — by ``Type.member`` label. The ``(label, kind)`` of every matched element is
-    validated against the ledger first; if validation fails the schema is left untouched. Otherwise
-    each matched node gains a ``@modl(concept, contract)`` directive on its AST node, so it is emitted
-    when the schema is printed with directives preserved. Root operation and introspection types are
-    ignored.
+    Object and enum types are matched to a ledger concept by name and kind, and their members — fields
+    and enum values — by ``Type.member`` label and kind. Every matched element is validated against
+    the ledger first as a ``(label, kind, parent_label)`` triple, where ``parent_label`` is ``None``
+    for a type and the type name for a member; if validation fails the schema is left untouched.
+    Otherwise each matched node with a ledger entry gains a ``@modl(concept, contract)`` directive on
+    its AST node, so it is emitted when the schema is printed with directives preserved. Root
+    operation and introspection types are ignored.
     """
-    matches: list[tuple[LedgerEntry, _DirectivesNode | None]] = []
-    annotations: list[tuple[str, str]] = []
+    matches: list[tuple[LedgerEntry | None, _DirectivesNode | None]] = []
+    elements: list[ModlElement] = []
     annotatable_types = select_types(
         schema, GraphQLObjectType, GraphQLEnumType, exclude_by_name=is_introspection_or_root_type
     )
@@ -51,17 +52,21 @@ def annotate_schema_with_ledger(schema: GraphQLSchema, ledger: Ledger) -> None:
         else:
             continue
 
-        matches.append((ledger.entries_by_label[type_name], graphql_type.ast_node))
-        annotations.append((type_name, type_kind))
+        type_entry = ledger.entry_for(type_name, type_kind)
+        matches.append((type_entry, graphql_type.ast_node))
+        type_element = ModlElement(label=type_name, kind=type_kind, parent_label=None)
+        elements.append(type_element)
         for member_name, member in members.items():
             label = f"{type_name}.{member_name}"
-            matches.append((ledger.entries_by_label[label], member.ast_node))
-            annotations.append((label, member_kind))
+            member_entry = ledger.entry_for(label, member_kind)
+            matches.append((member_entry, member.ast_node))
+            member_element = ModlElement(label=label, kind=member_kind, parent_label=type_name)
+            elements.append(member_element)
 
-    if not validate_modl_annotation(annotations, ledger.directory):
+    if not validate_modl_annotation(elements, ledger.directory):
         return
     for entry, ast_node in matches:
-        if ast_node is not None:
+        if entry is not None and ast_node is not None:
             ast_node.directives = (*ast_node.directives, _modl_directive_node(entry))
 
 

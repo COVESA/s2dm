@@ -52,6 +52,7 @@ def test_scaffold_includes_insights_page_and_generation_pipeline(scaffolded_site
     output = scaffolded_site
     assert (output / "src/insights/InsightsPage.tsx").exists()
     assert (output / "src/insights/insights.module.css").exists()
+    assert (output / "src/insights/cards.ts").exists()
     assert (output / "src/insights-ui/components/ConceptsBreakdown.tsx").exists()
     assert (output / "src/insights-ui/hostDefaults.tsx").exists()
     assert (output / "src/components/InsightsDetailsPane.tsx").exists()
@@ -70,8 +71,10 @@ def test_scaffold_includes_search_ui_and_shared_ui(scaffolded_site: Path) -> Non
     output = scaffolded_site
     assert (output / "src/search-ui/components/SearchBar.tsx").exists()
     assert not (output / "src/search-ui/package.json").exists()
+    assert (output / "src/shared-ui/components/empty-state.tsx").exists()
     assert (output / "src/shared-ui/components/icon-tabs.tsx").exists()
     assert (output / "src/shared-ui/components/input.tsx").exists()
+    assert (output / "src/shared-ui/components/table.tsx").exists()
     assert (output / "src/shared-ui/components/tabs.tsx").exists()
     assert (output / "src/shared-ui/utils/cn.ts").exists()
     assert (output / "src/shared-ui/theme.css").exists()
@@ -79,6 +82,30 @@ def test_scaffold_includes_search_ui_and_shared_ui(scaffolded_site: Path) -> Non
 
     package_json = json.loads((output / "package.json").read_text())
     assert "@radix-ui/react-tabs" in package_json["dependencies"]
+
+
+def test_scaffold_includes_ledger_page_and_staging_scripts(scaffolded_site: Path) -> None:
+    """The generated website includes the self-contained Ledger feature."""
+    output = scaffolded_site
+    assert (output / "src/ledger/LedgerPage.tsx").exists()
+    assert (output / "src/ledger/ledger.module.css").exists()
+    assert (output / "src/ledger/views.ts").exists()
+    assert (output / "src/ledger-ui/components/RawTablesView.tsx").exists()
+    assert (output / "src/ledger-ui/data/schema.ts").exists()
+    # The database runs on a worker thread, which needs its own entry point.
+    assert (output / "src/ledger-ui/data/ledgerWorker.ts").exists()
+    assert (output / "src/ledger-ui/data/ledgerClient.ts").exists()
+    assert (output / "src/ledger-ui/state/ledgerSaga.ts").exists()
+    assert (output / "src/store/ledgerStore.ts").exists()
+
+    # The database and the WebAssembly binary are staged by these two scripts.
+    assert (output / "scripts/copy-ledger.js").exists()
+    assert (output / "scripts/copy-sql-wasm.js").exists()
+
+    package_json = (output / "package.json").read_text()
+    assert "scripts/copy-ledger.js" in package_json
+    assert "scripts/copy-sql-wasm.js" in package_json
+    assert "sql.js" in package_json
 
 
 def test_scaffold_includes_semantic_search_and_generation_pipeline(scaffolded_site: Path) -> None:

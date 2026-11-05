@@ -11,8 +11,10 @@ from s2dm import log
 TEMPLATE_DIR = Path(__file__).parent / "templates" / "docs-website"
 
 # Host-agnostic React components shared with the playground. Vendored into the scaffolded
-# website so it stays self-contained, and reachable there through the `@insights-ui` alias.
+# website so it stays self-contained, and reachable there through the `@insights-ui` and
+# `@ledger-ui` aliases.
 INSIGHTS_UI_DIR = Path(__file__).parent / "templates" / "insights-ui"
+LEDGER_UI_DIR = Path(__file__).parent / "templates" / "ledger-ui"
 
 TEMPLATED_FILES = {"docusaurus.config.ts", "package-lock.json", "package.json"}
 
@@ -20,14 +22,15 @@ TEMPLATED_FILES = {"docusaurus.config.ts", "package-lock.json", "package.json"}
 # reachable through `@search-ui`.
 SEARCH_UI_DIR = Path(__file__).parent / "templates" / "search-ui"
 
-# UI primitives and theme tokens that the playground, `insights-ui` and `search-ui` build on,
-# vendored like `insights-ui` and reachable through `@shared-ui`.
+# UI primitives and theme tokens that the playground, `insights-ui`, `ledger-ui` and `search-ui`
+# build on, vendored like `insights-ui` and reachable through `@shared-ui`.
 SHARED_UI_DIR = Path(__file__).parent / "templates" / "shared-ui"
 
 # Packages vendored into the scaffolded site at `src/<name>`.
 VENDORED_PACKAGE_DIRS = {
     "shared-ui": SHARED_UI_DIR,
     "insights-ui": INSIGHTS_UI_DIR,
+    "ledger-ui": LEDGER_UI_DIR,
     "search-ui": SEARCH_UI_DIR,
 }
 

@@ -1,3 +1,4 @@
+import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { put, takeLatest } from "redux-saga/effects";
 import { appStartup, resetApp } from "@/store/app/appSlice";
@@ -11,6 +12,7 @@ import {
 	setAppliedSelectionQuery,
 	setSelectionQuery,
 } from "@/store/selection/selectionSlice";
+import { setExploreTab, setWorkspace } from "@/store/ui/uiSlice";
 import { clearValidationErrors } from "@/store/validation/validationSlice";
 import type { ImportedFile } from "@/types/importedFile";
 
@@ -27,6 +29,18 @@ function* handleResetApp() {
 	yield put(computeCapabilities());
 }
 
+/**
+ * Closes the insights details when the workspace or the explore tab changes.
+ * Which detail panes exist is the store's business, not a tab handler's. The
+ * ledger details stay open, so returning to the ledger workspace shows the same
+ * record selected.
+ *
+ * @returns An iterator of the saga's effects.
+ */
+function* handleTabChanged() {
+	yield put(closeInsightDetail());
+}
+
 function* handleSourceFilesChanged(action: PayloadAction<ImportedFile[]>) {
 	if (action.payload.length > 0) {
 		return;
@@ -39,4 +53,5 @@ export function* appSaga() {
 	yield takeLatest(appStartup.type, handleAppStartup);
 	yield takeLatest(resetApp.type, handleResetApp);
 	yield takeLatest(setSourceFiles.type, handleSourceFilesChanged);
+	yield takeLatest([setWorkspace.type, setExploreTab.type], handleTabChanged);
 }

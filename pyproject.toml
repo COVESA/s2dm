@@ -27,7 +27,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "linkml-runtime>=1.10.0",
-    "ddmodl",
+    "ddmodl==0.8.1",
     "onnxruntime>=1.31.0",
     "tokenizers>=0.23.3",
     "huggingface-hub>=1.16.1",

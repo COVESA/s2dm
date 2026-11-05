@@ -9,6 +9,7 @@ import {
 	matchesSearchTerm,
 	normalizeSearchTerm,
 } from "@search-ui/utils/textSearch";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { StatusBanner } from "@shared-ui/components/status-banner";
 import {
 	type GraphQLObjectType,
@@ -37,7 +38,6 @@ import { TreeExpandSpacer } from "@/components/explore/TreeRowParts";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
 import type { ValidatedQuery } from "@/components/QueryEditorWrapper";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyState } from "@/components/ui/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectInstanceTagFields,
