@@ -1,10 +1,43 @@
 import { EvidenceRow } from "@insights-ui/components/EvidenceRow";
-import { formatValue } from "@ledger-ui/data/recordLabel";
+import { dimensionsOf, formatDimension } from "@ledger-ui/data/instances";
+import { ABSENT_VALUE, formatValue } from "@ledger-ui/data/recordLabel";
 import type { LedgerCell } from "@ledger-ui/data/types";
 
 type RecordDetailsListProps = {
 	cells: LedgerCell[];
 };
+
+type CellValueProps = {
+	cell: LedgerCell;
+};
+
+/**
+ * The value of one cell: one line per dimension for a value with the shape of
+ * `instances` or `instance_tags`, the absent value when it holds no dimensions,
+ * otherwise the formatted value.
+ *
+ * @param cell - The column and value to show.
+ * @returns The lines of the dimensions, the absent value, or the formatted value.
+ */
+function CellValue({ cell }: CellValueProps) {
+	const dimensions = dimensionsOf(cell.value);
+	if (dimensions === null) {
+		return <>{formatValue(cell.value)}</>;
+	}
+	if (dimensions.length === 0) {
+		return <>{ABSENT_VALUE}</>;
+	}
+	return (
+		<>
+			{dimensions.map((dimension, index) => (
+				// Tags of two entities can repeat a dimension name.
+				<div key={`${index}:${dimension.name}`}>
+					{formatDimension(dimension)}
+				</div>
+			))}
+		</>
+	);
+}
 
 export function RecordDetailsList({ cells }: RecordDetailsListProps) {
 	return (
@@ -25,7 +58,7 @@ export function RecordDetailsList({ cells }: RecordDetailsListProps) {
 						className="m-0 min-w-0 truncate rounded-md bg-sky-500/10 px-2 py-1 font-mono text-card-foreground text-sm"
 						title={formatValue(cell.value)}
 					>
-						{formatValue(cell.value)}
+						<CellValue cell={cell} />
 					</dd>
 				</EvidenceRow>
 			))}

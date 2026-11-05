@@ -2,7 +2,7 @@ import { LedgerChainView } from "@ledger-ui/components/LedgerChainView";
 import { LedgerErrorBanner } from "@ledger-ui/components/LedgerErrorBanner";
 import { RecordActions } from "@ledger-ui/components/RecordActions";
 import { RecordDetailsList } from "@ledger-ui/components/RecordDetailsList";
-import { identityColumnFor } from "@ledger-ui/data/identity";
+import { singleIdentityColumnFor } from "@ledger-ui/data/identity";
 import { recordLabel, recordTypeName } from "@ledger-ui/data/recordLabel";
 import { findLedgerReferences } from "@ledger-ui/data/references";
 import type { LedgerRecord } from "@ledger-ui/data/types";
@@ -43,15 +43,16 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 		return <EmptyState title="Select a record to see its context" />;
 	}
 
-	const selectedName =
-		recordLabel(detail.record) || String(chain?.selected.identity ?? "");
 	const row = detail.kind === "row" ? detail : null;
-	const selectedTitle =
-		`${row ? recordTypeName(row.table) : ""} ${selectedName}`.trim();
 	// Anything this row points at, other than the record already on screen. Its
 	// own URI is compared, not its label, so a parent in the same table is kept.
-	const identityColumn = row ? identityColumnFor(tables, row.table) : null;
+	const identityColumn = row
+		? singleIdentityColumnFor(tables, row.table)
+		: null;
 	const ownUri = identityColumn ? detail.record[identityColumn] : undefined;
+	const selectedName = recordLabel(detail.record) || String(ownUri ?? "");
+	const selectedTitle =
+		`${row ? recordTypeName(row.table) : ""} ${selectedName}`.trim();
 	const cells =
 		detail.kind === "projection"
 			? detail.cells
@@ -64,10 +65,10 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 		(reference) =>
 			!(reference.table === row?.table && reference.value === ownUri),
 	);
-	// Only references whose identity column is known can be looked up, so an
+	// Only references to a table with one identity column can be looked up, so an
 	// action is never offered that would query a column the table lacks.
 	const actions = references.flatMap((reference) => {
-		const column = identityColumnFor(tables, reference.table);
+		const column = singleIdentityColumnFor(tables, reference.table);
 		return column ? [{ ...reference, column }] : [];
 	});
 

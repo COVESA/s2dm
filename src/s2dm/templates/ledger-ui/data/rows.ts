@@ -1,7 +1,7 @@
 import {
 	describeColumns,
-	orderingColumn,
-	primaryKeyColumn,
+	primaryKeyColumns,
+	primaryKeyColumnsOf,
 } from "@ledger-ui/data/schema";
 import {
 	compileSearchPattern,
@@ -70,6 +70,21 @@ function buildConditions(
 	};
 }
 
+/**
+ * Writes the ORDER BY clause that sorts by the given columns, in their order.
+ * Without the clause, SQLite makes no promise about row order.
+ *
+ * @param columns - The columns to sort by.
+ * @returns The clause, or `""` when there are no columns.
+ */
+function orderByClause(columns: string[]): string {
+	if (columns.length === 0) {
+		return "";
+	}
+	const quoted = columns.map((column) => quoteIdentifier(column));
+	return `ORDER BY ${quoted.join(", ")}`;
+}
+
 export function searchTable(
 	database: Database,
 	table: string,
@@ -94,14 +109,15 @@ export function searchTable(
 
 	const limit = options.limit ?? DEFAULT_ROW_LIMIT;
 	const offset = options.offset ?? 0;
-	// Ordered by the primary key, declared or from the profile, so a given row
-	// stays on the same page. A table with neither has no stable order.
-	const order = orderingColumn(table, columns);
+	// Ordered by the whole declared primary key, so a given row stays on the same
+	// page. A table that declares none has no stable order.
+	const order = primaryKeyColumnsOf(columns);
+	const orderBy = orderByClause(order);
 	// One row beyond the limit reveals whether more exist without a second query.
 	return readAll(
 		database,
 		`SELECT * FROM ${quoteIdentifier(table)} ${conditions.where}
-		 ${order ? `ORDER BY ${quoteIdentifier(order)}` : ""} LIMIT ? OFFSET ?`,
+		 ${orderBy} LIMIT ? OFFSET ?`,
 		[...conditions.params, limit + 1, offset],
 		limit,
 	);
@@ -114,38 +130,60 @@ export function rowPageIndex(
 	record: LedgerRecord,
 	pageSize: number,
 ): number {
-	// Pages are ordered by the primary key, so only that column can locate a row.
-	const order = primaryKeyColumn(database, table);
-	const value = order === null ? undefined : record[order];
-	if (order === null || value === undefined || value === null) {
+	// Pages are ordered by the primary key, so only its columns can locate a row.
+	const order = primaryKeyColumns(database, table);
+	const values = order.map((column) => record[column] ?? null);
+	if (order.length === 0 || values.includes(null)) {
 		return 0;
 	}
-	// NULLs sort first in SQLite, so they precede any value and must be counted.
+	// A row comes earlier when it equals the record on the leading key columns
+	// and sorts before it on the next one. NULLs sort first in SQLite, so they
+	// precede any value and must be counted.
+	const clauses: string[] = [];
+	const params: LedgerValue[] = [];
+	for (const [index, column] of order.entries()) {
+		const leading = order
+			.slice(0, index)
+			.map((leadingColumn) => `${quoteIdentifier(leadingColumn)} = ?`);
+		const quoted = quoteIdentifier(column);
+		const sortsBefore = `(${quoted} IS NULL OR ${quoted} < ?)`;
+		clauses.push(`(${[...leading, sortsBefore].join(" AND ")})`);
+		params.push(...values.slice(0, index + 1));
+	}
 	const { rows } = readAll(
 		database,
 		`SELECT COUNT(*) FROM ${quoteIdentifier(table)}
-		 WHERE ${quoteIdentifier(order)} IS NULL OR ${quoteIdentifier(order)} < ?`,
-		[value],
+		 WHERE ${clauses.join(" OR ")}`,
+		params,
 	);
 	return Math.floor(Number(rows[0]?.[0] ?? 0) / Math.max(1, pageSize));
 }
 
+/**
+ * Reads the rows of a table that hold every one of the given column values.
+ *
+ * @param database - The database to read.
+ * @param table - The table to read.
+ * @param columnValues - The value that each row must hold, by column.
+ * @param options - `limit` caps the rows, at `DEFAULT_ROW_LIMIT` by default.
+ *   `orderBy` lists the columns that sort them.
+ * @returns The matching rows.
+ */
 export function findRows(
 	database: Database,
 	table: string,
-	column: string,
-	value: LedgerValue,
-	options: { limit?: number; orderBy?: string } = {},
+	columnValues: LedgerRecord,
+	options: { limit?: number; orderBy?: string[] } = {},
 ): QueryResult {
-	// Without ORDER BY, SQLite makes no promise about row order.
-	const order = options.orderBy
-		? `ORDER BY ${quoteIdentifier(options.orderBy)}`
-		: "";
+	const entries = Object.entries(columnValues);
+	const matches = entries.map(([column]) => `${quoteIdentifier(column)} = ?`);
+	const values = entries.map(([, value]) => value);
+	const orderBy = orderByClause(options.orderBy ?? []);
 	return readAll(
 		database,
 		`SELECT * FROM ${quoteIdentifier(table)}
-		 WHERE ${quoteIdentifier(column)} = ? ${order} LIMIT ?`,
-		[value, options.limit ?? DEFAULT_ROW_LIMIT],
+		 WHERE ${matches.join(" AND ")} ${orderBy} LIMIT ?`,
+		[...values, options.limit ?? DEFAULT_ROW_LIMIT],
 	);
 }
 

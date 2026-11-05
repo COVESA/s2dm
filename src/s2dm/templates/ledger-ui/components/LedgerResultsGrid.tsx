@@ -1,8 +1,8 @@
 import { StatusBadge } from "@ledger-ui/components/StatusBadge";
-import { toRecord } from "@ledger-ui/data/introspect";
 import { STATUS_COLUMN } from "@ledger-ui/data/modlProfile";
 import { formatValue } from "@ledger-ui/data/recordLabel";
 import { isSameRow } from "@ledger-ui/data/resultRow";
+import { toRecord } from "@ledger-ui/data/rows";
 import type {
 	LedgerCell,
 	LedgerRecord,
@@ -67,7 +67,7 @@ export function LedgerResultsGrid({
 	sortable = true,
 }: LedgerResultsGridProps) {
 	// By position: a repeated column name would collapse in a keyed record.
-	const data = useMemo<LedgerValue[][]>(() => result.rows, [result.rows]);
+	const data: LedgerValue[][] = result.rows;
 
 	const columns = useMemo(
 		() =>

@@ -4,12 +4,15 @@ import {
 	chainNodeKey,
 	selectedAncestry,
 } from "@ledger-ui/data/chainSpec";
+import { singleIdentityColumnFor } from "@ledger-ui/data/identity";
 import {
 	recordLabel,
 	recordTypeName,
 	shortenIdentity,
 } from "@ledger-ui/data/recordLabel";
 import type { LedgerRecord } from "@ledger-ui/data/types";
+import { useLedgerSelector } from "@ledger-ui/state/hooks";
+import { selectLedgerTables } from "@ledger-ui/state/ledgerSlice";
 import { cn } from "@shared-ui/utils/cn";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import pluralize from "pluralize";
@@ -55,6 +58,8 @@ function GroupView({
 	// Only the fetched rows can be revealed; the rest are reported separately.
 	const hidden = group.nodes.length - visible.length;
 	const notFetched = group.total - group.nodes.length;
+	const typeName = recordTypeName(group.table).toLowerCase();
+	const moreLabel = pluralize(typeName, hidden);
 
 	return (
 		<div className="flex flex-col gap-1">
@@ -79,7 +84,7 @@ function GroupView({
 					style={{ marginLeft: `${depth * 12}px` }}
 					className="cursor-pointer rounded-md px-2 py-1 text-left font-mono text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
 				>
-					See {hidden} more {pluralize(pluralize.singular(group.label), hidden)}
+					See {hidden} more {moreLabel}
 				</button>
 			)}
 
@@ -106,10 +111,15 @@ function NodeView({
 	// null until the user decides for themselves, so the automatic state can
 	// change with the selection without discarding an explicit choice.
 	const [override, setOverride] = useState<boolean | null>(null);
+	const tables = useLedgerSelector(selectLedgerTables);
 
 	const isSelected =
 		node.table === selected.table && node.identity === selected.identity;
-	const label = recordLabel(node.record);
+	const identityColumn = singleIdentityColumnFor(tables, node.table);
+	let displayName = recordLabel(node.record);
+	if (!displayName && identityColumn) {
+		displayName = shortenIdentity(node.record[identityColumn] ?? "");
+	}
 	const groups = node.groups;
 	const hasChildren = groups.length > 0;
 
@@ -157,7 +167,7 @@ function NodeView({
 					{recordTypeName(node.table)}
 				</span>
 				<span className="min-w-0 flex-1 truncate font-mono text-sm">
-					{label || shortenIdentity(node.identity)}
+					{displayName}
 				</span>
 			</button>
 

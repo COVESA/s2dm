@@ -1,4 +1,5 @@
-import { identityColumnOf } from "@ledger-ui/data/identity";
+import { identityColumnsOf } from "@ledger-ui/data/identity";
+import { primaryKeyColumnsOf } from "@ledger-ui/data/schema";
 import type { LedgerRecord, LedgerTable } from "@ledger-ui/data/types";
 
 export type ChainParent = {
@@ -9,9 +10,9 @@ export type ChainParent = {
 
 export type ChainLevel = {
 	table: string;
-	identityColumn: string | null;
+	identityColumns: string[];
 	parent: ChainParent | null;
-	orderColumn: string | null;
+	orderColumns: string[];
 };
 
 export function levelOf(
@@ -45,11 +46,23 @@ export type LedgerChain = {
 	selected: { table: string; identity: string };
 };
 
-export function identityOf(
-	record: LedgerRecord,
-	column: string | null,
-): string {
-	return column === null ? "" : String(record[column] ?? "");
+/**
+ * Writes the identity of a record as one string that compares by value, so a
+ * record keyed by several columns still has one identity. The values form a
+ * JSON array, so a value that contains a separator stays apart from the next.
+ *
+ * @param record - The record to identify.
+ * @param columns - The identity columns of the record's table.
+ * @returns The values of the columns as a JSON array. Empty when every value
+ *   is empty or there are no columns.
+ */
+export function identityOf(record: LedgerRecord, columns: string[]): string {
+	const values = columns.map((column) => String(record[column] ?? ""));
+	const isEmpty = values.every((value) => value === "");
+	if (isEmpty) {
+		return "";
+	}
+	return JSON.stringify(values);
 }
 
 export function chainNodeKey(node: {
@@ -101,18 +114,25 @@ export function deriveChainSpec(tables: LedgerTable[]): ChainLevel[] {
 	);
 
 	return tables.map((table, index) => {
-		const primaryKey = table.columns.find((column) => column.primaryKey);
-		return {
-			table: table.name,
-			identityColumn: identityColumnOf(table),
-			parent: findNearestParent(table, index, positionOf, columnsOf),
-			orderColumn: primaryKey?.name ?? null,
-		};
+		const identityColumns = identityColumnsOf(table);
+		const parent = findNearestParent(table, index, positionOf, columnsOf);
+		const orderColumns = primaryKeyColumnsOf(table.columns);
+		return { table: table.name, identityColumns, parent, orderColumns };
 	});
 }
 
-// The closest preceding table this one points at, by key search rather than by
-// array position: an unrelated table may sit between two levels.
+/**
+ * Finds the closest preceding table that a table points at. It searches by
+ * key rather than by array position, because an unrelated table may sit
+ * between two levels.
+ *
+ * @param table - The table to find the parent of.
+ * @param index - The position of the table in the ordered tables.
+ * @param positionOf - The position of each table, by name.
+ * @param columnsOf - The column names of each table, by table name.
+ * @returns The parent table, the key column that points at it and the column
+ *   it references, or `null` when there is none.
+ */
 function findNearestParent(
 	table: LedgerTable,
 	index: number,
@@ -129,11 +149,16 @@ function findNearestParent(
 			continue;
 		}
 		const parentPosition = positionOf.get(key.referencesTable);
-		if (
-			parentPosition === undefined ||
-			parentPosition >= index ||
-			parentPosition <= closestPosition
-		) {
+		if (parentPosition === undefined || parentPosition >= index) {
+			continue;
+		}
+		// Of several keys to the same table, the one named after the column it
+		// references is the record's own link: contract_references.contract_uri,
+		// not target_contract_uri, which SQLite lists first.
+		const isCloser = parentPosition > closestPosition;
+		const isNamedLink =
+			parentPosition === closestPosition && key.column === key.referencesColumn;
+		if (!isCloser && !isNamedLink) {
 			continue;
 		}
 		// A rowid target is real to SQLite but absent from SELECT *, so it cannot

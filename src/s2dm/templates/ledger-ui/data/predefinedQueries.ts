@@ -36,15 +36,35 @@ JOIN bindings b   ON b.contract_uri  = ct.contract_uri;`,
 	},
 	{
 		label: "Revisions per concept",
-		description: "Two references per row, with the label to read them by",
-		sql: `SELECT c.current_label, c.concept_uri, r.revision_uri, r.status
+		description:
+			"Two references per row, with the label and the changes of each revision",
+		sql: `SELECT c.current_label, c.concept_uri, r.revision_uri, r.status,
+  a.aspect_key, a.operation, a.newer_value
 FROM concepts c
-JOIN revisions r ON r.concept_uri = c.concept_uri;`,
+JOIN revisions r ON r.concept_uri = c.concept_uri
+LEFT JOIN revision_aspects a ON a.revision_uri = r.revision_uri;`,
+	},
+	{
+		label: "Bindings by runtime path",
+		description:
+			"Instance tags read with json_each: one row per dimension, one row for a singleton",
+		sql: `SELECT
+  binding.runtime_path,
+  entity.current_label AS entity,
+  dimension.key AS dimension,
+  dimension.value AS instance,
+  binding.status,
+  binding.binding_uri
+FROM bindings binding
+LEFT JOIN json_each(binding.instance_tags) AS tag
+LEFT JOIN json_each(tag.value) AS dimension
+LEFT JOIN concepts entity ON entity.concept_uri = tag.key
+ORDER BY binding.runtime_path, dimension.key;`,
 	},
 	{
 		label: "Labels only",
 		description: "No URIs, so a selected row offers no actions",
-		sql: "SELECT current_label, kind, status FROM concepts;",
+		sql: "SELECT current_label, kind, status, instances FROM concepts;",
 	},
 	{
 		label: "Row counts",
@@ -52,7 +72,9 @@ JOIN revisions r ON r.concept_uri = c.concept_uri;`,
 		sql: `SELECT 'concepts' AS table_name, COUNT(*) AS rows FROM concepts
 UNION ALL SELECT 'revisions', COUNT(*) FROM revisions
 UNION ALL SELECT 'contracts', COUNT(*) FROM contracts
-UNION ALL SELECT 'bindings',  COUNT(*) FROM bindings;`,
+UNION ALL SELECT 'bindings', COUNT(*) FROM bindings
+UNION ALL SELECT 'revision_aspects', COUNT(*) FROM revision_aspects
+UNION ALL SELECT 'contract_references', COUNT(*) FROM contract_references;`,
 	},
 	{
 		label: "Write attempt",

@@ -1,4 +1,4 @@
-import { identityColumnFor } from "@ledger-ui/data/identity";
+import { identityColumnsOf } from "@ledger-ui/data/identity";
 import { findRows, toRecords } from "@ledger-ui/data/rows";
 import type {
 	LedgerRecord,
@@ -38,9 +38,18 @@ function sameValue(
 	return left === right;
 }
 
-// The table that holds this row, or null when no table does. A shape match only
-// shows the query named a table's columns, which aliased constants can do just
-// as well, so the stored record is read back and compared value by value.
+/**
+ * Finds the table that stores a row of a query result. A shape match only
+ * shows that the query named a table's columns, which aliased constants can
+ * do just as well, so the stored record is read back and compared value by
+ * value.
+ *
+ * @param database - The database to read.
+ * @param columns - The columns of the query result.
+ * @param record - The row, by column.
+ * @param tables - The tables of the ledger.
+ * @returns The table that holds the row, or `null` when no table does.
+ */
 export function storedRecordTable(
 	database: Database,
 	columns: string[],
@@ -52,15 +61,24 @@ export function storedRecordTable(
 		return null;
 	}
 
-	const identityColumn = identityColumnFor(tables, candidate);
-	const identity = identityColumn === null ? null : record[identityColumn];
-	if (identityColumn === null || identity == null) {
+	const candidateTable = tables.find((table) => table.name === candidate);
+	if (!candidateTable) {
+		return null;
+	}
+	const identityColumns = identityColumnsOf(candidateTable);
+	const hasIdentity =
+		identityColumns.length > 0 &&
+		identityColumns.every((column) => record[column] != null);
+	if (!hasIdentity) {
 		return null;
 	}
 
-	const result = findRows(database, candidate, identityColumn, identity, {
-		limit: 1,
-	});
+	const identityEntries = identityColumns.map((column) => [
+		column,
+		record[column],
+	]);
+	const identity: LedgerRecord = Object.fromEntries(identityEntries);
+	const result = findRows(database, candidate, identity, { limit: 1 });
 	const [stored] = toRecords(result);
 	if (!stored) {
 		return null;

@@ -3,12 +3,19 @@ import type { SearchOptions } from "@ledger-ui/data/search";
 import type { LedgerSearchMatch, LedgerTable } from "@ledger-ui/data/types";
 import type { Database } from "sql.js";
 
-// One preview per table that matches, in chain order. The exact total costs a
-// second scan, so it is only counted when the preview was truncated.
+/**
+ * Searches each table for a needle.
+ *
+ * @param database - The database to search.
+ * @param tables - The tables to search. The matches keep their order.
+ * @param needle - The text to look for.
+ * @param options - `limit` caps the preview rows of each table. `search` sets
+ *   how the needle matches.
+ * @returns One match per table that has matching rows, with a preview of the
+ *   rows and the total number of matches.
+ */
 export function searchLedger(
 	database: Database,
-	// Already read and profiled by readSchema: building the list here again would
-	// miss the fallback, and order a keyless file alphabetically instead.
 	tables: LedgerTable[],
 	needle: string,
 	options: { limit?: number; search?: SearchOptions } = {},
