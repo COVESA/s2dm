@@ -75,7 +75,7 @@ const sidebarPagesPlugin = ({ baseUrl }: LoadContext) => ({
       }
     }
   },
-  configureWebpack() {
+  configureWebpack(_config, isServer) {
     return {
       resolve: {
         alias: {
@@ -84,6 +84,10 @@ const sidebarPagesPlugin = ({ baseUrl }: LoadContext) => ({
           "@insights-ui": insightsUiDirectory,
           "@ledger-ui": ledgerUiDirectory,
           "@search-ui": searchUiDirectory,
+          // The server build only pre-renders pages and never runs the embedding
+          // worker. The Node build of transformers points at ONNX runtime files
+          // that the package does not ship.
+          ...(isServer ? { "@huggingface/transformers": false } : {}),
         },
       },
     };
