@@ -51,8 +51,8 @@ const SIDEBAR_PAGES = [
   { sidebar: "ledgerSidebar", data: "ledger-sidebar.json", component: "@site/src/ledger/LedgerPage.tsx" },
 ];
 
-const insightsPlugin = ({ baseUrl }: LoadContext) => ({
-  name: "s2dm-insights",
+const sidebarPagesPlugin = ({ baseUrl }: LoadContext) => ({
+  name: "s2dm-sidebar-pages",
   async allContentLoaded({ allContent, actions }) {
     const docsContent = allContent["docusaurus-plugin-content-docs"]?.default as LoadedContent | undefined;
     const version = docsContent?.loadedVersions.find((candidate) => candidate.isLast);
@@ -134,7 +134,7 @@ const config: Config = {
     },
     prism: { theme: prismThemes.github, darkTheme: prismThemes.dracula },
   } satisfies Preset.ThemeConfig,
-  plugins: [insightsPlugin, [
+  plugins: [sidebarPagesPlugin, [
     "@graphql-markdown/docusaurus",
     {
       schema: "../dist/model.graphql",

@@ -1,3 +1,5 @@
+import { routePath, routeSegment } from "../utils/routes";
+
 // The ledger's views in sidebar order. The links, the routes made from them and
 // the view the page renders all read this. Consecutive views sharing a section
 // become one sidebar category; the view without a segment is served at the root.
@@ -28,23 +30,16 @@ export function ledgerViewPath(
 	view: LedgerViewId,
 	root: string = LEDGER_ROOT_PATH,
 ): string {
-	const base = root.replace(/\/$/, "");
 	const found = LEDGER_VIEWS.find((candidate) => candidate.id === view);
-	return found?.segment ? `${base}/${found.segment}` : base;
+	const segment = found?.segment ?? null;
+	return routePath(root, segment);
 }
 
 export function ledgerViewOfPath(
 	pathname: string,
 	root: string = LEDGER_ROOT_PATH,
 ): LedgerViewId | null {
-	const base = root.replace(/\/$/, "");
-	const path = pathname.replace(/\/$/, "");
-	if (path === base) {
-		return LEDGER_VIEWS.find((view) => view.segment === null)?.id ?? null;
-	}
-	if (!path.startsWith(`${base}/`)) {
-		return null;
-	}
-	const segment = path.slice(base.length + 1);
-	return LEDGER_VIEWS.find((view) => view.segment === segment)?.id ?? null;
+	const segment = routeSegment(pathname, root);
+	const found = LEDGER_VIEWS.find((view) => (view.segment ?? "") === segment);
+	return found?.id ?? null;
 }
