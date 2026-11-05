@@ -45,6 +45,8 @@ export function LedgerErdDiagram({
 					startOnLoad: false,
 					securityLevel: "strict",
 					theme: theme === "dark" ? "dark" : "default",
+					layout: "dagre",
+					look: "classic",
 				});
 				// mermaid replaces the node's text with the drawing, so the source is
 				// assigned as text and never as markup.
