@@ -1,3 +1,5 @@
+import { routePath, routeSegment } from "../utils/routes";
+
 // The insight cards, grouped and ordered as the sidebar shows them. The links,
 // the routes made from them and the card the page renders all read this.
 export const INSIGHTS_SECTIONS = [
@@ -56,22 +58,21 @@ export function insightsCardPath(
 	card: InsightsCardId,
 	root: string = INSIGHTS_ROOT_PATH,
 ): string {
-	const base = root.replace(/\/$/, "");
-	return card === DEFAULT_INSIGHTS_CARD ? base : `${base}/${card}`;
+	let segment: string | null = card;
+	if (card === DEFAULT_INSIGHTS_CARD) {
+		segment = null;
+	}
+	return routePath(root, segment);
 }
 
 export function insightsCardOfPath(
 	pathname: string,
 	root: string = INSIGHTS_ROOT_PATH,
 ): InsightsCardId | null {
-	const base = root.replace(/\/$/, "");
-	const path = pathname.replace(/\/$/, "");
-	if (path === base) {
+	const segment = routeSegment(pathname, root);
+	if (segment === "") {
 		return DEFAULT_INSIGHTS_CARD;
 	}
-	if (!path.startsWith(`${base}/`)) {
-		return null;
-	}
-	const segment = path.slice(base.length + 1);
-	return INSIGHTS_CARDS.find((card) => card.id === segment)?.id ?? null;
+	const found = INSIGHTS_CARDS.find((card) => card.id === segment);
+	return found?.id ?? null;
 }
