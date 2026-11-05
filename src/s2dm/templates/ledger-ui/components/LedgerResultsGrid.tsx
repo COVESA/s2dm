@@ -9,6 +9,7 @@ import type {
 	LedgerValue,
 	QueryResult,
 } from "@ledger-ui/data/types";
+import { cn } from "@shared-ui/utils/cn";
 import {
 	createSortedRowModel,
 	rowSortingFeature,
@@ -28,7 +29,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/utils/cn";
 
 const features = tableFeatures({
 	rowSortingFeature,

@@ -14,8 +14,8 @@ import {
 	selectLedgerTables,
 	setLedgerSql,
 } from "@ledger-ui/state/ledgerSlice";
+import { StatusBanner } from "@shared-ui/components/status-banner";
 import { TextEditor } from "@/components/TextEditor";
-import { StatusBanner } from "@/components/ui/status-banner";
 
 // Its own component so that typing re-renders the editor alone: the view below
 // lists every row it was given, and redrawing those on each keystroke is felt.

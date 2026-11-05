@@ -1,6 +1,6 @@
 import { SearchOptionToggles } from "@ledger-ui/components/SearchOptionToggles";
+import { Input } from "@shared-ui/components/input";
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 
 type LedgerSearchInputProps = {
 	value: string;

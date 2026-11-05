@@ -22,8 +22,8 @@ TEMPLATED_FILES = {"docusaurus.config.ts", "package-lock.json", "package.json"}
 # reachable through `@search-ui`.
 SEARCH_UI_DIR = Path(__file__).parent / "templates" / "search-ui"
 
-# UI primitives and theme tokens that the playground, `insights-ui` and `search-ui` build on,
-# vendored like `insights-ui` and reachable through `@shared-ui`.
+# UI primitives and theme tokens that the playground, `insights-ui`, `ledger-ui` and `search-ui`
+# build on, vendored like `insights-ui` and reachable through `@shared-ui`.
 SHARED_UI_DIR = Path(__file__).parent / "templates" / "shared-ui"
 
 # Packages vendored into the scaffolded site at `src/<name>`.

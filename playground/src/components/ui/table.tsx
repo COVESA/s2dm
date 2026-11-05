@@ -1,5 +1,5 @@
+import { cn } from "@shared-ui/utils/cn";
 import type * as React from "react";
-import { cn } from "@/utils/cn";
 
 function Table({
 	className,

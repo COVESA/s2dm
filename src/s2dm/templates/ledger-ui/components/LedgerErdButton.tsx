@@ -1,7 +1,7 @@
 import { LedgerErdDiagram } from "@ledger-ui/components/LedgerErdDiagram";
+import { Button } from "@shared-ui/components/button";
 import { Network } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,

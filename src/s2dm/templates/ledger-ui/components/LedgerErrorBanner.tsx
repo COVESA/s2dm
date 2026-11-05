@@ -1,5 +1,5 @@
-import { StatusBanner } from "@/components/ui/status-banner";
-import { cn } from "@/utils/cn";
+import { StatusBanner } from "@shared-ui/components/status-banner";
+import { cn } from "@shared-ui/utils/cn";
 
 type LedgerErrorBannerProps = {
 	children: React.ReactNode;

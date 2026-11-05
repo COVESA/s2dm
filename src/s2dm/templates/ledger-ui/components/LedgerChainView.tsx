@@ -10,10 +10,10 @@ import {
 	shortenIdentity,
 } from "@ledger-ui/data/recordLabel";
 import type { LedgerRecord } from "@ledger-ui/data/types";
+import { cn } from "@shared-ui/utils/cn";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import pluralize from "pluralize";
 import { useState } from "react";
-import { cn } from "@/utils/cn";
 
 // Rows shown before "See N more".
 const CHAIN_GROUP_RENDER_LIMIT = 5;

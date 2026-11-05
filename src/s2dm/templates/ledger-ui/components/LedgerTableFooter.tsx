@@ -1,8 +1,8 @@
 import { LEDGER_PAGE_SIZE } from "@ledger-ui/data/rows";
 import { useLedgerDispatch } from "@ledger-ui/state/hooks";
 import { setLedgerPage } from "@ledger-ui/state/ledgerSlice";
+import { Button } from "@shared-ui/components/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type LedgerTableFooterProps = {
 	total: number;

@@ -1,4 +1,4 @@
-import { cn } from "@/utils/cn";
+import { cn } from "@shared-ui/utils/cn";
 
 export type LedgerBadgeTone = "active" | "superseded" | "removed" | "neutral";
 

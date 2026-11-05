@@ -16,9 +16,9 @@ import {
 	selectLedgerDetail,
 	setExploreQuery,
 } from "@ledger-ui/state/ledgerSlice";
+import { Button } from "@shared-ui/components/button";
 import { ArrowRight } from "lucide-react";
 import pluralize from "pluralize";
-import { Button } from "@/components/ui/button";
 
 export function ExploreView() {
 	const dispatch = useLedgerDispatch();

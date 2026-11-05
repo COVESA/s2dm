@@ -6,11 +6,11 @@ import {
 	selectLedgerError,
 	selectLedgerFileName,
 } from "@ledger-ui/state/ledgerSlice";
+import { Button } from "@shared-ui/components/button";
 import { Database, Plus, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { FileListRow } from "@/components/FileListRow";
-import { Button } from "@/components/ui/button";
 import { ImportErrorBanner } from "@/components/ui/import-error-banner";
 import { Dropdown, DropdownItem } from "@/components/ui/simple-dropdown";
 import { useFileImport } from "@/hooks/useFileImport";
