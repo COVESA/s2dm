@@ -41,7 +41,7 @@
     "graphql": "16.14.0",
     "graphql-voyager": "2.1.0",
     "lucide-react": "0.563.0",
-    "mermaid": "11.17.2",
+    "mermaid": "12.2.0",
     "monaco-editor": "0.52.2",
     "patch-package": "8.0.1",
     "pluralize": "8.0.0",
