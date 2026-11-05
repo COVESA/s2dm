@@ -1,14 +1,13 @@
 import type { QueryResult } from "@ledger-ui/data/types";
 import {
 	closeLedger,
-	openLedgerFailure,
 	openLedgerSuccess,
 	openTableWithSearch,
 	setSearchOptions,
 	showRecordInTable,
 } from "@ledger-ui/state/ledgerActions";
 import type { LedgerRootState } from "@ledger-ui/state/types";
-import { createSlice, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface LedgerTableState {
 	selectedTable: string;
@@ -123,10 +122,8 @@ const ledgerTableSlice = createSlice({
 				state.isLoadingRows = true;
 				state.search = action.payload.search;
 			})
-			.addMatcher(isAnyOf(closeLedger, openLedgerFailure), (state, action) => {
-				if (closeLedger.match(action) || action.payload.cleared) {
-					resetTableView(state);
-				}
+			.addCase(closeLedger, (state) => {
+				resetTableView(state);
 			});
 	},
 });

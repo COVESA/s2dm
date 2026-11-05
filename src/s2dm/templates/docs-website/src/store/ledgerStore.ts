@@ -82,9 +82,8 @@ export function openLedgerOnce(options: {
 			if (controller.signal.aborted) {
 				return;
 			}
-			opened.store.dispatch(
-				openLedgerFailure({ message: getErrorMessage(reason), cleared: false }),
-			);
+			const message = getErrorMessage(reason);
+			opened.store.dispatch(openLedgerFailure({ message }));
 		});
 
 	return opened;

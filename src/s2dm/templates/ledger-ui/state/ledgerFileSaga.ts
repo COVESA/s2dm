@@ -32,9 +32,8 @@ function* openLedgerWorker(
 		}
 		// Nothing was cleared: the client only adopts a worker once its database
 		// is readable, so the ledger already loaded is still the one loaded.
-		yield put(
-			openLedgerFailure({ message: getErrorMessage(error), cleared: false }),
-		);
+		const message = getErrorMessage(error);
+		yield put(openLedgerFailure({ message }));
 	}
 }
 

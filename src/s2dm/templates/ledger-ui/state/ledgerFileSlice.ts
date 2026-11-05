@@ -57,12 +57,6 @@ const ledgerFileSlice = createSlice({
 			.addCase(openLedgerFailure, (state, action) => {
 				state.isLoading = false;
 				state.error = action.payload.message;
-				// Only when this import had already replaced the loaded ledger: a
-				// file that never opened must leave the one on screen alone.
-				if (action.payload.cleared) {
-					state.fileName = "";
-					state.tables = [];
-				}
 			})
 			.addCase(closeLedger, (state) => {
 				state.isLoading = false;
@@ -96,11 +90,20 @@ export const selectLedgerError = (state: LedgerRootState) =>
 export const selectHasLedger = (state: LedgerRootState) =>
 	state.ledgerFile.tables.length > 0;
 
-// Derived, so it cannot drift from the fields it reads. A loaded ledger outranks
-// a failed or running import, which leaves it on screen; "empty" is a database
-// that opened holding no tables, which the table count alone reads as loading.
+/**
+ * Derives the ledger's status, so it cannot drift from the fields it reads.
+ *
+ * A loaded ledger outranks a failed or running import: its views stay until a
+ * new ledger replaces it. "empty" is a database that opened holding no tables.
+ *
+ * @param state - The store state that holds the ledger file.
+ * @returns "ready" while a ledger with tables is loaded, else the import's status.
+ */
 export const selectLedgerStatus = (state: LedgerRootState): LedgerStatus => {
 	const file = state.ledgerFile;
+	if (file.tables.length > 0) {
+		return "ready";
+	}
 	if (file.error) {
 		return "failed";
 	}
@@ -110,7 +113,7 @@ export const selectLedgerStatus = (state: LedgerRootState): LedgerStatus => {
 	if (!file.fileName) {
 		return "idle";
 	}
-	return file.tables.length > 0 ? "ready" : "empty";
+	return "empty";
 };
 export const selectLedgerView = (state: LedgerRootState) =>
 	state.ledgerFile.view;

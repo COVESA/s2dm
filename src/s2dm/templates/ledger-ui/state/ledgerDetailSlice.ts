@@ -1,10 +1,6 @@
 import type { LedgerChain } from "@ledger-ui/data/chainSpec";
 import type { LedgerCell, LedgerRecord } from "@ledger-ui/data/types";
-import {
-	closeLedger,
-	openLedgerFailure,
-	openLedgerSuccess,
-} from "@ledger-ui/state/ledgerActions";
+import { closeLedger, openLedgerSuccess } from "@ledger-ui/state/ledgerActions";
 import type { LedgerRootState } from "@ledger-ui/state/types";
 import { createSlice, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 
@@ -77,15 +73,9 @@ const ledgerDetailSlice = createSlice({
 		},
 	},
 	extraReducers: (builder) => {
-		builder.addMatcher(
-			isAnyOf(closeLedger, openLedgerSuccess, openLedgerFailure),
-			(state, action) => {
-				if (openLedgerFailure.match(action) && !action.payload.cleared) {
-					return;
-				}
-				Object.assign(state, initialState);
-			},
-		);
+		builder.addMatcher(isAnyOf(closeLedger, openLedgerSuccess), (state) => {
+			Object.assign(state, initialState);
+		});
 	},
 });
 

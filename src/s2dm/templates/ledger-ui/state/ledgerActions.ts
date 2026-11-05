@@ -18,10 +18,9 @@ export const openLedgerSuccess = createAction<{
 	fileName: string;
 	tables: LedgerTable[];
 }>("ledger/openLedgerSuccess");
-export const openLedgerFailure = createAction<{
-	message: string;
-	cleared: boolean;
-}>("ledger/openLedgerFailure");
+export const openLedgerFailure = createAction<{ message: string }>(
+	"ledger/openLedgerFailure",
+);
 export const closeLedger = createAction("ledger/closeLedger");
 
 export const setLedgerView = createAction<LedgerView>("ledger/setLedgerView");
