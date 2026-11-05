@@ -1,5 +1,4 @@
 import { closeInsightDetail } from "@insights-ui/state/insightDetailSlice";
-import { closeLedgerDetail } from "@ledger-ui/state/ledgerSlice";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { put, takeLatest } from "redux-saga/effects";
 import { appStartup, resetApp } from "@/store/app/appSlice";
@@ -30,15 +29,15 @@ function* handleResetApp() {
 	yield put(computeCapabilities());
 }
 
-// Which detail panes exist is the store's business, not a tab handler's. The two
-// rules differ: leaving a workspace abandons both stacks, changing explore tab
-// only the insights one.
-function* handleWorkspaceChanged() {
-	yield put(closeInsightDetail());
-	yield put(closeLedgerDetail());
-}
-
-function* handleExploreTabChanged() {
+/**
+ * Closes the insights details when the workspace or the explore tab changes.
+ * Which detail panes exist is the store's business, not a tab handler's. The
+ * ledger details stay open, so returning to the ledger workspace shows the same
+ * record selected.
+ *
+ * @returns An iterator of the saga's effects.
+ */
+function* handleTabChanged() {
 	yield put(closeInsightDetail());
 }
 
@@ -54,6 +53,5 @@ export function* appSaga() {
 	yield takeLatest(appStartup.type, handleAppStartup);
 	yield takeLatest(resetApp.type, handleResetApp);
 	yield takeLatest(setSourceFiles.type, handleSourceFilesChanged);
-	yield takeLatest(setWorkspace.type, handleWorkspaceChanged);
-	yield takeLatest(setExploreTab.type, handleExploreTabChanged);
+	yield takeLatest([setWorkspace.type, setExploreTab.type], handleTabChanged);
 }

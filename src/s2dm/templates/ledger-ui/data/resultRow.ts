@@ -1,4 +1,8 @@
-import type { LedgerRecord, LedgerValue } from "@ledger-ui/data/types";
+import type {
+	LedgerRecord,
+	LedgerValue,
+	QueryResult,
+} from "@ledger-ui/data/types";
 
 // Positional throughout: a repeated column name collapses in a keyed record, so
 // comparing through one cannot even match the row it came from.
@@ -34,4 +38,19 @@ export function recordValues(
 	columns: string[],
 ): LedgerValue[] {
 	return columns.map((column) => record[column] ?? null);
+}
+
+/**
+ * Whether a page of rows holds the given record.
+ *
+ * @param page - The rows of the current page.
+ * @param record - The record to look for.
+ * @returns True when one row of the page has the record's value in every column.
+ */
+export function isRecordOnPage(
+	page: QueryResult,
+	record: LedgerRecord,
+): boolean {
+	const selectedValues = recordValues(record, page.columns);
+	return page.rows.some((rowValues) => isSameRow(rowValues, selectedValues));
 }

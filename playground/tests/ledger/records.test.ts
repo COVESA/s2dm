@@ -19,7 +19,7 @@ import {
 	matchResultTable,
 	storedRecordTable,
 } from "@ledger-ui/data/resultRecord";
-import { isSameRow } from "@ledger-ui/data/resultRow";
+import { isRecordOnPage, isSameRow } from "@ledger-ui/data/resultRow";
 import { readSchema } from "@ledger-ui/data/schema";
 import { describe, expect, it } from "vitest";
 import {
@@ -212,6 +212,29 @@ describe("isSameRow", () => {
 		const isSame = isSameRow([bytes], ["1,2"]);
 
 		expect(isSame).toBe(false);
+	});
+});
+
+describe("isRecordOnPage", () => {
+	const page = {
+		columns: ["serial", "label"],
+		rows: [
+			[1, "a"],
+			[2, "b"],
+		],
+		truncated: false,
+	};
+
+	it("is true for a row of the page", () => {
+		const onPage = isRecordOnPage(page, { serial: 2, label: "b" });
+
+		expect(onPage).toBe(true);
+	});
+
+	it("is false when one value of the record differs", () => {
+		const onPage = isRecordOnPage(page, { serial: 2, label: "changed" });
+
+		expect(onPage).toBe(false);
 	});
 });
 
