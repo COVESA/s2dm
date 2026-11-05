@@ -2,7 +2,7 @@ import BrowserOnly from "@docusaurus/BrowserOnly";
 import { Download, Maximize } from "lucide-react";
 import { useCallback, useState } from "react";
 import { TextEditorDialog } from "@/components/TextEditorDialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared-ui/components/button";
 import { useTheme } from "@/hooks/useTheme";
 
 type TextEditorProps = {

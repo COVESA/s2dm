@@ -4,8 +4,8 @@ import {
 	selectSearchOptions,
 	setSearchOptions,
 } from "@ledger-ui/state/ledgerSlice";
+import { cn } from "@shared-ui/utils/cn";
 import { CaseSensitive, Regex, WholeWord } from "lucide-react";
-import { cn } from "@/utils/cn";
 
 const TOGGLES: {
 	option: keyof SearchOptions;

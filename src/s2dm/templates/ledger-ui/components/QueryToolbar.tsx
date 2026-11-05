@@ -8,8 +8,8 @@ import {
 	selectLedgerSql,
 	selectPredefinedQueryLabel,
 } from "@ledger-ui/state/ledgerSlice";
+import { Button } from "@shared-ui/components/button";
 import { Play, Square } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
 	Select,
 	SelectContent,
