@@ -459,7 +459,7 @@ type Car @modl(concept: "http://example/concepts/0", contract: "http://example/c
 }
 ```
 
-**Note:** The ledger directory must contain the modl `concepts.csv`, `contracts.csv`, `revisions.csv`, and `bindings.csv` files. If the schema and ledger do not describe the same set of elements, the schema is composed without `@modl` annotations.
+**Note:** The ledger directory must contain the modl `concepts.csv`, `contracts.csv`, `revisions.csv`, `bindings.csv`, `revision_aspects.csv`, and `contract_references.csv` files. If the schema and ledger do not describe the same set of elements, the schema is composed without `@modl` annotations.
 
 ## Embeddings Commands
 

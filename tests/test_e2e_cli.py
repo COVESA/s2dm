@@ -17,7 +17,15 @@ from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME, VENDOR_
 from s2dm.tools.string import normalize_whitespace
 from tests.conftest import TestSchemaData as TSD
 from tests.deps.helpers import file_sha256, write_dependency_lock, write_metadata_file
-from tests.ledger_common import FULL_BINDINGS, FULL_CONCEPTS, FULL_CONTRACTS, FULL_REVISIONS, modl_args
+from tests.ledger_common import (
+    FULL_BINDINGS,
+    FULL_CONCEPTS,
+    FULL_CONTRACT_REFERENCES,
+    FULL_CONTRACTS,
+    FULL_REVISION_ASPECTS,
+    FULL_REVISIONS,
+    modl_args,
+)
 
 LINKML_SCHEMA_ID = "https://covesa.global/s2dm"
 LINKML_SCHEMA_NAME = "TestSchema"
@@ -1698,6 +1706,8 @@ enum DriveType {
         (ledger_dir / "contracts.csv").write_text(FULL_CONTRACTS, encoding="utf-8")
         (ledger_dir / "revisions.csv").write_text(FULL_REVISIONS, encoding="utf-8")
         (ledger_dir / "bindings.csv").write_text(FULL_BINDINGS, encoding="utf-8")
+        (ledger_dir / "revision_aspects.csv").write_text(FULL_REVISION_ASPECTS, encoding="utf-8")
+        (ledger_dir / "contract_references.csv").write_text(FULL_CONTRACT_REFERENCES, encoding="utf-8")
         output_path = Path("composed.graphql")
 
         result = runner.invoke(
