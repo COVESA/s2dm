@@ -10,10 +10,15 @@ import {
 	setExploreQuery,
 	setSearchOptions,
 } from "@ledger-ui/state/ledgerSlice";
-import { call, debounce, put, select, takeLatest } from "redux-saga/effects";
+import type { UnknownAction } from "@reduxjs/toolkit";
+import { call, delay, put, select, takeLatest } from "redux-saga/effects";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
-function* exploreLedgerWorker() {
+function* exploreLedgerWorker(action: UnknownAction) {
+	// A keystroke waits for a pause in typing. A newer action cancels the wait.
+	if (setExploreQuery.match(action)) {
+		yield delay(EXPLORE_DEBOUNCE_MS);
+	}
 	try {
 		const exploreNeedle: string = yield select(selectExploreQuery);
 		const trimmed = exploreNeedle.trim();
@@ -42,7 +47,13 @@ function* exploreLedgerWorker() {
 // Rows previewed per matching table; "Display all" opens the full table.
 const EXPLORE_PREVIEW_LIMIT = 5;
 
+// The pause in typing before a search runs.
+const EXPLORE_DEBOUNCE_MS = 250;
+
 export function* ledgerExploreSaga() {
-	yield takeLatest(setSearchOptions.type, exploreLedgerWorker);
-	yield debounce(250, setExploreQuery.type, exploreLedgerWorker);
+	// One watcher, so a newer keystroke or option cancels the search still running.
+	yield takeLatest(
+		[setExploreQuery.type, setSearchOptions.type],
+		exploreLedgerWorker,
+	);
 }
