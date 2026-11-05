@@ -44,6 +44,7 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 	}
 
 	const row = detail.kind === "row" ? detail : null;
+	const storedTable = row?.table ?? null;
 	// Anything this row points at, other than the record already on screen. Its
 	// own URI is compared, not its label, so a parent in the same table is kept.
 	const identityColumn = row
@@ -117,7 +118,11 @@ export function LedgerDetailsContent({ onClose }: LedgerDetailsContentProps) {
 
 				<section className="flex flex-col gap-2">
 					<Heading level="h3">Actions</Heading>
-					<RecordActions actions={actions} row={row} record={detail.record} />
+					<RecordActions
+						actions={actions}
+						storedTable={storedTable}
+						record={detail.record}
+					/>
 				</section>
 			</div>
 		</DetailsPaneShell>
