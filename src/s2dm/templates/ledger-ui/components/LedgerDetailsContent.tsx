@@ -17,9 +17,9 @@ import {
 	selectLedgerDetail,
 	selectLedgerTables,
 } from "@ledger-ui/state/ledgerSlice";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { Heading } from "@shared-ui/components/heading";
 import { DetailsPaneShell } from "@/components/DetailsPaneShell";
-import { EmptyState } from "@/components/ui/empty-state";
 
 type LedgerDetailsContentProps = {
 	// One host collapses a pane, another only clears the selection.

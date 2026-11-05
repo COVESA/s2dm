@@ -7,7 +7,7 @@ import {
 	selectIsLoadingLedger,
 	selectLedgerTables,
 } from "@ledger-ui/state/ledgerSlice";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@shared-ui/components/empty-state";
 
 type LedgerOverviewProps = {
 	// How this host offers the relationships diagram. A narrow pane wants the

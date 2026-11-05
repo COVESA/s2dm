@@ -8,13 +8,13 @@ import {
 	selectLedgerView,
 	setLedgerView,
 } from "@ledger-ui/state/ledgerSlice";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import {
 	Tabs,
 	TabsContent,
 	TabsList,
 	TabsTrigger,
 } from "@shared-ui/components/tabs";
-import { EmptyState } from "@/components/ui/empty-state";
 
 export function LedgerTab() {
 	const dispatch = useLedgerDispatch();

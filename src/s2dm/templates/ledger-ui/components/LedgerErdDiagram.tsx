@@ -1,7 +1,7 @@
 import { LedgerErrorBanner } from "@ledger-ui/components/LedgerErrorBanner";
 import { LEDGER_ER_DIAGRAM } from "@ledger-ui/data/erDiagram";
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { useEffect, useState } from "react";
-import { EmptyState } from "@/components/ui/empty-state";
 import { useTheme } from "@/hooks/useTheme";
 
 type LedgerErdDiagramProps = {
