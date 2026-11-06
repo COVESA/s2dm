@@ -114,16 +114,16 @@ wheels = [
 
 [[package]]
 name = "ariadne"
-version = "0.24.0"
+version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "graphql-core" },
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/16/493bc21a82c80b225c80a9c6d0f47055e229a0f87567b40fd4e477830d67/ariadne-0.24.0.tar.gz", hash = "sha256:6ea3f53d7e54d83b011e5697795ab7f8a713cb5f9423d6849e43a84f2fe81293", size = 75540, upload-time = "2024-12-19T11:57:11.329Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/81/0dd688084f4dcf1a65ab7d77f2ed51d60b9ab753238a83039056008ce421/ariadne-1.1.1.tar.gz", hash = "sha256:72fd197925408520f3b22c718396bb3bdaf6ab5deca1cbd2ebb64be7e5b35358", size = 92476, upload-time = "2026-10-07T11:59:51.497Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/38/a21b21e5479ea7ffc515565fcde2f03f0b84eb6c7cb3d3e64dfebaf928ed/ariadne-0.24.0-py2.py3-none-any.whl", hash = "sha256:aee510e72954a84052c0705b5ed8db7f6ff82d782b9a0a8ead58b4776e3246c9", size = 108795, upload-time = "2024-12-19T11:57:08.74Z" },
+    { url = "https://files.pythonhosted.org/packages/46/f3/26840f06bd2e31810a478cfda1b72ae8481ec7413ca285cf779cf8a482cf/ariadne-1.1.1-py3-none-any.whl", hash = "sha256:af71765ac085b333545bbf7a08217308e2f9c5db62737fea03b2de958b1b446c", size = 129598, upload-time = "2026-10-07T11:59:49.847Z" },
 ]
 
 [[package]]
@@ -2887,14 +2887,14 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ariadne", specifier = ">=0.24.0" },
+    { name = "ariadne", specifier = ">=1.1.1,<1.2" },
     { name = "avro", specifier = ">=1.12.0" },
     { name = "boltons", specifier = ">=26.2.0" },
     { name = "case-converter", specifier = ">=1.2.0" },
     { name = "click", specifier = ">=8.1.7" },
     { name = "ddmodl" },
     { name = "fastapi", specifier = ">=0.115.0" },
-    { name = "graphql-core", specifier = ">=3.2.6" },
+    { name = "graphql-core", specifier = "==3.2.6" },
     { name = "httpx", specifier = ">=0.28.0" },
     { name = "huggingface-hub", specifier = ">=1.16.1" },
     { name = "inflect", specifier = ">=7.0.0" },
