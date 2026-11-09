@@ -834,9 +834,9 @@ class TestProtobufExporter:
 
         assert "SeatPosition" not in result, "SeatPosition should not be included as it's not referenced by Vehicle"
         assert "SeatRowEnum" not in result, "SeatRowEnum should not be included as it's not referenced by Vehicle"
-        assert (
-            "SeatPositionEnum" not in result
-        ), "SeatPositionEnum should not be included as it's not referenced by Vehicle"
+        assert "SeatPositionEnum" not in result, (
+            "SeatPositionEnum should not be included as it's not referenced by Vehicle"
+        )
 
     def test_complete_proto_file(self) -> None:
         """Test that the complete Protobuf output includes syntax, imports, and source option definition."""

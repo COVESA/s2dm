@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, cast
 
@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, model_validat
 from s2dm import log
 
 
-class CaseFormat(str, Enum):
+class CaseFormat(StrEnum):
     CAMEL_CASE = "camelCase"
     PASCAL_CASE = "PascalCase"
     SNAKE_CASE = "snake_case"
@@ -19,12 +19,12 @@ class CaseFormat(str, Enum):
     TITLE_CASE = "TitleCase"
 
 
-class ValidationMode(str, Enum):
+class ValidationMode(StrEnum):
     CONVERSION = "conversion"
     CHECK = "check"
 
 
-class ElementType(str, Enum):
+class ElementType(StrEnum):
     TYPE = "type"
     FIELD = "field"
     ARGUMENT = "argument"
@@ -32,7 +32,7 @@ class ElementType(str, Enum):
     INSTANCE_TAG = "instanceTag"
 
 
-class ContextType(str, Enum):
+class ContextType(StrEnum):
     OBJECT = "object"
     INTERFACE = "interface"
     INPUT = "input"

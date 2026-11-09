@@ -933,7 +933,7 @@ def test_query_custom_query_file(
 
     sparql_file = tmp_outputs / "my_query.sparql"
     sparql_file.write_text(
-        "PREFIX s2dm: <https://covesa.global/models/s2dm#>\n" "SELECT ?type WHERE { ?type a s2dm:ObjectType } LIMIT 5",
+        "PREFIX s2dm: <https://covesa.global/models/s2dm#>\nSELECT ?type WHERE { ?type a s2dm:ObjectType } LIMIT 5",
         encoding="utf-8",
     )
 
@@ -1270,12 +1270,12 @@ def test_registry_export_concept_uri(
 
     assert isinstance(data, dict), "Expected JSON-LD output to be a dict."
 
-    assert contains_value(
-        data, "ns:Vehicle.averageSpeed"
-    ), 'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
-    assert contains_value(
-        data, "ns:Person.name"
-    ), 'Expected value "ns:Person.name" not found in the concept URI output.'
+    assert contains_value(data, "ns:Vehicle.averageSpeed"), (
+        'Expected value "ns:Vehicle.averageSpeed" not found in the concept URI output.'
+    )
+    assert contains_value(data, "ns:Person.name"), (
+        'Expected value "ns:Person.name" not found in the concept URI output.'
+    )
 
 
 def test_registry_export_id(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
@@ -1306,9 +1306,9 @@ def test_registry_export_id(runner: CliRunner, tmp_outputs: Path, spec_directory
         data = json.load(f)
     # New format has 'concepts' key with concept names as keys
     concepts = data["concepts"]
-    assert any(
-        "Vehicle.averageSpeed" in k for k in concepts
-    ), "Expected 'Vehicle.averageSpeed' not found in the output."
+    assert any("Vehicle.averageSpeed" in k for k in concepts), (
+        "Expected 'Vehicle.averageSpeed' not found in the output."
+    )
     assert any("Person.name" in k for k in concepts), "Expected 'Person.name' not found in the output."
 
 
@@ -1368,9 +1368,9 @@ def test_registry_init(runner: CliRunner, tmp_outputs: Path, spec_directory: Pat
         'Expected entry with "@id": "ns:Vehicle.averageSpeed" and specHistory id '
         + f'"{ExpectedIds.VEHICLE_AVG_SPEED_ID}" not found.'
     )
-    assert (
-        found_person
-    ), f'Expected entry with "@id": "ns:Person.height" and specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" not found.'
+    assert found_person, (
+        f'Expected entry with "@id": "ns:Person.height" and specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" not found.'
+    )
 
 
 def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: Path, units_directory: Path) -> None:
@@ -1489,18 +1489,18 @@ def test_registry_update(runner: CliRunner, tmp_outputs: Path, spec_directory: P
                     found_person_new = True
         if found_vehicle_old and found_vehicle_new and found_person_old and found_person_new:
             break
-    assert (
-        found_vehicle_old
-    ), f'Expected old specHistory id "{ExpectedIds.VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
-    assert (
-        found_vehicle_new
-    ), f'Expected new specHistory id "{ExpectedIds.NEW_VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
-    assert (
-        found_person_old
-    ), f'Expected old specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" for Person.height not found.'
-    assert (
-        found_person_new
-    ), f'Expected new specHistory id "{ExpectedIds.NEW_PERSON_HEIGHT_ID}" for Person.height not found.'
+    assert found_vehicle_old, (
+        f'Expected old specHistory id "{ExpectedIds.VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
+    )
+    assert found_vehicle_new, (
+        f'Expected new specHistory id "{ExpectedIds.NEW_VEHICLE_AVG_SPEED_ID}" for Vehicle.averageSpeed not found.'
+    )
+    assert found_person_old, (
+        f'Expected old specHistory id "{ExpectedIds.PERSON_HEIGHT_ID}" for Person.height not found.'
+    )
+    assert found_person_new, (
+        f'Expected new specHistory id "{ExpectedIds.NEW_PERSON_HEIGHT_ID}" for Person.height not found.'
+    )
 
 
 @pytest.mark.parametrize(
@@ -2034,7 +2034,7 @@ def test_compose_with_selection_query_keeps_nested_enum_directive_dependencies(r
         output_path = working_directory / "composed.graphql"
 
         selection_path.write_text(
-            "query Selection {\n" "  vehicle {\n" "    id\n" "  }\n" "}\n",
+            "query Selection {\n  vehicle {\n    id\n  }\n}\n",
             encoding="utf-8",
         )
 
@@ -2069,7 +2069,7 @@ def test_compose_with_selection_query_keeps_nested_enum_schema_enum(runner: CliR
         output_path = working_directory / "composed.graphql"
 
         selection_path.write_text(
-            "query Selection {\n" "  vehicle {\n" "    id\n" "  }\n" "}\n",
+            "query Selection {\n  vehicle {\n    id\n  }\n}\n",
             encoding="utf-8",
         )
 
@@ -2442,7 +2442,7 @@ def test_deps_build_composes_shared_only_dependency_with_type_bearing_dependency
         shared_only_directory = working_directory / "shared_only_source"
         shared_only_directory.mkdir()
         shared_only_schema = (
-            "directive @metadata(comment: String) on FIELD_DEFINITION\n" "enum Color {\n" "    RED\n" "    BLUE\n" "}\n"
+            "directive @metadata(comment: String) on FIELD_DEFINITION\nenum Color {\n    RED\n    BLUE\n}\n"
         )
         (shared_only_directory / "schema.graphql").write_text(shared_only_schema, encoding="utf-8")
         (shared_only_directory / "metadata.yaml").write_text(
@@ -2663,7 +2663,7 @@ def test_deps_build_auto_prefix_writes_composed_schema_for_conflicts(runner: Cli
             )
             config_lines.extend(
                 [
-                    f'  - name: {dependency["name"]}',
+                    f"  - name: {dependency['name']}",
                     f'    version: "{dependency["version"]}"',
                     f'    source: "{source_directory.resolve()}"',
                     '    artifact: "schema.graphql"',

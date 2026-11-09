@@ -46,13 +46,13 @@ class TestProtobufE2E:
             re.DOTALL,
         ), "Cabin message with source option and repeated fields"
 
-        assert re.search(
-            r"message Seat \{.*?" r'option \(message_source\) = "Seat";', result, re.DOTALL
-        ), "Seat message with source option"
+        assert re.search(r"message Seat \{.*?" r'option \(message_source\) = "Seat";', result, re.DOTALL), (
+            "Seat message with source option"
+        )
 
-        assert re.search(
-            r"message Door \{.*?" r'option \(message_source\) = "Door";', result, re.DOTALL
-        ), "Door message with source option"
+        assert re.search(r"message Door \{.*?" r'option \(message_source\) = "Door";', result, re.DOTALL), (
+            "Door message with source option"
+        )
 
         assert "message Cabin_seats" not in result
         assert "message Cabin_doors" not in result

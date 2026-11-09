@@ -17,14 +17,20 @@ repos:
       - id: check-shebang-scripts-are-executable
       - id: trailing-whitespace
       - id: debug-statements
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.2
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
   - repo: local
     hooks:
+      - id: ruff
+        name: ruff
+        entry: uv run ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+      - id: ruff-format
+        name: ruff-format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
       - id: mypy
         name: mypy
         entry: bash -c 'uv run mypy --install-types --non-interactive "$@"' --
