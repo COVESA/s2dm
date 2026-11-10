@@ -12,7 +12,7 @@ dependencies = [
     "click>=8.1.7,<8.6",
     "rich-click>=1.8.3,<1.10",
     "rich>=13.9.4,<15.1",
-    "graphql-core==3.2.6",
+    "graphql-core==3.3.2",
     "pyyaml>=6.0.2,<6.1",
     "pydantic>=2.10.6,<2.15",
     "jinja2>=3.1.0,<3.2",

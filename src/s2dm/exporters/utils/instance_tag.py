@@ -1,6 +1,6 @@
-from copy import copy
+from dataclasses import replace
 from itertools import product
-from typing import Any, NamedTuple, cast
+from typing import NamedTuple, cast
 
 from graphql import (
     GraphQLEnumType,
@@ -39,6 +39,7 @@ from s2dm.exporters.utils.naming_config import (
     NamingConventionConfig,
     get_case_for_element,
 )
+from s2dm.utils.sequence import get_sequence_or_empty
 
 InstanceTagSource = GraphQLObjectType | GraphQLEnumType
 
@@ -183,7 +184,7 @@ def get_instance_tag_dict(
     for field_name, field in instance_tag_object.fields.items():
         field_type = field.type
         if is_non_null_type(field_type):
-            field_type = cast(GraphQLNonNull[Any], field_type).of_type
+            field_type = field_type.of_type
 
         if isinstance(field_type, GraphQLEnumType):
             instance_tag_dict[field_name] = list(field_type.values.keys())
@@ -394,19 +395,19 @@ def _exclude_instances(defined_instances: _DefinedInstances, newly_excluded: lis
 
     field_node = cast(FieldDefinitionNode, defined_instances.tag_field.ast_node)
     directives: list[ConstDirectiveNode] = []
-    for directive in field_node.directives:
+    for directive in get_sequence_or_empty(field_node.directives):
         if directive.name.value != Directive.INSTANCE_TAG.value:
             directives.append(directive)
             continue
+        directive_arguments = get_sequence_or_empty(directive.arguments)
         other_arguments = [
-            argument for argument in directive.arguments if argument.name.value != DirectiveArgument.EXCLUDE.value
+            argument for argument in directive_arguments if argument.name.value != DirectiveArgument.EXCLUDE.value
         ]
-        narrowed_directive = copy(directive)
-        narrowed_directive.arguments = (*other_arguments, exclude_argument)
+        narrowed_directive = replace(directive, arguments=(*other_arguments, exclude_argument))
         directives.append(narrowed_directive)
 
-    narrowed_field_node = copy(field_node)
-    narrowed_field_node.directives = tuple(directives)
+    narrowed_directives = tuple(directives)
+    narrowed_field_node = replace(field_node, directives=narrowed_directives)
     defined_instances.tag_field.ast_node = narrowed_field_node
 
 

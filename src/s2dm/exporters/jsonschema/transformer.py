@@ -4,10 +4,7 @@ from graphql import (
     GraphQLEnumType,
     GraphQLField,
     GraphQLInterfaceType,
-    GraphQLList,
-    GraphQLNonNull,
     GraphQLObjectType,
-    GraphQLScalarType,
     GraphQLSchema,
     GraphQLType,
     GraphQLUnionType,
@@ -163,13 +160,13 @@ class JsonSchemaTransformer:
             Optional[Dict[str, Any]]: JSON Schema definition or None if not transformable
         """
         if is_object_type(graphql_type):
-            return self.transform_object_type(cast(GraphQLObjectType, graphql_type))
+            return self.transform_object_type(graphql_type)
         elif is_enum_type(graphql_type):
-            return self.transform_enum_type(cast(GraphQLEnumType, graphql_type))
+            return self.transform_enum_type(graphql_type)
         elif is_interface_type(graphql_type):
-            return self.transform_interface_type(cast(GraphQLInterfaceType, graphql_type))
+            return self.transform_interface_type(graphql_type)
         elif is_union_type(graphql_type):
-            return self.transform_union_type(cast(GraphQLUnionType, graphql_type))
+            return self.transform_union_type(graphql_type)
         else:
             log.warning(
                 f"Unsupported GraphQL type: {type(graphql_type)} found in element {graphql_type} of the given schema"
@@ -296,14 +293,13 @@ class JsonSchemaTransformer:
 
         # Handle NonNull wrapper. e.g. `Type!`
         if is_non_null_type(field_type):
-            return self.get_field_type_definition(cast(GraphQLNonNull[Any], field_type).of_type, nullable=False)
+            return self.get_field_type_definition(field_type.of_type, nullable=False)
 
         # Handle List wrapper
         if is_list_type(field_type):
-            list_type = cast(GraphQLList[Any], field_type)
-            item_definition = self.get_field_type_definition(list_type.of_type)
+            item_definition = self.get_field_type_definition(field_type.of_type)
 
-            if not is_non_null_type(list_type.of_type) and self.strict:
+            if not is_non_null_type(field_type.of_type) and self.strict:
                 # For nullable items, allow the item type or null
                 if "$ref" in item_definition:
                     # For object/union references, use oneOf
@@ -325,8 +321,7 @@ class JsonSchemaTransformer:
 
         # Handle scalar types
         if is_scalar_type(field_type):
-            scalar_type = cast(GraphQLScalarType, field_type)
-            json_type = GRAPHQL_SCALAR_TO_JSON_SCHEMA.get(scalar_type.name)
+            json_type = GRAPHQL_SCALAR_TO_JSON_SCHEMA.get(field_type.name)
             if json_type:
                 definition = {"type": json_type}
 
@@ -337,8 +332,7 @@ class JsonSchemaTransformer:
 
         # Handle enum types
         if is_enum_type(field_type):
-            enum_type = cast(GraphQLEnumType, field_type)
-            definition = {"$ref": f"#/$defs/{enum_type.name}"}
+            definition = {"$ref": f"#/$defs/{field_type.name}"}
 
             if nullable and self.strict:
                 return {"oneOf": [definition, {"type": "null"}]}
@@ -356,8 +350,7 @@ class JsonSchemaTransformer:
 
         # Handle union types
         if is_union_type(field_type):
-            union_type = cast(GraphQLUnionType, field_type)
-            definition = {"$ref": f"#/$defs/{union_type.name}"}
+            definition = {"$ref": f"#/$defs/{field_type.name}"}
 
             if nullable and self.strict:
                 return {"oneOf": [definition, {"type": "null"}]}
@@ -417,7 +410,7 @@ class JsonSchemaTransformer:
 
             unwrapped_type = field_type
             if unwrapped_type and is_non_null_type(unwrapped_type):
-                unwrapped_type = cast(GraphQLNonNull[Any], unwrapped_type).of_type
+                unwrapped_type = unwrapped_type.of_type
 
             if unwrapped_type and is_list_type(unwrapped_type):
                 contained_type_extensions.update(range_extensions)

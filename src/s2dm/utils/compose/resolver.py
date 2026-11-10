@@ -1,7 +1,9 @@
+from collections.abc import Sequence
 from typing import Literal, TypeGuard
 
 from graphql import DocumentNode, parse, print_ast
 from graphql.language.ast import (
+    DefinitionNode,
     DirectiveDefinitionNode,
     EnumTypeDefinitionNode,
     FieldDefinitionNode,
@@ -23,10 +25,18 @@ from s2dm.utils.schema_definitions import (
     is_field_definition_superset,
     is_scalar_definition_superset,
 )
+from s2dm.utils.sequence import get_sequence_or_empty
 
 DefinitionKind = Literal["directive", "scalar", "enum"]
 
 QUERY_TYPE_NAME = "Query"
+
+
+def _printed_node_set(nodes: Sequence[Node] | None) -> frozenset[str]:
+    """Return the printed nodes as a set, so the same nodes in any order compare equal."""
+    node_sequence = get_sequence_or_empty(nodes)
+    printed_nodes = {print_ast(node) for node in node_sequence}
+    return frozenset(printed_nodes)
 
 
 class SharedDefinitionResolver:
@@ -43,7 +53,7 @@ class SharedDefinitionResolver:
 
     def __init__(self, schema_definitions: list[SchemaDefinition], merge_shared_definitions: bool = False) -> None:
         self.merge_shared_definitions = merge_shared_definitions
-        self.superset_definitions_by_key: dict[tuple[DefinitionKind, str], Node] = {}
+        self.superset_definitions_by_key: dict[tuple[DefinitionKind, str], DefinitionNode] = {}
         self.merged_query_definition: ObjectTypeDefinitionNode | None = None
         self.schema_documents = [
             (schema_definition.source_label, parse(schema_definition.content))
@@ -75,7 +85,7 @@ class SharedDefinitionResolver:
         ``scalar_conflicts`` / ``enum_conflicts`` and must block the build before this is written.
         """
         seen_keys: set[tuple[DefinitionKind, str]] = set()
-        shared_definitions: list[Node] = []
+        shared_definitions: list[DefinitionNode] = []
         for _, document in self.schema_documents:
             for definition in document.definitions:
                 shared_definition = self._as_shared_definition(definition)
@@ -129,7 +139,7 @@ class SharedDefinitionResolver:
             for definition in document.definitions:
                 if not self._is_query_definition(definition):
                     continue
-                for field in definition.fields:
+                for field in get_sequence_or_empty(definition.fields):
                     field_occurrences_by_name.setdefault(field.name.value, []).append((source_label, field))
 
         conflicts: list[QueryFieldConflict] = []
@@ -213,7 +223,7 @@ class SharedDefinitionResolver:
     def _incompatible_definitions(self) -> dict[tuple[DefinitionKind, str], tuple[str, ...]]:
         source_labels_by_key: dict[tuple[DefinitionKind, str], list[str]] = {}
         identities_by_key: dict[tuple[DefinitionKind, str], set[tuple[object, ...]]] = {}
-        definitions_by_key: dict[tuple[DefinitionKind, str], list[Node]] = {}
+        definitions_by_key: dict[tuple[DefinitionKind, str], list[DefinitionNode]] = {}
         for source_label, document in self.schema_documents:
             for definition in document.definitions:
                 shared_definition = self._as_shared_definition(definition)
@@ -242,7 +252,9 @@ class SharedDefinitionResolver:
 
         return incompatible_definitions
 
-    def _select_superset_definition(self, key: tuple[DefinitionKind, str], definitions: list[Node]) -> Node | None:
+    def _select_superset_definition(
+        self, key: tuple[DefinitionKind, str], definitions: list[DefinitionNode]
+    ) -> DefinitionNode | None:
         kind, _ = key
         for candidate in definitions:
             candidate_is_superset = True
@@ -292,31 +304,31 @@ class SharedDefinitionResolver:
     @staticmethod
     def _directive_identity(node: DirectiveDefinitionNode) -> tuple[object, ...]:
         """Directive identity: its locations and argument definitions, compared order-insensitively."""
-        locations = tuple(sorted(location.value for location in node.locations))
-        arguments = tuple(sorted(print_ast(argument) for argument in node.arguments))
+        locations = _printed_node_set(node.locations)
+        arguments = _printed_node_set(node.arguments)
         return (locations, arguments, node.repeatable)
 
     @staticmethod
     def _scalar_identity(node: ScalarTypeDefinitionNode) -> tuple[object, ...]:
         """Scalar identity: the directives applied to it, compared order-insensitively."""
-        return tuple(sorted(print_ast(directive) for directive in node.directives))
+        directives = _printed_node_set(node.directives)
+        return (directives,)
 
     @staticmethod
     def _enum_identity(node: EnumTypeDefinitionNode) -> tuple[object, ...]:
         """Enum identity: its directives and each value's name and directives, compared order-insensitively."""
-        directives = tuple(sorted(print_ast(directive) for directive in node.directives))
-        values = tuple(
-            sorted(
-                (value.name.value, tuple(sorted(print_ast(directive) for directive in value.directives)))
-                for value in node.values
-            )
-        )
+        directives = _printed_node_set(node.directives)
+        value_identities: set[tuple[str, frozenset[str]]] = set()
+        for value in get_sequence_or_empty(node.values):
+            value_directives = _printed_node_set(value.directives)
+            value_identities.add((value.name.value, value_directives))
+        values = frozenset(value_identities)
         return (directives, values)
 
     @staticmethod
     def _field_identity(node: FieldDefinitionNode) -> tuple[object, ...]:
         """Field identity: its return type, arguments, and directives, compared order-insensitively."""
         return_type = print_ast(node.type)
-        arguments = tuple(sorted(print_ast(argument) for argument in node.arguments))
-        directives = tuple(sorted(print_ast(directive) for directive in node.directives))
+        arguments = _printed_node_set(node.arguments)
+        directives = _printed_node_set(node.directives)
         return (return_type, arguments, directives)

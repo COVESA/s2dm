@@ -529,6 +529,47 @@ class TestDirectives:
         assert "x-metadata" in speed_field
         assert speed_field["x-metadata"]["vssType"] == "sensor"
 
+    def test_null_directive_arguments_are_omitted(self) -> None:
+        schema_str = """
+            directive @range(min: Float, max: Float) on FIELD_DEFINITION
+            directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT
+
+            type Query { vehicle: Vehicle }
+            type Vehicle {
+                speed: Float @range(min: null, max: 250) @metadata(comment: null, vssType: null)
+            }
+        """
+        graphql_schema = build_schema(schema_str)
+        result = transform(graphql_schema)
+        schema = json.loads(result)
+
+        speed_prop = schema["$defs"]["Vehicle"]["properties"]["speed"]
+        assert "minimum" not in speed_prop
+        assert speed_prop["maximum"] == 250
+        assert "$comment" not in speed_prop
+        assert "x-metadata" not in speed_prop
+
+    def test_metadata_directive_keeps_object_values(self) -> None:
+        schema_str = """
+            directive @metadata(comment: String, extra: [KeyValue]) on FIELD_DEFINITION | OBJECT
+
+            input KeyValue {
+                key: String!
+                value: String
+            }
+
+            type Query { vehicle: Vehicle }
+            type Vehicle {
+                speed: Float @metadata(extra: [{key: "owner", value: "team"}])
+            }
+        """
+        graphql_schema = build_schema(schema_str)
+        result = transform(graphql_schema)
+        schema = json.loads(result)
+
+        speed_prop = schema["$defs"]["Vehicle"]["properties"]["speed"]
+        assert speed_prop["x-metadata"] == {"extra": [{"key": "owner", "value": "team"}]}
+
 
 class TestErrorHandling:
     def test_unsupported_graphql_type_handling(self) -> None:

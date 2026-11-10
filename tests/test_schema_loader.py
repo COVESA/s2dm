@@ -1,12 +1,24 @@
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
-from graphql import DocumentNode, GraphQLField, GraphQLObjectType, build_schema, parse
+from graphql import (
+    DocumentNode,
+    GraphQLEnumType,
+    GraphQLField,
+    GraphQLInputObjectType,
+    GraphQLObjectType,
+    InputValueDefinitionNode,
+    build_schema,
+    parse,
+    value_from_ast_untyped,
+)
 
+from s2dm.exporters.utils.directive import get_directive_arguments
 from s2dm.exporters.utils.schema_loader import (
     check_correct_schema,
     compose_schemas_to_string,
+    load_and_process_schema,
     load_schema_with_source_map,
     print_schema_with_directives_preserved,
 )
@@ -227,15 +239,21 @@ def test_compose_preserves_directive_with_list_arguments() -> None:
 
     result = print_schema_with_directives_preserved(schema, source_map)
 
-    # Verify list arguments are properly serialized, not as "ListValueNode at X:Y"
-    assert 'enum LengthUnit @vspec(element: "QUANTITY_KIND", metadata: [{key: "quantity", value: "length"}])' in result
-    assert 'MILLIMETER @vspec(element: "UNIT", metadata: [{key: "unit", value: "mm"}])' in result
-    assert 'CENTIMETER @vspec(element: "UNIT", metadata: [{key: "unit", value: "cm"}])' in result
-    assert 'METER @vspec(element: "UNIT", metadata: [{key: "unit", value: "m"}])' in result
+    rebuilt_schema = build_schema(result)
+    length_unit_type = rebuilt_schema.type_map["LengthUnit"]
+    assert isinstance(length_unit_type, GraphQLEnumType)
+    type_arguments = get_directive_arguments(length_unit_type, "vspec")
+    value_arguments = {
+        value_name: get_directive_arguments(enum_value, "vspec")
+        for value_name, enum_value in length_unit_type.values.items()
+    }
 
-    # Ensure no AST node representations leaked into output
-    assert "ListValueNode" not in result
-    assert "ObjectValueNode" not in result
+    assert type_arguments == {"element": "QUANTITY_KIND", "metadata": [{"key": "quantity", "value": "length"}]}
+    assert value_arguments == {
+        "MILLIMETER": {"element": "UNIT", "metadata": [{"key": "unit", "value": "mm"}]},
+        "CENTIMETER": {"element": "UNIT", "metadata": [{"key": "unit", "value": "cm"}]},
+        "METER": {"element": "UNIT", "metadata": [{"key": "unit", "value": "m"}]},
+    }
 
 
 def test_compose_preserves_directive_with_nested_objects() -> None:
@@ -265,9 +283,12 @@ def test_compose_preserves_directive_with_nested_objects() -> None:
 
     result = print_schema_with_directives_preserved(schema, source_map)
 
-    # Verify nested objects are properly serialized
-    assert '@metadata(config: {settings: {enabled: true, count: 42}, name: "test"})' in result
-    assert "ObjectValueNode" not in result
+    rebuilt_schema = build_schema(result)
+    test_type = rebuilt_schema.type_map["TestType"]
+    assert isinstance(test_type, GraphQLObjectType)
+    metadata_arguments = get_directive_arguments(test_type, "metadata")
+
+    assert metadata_arguments == {"config": {"settings": {"enabled": True, "count": 42}, "name": "test"}}
 
 
 def test_compose_preserves_directive_with_various_scalar_types() -> None:
@@ -765,6 +786,197 @@ def test_compose_rejects_incompatible_query_field_redeclaration(tmp_path: Path) 
         )
 
 
+ENUM_DEFAULTS_SCHEMA = """
+enum LengthUnit {
+  MILLIM
+  CENTIM
+}
+
+enum Color {
+  RED
+  BLUE
+}
+
+input VehicleFilter {
+  color: Color = RED
+}
+
+type Vehicle {
+  length(unit: LengthUnit = MILLIM): Float
+}
+
+type Query {
+  vehicle(filter: VehicleFilter): Vehicle
+}
+"""
+
+ENUM_VALUE_RENAMING_CONFIG = """
+enumValue: snake_case
+instanceTag: snake_case
+"""
+
+
+def read_default(input_value_node: InputValueDefinitionNode | None) -> Any:
+    assert input_value_node is not None
+    default_value_node = input_value_node.default_value
+    assert default_value_node is not None
+    return value_from_ast_untyped(default_value_node)
+
+
+def test_compose_keeps_enum_defaults(tmp_path: Path) -> None:
+    schema_path = tmp_path / "schema.graphql"
+    schema_path.write_text(ENUM_DEFAULTS_SCHEMA, encoding="utf-8")
+
+    composed_schema = compose_schemas_to_string(
+        schemas=[schema_path],
+        root_type=None,
+        selection_query=None,
+        naming_config=None,
+        expanded_instances=False,
+    )
+
+    rebuilt_schema = build_schema(composed_schema)
+    vehicle_type = rebuilt_schema.type_map["Vehicle"]
+    vehicle_filter_type = rebuilt_schema.type_map["VehicleFilter"]
+    assert isinstance(vehicle_type, GraphQLObjectType)
+    assert isinstance(vehicle_filter_type, GraphQLInputObjectType)
+    unit_argument_node = vehicle_type.fields["length"].args["unit"].ast_node
+    color_field_node = vehicle_filter_type.fields["color"].ast_node
+    unit_default = read_default(unit_argument_node)
+    color_default = read_default(color_field_node)
+
+    assert unit_default == "MILLIM"
+    assert color_default == "RED"
+
+
+def test_compose_renames_enum_values_in_defaults_and_directive_usages(tmp_path: Path) -> None:
+    schema_str = """
+    directive @config(mode: Mode = ACTIVE) on OBJECT
+
+    enum Mode {
+      ACTIVE
+      PAUSED
+    }
+
+    enum LengthUnit {
+      MILLIM
+      CENTIM
+    }
+
+    input VehicleFilter {
+      unit: LengthUnit = CENTIM
+    }
+
+    type Vehicle @config(mode: PAUSED) {
+      length(unit: LengthUnit = MILLIM): Float
+    }
+
+    type Query {
+      vehicle(filter: VehicleFilter): Vehicle
+    }
+    """
+    schema_path = tmp_path / "schema.graphql"
+    schema_path.write_text(schema_str, encoding="utf-8")
+    naming_config_path = tmp_path / "naming.yaml"
+    naming_config_path.write_text(ENUM_VALUE_RENAMING_CONFIG, encoding="utf-8")
+
+    composed_schema = compose_schemas_to_string(
+        schemas=[schema_path],
+        root_type=None,
+        selection_query=None,
+        naming_config=naming_config_path,
+        expanded_instances=False,
+    )
+
+    rebuilt_schema = build_schema(composed_schema)
+    config_directive = rebuilt_schema.get_directive("config")
+    vehicle_type = rebuilt_schema.type_map["Vehicle"]
+    vehicle_filter_type = rebuilt_schema.type_map["VehicleFilter"]
+    assert config_directive is not None
+    assert isinstance(vehicle_type, GraphQLObjectType)
+    assert isinstance(vehicle_filter_type, GraphQLInputObjectType)
+    mode_argument_node = config_directive.args["mode"].ast_node
+    unit_field_node = vehicle_filter_type.fields["unit"].ast_node
+    unit_argument_node = vehicle_type.fields["length"].args["unit"].ast_node
+    config_arguments = get_directive_arguments(vehicle_type, "config")
+
+    enum_values_in_use = {
+        "directive argument default": read_default(mode_argument_node),
+        "directive usage": config_arguments["mode"],
+        "input field default": read_default(unit_field_node),
+        "field argument default": read_default(unit_argument_node),
+    }
+
+    assert enum_values_in_use == {
+        "directive argument default": "active",
+        "directive usage": "paused",
+        "input field default": "centim",
+        "field argument default": "millim",
+    }
+
+
+def test_compose_renames_enum_values_and_input_field_names_in_list_and_object_defaults(tmp_path: Path) -> None:
+    schema_str = """
+    enum LengthUnit {
+      MILLIM
+      CENTIM
+    }
+
+    input VehicleFilter {
+      lengthUnit: LengthUnit
+      allowedUnits: [LengthUnit]
+    }
+
+    type Vehicle {
+      length(units: [LengthUnit] = [MILLIM, CENTIM]): Float
+      width(units: [LengthUnit] = MILLIM): Float
+    }
+
+    type Query {
+      vehicle(filter: VehicleFilter = {lengthUnit: CENTIM, allowedUnits: [MILLIM]}): Vehicle
+    }
+    """
+    naming_config_str = """
+    enumValue: snake_case
+    instanceTag: snake_case
+    field:
+      input: snake_case
+    """
+    schema_path = tmp_path / "schema.graphql"
+    schema_path.write_text(schema_str, encoding="utf-8")
+    naming_config_path = tmp_path / "naming.yaml"
+    naming_config_path.write_text(naming_config_str, encoding="utf-8")
+
+    composed_schema = compose_schemas_to_string(
+        schemas=[schema_path],
+        root_type=None,
+        selection_query=None,
+        naming_config=naming_config_path,
+        expanded_instances=False,
+    )
+
+    rebuilt_schema = build_schema(composed_schema)
+    vehicle_type = rebuilt_schema.type_map["Vehicle"]
+    query_type = rebuilt_schema.type_map["Query"]
+    assert isinstance(vehicle_type, GraphQLObjectType)
+    assert isinstance(query_type, GraphQLObjectType)
+    length_units_node = vehicle_type.fields["length"].args["units"].ast_node
+    width_units_node = vehicle_type.fields["width"].args["units"].ast_node
+    filter_node = query_type.fields["vehicle"].args["filter"].ast_node
+
+    defaults_in_use = {
+        "list default": read_default(length_units_node),
+        "single value for a list type": read_default(width_units_node),
+        "input object default": read_default(filter_node),
+    }
+
+    assert defaults_in_use == {
+        "list default": ["millim", "centim"],
+        "single value for a list type": "millim",
+        "input object default": {"length_unit": "centim", "allowed_units": ["millim"]},
+    }
+
+
 def test_check_correct_schema_flags_multiple_instance_tag_fields() -> None:
     schema_str = """
     directive @instanceTag(exclude: [String!]) on OBJECT | FIELD_DEFINITION | ENUM
@@ -848,3 +1060,19 @@ def test_check_correct_schema_excludes_warning_severity_violations() -> None:
     schema = build_schema(schema_str)
     violations = check_correct_schema(schema)
     assert all(violation.severity == Severity.ERROR for violation in violations)
+
+
+@pytest.mark.parametrize("renames_enum_values", [False, True], ids=["plain", "renaming"])
+def test_check_correct_schema_accepts_valid_enum_defaults(tmp_path: Path, renames_enum_values: bool) -> None:
+    schema_path = tmp_path / "schema.graphql"
+    schema_path.write_text(ENUM_DEFAULTS_SCHEMA, encoding="utf-8")
+    naming_config_path: Path | None = None
+    if renames_enum_values:
+        naming_config_path = tmp_path / "naming.yaml"
+        naming_config_path.write_text(ENUM_VALUE_RENAMING_CONFIG, encoding="utf-8")
+    annotated_schema, _, _ = load_and_process_schema(schema_paths=[schema_path], naming_config_path=naming_config_path)
+
+    violations = check_correct_schema(annotated_schema.schema)
+    violation_codes = [violation.code for violation in violations]
+
+    assert violation_codes == []

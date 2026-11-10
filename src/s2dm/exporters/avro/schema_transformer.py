@@ -5,10 +5,8 @@ from graphql import (
     GraphQLEnumType,
     GraphQLField,
     GraphQLInterfaceType,
-    GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
-    GraphQLScalarType,
     GraphQLType,
     GraphQLUnionType,
     is_enum_type,
@@ -86,14 +84,12 @@ class AvroSchemaTransformer:
         Returns:
             dict[str, Any] | None: Avro schema definition or None if not transformable
         """
-        if is_object_type(graphql_type):
-            return self.transform_object_type(cast(GraphQLObjectType, graphql_type))
-        elif is_interface_type(graphql_type):
-            return self.transform_object_type(cast(GraphQLInterfaceType, graphql_type))
+        if is_object_type(graphql_type) or is_interface_type(graphql_type):
+            return self.transform_object_type(graphql_type)
         elif is_enum_type(graphql_type):
-            return self.transform_enum_type(cast(GraphQLEnumType, graphql_type))
+            return self.transform_enum_type(graphql_type)
         elif is_union_type(graphql_type):
-            return self.transform_union_type(cast(GraphQLUnionType, graphql_type))
+            return self.transform_union_type(graphql_type)
         else:
             log.warning(
                 f"Unsupported GraphQL type: {type(graphql_type)} found in element {graphql_type} of the given schema"
@@ -207,30 +203,26 @@ class AvroSchemaTransformer:
             Any: Avro type definition
         """
         if is_list_type(field_type):
-            list_type = cast(GraphQLList[Any], field_type)
-            item_type = self.get_field_type_definition(list_type.of_type)
+            item_type = self.get_field_type_definition(field_type.of_type)
             return {"type": "array", "items": item_type}
 
         if is_scalar_type(field_type):
-            scalar_type = cast(GraphQLScalarType, field_type)
-            return get_avro_scalar_type(scalar_type, field)
+            return get_avro_scalar_type(field_type, field)
 
         if is_enum_type(field_type):
-            enum_type = cast(GraphQLEnumType, field_type)
-            if enum_type.name in self.transformed_types:
-                return self._get_type_reference(enum_type.name)
-            self.transformed_types.add(enum_type.name)
-            return self.transform_enum_type(enum_type)
+            if field_type.name in self.transformed_types:
+                return self._get_type_reference(field_type.name)
+            self.transformed_types.add(field_type.name)
+            return self.transform_enum_type(field_type)
 
         if is_object_type(field_type) or is_interface_type(field_type):
             return self._process_field_object_type(field_type)
 
         if is_union_type(field_type):
-            union_type = cast(GraphQLUnionType, field_type)
-            if union_type.name in self.transformed_types:
-                return self._get_type_reference(union_type.name)
-            self.transformed_types.add(union_type.name)
-            return self.transform_union_type(union_type)
+            if field_type.name in self.transformed_types:
+                return self._get_type_reference(field_type.name)
+            self.transformed_types.add(field_type.name)
+            return self.transform_union_type(field_type)
 
         log.warning(f"Unsupported GraphQL type '{field_type}' for Avro conversion, using null")
         return "null"

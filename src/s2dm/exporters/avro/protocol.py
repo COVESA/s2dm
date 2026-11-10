@@ -1,7 +1,4 @@
-from typing import cast
-
 from graphql import GraphQLNamedType, GraphQLObjectType, is_named_type
-from graphql.language.ast import ObjectValueNode, StringValueNode
 
 from s2dm import log
 from s2dm.constants.directive import Directive, DirectiveArgument
@@ -23,22 +20,12 @@ def get_namespace_from_metadata(object_type: GraphQLObjectType, global_namespace
         return global_namespace
 
     for item in metadata:
-        if not isinstance(item, ObjectValueNode):
+        if not isinstance(item, dict):
             continue
 
-        key_field = None
-        value_field = None
-        for field in item.fields:
-            if not isinstance(field.value, StringValueNode):
-                continue
-
-            if field.name.value == "key":
-                key_field = field.value.value
-            elif field.name.value == "value":
-                value_field = field.value.value
-
-        if key_field == "namespace" and value_field:
-            return value_field
+        namespace = item.get("value")
+        if item.get("key") == "namespace" and isinstance(namespace, str) and namespace:
+            return namespace
 
     return global_namespace
 
@@ -80,7 +67,7 @@ def _generate_protocol_for_struct_types(
 
         referenced_types = get_referenced_types(schema, type_name, include_instance_tag_fields=True)
         referenced_named_types: set[GraphQLNamedType] = {
-            cast(GraphQLNamedType, graphql_type) for graphql_type in referenced_types if is_named_type(graphql_type)
+            graphql_type for graphql_type in referenced_types if is_named_type(graphql_type)
         }
 
         transformer = AvroProtocolTransformer(

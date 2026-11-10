@@ -18,13 +18,16 @@ from s2dm.constants.directive import Directive
 
 
 class _Named(Protocol):
-    name: NameNode
+    @property
+    def name(self) -> NameNode: ...
 
 
 _N = TypeVar("_N", bound=_Named)
 
 
-def _find_by_name(nodes: Iterable[_N], name: str) -> _N | None:
+def _find_by_name(nodes: Iterable[_N] | None, name: str) -> _N | None:
+    if nodes is None:
+        return None
     return next((node for node in nodes if node.name.value == name), None)
 
 
@@ -111,7 +114,7 @@ def modl_args(document: DocumentNode, type_name: str, member_name: str | None = 
     if member_name is None:
         directives = type_def.directives
     else:
-        members: Iterable[FieldDefinitionNode | EnumValueDefinitionNode] = (
+        members: Iterable[FieldDefinitionNode | EnumValueDefinitionNode] | None = (
             type_def.fields if isinstance(type_def, ObjectTypeDefinitionNode) else type_def.values
         )
         member = _find_by_name(members, member_name)
@@ -124,6 +127,6 @@ def modl_args(document: DocumentNode, type_name: str, member_name: str | None = 
         return None
     return {
         argument.name.value: argument.value.value
-        for argument in modl.arguments
+        for argument in modl.arguments or ()
         if isinstance(argument.value, StringValueNode)
     }

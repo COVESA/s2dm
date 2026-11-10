@@ -1,11 +1,9 @@
 from graphql import (
     GraphQLEnumType,
-    GraphQLField,
     GraphQLInputObjectType,
     GraphQLInterfaceType,
     GraphQLObjectType,
     GraphQLSchema,
-    Undefined,
     get_named_type,
     get_nullable_type,
     is_list_type,
@@ -31,6 +29,7 @@ from s2dm.exporters.utils.instance_tag import (
 from s2dm.exporters.utils.naming_config import NamingConventionConfig
 from s2dm.exporters.utils.violations import ConstraintCode, ConstraintViolation, Severity
 from s2dm.tools.naming_checker import check_naming_conventions
+from s2dm.utils.sequence import get_sequence_or_empty
 
 
 def _get_invalid_directive_enum_argument_values(
@@ -43,7 +42,7 @@ def _get_invalid_directive_enum_argument_values(
     if not directive_definition:
         return errors
 
-    for argument_node in directive_node.arguments:
+    for argument_node in get_sequence_or_empty(directive_node.arguments):
         argument_name = argument_node.name.value
         argument_definition = directive_definition.args[argument_name]
         named_type = get_named_type(argument_definition.type)
@@ -64,79 +63,8 @@ def _get_invalid_directive_enum_argument_values(
     return errors
 
 
-def _get_invalid_input_field_defaults(type_name: str, input_type: GraphQLInputObjectType) -> list[str]:
-    errors: list[str] = []
-    for field_name, field in input_type.fields.items():
-        named_type = get_named_type(field.type)
-        if not isinstance(named_type, GraphQLEnumType):
-            continue
-
-        if (
-            not field.ast_node
-            or field.ast_node.default_value is None
-            or field.default_value is not Undefined
-            or not isinstance(field.ast_node.default_value, EnumValueNode)
-        ):
-            continue
-
-        invalid_value = field.ast_node.default_value.value
-        errors.append(
-            f"Input type '{type_name}.{field_name}' has invalid enum default value '{invalid_value}'. "
-            f"Valid values are: {list(named_type.values.keys())}"
-        )
-    return errors
-
-
-def _get_invalid_field_argument_defaults(type_name: str, field_name: str, field: GraphQLField) -> list[str]:
-    errors: list[str] = []
-    for argument_name, argument in field.args.items():
-        named_type = get_named_type(argument.type)
-        if not isinstance(named_type, GraphQLEnumType):
-            continue
-
-        if (
-            not argument.ast_node
-            or argument.ast_node.default_value is None
-            or argument.default_value is not Undefined
-            or not isinstance(argument.ast_node.default_value, EnumValueNode)
-        ):
-            continue
-
-        invalid_value = argument.ast_node.default_value.value
-        errors.append(
-            f"Field argument '{type_name}.{field_name}({argument_name})' "
-            f"has invalid enum default value '{invalid_value}'. "
-            f"Valid values are: {list(named_type.values.keys())}"
-        )
-    return errors
-
-
-def _get_invalid_directive_definition_defaults(schema: GraphQLSchema) -> list[str]:
-    errors: list[str] = []
-    for directive in schema.directives:
-        for argument_name, argument in directive.args.items():
-            named_type = get_named_type(argument.type)
-            if not isinstance(named_type, GraphQLEnumType):
-                continue
-
-            if (
-                not argument.ast_node
-                or not argument.ast_node.default_value
-                or argument.default_value is not Undefined
-                or not isinstance(argument.ast_node.default_value, EnumValueNode)
-            ):
-                continue
-
-            invalid_value = argument.ast_node.default_value.value
-            errors.append(
-                f"Directive definition '@{directive.name}({argument_name})' "
-                f"has invalid enum default value '{invalid_value}'. Valid values are: {list(named_type.values.keys())}"
-            )
-    return errors
-
-
-def get_enum_default_errors(schema: GraphQLSchema) -> list[str]:
-    """Check that all enum default values exist in their enum definitions."""
+def get_directive_enum_value_errors(schema: GraphQLSchema) -> list[str]:
+    """Check that the enum arguments of applied directives use values that exist in their enum definitions."""
     errors: list[str] = []
 
     for type_name, type_object in schema.type_map.items():
@@ -145,9 +73,6 @@ def get_enum_default_errors(schema: GraphQLSchema) -> list[str]:
                 errors.extend(
                     _get_invalid_directive_enum_argument_values(schema, directive_node, f"Type '{type_name}'")
                 )
-
-        if isinstance(type_object, GraphQLInputObjectType):
-            errors.extend(_get_invalid_input_field_defaults(type_name, type_object))
 
         if isinstance(type_object, GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType):
             for field_name, field in type_object.fields.items():
@@ -158,11 +83,6 @@ def get_enum_default_errors(schema: GraphQLSchema) -> list[str]:
                                 schema, directive_node, f"Field '{type_name}.{field_name}'"
                             )
                         )
-
-                if isinstance(type_object, GraphQLObjectType | GraphQLInterfaceType):
-                    errors.extend(_get_invalid_field_argument_defaults(type_name, field_name, field))
-
-    errors.extend(_get_invalid_directive_definition_defaults(schema))
 
     return errors
 
@@ -176,9 +96,11 @@ class ConstraintChecker:
         spec_errors = validate_schema(self.schema)
         return [ConstraintViolation(ConstraintCode.SCHEMA_SPEC, spec_error.message) for spec_error in spec_errors]
 
-    def check_enum_defaults(self) -> list[ConstraintViolation]:
-        enum_default_errors = get_enum_default_errors(self.schema)
-        return [ConstraintViolation(ConstraintCode.ENUM_DEFAULT, error) for error in enum_default_errors]
+    def check_directive_enum_values(self) -> list[ConstraintViolation]:
+        directive_enum_value_errors = get_directive_enum_value_errors(self.schema)
+        return [
+            ConstraintViolation(ConstraintCode.DIRECTIVE_ENUM_VALUE, error) for error in directive_enum_value_errors
+        ]
 
     def check_min_not_greater_than_max(
         self, objects: list[GraphQLObjectType], directive: Directive
@@ -335,7 +257,7 @@ class ConstraintChecker:
         violations += self.check_instance_tag_reference(objects)
         violations += self.check_instance_tag_multiple_fields(objects)
         violations += self.check_schema_spec()
-        violations += self.check_enum_defaults()
+        violations += self.check_directive_enum_values()
         violations += self.check_instance_tag_source_type_fields(objects)
         violations += self.check_instance_tag_expandability(objects)
         violations += self.check_instance_tag_single_dimension(objects)

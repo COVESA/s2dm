@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from graphql import DirectiveLocation, build_schema, parse
+from graphql import DirectiveLocation, Undefined, build_schema, parse
 from graphql.type import (
     GraphQLEnumType,
     GraphQLEnumValue,
@@ -21,6 +21,7 @@ from s2dm.exporters.utils import instance_tag as instance_tag_utils
 from s2dm.exporters.utils import schema as schema_utils
 from s2dm.exporters.utils import schema_loader as schema_loader_utils
 from s2dm.exporters.utils.graphql_type import is_introspection_type
+from s2dm.utils import sequence as sequence_utils
 from s2dm.utils import url as url_utils
 from tests.conftest import TestSchemaData as TSD
 
@@ -44,6 +45,16 @@ from tests.conftest import TestSchemaData as TSD
 )
 def test_is_url(value: str, expected: bool, description: str) -> None:
     assert url_utils.is_url(value) == expected, description
+
+
+def test_get_sequence_or_empty_returns_the_items() -> None:
+    items = (1, 2)
+
+    assert sequence_utils.get_sequence_or_empty(items) is items
+
+
+def test_get_sequence_or_empty_returns_an_empty_tuple_for_missing_items() -> None:
+    assert sequence_utils.get_sequence_or_empty(None) == ()
 
 
 def test_build_schema_str(schema_path: list[Path]) -> None:
@@ -213,6 +224,39 @@ def test_prune_schema_keeps_directive_argument_list_input_object_definition() ->
         r"input KeyValue \{\n\s+key: String\n\s+value: String\n\}",
         pruned_schema_str,
     )
+
+
+def test_prune_schema_keeps_fields_of_inline_fragment_without_type_condition() -> None:
+    schema_str = """
+    type Vehicle {
+      id: ID!
+      speed: Float
+      weight: Float
+    }
+
+    type Query {
+      vehicle: Vehicle
+    }
+    """
+
+    query_str = """
+    query Selection {
+      vehicle {
+        id
+        ... {
+          speed
+        }
+      }
+    }
+    """
+
+    schema = build_schema(schema_str)
+    selection_query = parse(query_str)
+    pruned_schema = schema_loader_utils.prune_schema_using_query_selection(schema, selection_query)
+
+    vehicle_type = pruned_schema.type_map["Vehicle"]
+    assert isinstance(vehicle_type, GraphQLObjectType)
+    assert set(vehicle_type.fields) == {"id", "speed"}
 
 
 def test_select_schema_content_keeps_direct_enum_directive_argument_type() -> None:
@@ -710,6 +754,32 @@ def test_get_directive_arguments_parses_instance_tag_exclude_list() -> None:
     assert args["exclude"] == ["ROW1.LEFT"]
 
 
+def test_get_directive_arguments_converts_objects_and_leaves_out_null() -> None:
+    schema = build_schema("""
+    input KeyValue {
+      key: String!
+      value: String
+    }
+
+    directive @meta(entries: [KeyValue], note: String) on OBJECT
+
+    type Vehicle @meta(entries: [{key: "unit", value: "m"}], note: null) {
+      speed: Float
+    }
+
+    type Query {
+      vehicle: Vehicle
+    }
+    """)
+
+    vehicle_type = schema.type_map["Vehicle"]
+    assert isinstance(vehicle_type, GraphQLObjectType)
+
+    meta_arguments = directive_utils.get_directive_arguments(vehicle_type, "meta")
+
+    assert meta_arguments == {"entries": [{"key": "unit", "value": "m"}]}
+
+
 def test_has_given_directive(schema_path: list[Path]) -> None:
     schema = schema_loader_utils.load_schema(schema_path)
     object_types = extraction_utils.get_all_object_types(schema)
@@ -772,6 +842,38 @@ def test_print_field_sdl(schema_path: list[Path]) -> None:
             assert isinstance(sdl, str)
             break
         break
+
+
+@pytest.mark.parametrize(
+    ("field_name", "expected_default"),
+    [("length", "MILLIM"), ("width", Undefined), ("height", Undefined)],
+    ids=["valid default", "invalid default", "no default"],
+)
+def test_get_argument_or_input_field_default(field_name: str, expected_default: Any) -> None:
+    schema_str = """
+    enum LengthUnit {
+      MILLIM
+      CENTIM
+    }
+
+    type Vehicle {
+      length(unit: LengthUnit = MILLIM): Float
+      width(unit: LengthUnit = METER): Float
+      height(unit: LengthUnit): Float
+    }
+
+    type Query {
+      vehicle: Vehicle
+    }
+    """
+    schema = build_schema(schema_str)
+    vehicle_type = schema.type_map["Vehicle"]
+    assert isinstance(vehicle_type, GraphQLObjectType)
+    unit_argument = vehicle_type.fields[field_name].args["unit"]
+
+    default_value = field_utils.get_argument_or_input_field_default(unit_argument)
+
+    assert default_value == expected_default
 
 
 # #########################################################

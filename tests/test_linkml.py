@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from graphql import build_schema
+from graphql import build_schema, parse_value, value_from_ast_untyped
 from linkml_runtime.loaders import yaml_loader
 
 from s2dm.exporters.linkml import translate_to_linkml
@@ -302,6 +302,74 @@ class TestDirectiveMapping:
         assert "description" not in tags_slot
         assert tags_slot["annotations"]["s2dm_metadata_comment"] == "Tag values"
         assert tags_slot["annotations"]["s2dm_metadata_vssType"] == "attribute"
+
+    def test_null_directive_arguments_are_omitted(self) -> None:
+        """Test that null directive arguments map to no LinkML constraint, annotation or mapping."""
+        schema_str = """
+            directive @range(min: Float, max: Float) on FIELD_DEFINITION
+            directive @metadata(comment: String, vssType: String) on FIELD_DEFINITION | OBJECT
+            directive @reference(uri: String, versionTag: String) on ENUM | ENUM_VALUE
+
+            type Query { vehicle: Vehicle }
+
+            enum FuelType @reference(uri: null) {
+                PETROL @reference(uri: null)
+            }
+
+            type Vehicle {
+                speed: Float @range(min: null, max: 250) @metadata(comment: null, vssType: "sensor")
+                fuel: FuelType
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str)
+        speed_slot = schema["classes"]["Vehicle"]["attributes"]["speed"]
+        fuel_enum = schema["enums"]["FuelType"]
+
+        assert "minimum_value" not in speed_slot
+        assert speed_slot["maximum_value"] == 250
+        assert "s2dm_metadata_comment" not in speed_slot["annotations"]
+        assert speed_slot["annotations"]["s2dm_metadata_vssType"] == "sensor"
+        assert "exact_mappings" not in fuel_enum
+        assert "meaning" not in fuel_enum["permissible_values"]["PETROL"]
+
+    def test_metadata_annotations_keep_non_string_values_as_graphql_text(self) -> None:
+        """Test that non-string @metadata values become GraphQL value text in LinkML annotations."""
+        schema_str = """
+            directive @metadata(single: KeyValue, many: [KeyValue], tags: [String], active: Boolean) on FIELD_DEFINITION
+
+            input KeyValue {
+                key: String!
+                value: String
+            }
+
+            type Query { vehicle: Vehicle }
+
+            type Vehicle {
+                speed: Float
+                    @metadata(
+                        single: {key: "owner", value: "team"}
+                        many: [{key: "unit", value: "m"}]
+                        tags: ["a", "b"]
+                        active: true
+                    )
+            }
+        """
+
+        schema = _transform_to_schema_dict(schema_str)
+        speed_annotations = schema["classes"]["Vehicle"]["attributes"]["speed"]["annotations"]
+        annotation_values: dict[str, Any] = {}
+        for argument_name in ("single", "many", "tags", "active"):
+            annotation_text = speed_annotations[f"s2dm_metadata_{argument_name}"]
+            value_node = parse_value(annotation_text)
+            annotation_values[argument_name] = value_from_ast_untyped(value_node)
+
+        assert annotation_values == {
+            "single": {"key": "owner", "value": "team"},
+            "many": [{"key": "unit", "value": "m"}],
+            "tags": ["a", "b"],
+            "active": True,
+        }
 
 
 class TestUnitMapping:

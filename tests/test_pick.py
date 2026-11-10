@@ -257,14 +257,29 @@ class TestSharedNames:
 
 
 class TestPrintedSchemaDescription:
-    def test_a_documented_schema_keeps_its_description(self, tmp_path: Path) -> None:
+    def test_a_definitions_only_pick_drops_the_schema_description(self, tmp_path: Path) -> None:
         schema_path = tmp_path / "documented.graphql"
-        schema_path.write_text(
-            '"""A documented model."""\nschema { query: Query }\ntype Query { a: String }\nenum FuelType { PETROL }\n'
-        )
+        schema_path.write_text('''
+            """A documented model."""
+            schema {
+              query: Query
+            }
+
+            type Query {
+              a: String
+            }
+
+            enum FuelType {
+              PETROL
+            }
+        ''')
         schema = load_schema([schema_path])
         query = parse_selection_query('query Selection @pick(enums: ["FuelType"]) {}')
 
-        printed = print_schema_with_directives_preserved(prune_schema_using_query_selection(schema, query))
+        pruned_schema = prune_schema_using_query_selection(schema, query)
+        printed = print_schema_with_directives_preserved(pruned_schema)
 
-        assert "A documented model" in printed
+        printed_schema = build_schema(printed)
+        assert printed_schema.query_type is None
+        assert printed_schema.description is None
+        assert isinstance(printed_schema.type_map["FuelType"], GraphQLEnumType)

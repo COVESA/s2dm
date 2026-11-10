@@ -2,7 +2,6 @@
 
 import re
 from collections import defaultdict
-from copy import copy
 from dataclasses import dataclass, field, replace
 from typing import Any, NamedTuple, TypeVar, cast
 
@@ -23,9 +22,9 @@ from graphql import (
 )
 from graphql.error import GraphQLSyntaxError
 from graphql.language.ast import DirectiveNode, FieldNode, OperationDefinitionNode, OperationType
-from graphql.utilities import value_from_ast_untyped
 
 from s2dm.constants.directive import Directive
+from s2dm.exporters.utils.directive import get_directive_node_arguments
 from s2dm.exporters.utils.graphql_type import is_introspection_type
 from s2dm.exporters.utils.instance_tag import (
     get_defined_instance_names,
@@ -35,6 +34,7 @@ from s2dm.exporters.utils.instance_tag import (
     is_valid_instance_tag_field,
     pick_instances,
 )
+from s2dm.utils.sequence import get_sequence_or_empty
 
 DIRECTIVE_NAME = Directive.PICK.value
 
@@ -155,7 +155,7 @@ def _read_operation_arguments(directive_node: DirectiveNode) -> PickedDefinition
     Raises:
         ValueError: If the directive carries an argument that @pick on the operation does not define.
     """
-    arguments = {argument.name.value: value_from_ast_untyped(argument.value) for argument in directive_node.arguments}
+    arguments = get_directive_node_arguments(directive_node)
 
     unknown_arguments = arguments.keys() - OPERATION_ARGUMENTS
     unknown = sorted(unknown_arguments)
@@ -185,7 +185,7 @@ def _read_field_arguments(directive_node: DirectiveNode, query_path: str) -> Pic
     Raises:
         ValueError: If an argument other than `instances` is given, or `instances` is missing.
     """
-    arguments = {argument.name.value: value_from_ast_untyped(argument.value) for argument in directive_node.arguments}
+    arguments = get_directive_node_arguments(directive_node)
 
     unknown_arguments = arguments.keys() - FIELD_ARGUMENTS
     unknown = sorted(unknown_arguments)
@@ -267,11 +267,9 @@ def _strip_pick(node: _PickableNode) -> _PickableNode:
     Returns:
         The copy.
     """
-    stripped_node = copy(node)
-    stripped_node.directives = tuple(
-        directive for directive in node.directives if directive.name.value != DIRECTIVE_NAME
-    )
-    return stripped_node
+    node_directives = get_sequence_or_empty(node.directives)
+    kept_directives = tuple(directive for directive in node_directives if directive.name.value != DIRECTIVE_NAME)
+    return replace(node, directives=kept_directives)
 
 
 def _extract_picked_definitions(document: DocumentNode) -> tuple[DocumentNode, PickedDefinitions]:
@@ -299,7 +297,9 @@ def _extract_picked_definitions(document: DocumentNode) -> tuple[DocumentNode, P
         return document, PickedDefinitions()
 
     applied_directives = [
-        directive for directive in query_operation.directives if directive.name.value == DIRECTIVE_NAME
+        directive
+        for directive in get_sequence_or_empty(query_operation.directives)
+        if directive.name.value == DIRECTIVE_NAME
     ]
     if not applied_directives:
         return document, PickedDefinitions()
@@ -426,7 +426,9 @@ class _FieldPickExtractor(Visitor):
             enclosing_field = self.field_stack[-1]
         current_field = self._push_query_field(node, enclosing_field)
 
-        pick_directives = [directive for directive in node.directives if directive.name.value == DIRECTIVE_NAME]
+        pick_directives = [
+            directive for directive in get_sequence_or_empty(node.directives) if directive.name.value == DIRECTIVE_NAME
+        ]
         if not pick_directives:
             return None
 

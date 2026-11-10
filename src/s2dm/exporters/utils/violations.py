@@ -6,7 +6,7 @@ from enum import StrEnum
 
 class ConstraintCode(StrEnum):
     SCHEMA_SPEC = "schema.spec"
-    ENUM_DEFAULT = "schema.enum_default"
+    DIRECTIVE_ENUM_VALUE = "schema.directive_enum_value"
     INSTANCE_TAG_INVALID_EXCLUDE = "instanceTag.invalid_exclude"
     INSTANCE_TAG_INVALID_REFERENCE = "instanceTag.invalid_reference"
     INSTANCE_TAG_MULTIPLE_FIELDS = "instanceTag.multiple_fields"

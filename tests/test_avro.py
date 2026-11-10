@@ -781,6 +781,41 @@ class TestRangeDirective:
 
         parse_avro_schema(result)
 
+    def test_range_with_null_min(self) -> None:
+        """Test that @range with a null min optimizes like a range with only max."""
+        schema_str = """
+        directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+        scalar Int64
+
+        type Vehicle {
+            rpm: Int64 @range(min: null, max: 8000)
+        }
+
+        type Query {
+            vehicle: Vehicle
+        }
+        """
+        graphql_schema = build_schema(schema_str)
+        selection_query = parse("query Selection { vehicle { rpm } }")
+        annotated_schema = process_schema(
+            schema=graphql_schema,
+            source_map={},
+            query_document=selection_query,
+        )
+
+        result = transform(annotated_schema, "com.example", selection_query)
+        result_dict = json.loads(result)
+
+        vehicle_field = result_dict["fields"][0]
+        vehicle_record = vehicle_field["type"][1]
+        rpm_field = vehicle_record["fields"][0]
+
+        assert rpm_field["name"] == "rpm"
+        assert rpm_field["type"] == ["null", "int"]
+
+        parse_avro_schema(result)
+
     def test_range_with_only_min_requires_long(self) -> None:
         """Test that @range with only min uses long when needed."""
         schema_str = """

@@ -1,18 +1,16 @@
 """Annotate a composed GraphQL schema with ``@modl`` directives sourced from a ledger."""
 
+from dataclasses import replace
+
 from graphql import (
     ConstArgumentNode,
     ConstDirectiveNode,
-    EnumTypeDefinitionNode,
-    EnumValueDefinitionNode,
-    FieldDefinitionNode,
     GraphQLEnumType,
     GraphQLEnumValue,
     GraphQLField,
     GraphQLObjectType,
     GraphQLSchema,
     NameNode,
-    ObjectTypeDefinitionNode,
     StringValueNode,
 )
 from modl.models import ElementKind
@@ -22,8 +20,9 @@ from s2dm.exporters.utils.extraction import select_types
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 from s2dm.ledger.models import Ledger, LedgerEntry
 from s2dm.ledger.validation import validate_modl_annotation
+from s2dm.utils.sequence import get_sequence_or_empty
 
-_DirectivesNode = ObjectTypeDefinitionNode | EnumTypeDefinitionNode | FieldDefinitionNode | EnumValueDefinitionNode
+_AnnotatableElement = GraphQLObjectType | GraphQLEnumType | GraphQLField | GraphQLEnumValue
 
 
 def annotate_schema_with_ledger(schema: GraphQLSchema, ledger: Ledger) -> None:
@@ -36,7 +35,7 @@ def annotate_schema_with_ledger(schema: GraphQLSchema, ledger: Ledger) -> None:
     when the schema is printed with directives preserved. Root operation and introspection types are
     ignored.
     """
-    matches: list[tuple[LedgerEntry, _DirectivesNode | None]] = []
+    matches: list[tuple[LedgerEntry, _AnnotatableElement]] = []
     annotations: list[tuple[str, str]] = []
     annotatable_types = select_types(
         schema, GraphQLObjectType, GraphQLEnumType, exclude_by_name=is_introspection_or_root_type
@@ -51,18 +50,22 @@ def annotate_schema_with_ledger(schema: GraphQLSchema, ledger: Ledger) -> None:
         else:
             continue
 
-        matches.append((ledger.entries_by_label[type_name], graphql_type.ast_node))
+        matches.append((ledger.entries_by_label[type_name], graphql_type))
         annotations.append((type_name, type_kind))
         for member_name, member in members.items():
             label = f"{type_name}.{member_name}"
-            matches.append((ledger.entries_by_label[label], member.ast_node))
+            matches.append((ledger.entries_by_label[label], member))
             annotations.append((label, member_kind))
 
     if not validate_modl_annotation(annotations, ledger.directory):
         return
-    for entry, ast_node in matches:
-        if ast_node is not None:
-            ast_node.directives = (*ast_node.directives, _modl_directive_node(entry))
+    for entry, element in matches:
+        ast_node = element.ast_node
+        if ast_node is None:
+            continue
+        existing_directives = get_sequence_or_empty(ast_node.directives)
+        modl_directive = _modl_directive_node(entry)
+        element.ast_node = replace(ast_node, directives=(*existing_directives, modl_directive))
 
 
 def _modl_directive_node(entry: LedgerEntry) -> ConstDirectiveNode:
