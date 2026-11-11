@@ -13,11 +13,7 @@ import {
 import { selectComposedSources } from "@/store/schema/composedSources";
 import { selectAppliedSelectionQuery } from "@/store/selection/selectionSlice";
 import type { SchemaSource } from "@/types/schemaSource";
-import { getAxiosErrorMessage, getErrorMessage } from "@/utils/getErrorMessage";
-
-function getExportErrorMessage(err: unknown): string {
-	return getAxiosErrorMessage(err) ?? getErrorMessage(err);
-}
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 function isEmpty(value: unknown, propertyType: string): boolean {
 	if (value === null || value === undefined) {
@@ -127,7 +123,7 @@ function* exportSchemaWorker(action: PayloadAction<ExportSchemaOptions>) {
 
 		yield put(exportSuccess({ endpoint, output, format }));
 	} catch (err) {
-		const errorMsg = getExportErrorMessage(err);
+		const errorMsg = getErrorMessage(err);
 		yield put(
 			exportFailure({ endpoint: action.payload.endpoint, error: errorMsg }),
 		);

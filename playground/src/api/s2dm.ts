@@ -2,8 +2,7 @@ import type { ConceptsResponse } from "@insights-ui/types/concepts";
 import type { CoverageResponse } from "@insights-ui/types/coverage";
 import type { QualityResponse } from "@insights-ui/types/quality";
 import type { RelationshipsResponse } from "@insights-ui/types/relationships";
-import { AxiosError } from "axios";
-import { apiClient } from "@/api/client";
+import { ApiError, apiClient, GENERIC_ERROR_MESSAGE } from "@/api/client";
 import type {
 	DependenciesIdentities,
 	DependenciesStatusResponse,
@@ -22,7 +21,6 @@ import type {
 	ValidateSchemaResponse,
 } from "@/api/types";
 import { NO_TIMEOUT } from "@/config/api";
-import { getAxiosErrorMessage } from "@/utils/getErrorMessage";
 
 type DependenciesWarningsResponse = {
 	warnings: string[];
@@ -39,20 +37,15 @@ export class ApiValidationError extends Error {
 }
 
 function handleApiError(error: unknown): never {
-	const axiosMessage = getAxiosErrorMessage(error);
-	if (axiosMessage) {
-		throw new Error(axiosMessage);
-	}
-
 	if (error instanceof Error && error.message.trim().length > 0) {
 		throw new Error(error.message);
 	}
 
-	throw new Error("We couldn't complete that request. Please try again.");
+	throw new Error(GENERIC_ERROR_MESSAGE);
 }
 
 function isNotFoundError(error: unknown): boolean {
-	return error instanceof AxiosError && error.response?.status === 404;
+	return error instanceof ApiError && error.status === 404;
 }
 
 export async function validateSchemas(
