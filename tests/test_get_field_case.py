@@ -144,7 +144,7 @@ def test_field_case_consistency(test_schema):  # type: ignore[no-untyped-def]
         cases = [get_field_case(test_type.fields[fname]) for fname in field_names]
         # All fields in the same pattern should return the same FieldCase
         assert len(set(cases)) == 1, (
-            f"Inconsistent field cases for pattern {pattern_name}: " f"{dict(zip(field_names, cases, strict=True))}"
+            f"Inconsistent field cases for pattern {pattern_name}: {dict(zip(field_names, cases, strict=True))}"
         )
 
 

@@ -13,7 +13,6 @@ from graphql import (
     GraphQLEnumType,
     GraphQLNamedType,
     GraphQLObjectType,
-    GraphQLScalarType,
     GraphQLSchema,
     get_named_type,
     is_scalar_type,
@@ -102,11 +101,7 @@ class IDExporter:
                 for field_name, field in named_type.fields.items():
                     # Check if field's type is ID scalar - skip ID fields
                     field_type = get_named_type(field.type)
-                    if (
-                        is_scalar_type(field_type)
-                        and isinstance(field_type, GraphQLScalarType)
-                        and is_id_type(field_type.name)
-                    ):
+                    if is_scalar_type(field_type) and is_id_type(field_type.name):
                         continue
 
                     # Check if it's a leaf field (not an object type)

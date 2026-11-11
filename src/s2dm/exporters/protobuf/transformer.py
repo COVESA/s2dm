@@ -5,11 +5,8 @@ from graphql import (
     GraphQLEnumType,
     GraphQLField,
     GraphQLInterfaceType,
-    GraphQLList,
     GraphQLNamedType,
-    GraphQLNonNull,
     GraphQLObjectType,
-    GraphQLScalarType,
     GraphQLType,
     GraphQLUnionType,
     get_named_type,
@@ -119,13 +116,11 @@ class ProtobufTransformer:
 
         for type_def in user_defined_types:
             if is_enum_type(type_def):
-                enum_types.append(cast(GraphQLEnumType, type_def))
-            elif is_object_type(type_def):
-                message_types.append(cast(GraphQLObjectType, type_def))
-            elif is_interface_type(type_def):
-                message_types.append(cast(GraphQLInterfaceType, type_def))
+                enum_types.append(type_def)
+            elif is_object_type(type_def) or is_interface_type(type_def):
+                message_types.append(type_def)
             elif is_union_type(type_def):
-                union_types.append(cast(GraphQLUnionType, type_def))
+                union_types.append(type_def)
 
         proto_schema = ProtoSchema(
             package=self.package_name,
@@ -404,12 +399,10 @@ class ProtobufTransformer:
                     raise ValueError(f"Type '{named_unwrapped_type.name}' not found in available types")
             else:
                 if is_list and (is_object_type(unwrapped_type) or is_interface_type(unwrapped_type)):
-                    named_type = cast(GraphQLObjectType | GraphQLInterfaceType, unwrapped_type)
-                    self._add_type_with_dependencies(named_type.name, referenced_types)
+                    self._add_type_with_dependencies(unwrapped_type.name, referenced_types)
                 elif is_union_type(unwrapped_type):
-                    union_type_cast = cast(GraphQLUnionType, unwrapped_type)
-                    self._add_type_with_dependencies(union_type_cast.name, referenced_types)
-                    for member_type in union_type_cast.types:
+                    self._add_type_with_dependencies(unwrapped_type.name, referenced_types)
+                    for member_type in unwrapped_type.types:
                         self._add_type_with_dependencies(member_type.name, referenced_types)
 
                 fields.append(
@@ -436,28 +429,23 @@ class ProtobufTransformer:
     def _get_base_proto_type(self, field_type: GraphQLType) -> str:
         """Get the base Protobuf type string without optional prefix."""
         if is_non_null_type(field_type):
-            return self._get_base_proto_type(cast(GraphQLNonNull[Any], field_type).of_type)
+            return self._get_base_proto_type(field_type.of_type)
 
         if is_list_type(field_type):
-            list_type = cast(GraphQLList[Any], field_type)
-            item_type = self._get_base_proto_type(list_type.of_type)
+            item_type = self._get_base_proto_type(field_type.of_type)
             return f"repeated {item_type}"
 
         if is_scalar_type(field_type):
-            scalar_type = cast(GraphQLScalarType, field_type)
-            return GRAPHQL_SCALAR_TO_PROTOBUF.get(scalar_type.name, "string")
+            return GRAPHQL_SCALAR_TO_PROTOBUF.get(field_type.name, "string")
 
         if is_enum_type(field_type):
-            enum_type = cast(GraphQLEnumType, field_type)
-            return f"{enum_type.name}.Enum"
+            return f"{field_type.name}.Enum"
 
         if is_object_type(field_type) or is_interface_type(field_type):
-            named_type = cast(GraphQLObjectType | GraphQLInterfaceType, field_type)
-            return named_type.name
+            return field_type.name
 
         if is_union_type(field_type):
-            union_type = cast(GraphQLUnionType, field_type)
-            return union_type.name
+            return field_type.name
 
         return "string"
 

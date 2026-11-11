@@ -189,6 +189,7 @@ def test_enum_value_superset_is_selected_with_merge_shared_definitions() -> None
     ]
 
     assert resolver.enum_conflicts == ()
+    assert drivetrain.values is not None
     assert {value.name.value for value in drivetrain.values} == {"FWD", "RWD", "AWD"}
 
 
@@ -293,6 +294,7 @@ def test_disjoint_query_fields_are_stitched_into_one_type() -> None:
     ]
 
     assert resolver.root_type_conflicts == ()
+    assert query.fields is not None
     assert {field.name.value for field in query.fields} == {"vehicle", "powertrain"}
 
 
@@ -332,6 +334,7 @@ def test_query_declared_in_only_one_source_is_unchanged() -> None:
     ]
 
     assert resolver.root_type_conflicts == ()
+    assert query.fields is not None
     assert {field.name.value for field in query.fields} == {"vehicle"}
 
 
@@ -392,8 +395,11 @@ def test_query_field_directive_superset_is_selected_with_merge_shared_definition
     )
 
     query = _query_type(resolver.resolved_definitions_sdl())
+    assert query.fields is not None
     (vehicle,) = query.fields
+    assert vehicle.directives is not None
     (meta,) = vehicle.directives
+    assert meta.arguments is not None
     argument_names = {argument.name.value for argument in meta.arguments}
 
     assert resolver.root_type_conflicts == ()
@@ -427,7 +433,9 @@ def test_query_field_added_optional_argument_is_a_superset_with_merge_shared_def
     )
 
     query = _query_type(resolver.resolved_definitions_sdl())
+    assert query.fields is not None
     (component,) = query.fields
+    assert component.arguments is not None
     argument_names = {argument.name.value for argument in component.arguments}
 
     assert resolver.root_type_conflicts == ()

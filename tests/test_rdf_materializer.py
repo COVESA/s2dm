@@ -323,7 +323,7 @@ class TestMaterializeDataGraph:
 
     def test_builtin_scalars_use_s2dm_namespace(self) -> None:
         """Built-in scalars resolve to s2dm:Int, s2dm:Boolean, etc."""
-        schema_str = "type Query { t: T } " "type T { id: ID! name: String count: Int ratio: Float flag: Boolean }"
+        schema_str = "type Query { t: T } type T { id: ID! name: String count: Int ratio: Float flag: Boolean }"
         extract = extract_schema_for_rdf(build_schema(schema_str))
         graph = materialize_data_graph(extract, NS, PREFIX)
 

@@ -111,9 +111,9 @@ class TestSKOSSearchService:
         for term, case_insensitive in [("Vehicle", False), ("vehicle", True), ("Door", False)]:
             total_count = search_service.count_keyword_matches(term, ignore_case=case_insensitive)
             search_results = search_service.search_keyword(term, ignore_case=case_insensitive, limit_value=None)
-            assert total_count == len(
-                search_results
-            ), f"Count mismatch for '{term}' case_insensitive={case_insensitive}"
+            assert total_count == len(search_results), (
+                f"Count mismatch for '{term}' case_insensitive={case_insensitive}"
+            )
 
     def test_search_empty_string(self, search_service: SKOSSearchService) -> None:
         """Test search with empty keyword returns empty results."""

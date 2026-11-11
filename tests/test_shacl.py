@@ -1,7 +1,16 @@
 import pytest
-from graphql import GraphQLScalarType, GraphQLSchema, build_schema
+from graphql import (
+    GraphQLBoolean,
+    GraphQLFloat,
+    GraphQLID,
+    GraphQLInt,
+    GraphQLScalarType,
+    GraphQLSchema,
+    GraphQLString,
+    build_schema,
+)
 from rdflib import XSD, Literal
-from rdflib.namespace import SH
+from rdflib.namespace import RDFS, SH
 
 from s2dm.exporters.shacl import GRAPHQL_SCALAR_TO_XSD, get_xsd_datatype, translate_to_shacl
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
@@ -11,25 +20,26 @@ class TestGetXsdDatatype:
     """Test the GraphQL scalar to XSD datatype mapping."""
 
     @pytest.mark.parametrize(
-        "scalar_name,expected_xsd_fragment",
+        "scalar,expected_xsd_fragment",
         [
-            ("Int", "integer"),
-            ("Float", "float"),
-            ("String", "string"),
-            ("Boolean", "boolean"),
-            ("ID", "string"),
-            ("Int8", "byte"),
-            ("UInt8", "unsignedByte"),
-            ("Int16", "short"),
-            ("UInt16", "unsignedShort"),
-            ("UInt32", "unsignedInt"),
-            ("Int64", "long"),
-            ("UInt64", "unsignedLong"),
+            (GraphQLInt, "integer"),
+            (GraphQLFloat, "float"),
+            (GraphQLString, "string"),
+            (GraphQLBoolean, "boolean"),
+            (GraphQLID, "string"),
+            (GraphQLScalarType(name="Int8"), "byte"),
+            (GraphQLScalarType(name="UInt8"), "unsignedByte"),
+            (GraphQLScalarType(name="Int16"), "short"),
+            (GraphQLScalarType(name="UInt16"), "unsignedShort"),
+            (GraphQLScalarType(name="UInt32"), "unsignedInt"),
+            (GraphQLScalarType(name="Int64"), "long"),
+            (GraphQLScalarType(name="UInt64"), "unsignedLong"),
         ],
     )
-    def test_known_scalars_map_to_expected_xsd_type(self, scalar_name: str, expected_xsd_fragment: str) -> None:
+    def test_known_scalars_map_to_expected_xsd_type(
+        self, scalar: GraphQLScalarType, expected_xsd_fragment: str
+    ) -> None:
         """Each known GraphQL scalar (built-in and custom integer widths) maps to the correct XSD datatype."""
-        scalar = GraphQLScalarType(name=scalar_name)
         assert get_xsd_datatype(scalar) == XSD[expected_xsd_fragment]
 
     def test_unknown_scalar_falls_back_to_string(self) -> None:
@@ -100,6 +110,39 @@ class TestTranslateToShaclScalarDatatypes:
                 for dtype in graph.objects(property_node, SH.datatype)
             }
             assert datatypes == {expected_datatype}, f"Field '{field_name}' has datatypes {datatypes}"
+
+
+class TestTranslateToShaclComments:
+    """Integration test: translate_to_shacl adds rdfs:comment from @metadata."""
+
+    def test_null_comment_adds_no_comment(self) -> None:
+        schema = build_schema("""
+            directive @metadata(comment: String) on FIELD_DEFINITION
+
+            type Vehicle {
+                speed: Float @metadata(comment: null)
+            }
+
+            type Query {
+                vehicle: Vehicle
+            }
+        """)
+        annotated_schema = AnnotatedSchema(schema=schema)
+
+        graph = translate_to_shacl(
+            annotated_schema,
+            "http://ex/shapes#",
+            "shapes",
+            "http://ex/model#",
+            "model",
+        )
+
+        speed_comments = {
+            comment
+            for property_node in graph.subjects(SH.name, Literal("speed"))
+            for comment in graph.objects(property_node, RDFS.comment)
+        }
+        assert speed_comments == set()
 
 
 if __name__ == "__main__":

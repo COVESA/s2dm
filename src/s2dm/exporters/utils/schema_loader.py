@@ -2,7 +2,7 @@ import re
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, cast, overload
+from typing import Any, overload
 
 from ariadne import load_schema_from_path
 from graphql import (
@@ -362,7 +362,7 @@ def _print_schema_without_empty_query_type(schema: GraphQLSchema) -> str:
     Selecting only definitions leaves nothing on the query root, and an object type with no
     fields is invalid. The remaining definitions compose into a model that has one. The root is
     dropped before printing rather than after, so its description and the schema block naming it
-    go with it.
+    go with it. The schema description goes as well. GraphQL allows it only on that schema block.
 
     Args:
         schema: The schema to print.
@@ -379,11 +379,7 @@ def _print_schema_without_empty_query_type(schema: GraphQLSchema) -> str:
         for type_name, type_definition in schema.type_map.items()
         if type_definition is not query_type and not is_introspection_type(type_name)
     ]
-    rootless_schema = GraphQLSchema(
-        types=remaining_types,
-        directives=schema.directives,
-        description=schema.description,
-    )
+    rootless_schema = GraphQLSchema(types=remaining_types, directives=schema.directives)
     return print_schema(rootless_schema)
 
 
@@ -539,15 +535,14 @@ def get_referenced_types(
         referenced.add(type_def)
 
         if is_object_type(type_def):
-            object_type = cast(GraphQLObjectType, type_def)
-            if not has_given_directive(object_type, Directive.INSTANCE_TAG) or include_instance_tag_fields:
-                visit_object_type(object_type)
+            if not has_given_directive(type_def, Directive.INSTANCE_TAG) or include_instance_tag_fields:
+                visit_object_type(type_def)
         elif is_interface_type(type_def):
-            visit_interface_type(cast(GraphQLInterfaceType, type_def))
+            visit_interface_type(type_def)
         elif is_union_type(type_def):
-            visit_union_type(cast(GraphQLUnionType, type_def))
+            visit_union_type(type_def)
         elif is_input_object_type(type_def):
-            visit_input_object_type(cast(GraphQLInputObjectType, type_def))
+            visit_input_object_type(type_def)
         # Scalar and enum types don't reference other types
 
     def visit_object_type(obj_type: GraphQLObjectType) -> None:
@@ -638,8 +633,7 @@ def prune_schema_using_query_selection(
         if not type_def or not is_input_object_type(type_def):
             return
 
-        input_obj_type = cast(GraphQLInputObjectType, type_def)
-        for field in input_obj_type.fields.values():
+        for field in type_def.fields.values():
             field_type = get_named_type(field.type)
             traverse_input_type_dependencies(field_type.name)
 
@@ -662,8 +656,7 @@ def prune_schema_using_query_selection(
         directives = collect_ast_directives(type_obj.ast_node)
 
         if is_object_type(type_obj) or is_interface_type(type_obj) or is_input_object_type(type_obj):
-            composite_type = cast(GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType, type_obj)
-            for field in composite_type.fields.values():
+            for field in type_obj.fields.values():
                 directives |= collect_ast_directives(field.ast_node)
 
         if isinstance(type_obj, GraphQLEnumType):
@@ -685,6 +678,12 @@ def prune_schema_using_query_selection(
             argument_type = get_named_type(argument.type)
             traverse_input_type_dependencies(argument_type.name)
 
+    def inline_fragment_type_name(fragment: InlineFragmentNode, enclosing_type_name: str) -> str:
+        """Return the type a fragment selects from; a fragment without a type condition uses the enclosing type."""
+        if fragment.type_condition is None:
+            return enclosing_type_name
+        return fragment.type_condition.name.value
+
     def collect_selections(type_name: str, selection_set: SelectionSetNode) -> None:
         """Recursively collect field names and type names to keep."""
         graphql_type = schema.type_map.get(type_name)
@@ -696,42 +695,40 @@ def prune_schema_using_query_selection(
         if not (is_object_type(graphql_type) or is_interface_type(graphql_type)):
             for selection in selection_set.selections:
                 if isinstance(selection, InlineFragmentNode) and selection.selection_set is not None:
-                    fragment_type_name = selection.type_condition.name.value
+                    fragment_type_name = inline_fragment_type_name(selection, type_name)
                     collect_selections(fragment_type_name, selection.selection_set)
             return
 
         if type_name not in fields_to_keep:
             fields_to_keep[type_name] = set()
 
-        composite_type = cast(GraphQLObjectType | GraphQLInterfaceType, graphql_type)
-
         if include_instance_tag_fields:
             instance_tag_field_name = next(
                 (
                     field_name
-                    for field_name, field in composite_type.fields.items()
+                    for field_name, field in graphql_type.fields.items()
                     if is_valid_instance_tag_field(field, schema)
                 ),
                 None,
             )
             if instance_tag_field_name is not None:
                 fields_to_keep[type_name].add(instance_tag_field_name)
-                instance_tag_field = composite_type.fields[instance_tag_field_name]
+                instance_tag_field = graphql_type.fields[instance_tag_field_name]
                 instance_tag_type = get_named_type(instance_tag_field.type)
                 keep_type(instance_tag_type.name)
 
         for selection in selection_set.selections:
             if isinstance(selection, InlineFragmentNode) and selection.selection_set is not None:
-                fragment_type_name = selection.type_condition.name.value
+                fragment_type_name = inline_fragment_type_name(selection, type_name)
                 collect_selections(fragment_type_name, selection.selection_set)
             elif isinstance(selection, FieldNode):
                 field_name = selection.name.value
                 fields_to_keep[type_name].add(field_name)
 
-                if field_name not in composite_type.fields:
+                if field_name not in graphql_type.fields:
                     continue
 
-                field = composite_type.fields[field_name]
+                field = graphql_type.fields[field_name]
                 field_type = get_named_type(field.type)
                 keep_type(field_type.name)
 
@@ -775,10 +772,9 @@ def prune_schema_using_query_selection(
         if not (is_object_type(type_obj) or is_interface_type(type_obj)):
             continue
 
-        obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
-        fields_to_delete = [fname for fname in obj_type.fields if fname not in fields_to_keep_set]
+        fields_to_delete = [fname for fname in type_obj.fields if fname not in fields_to_keep_set]
         for fname in fields_to_delete:
-            del obj_type.fields[fname]
+            del type_obj.fields[fname]
 
     types_to_delete = [
         type_name
@@ -818,8 +814,7 @@ def build_annotated_schema(
         if not is_object_type(type_obj) and not is_interface_type(type_obj):
             continue
 
-        obj_type = cast(GraphQLObjectType | GraphQLInterfaceType, type_obj)
-        for field_name, field in obj_type.fields.items():
+        for field_name, field in type_obj.fields.items():
             if (type_name, field_name) in expansion_field_meta:
                 continue
 

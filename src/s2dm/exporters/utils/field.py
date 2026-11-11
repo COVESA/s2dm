@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
-from graphql import GraphQLField, GraphQLInputField, is_list_type, is_non_null_type
+from graphql import GraphQLArgument, GraphQLField, GraphQLInputField, Undefined, is_list_type, is_non_null_type
+from graphql.utilities import coerce_input_literal
 
 from s2dm.constants.directive import Directive, DirectiveArgument
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
@@ -103,18 +105,18 @@ def get_field_case(field: GraphQLField) -> FieldCase:
         FieldCase: The case of the field as one of the 6 possible cases that are possible with the GraphQL SDL.
         without custom directives.
     """
-    t = field.type
+    field_type = field.type
 
-    if is_non_null_type(t):
-        t = t.of_type  # type: ignore[union-attr]
-        if is_list_type(t):
-            if is_non_null_type(t.of_type):
+    if is_non_null_type(field_type):
+        field_type = field_type.of_type
+        if is_list_type(field_type):
+            if is_non_null_type(field_type.of_type):
                 return FieldCase.NON_NULL_LIST_NON_NULL
             return FieldCase.NON_NULL_LIST
         return FieldCase.NON_NULL
 
-    if is_list_type(t):
-        if is_non_null_type(t.of_type):  # type: ignore[union-attr]
+    if is_list_type(field_type):
+        if is_non_null_type(field_type.of_type):
             return FieldCase.LIST_NON_NULL
         return FieldCase.LIST
 
@@ -176,6 +178,22 @@ def get_cardinality(field: GraphQLField | GraphQLInputField) -> Cardinality | No
         return Cardinality(min=min_val, max=max_val)
     else:
         return None
+
+
+def get_argument_or_input_field_default(input_value: GraphQLArgument | GraphQLInputField) -> Any:
+    """
+    Return the default value of an argument or input field, coerced to its Python value.
+
+    Args:
+        input_value (GraphQLArgument | GraphQLInputField): The argument or input field to read.
+
+    Returns:
+        Any: The coerced default value, or Undefined when the default is missing or not valid for the type.
+    """
+    default_input = input_value.default
+    if default_input is None or default_input.literal is None:
+        return Undefined
+    return coerce_input_literal(default_input.literal, input_value.type)
 
 
 def has_valid_cardinality(field: GraphQLField) -> bool:

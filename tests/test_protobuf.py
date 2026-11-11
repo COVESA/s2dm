@@ -834,9 +834,9 @@ class TestProtobufExporter:
 
         assert "SeatPosition" not in result, "SeatPosition should not be included as it's not referenced by Vehicle"
         assert "SeatRowEnum" not in result, "SeatRowEnum should not be included as it's not referenced by Vehicle"
-        assert (
-            "SeatPositionEnum" not in result
-        ), "SeatPositionEnum should not be included as it's not referenced by Vehicle"
+        assert "SeatPositionEnum" not in result, (
+            "SeatPositionEnum should not be included as it's not referenced by Vehicle"
+        )
 
     def test_complete_proto_file(self) -> None:
         """Test that the complete Protobuf output includes syntax, imports, and source option definition."""
@@ -1003,6 +1003,26 @@ class TestProtobufExporter:
             result,
             re.DOTALL,
         ), "Vehicle message with range validation in repeated.items"
+
+    def test_range_directive_with_null_min(self) -> None:
+        """Test that a null @range min adds no lower bound."""
+        schema_str = """
+        directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+        type Vehicle {
+            speed: Int @range(min: null, max: 250)
+        }
+
+        type Query {
+            vehicle: Vehicle
+        }
+        """
+        schema = build_schema(schema_str)
+        selection_query = parse("query Selection { vehicle { speed } }")
+        annotated_schema = process_schema(schema=schema, source_map={}, query_document=selection_query)
+        result = translate_to_protobuf(annotated_schema, selection_query=selection_query)
+
+        assert re.search(r"int32 speed = 1 \[\(buf\.validate\.field\)\.int32 = \{lte: 250\}\];", result)
 
     def test_flatten_naming_multiple_root_types_named_query(self, test_schema_path: list[Path]) -> None:
         """Test that flatten mode uses the selection query name for the output message."""

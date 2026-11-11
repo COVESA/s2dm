@@ -679,6 +679,17 @@ def test_get_instance_tag_fields_leaves_out_the_source_excluded_instances() -> N
     assert tag_fields["Door.position"].instances == ["ROW1.LEFT", "ROW1.RIGHT", "ROW2.LEFT"]
 
 
+def test_get_instance_tag_fields_treats_a_null_exclude_as_empty() -> None:
+    null_exclude_schema = SCHEMA.replace(
+        "position: DoorPosition @instanceTag", "position: DoorPosition @instanceTag(exclude: null)"
+    ).replace("type DoorPosition @instanceTag", "type DoorPosition @instanceTag(exclude: null)")
+    schema = build_schema(null_exclude_schema)
+
+    tag_fields = get_instance_tag_fields(schema)
+
+    assert tag_fields["Door.position"].instances == ["ROW1.LEFT", "ROW1.RIGHT", "ROW2.LEFT", "ROW2.RIGHT"]
+
+
 def test_get_instance_tag_fields_uses_the_field_as_the_dimension_of_an_enum_tag() -> None:
     schema = build_schema(ENUM_TAG_SCHEMA)
 

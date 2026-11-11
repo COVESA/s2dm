@@ -1,9 +1,9 @@
 """Names of the GraphQL directives and arguments used across the tool."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Directive(str, Enum):
+class Directive(StrEnum):
     """Names of the custom GraphQL directives used across the tool."""
 
     INSTANCE_TAG = "instanceTag"
@@ -17,14 +17,14 @@ class Directive(str, Enum):
     PICK = "pick"
 
 
-class BuiltInDirective(str, Enum):
+class BuiltInDirective(StrEnum):
     """Names of the built-in GraphQL directives the tool reasons about."""
 
     DEPRECATED = "deprecated"
     SPECIFIED_BY = "specifiedBy"
 
 
-class DirectiveArgument(str, Enum):
+class DirectiveArgument(StrEnum):
     """Names of the arguments accepted by the directives the tool reads."""
 
     EXCLUDE = "exclude"

@@ -469,6 +469,8 @@ def test_compose_dependency_schemas_preserves_merged_query_type() -> None:
     composed_schema = compose_dependency_schemas(schema_paths, preserve_query_type=True)
 
     object_type_definitions = _object_type_definitions_by_name(composed_schema)
-    query_field_names = {field.name.value for field in object_type_definitions["Query"].fields}
+    query_definition = object_type_definitions["Query"]
+    assert query_definition.fields is not None
+    query_field_names = {field.name.value for field in query_definition.fields}
     assert set(object_type_definitions) == {"Query", "Body", "Powertrain"}
     assert query_field_names == {"body", "powertrain"}

@@ -19,7 +19,7 @@ from s2dm.constants.directive import Directive, DirectiveArgument
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.directive import get_directive_arguments, has_given_directive
 from s2dm.exporters.utils.extraction import get_all_object_types
-from s2dm.exporters.utils.field import FieldCase
+from s2dm.exporters.utils.field import FieldCase, get_argument_or_input_field_default
 from s2dm.exporters.utils.graphql_type import is_introspection_or_root_type
 from s2dm.exporters.utils.schema_loader import load_schema_with_naming, process_schema
 
@@ -285,9 +285,9 @@ def process_field(
 
         # TODO: Map the unit name. i.e., SCREAMMING_SNAKE_CASE used in graphql to abbreviated vss unit name.
         if "unit" in field.args:
-            unit_arg = field.args["unit"].default_value
-            if unit_arg is not None and unit_arg is not Undefined and unit_arg in UNITS_DICT:
-                field_dict["unit"] = UNITS_DICT[unit_arg]
+            default_unit = get_argument_or_input_field_default(field.args["unit"])
+            if default_unit is not None and default_unit is not Undefined and default_unit in UNITS_DICT:
+                field_dict["unit"] = UNITS_DICT[default_unit]
 
         if has_given_directive(field, Directive.METADATA):
             metadata_directive = None

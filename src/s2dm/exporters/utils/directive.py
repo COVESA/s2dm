@@ -3,7 +3,7 @@ from typing import Any
 
 from graphql import (
     DirectiveLocation,
-    FloatValueNode,
+    DirectiveNode,
     GraphQLEnumType,
     GraphQLEnumValue,
     GraphQLField,
@@ -15,12 +15,12 @@ from graphql import (
     GraphQLSchema,
     GraphQLType,
     GraphQLUnionType,
-    IntValueNode,
-    ListValueNode,
+    value_from_ast_untyped,
 )
 from graphql.language.printer import print_ast
 
 from s2dm.constants.directive import BuiltInDirective
+from s2dm.utils.sequence import get_sequence_or_empty
 
 GRAPHQL_TYPE_DEFINITION_PATTERN = r"^(type|interface|input|enum|union|scalar)\s+(\w+)"
 
@@ -59,35 +59,29 @@ def get_directive_arguments(element: DirectiveElement, directive_name: str) -> d
         element: The GraphQL element from which to extract the directive arguments.
         directive_name: The name of the directive whose arguments are to be extracted.
     Returns:
-        dict[str, Any]: A dictionary containing the directive arguments with proper type conversion.
+        dict[str, Any]: The directive arguments by name. An argument with a null value is left out.
     """
     if not has_given_directive(element, directive_name) or not element.ast_node:
         return {}
 
-    directive = next(d for d in element.ast_node.directives if d.name.value == directive_name)
-    args: dict[str, Any] = {}
+    directive_nodes = get_sequence_or_empty(element.ast_node.directives)
+    directive = next(
+        applied_directive for applied_directive in directive_nodes if applied_directive.name.value == directive_name
+    )
+    arguments = get_directive_node_arguments(directive)
+    return {name: value for name, value in arguments.items() if value is not None}
 
-    def convert_value(value_node: Any) -> Any:
-        if isinstance(value_node, IntValueNode):
-            return int(value_node.value)
 
-        if isinstance(value_node, FloatValueNode):
-            return float(value_node.value)
-
-        if isinstance(value_node, ListValueNode):
-            return [convert_value(item) for item in value_node.values]
-
-        raw_value = getattr(value_node, "value", None)
-        if raw_value is not None:
-            return raw_value
-
-        return value_node
-
-    for arg in directive.arguments:
-        arg_name = arg.name.value
-        args[arg_name] = convert_value(arg.value)
-
-    return args
+def get_directive_node_arguments(directive_node: DirectiveNode) -> dict[str, Any]:
+    """
+    Reads the arguments of an applied directive as Python values.
+    Args:
+        directive_node: The applied directive.
+    Returns:
+        dict[str, Any]: The argument values by argument name.
+    """
+    argument_nodes = get_sequence_or_empty(directive_node.arguments)
+    return {argument.name.value: value_from_ast_untyped(argument.value) for argument in argument_nodes}
 
 
 def has_given_directive(element: DirectiveElement, directive_name: str) -> bool:

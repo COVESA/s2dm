@@ -8,6 +8,7 @@ from graphql import (
     GraphQLField,
     GraphQLInputField,
     GraphQLInputObjectType,
+    GraphQLInputType,
     GraphQLInterfaceType,
     GraphQLList,
     GraphQLNamedType,
@@ -16,9 +17,9 @@ from graphql import (
     GraphQLScalarType,
     GraphQLUnionType,
     Undefined,
+    ast_from_value,
     get_named_type,
 )
-from graphql.language.ast import ValueNode
 from graphql.language.printer import print_ast
 from linkml_runtime.linkml_model.meta import (
     AnonymousSlotExpression,
@@ -35,7 +36,7 @@ from linkml_runtime.utils.schema_as_dict import schema_as_dict
 from s2dm.constants.directive import Directive, DirectiveArgument
 from s2dm.exporters.utils.annotated_schema import AnnotatedSchema
 from s2dm.exporters.utils.directive import get_argument_content, get_directive_arguments, has_given_directive
-from s2dm.exporters.utils.field import FieldCase, get_cardinality, get_field_case
+from s2dm.exporters.utils.field import FieldCase, get_argument_or_input_field_default, get_cardinality, get_field_case
 from s2dm.exporters.utils.graphql_type import is_builtin_scalar_type, is_id_type, is_root_type
 
 SCALAR_RANGE_MAP: Mapping[str, str] = {
@@ -334,7 +335,7 @@ class LinkmlTransformer:
         if unit_argument is None:
             return
 
-        default_unit = unit_argument.default_value
+        default_unit = get_argument_or_input_field_default(unit_argument)
         if default_unit is None or default_unit is Undefined:
             return
 
@@ -383,14 +384,16 @@ class LinkmlTransformer:
         | GraphQLInputObjectType
         | GraphQLInterfaceType,
     ) -> None:
-        if not has_given_directive(source_element, Directive.METADATA):
+        metadata_directive = self.annotated_schema.schema.get_directive(Directive.METADATA)
+        if metadata_directive is None or not has_given_directive(source_element, Directive.METADATA):
             return
 
         metadata_arguments = get_directive_arguments(source_element, Directive.METADATA)
         annotations = {
-            f"s2dm_metadata_{key}": self._stringify_directive_value(value)
-            for key, value in metadata_arguments.items()
-            if value is not None
+            f"s2dm_metadata_{argument_name}": self._stringify_directive_value(
+                value, metadata_directive.args[argument_name].type
+            )
+            for argument_name, value in metadata_arguments.items()
         }
         self._merge_annotations(target_definition, annotations)
 
@@ -407,10 +410,13 @@ class LinkmlTransformer:
         merged_annotations.update(annotations)
         target_definition.annotations = merged_annotations
 
-    def _stringify_directive_value(self, value: Any) -> str:
-        if isinstance(value, ValueNode):
-            return print_ast(value)
-        return str(value)
+    def _stringify_directive_value(self, value: Any, argument_type: GraphQLInputType) -> str:
+        if isinstance(value, str):
+            return value
+        value_node = ast_from_value(value, argument_type)
+        if value_node is None:
+            raise ValueError(f"Directive argument value {value!r} does not match its type {argument_type}")
+        return print_ast(value_node)
 
     def _to_linkml_range(self, named_type: GraphQLNamedType) -> str:
         if isinstance(named_type, GraphQLScalarType):

@@ -17,6 +17,7 @@ def test_required_input_value_definition_uses_non_null_without_default() -> None
         """
     )
     directive = cast(DirectiveDefinitionNode, document.definitions[0])
+    assert directive.arguments is not None
     arguments = {argument.name.value: argument for argument in directive.arguments}
 
     assert schema_definitions.is_required_input_value_definition(arguments["required"])

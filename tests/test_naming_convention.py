@@ -195,9 +195,7 @@ def test_multiple_violation_types() -> None:
 def test_load_naming_convention_config_parses_exceptions(tmp_path: Path) -> None:
     """load_naming_convention_config parses the top-level exceptions key from YAML."""
     config_path = tmp_path / "naming.yaml"
-    config_path.write_text(
-        "type:\n" "  object: PascalCase\n" "exceptions:\n" "  AI: AI\n" "  VIN: VIN\n" "  PwfStatus: PWFStatus\n"
-    )
+    config_path.write_text("type:\n  object: PascalCase\nexceptions:\n  AI: AI\n  VIN: VIN\n  PwfStatus: PWFStatus\n")
 
     config = load_naming_convention_config(config_path)
 

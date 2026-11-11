@@ -385,7 +385,7 @@ def test_run_includes_schema_spec_violations() -> None:
     assert any(violation.code == ConstraintCode.SCHEMA_SPEC for violation in violations)
 
 
-def test_run_includes_enum_default_violations() -> None:
+def test_run_reports_invalid_enum_default_as_spec_violation() -> None:
     sdl = """
     enum Color { RED BLUE }
 
@@ -401,7 +401,7 @@ def test_run_includes_enum_default_violations() -> None:
     objects = get_objects(schema)
     checker = ConstraintChecker(schema)
     violations = checker.run(objects)
-    assert any(violation.code == ConstraintCode.ENUM_DEFAULT for violation in violations)
+    assert any(violation.code == ConstraintCode.SCHEMA_SPEC for violation in violations)
 
 
 def test_check_schema_spec_flags_invalid_schema() -> None:
@@ -436,31 +436,35 @@ def test_check_schema_spec_allows_valid_schema() -> None:
     assert not violations
 
 
-def test_check_enum_defaults_flags_invalid_default() -> None:
+def test_check_directive_enum_values_flags_invalid_value() -> None:
     sdl = """
+    directive @color(value: Color) on FIELD_DEFINITION
+
     enum Color { RED BLUE }
 
-    input VehicleInput {
-      color: Color = GREEN
+    type Vehicle {
+      name: String @color(value: GREEN)
     }
     """
     schema = make_schema(sdl)
     checker = ConstraintChecker(schema)
-    violations = checker.check_enum_defaults()
-    assert any(violation.code == ConstraintCode.ENUM_DEFAULT for violation in violations)
+    violations = checker.check_directive_enum_values()
+    assert any(violation.code == ConstraintCode.DIRECTIVE_ENUM_VALUE for violation in violations)
 
 
-def test_check_enum_defaults_allows_valid_default() -> None:
+def test_check_directive_enum_values_allows_valid_value() -> None:
     sdl = """
+    directive @color(value: Color) on FIELD_DEFINITION
+
     enum Color { RED BLUE }
 
-    input VehicleInput {
-      color: Color = RED
+    type Vehicle {
+      name: String @color(value: RED)
     }
     """
     schema = make_schema(sdl)
     checker = ConstraintChecker(schema)
-    violations = checker.check_enum_defaults()
+    violations = checker.check_directive_enum_values()
     assert not violations
 
 
@@ -530,3 +534,41 @@ def test_cardinality_min_gt_max() -> None:
     checker = ConstraintChecker(schema)
     violations = checker.run(objects)
     assert any(violation.code == ConstraintCode.MIN_GREATER_THAN_MAX for violation in violations)
+
+
+def test_range_null_min_is_not_flagged() -> None:
+    sdl = """
+    directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+    type Query {
+      ping: String
+    }
+
+    type Vehicle {
+      topSpeed: Int @range(min: null, max: 5)
+    }
+    """
+    schema = make_schema(sdl)
+    objects = get_objects(schema)
+    checker = ConstraintChecker(schema)
+    violations = checker.run(objects)
+    assert not violations
+
+
+def test_cardinality_null_min_is_not_flagged() -> None:
+    sdl = """
+    directive @cardinality(min: Int, max: Int) on FIELD_DEFINITION
+
+    type Query {
+      ping: String
+    }
+
+    type Vehicle {
+      doorCount: Int @cardinality(min: null, max: 2)
+    }
+    """
+    schema = make_schema(sdl)
+    objects = get_objects(schema)
+    checker = ConstraintChecker(schema)
+    violations = checker.run(objects)
+    assert not violations

@@ -8,7 +8,6 @@ from graphql import (
     GraphQLNonNull,
     GraphQLNullableType,
     GraphQLObjectType,
-    GraphQLScalarType,
     GraphQLType,
     GraphQLUnionType,
     get_named_type,
@@ -65,11 +64,11 @@ class AvroProtocolTransformer:
             self.processed_types.add(type_name)
 
             if is_object_type(graphql_type):
-                lines.append(self._transform_record(cast(GraphQLObjectType, graphql_type)))
+                lines.append(self._transform_record(graphql_type))
             elif is_enum_type(graphql_type) and self.strict:
-                lines.append(self._transform_enum(cast(GraphQLEnumType, graphql_type)))
+                lines.append(self._transform_enum(graphql_type))
             elif is_union_type(graphql_type):
-                lines.append(self._transform_union(cast(GraphQLUnionType, graphql_type)))
+                lines.append(self._transform_union(graphql_type))
 
         lines.append("}")
 
@@ -135,12 +134,10 @@ class AvroProtocolTransformer:
             return f"array<{element_type_str}>"
 
         if is_scalar_type(field_type):
-            scalar_type = cast(GraphQLScalarType, field_type)
-            return get_avro_scalar_type(scalar_type, field)
+            return get_avro_scalar_type(field_type, field)
 
         if is_enum_type(field_type):
-            enum_type = cast(GraphQLEnumType, field_type)
-            return enum_type.name if self.strict else "string"
+            return field_type.name if self.strict else "string"
 
         if is_object_type(field_type) or is_union_type(field_type):
             named_type = cast(GraphQLNamedType, field_type)

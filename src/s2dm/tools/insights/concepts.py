@@ -111,9 +111,8 @@ def compute_concepts(schema: GraphQLSchema) -> ConceptsResult:
             enum_value_counts.append(EnumValueCount(name=named_type.name, values=len(named_type.values)))
         elif isinstance(named_type, GraphQLUnionType):
             unions.append(named_type.name)
-        elif isinstance(named_type, GraphQLScalarType):
-            if not is_builtin_scalar_type(named_type.name):
-                scalars.append(named_type.name)
+        elif isinstance(named_type, GraphQLScalarType) and not is_builtin_scalar_type(named_type.name):
+            scalars.append(named_type.name)
 
     custom_directives = sorted(
         f"@{directive.name}" for directive in schema.directives if directive not in specified_directives

@@ -16,6 +16,8 @@ from graphql import (
     ScalarTypeDefinitionNode,
 )
 
+from s2dm.utils.sequence import get_sequence_or_empty
+
 
 def is_required_input_value_definition(argument: InputValueDefinitionNode) -> bool:
     """Return whether an AST input value definition must be provided by callers."""
@@ -39,8 +41,8 @@ def is_directive_definition_superset(
     if not definition_locations.issubset(candidate_locations):
         return False
 
-    candidate_arguments = {argument.name.value: argument for argument in candidate.arguments}
-    definition_arguments = {argument.name.value: argument for argument in definition.arguments}
+    candidate_arguments = {argument.name.value: argument for argument in get_sequence_or_empty(candidate.arguments)}
+    definition_arguments = {argument.name.value: argument for argument in get_sequence_or_empty(definition.arguments)}
     return _is_input_value_definitions_superset(candidate_arguments, definition_arguments)
 
 
@@ -57,8 +59,8 @@ def is_field_definition_superset(
     if candidate.name.value != definition.name.value or candidate.type.to_dict() != definition.type.to_dict():
         return False
 
-    candidate_arguments = {argument.name.value: argument for argument in candidate.arguments}
-    definition_arguments = {argument.name.value: argument for argument in definition.arguments}
+    candidate_arguments = {argument.name.value: argument for argument in get_sequence_or_empty(candidate.arguments)}
+    definition_arguments = {argument.name.value: argument for argument in get_sequence_or_empty(definition.arguments)}
     if not _is_input_value_definitions_superset(candidate_arguments, definition_arguments):
         return False
 
@@ -87,8 +89,8 @@ def is_applied_directive_superset(candidate: DirectiveNode, definition: Directiv
     if candidate.name.value != definition.name.value:
         return False
 
-    candidate_arguments = {argument.name.value: argument for argument in candidate.arguments}
-    definition_arguments = {argument.name.value: argument for argument in definition.arguments}
+    candidate_arguments = {argument.name.value: argument for argument in get_sequence_or_empty(candidate.arguments)}
+    definition_arguments = {argument.name.value: argument for argument in get_sequence_or_empty(definition.arguments)}
     for definition_argument in definition_arguments.values():
         if not _has_matching_applied_argument_value(candidate_arguments, definition_argument):
             return False
@@ -113,14 +115,16 @@ def _has_matching_applied_argument_value(
 
 
 def is_applied_directives_superset(
-    candidate_directives: tuple[DirectiveNode, ...],
-    definition_directives: tuple[DirectiveNode, ...],
+    candidate_directives: tuple[DirectiveNode, ...] | None,
+    definition_directives: tuple[DirectiveNode, ...] | None,
 ) -> bool:
     """Return whether one set of applied directives is a superset of another."""
     if not definition_directives:
         return True
 
-    candidate_directives_by_name = {directive.name.value: directive for directive in candidate_directives}
+    candidate_directives_by_name = {
+        directive.name.value: directive for directive in get_sequence_or_empty(candidate_directives)
+    }
     for definition_directive in definition_directives:
         candidate_directive = candidate_directives_by_name.get(definition_directive.name.value)
         if candidate_directive is None or not is_applied_directive_superset(candidate_directive, definition_directive):
@@ -153,8 +157,8 @@ def is_enum_definition_superset(
     ):
         return False
 
-    candidate_values = {value.name.value: value for value in candidate.values}
-    for definition_value in definition.values:
+    candidate_values = {value.name.value: value for value in get_sequence_or_empty(candidate.values)}
+    for definition_value in get_sequence_or_empty(definition.values):
         candidate_value = candidate_values.get(definition_value.name.value)
         if candidate_value is None or not is_applied_directives_superset(
             candidate_value.directives, definition_value.directives

@@ -1,15 +1,32 @@
+from dataclasses import replace
 from pathlib import Path
 
 from caseconverter import camelcase, cobolcase, flatcase, kebabcase, macrocase, pascalcase, snakecase, titlecase
 from graphql import (
+    ConstArgumentNode,
+    ConstDirectiveNode,
+    ConstObjectFieldNode,
+    ConstValueNode,
+    EnumValueNode,
+    GraphQLArgument,
+    GraphQLDefaultInput,
     GraphQLEnumType,
+    GraphQLEnumValue,
+    GraphQLField,
+    GraphQLInputField,
     GraphQLInputObjectType,
+    GraphQLInputType,
     GraphQLInterfaceType,
+    GraphQLList,
+    GraphQLNamedType,
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLUnionType,
+    ListValueNode,
+    ObjectValueNode,
     get_named_type,
+    get_nullable_type,
 )
 
 from s2dm.constants.directive import Directive
@@ -23,6 +40,7 @@ from s2dm.exporters.utils.naming_config import (
     get_case_for_element,
     load_naming_convention_config,
 )
+from s2dm.utils.sequence import get_sequence_or_empty
 
 CASE_CONVERTERS = {
     CaseFormat.CAMEL_CASE: camelcase,
@@ -115,6 +133,8 @@ def apply_naming_to_schema(schema: GraphQLSchema, naming_config: NamingConventio
         type_obj.name = new_name
         schema.type_map[new_name] = type_obj
 
+    _rename_schema_literals(schema)
+
 
 def convert_field_names(
     type_obj: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType,
@@ -180,6 +200,101 @@ def convert_enum_values(
 
     type_obj.values.clear()
     type_obj.values.update(new_values)
+
+
+def _rename_literal(literal: ConstValueNode, input_type: GraphQLInputType) -> ConstValueNode:
+    """Rename enum values and input fields recursively within a literal."""
+    nullable_type = get_nullable_type(input_type)
+    if isinstance(nullable_type, GraphQLList):
+        # GraphQL also accepts a single value for a list type.
+        if not isinstance(literal, ListValueNode):
+            return _rename_literal(literal, nullable_type.of_type)
+        values = tuple(_rename_literal(item, nullable_type.of_type) for item in literal.values)
+        return replace(literal, values=values)
+
+    if isinstance(nullable_type, GraphQLEnumType) and isinstance(literal, EnumValueNode):
+        for current_name, enum_value in nullable_type.values.items():
+            if enum_value.value == literal.value:
+                return replace(literal, value=current_name)
+
+    if isinstance(nullable_type, GraphQLInputObjectType) and isinstance(literal, ObjectValueNode):
+        field_names = {
+            field.ast_node.name.value if field.ast_node else name: name for name, field in nullable_type.fields.items()
+        }
+        fields: list[ConstObjectFieldNode] = []
+        for field_node in literal.fields:
+            current_name = field_names.get(field_node.name.value)
+            if current_name is None:
+                fields.append(field_node)
+                continue
+            input_field = nullable_type.fields[current_name]
+            name = replace(field_node.name, value=current_name)
+            value = _rename_literal(field_node.value, input_field.type)
+            renamed_field = replace(field_node, name=name, value=value)
+            fields.append(renamed_field)
+        renamed_fields = tuple(fields)
+        return replace(literal, fields=renamed_fields)
+    return literal
+
+
+def _rename_default(input_value: GraphQLArgument | GraphQLInputField) -> None:
+    """Update an argument or input-field default in place."""
+    default_input = input_value.default
+    if default_input is None or default_input.literal is None:
+        return
+
+    renamed_literal = _rename_literal(default_input.literal, input_value.type)
+    input_value.default = GraphQLDefaultInput(literal=renamed_literal)
+
+
+def _rename_directive_arguments(
+    element: GraphQLNamedType | GraphQLField | GraphQLInputField | GraphQLEnumValue, schema: GraphQLSchema
+) -> None:
+    """Update an element's directive argument literals in place."""
+    ast_node = element.ast_node
+    if ast_node is None or not ast_node.directives:
+        return
+
+    directives: list[ConstDirectiveNode] = []
+    for directive_node in ast_node.directives:
+        directive = schema.get_directive(directive_node.name.value)
+        if directive is None:
+            directives.append(directive_node)
+            continue
+        arguments: list[ConstArgumentNode] = []
+        argument_nodes = get_sequence_or_empty(directive_node.arguments)
+        for argument_node in argument_nodes:
+            argument = directive.args[argument_node.name.value]
+            value = _rename_literal(argument_node.value, argument.type)
+            renamed_argument = replace(argument_node, value=value)
+            arguments.append(renamed_argument)
+        renamed_arguments = tuple(arguments)
+        renamed_directive = replace(directive_node, arguments=renamed_arguments)
+        directives.append(renamed_directive)
+    renamed_directives = tuple(directives)
+    element.ast_node = replace(ast_node, directives=renamed_directives)
+
+
+def _rename_schema_literals(schema: GraphQLSchema) -> None:
+    """Update schema defaults and directive literals in place after renaming definitions."""
+    for directive in schema.directives:
+        for argument in directive.args.values():
+            _rename_default(argument)
+
+    for named_type in schema.type_map.values():
+        _rename_directive_arguments(named_type, schema)
+        if isinstance(named_type, GraphQLObjectType | GraphQLInterfaceType):
+            for field in named_type.fields.values():
+                _rename_directive_arguments(field, schema)
+                for argument in field.args.values():
+                    _rename_default(argument)
+        elif isinstance(named_type, GraphQLInputObjectType):
+            for input_field in named_type.fields.values():
+                _rename_directive_arguments(input_field, schema)
+                _rename_default(input_field)
+        elif isinstance(named_type, GraphQLEnumType):
+            for enum_value in named_type.values.values():
+                _rename_directive_arguments(enum_value, schema)
 
 
 def apply_naming_to_instance_values(
