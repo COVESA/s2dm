@@ -46,8 +46,7 @@ function getPresentation(
 	if (status === "invalid") {
 		return {
 			label: "Invalid",
-			className:
-				"border-destructive/30 bg-destructive/10 text-destructive dark:text-destructive",
+			className: "border-destructive/40 bg-destructive/10 text-destructive",
 		};
 	}
 

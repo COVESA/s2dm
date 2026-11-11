@@ -1,0 +1,32 @@
+"""A vehicle cabin, the root of this example tree."""
+type Cabin {
+  """Seats in the cabin."""
+  seat: [Seat]
+}
+
+"""One seat."""
+type Seat {
+  """Where the seat sits in the cabin."""
+  position: SeatPosition
+
+  """Backrest angle, in degrees from vertical."""
+  backrestAngle: Float
+
+  """Whether the seat is occupied."""
+  isOccupied: Boolean
+}
+
+"""Where a seat sits in the cabin."""
+enum SeatPosition {
+  """Front left."""
+  FRONT_LEFT
+  """Front right."""
+  FRONT_RIGHT
+  """Second row."""
+  ROW2
+}
+
+type Query {
+  """The cabin."""
+  cabin: Cabin
+}

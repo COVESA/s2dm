@@ -10,6 +10,7 @@ const require = createRequire(import.meta.url);
 const sourceDirectory = fileURLToPath(new URL("./src", import.meta.url));
 const sharedUiDirectory = path.join(sourceDirectory, "shared-ui");
 const insightsUiDirectory = path.join(sourceDirectory, "insights-ui");
+const ledgerUiDirectory = path.join(sourceDirectory, "ledger-ui");
 const searchUiDirectory = path.join(sourceDirectory, "search-ui");
 
 function addBaseUrlToSidebar(items: PropSidebar, baseUrl: string): PropSidebar {
@@ -43,35 +44,50 @@ function getSidebarLinks(items: PropSidebar): string[] {
   });
 }
 
-const insightsPlugin = ({ baseUrl }: LoadContext) => ({
-  name: "s2dm-insights",
+// Each workspace renders one page against its own docs sidebar, with a route per
+// sidebar link so the sidebar highlights the current view the way the docs do.
+const SIDEBAR_PAGES = [
+  { sidebar: "insightsSidebar", data: "insights-sidebar.json", component: "@site/src/insights/InsightsPage.tsx" },
+  { sidebar: "ledgerSidebar", data: "ledger-sidebar.json", component: "@site/src/ledger/LedgerPage.tsx" },
+];
+
+const sidebarPagesPlugin = ({ baseUrl }: LoadContext) => ({
+  name: "s2dm-sidebar-pages",
   async allContentLoaded({ allContent, actions }) {
     const docsContent = allContent["docusaurus-plugin-content-docs"]?.default as LoadedContent | undefined;
     const version = docsContent?.loadedVersions.find((candidate) => candidate.isLast);
-    const sidebarItems = version?.sidebars.insightsSidebar as PropSidebar | undefined;
-    if (!sidebarItems) {
-      throw new Error("The insightsSidebar definition is missing from sidebars.ts");
-    }
 
-    const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
-    const sidebarData = await actions.createData("insights-sidebar.json", sidebar);
-    for (const path of getSidebarLinks(sidebar)) {
-      actions.addRoute({
-        path,
-        component: "@site/src/insights/InsightsPage.tsx",
-        exact: true,
-        modules: { sidebar: sidebarData },
-      });
+    for (const page of SIDEBAR_PAGES) {
+      const sidebarItems = version?.sidebars[page.sidebar] as PropSidebar | undefined;
+      if (!sidebarItems) {
+        throw new Error(`The ${page.sidebar} definition is missing from sidebars.ts`);
+      }
+
+      const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
+      const sidebarData = await actions.createData(page.data, sidebar);
+      for (const path of getSidebarLinks(sidebar)) {
+        actions.addRoute({
+          path,
+          component: page.component,
+          exact: true,
+          modules: { sidebar: sidebarData },
+        });
+      }
     }
   },
-  configureWebpack() {
+  configureWebpack(_config, isServer) {
     return {
       resolve: {
         alias: {
           "@": sourceDirectory,
           "@shared-ui": sharedUiDirectory,
           "@insights-ui": insightsUiDirectory,
+          "@ledger-ui": ledgerUiDirectory,
           "@search-ui": searchUiDirectory,
+          // The server build only pre-renders pages and never runs the embedding
+          // worker. The Node build of transformers points at ONNX runtime files
+          // that the package does not ship.
+          ...(isServer ? { "@huggingface/transformers": false } : {}),
         },
       },
     };
@@ -111,6 +127,7 @@ const config: Config = {
         { type: "docSidebar", sidebarId: "tutorialSidebar", position: "left", label: "Docs" },
         { to: "/visualizer", label: "Visualizer", position: "left" },
         { to: "/insights", label: "Insights", position: "left" },
+        { to: "/ledger", label: "Ledger", position: "left" },
         { href: "$github_repo_url", label: "GitHub", position: "right" },
       ],
     },
@@ -121,7 +138,7 @@ const config: Config = {
     },
     prism: { theme: prismThemes.github, darkTheme: prismThemes.dracula },
   } satisfies Preset.ThemeConfig,
-  plugins: [insightsPlugin, [
+  plugins: [sidebarPagesPlugin, [
     "@graphql-markdown/docusaurus",
     {
       schema: "../dist/model.graphql",

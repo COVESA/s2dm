@@ -85,11 +85,23 @@ FULL_REVISIONS = dedent_csv(
 
 FULL_BINDINGS = dedent_csv(
     """
-    serial,contract_uri,binding_uri,instance_label,status
-    0,http://ex/contracts/2,http://ex/bindings/0,,ACTIVE
-    1,http://ex/contracts/3,http://ex/bindings/1,,ACTIVE
-    2,http://ex/contracts/4,http://ex/bindings/2,,ACTIVE
-    3,http://ex/contracts/5,http://ex/bindings/3,,ACTIVE
+    serial,contract_uri,binding_uri,instance_tags,runtime_path,status
+    0,http://ex/contracts/2,http://ex/bindings/0,{},Car.id,ACTIVE
+    1,http://ex/contracts/3,http://ex/bindings/1,{},Car.owner,ACTIVE
+    2,http://ex/contracts/4,http://ex/bindings/2,{},Person.id,ACTIVE
+    3,http://ex/contracts/5,http://ex/bindings/3,{},Person.name,ACTIVE
+    """
+)
+
+FULL_REVISION_ASPECTS = dedent_csv(
+    """
+    revision_uri,aspect_key,operation,previous_value,newer_value,reason
+    """
+)
+
+FULL_CONTRACT_REFERENCES = dedent_csv(
+    """
+    contract_uri,role,target_contract_uri
     """
 )
 

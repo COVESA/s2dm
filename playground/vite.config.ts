@@ -24,6 +24,10 @@ export default defineConfig({
 				),
 			},
 			{
+				find: "@ledger-ui",
+				replacement: path.resolve(__dirname, "../src/s2dm/templates/ledger-ui"),
+			},
+			{
 				find: "@search-ui",
 				replacement: path.resolve(__dirname, "../src/s2dm/templates/search-ui"),
 			},

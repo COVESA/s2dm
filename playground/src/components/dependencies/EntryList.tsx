@@ -1,5 +1,5 @@
+import { EmptyState } from "@shared-ui/components/empty-state";
 import { EntryRow } from "@/components/dependencies/EntryRow";
-import { EmptyState } from "@/components/ui/empty-state";
 
 type EntrySummary = {
 	primary: string;
