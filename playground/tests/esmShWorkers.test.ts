@@ -1,6 +1,5 @@
-import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { test } from "node:test";
+import { expect, test } from "vitest";
 
 const ESM_ORIGIN = "https://esm.sh";
 /**
@@ -21,6 +20,11 @@ const MONACO_EDITOR_VERSION_PATTERN = /monaco-editor@([^/,&?\s]+)/g;
 const PACKAGE_VERSION_PATTERN =
 	/^https:\/\/esm\.sh\/(?:@[^/]+\/)?[^/@]+@([^/?]+)/;
 const EXACT_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/;
+/**
+ * The time in milliseconds that the crawl of the worker modules may take. The
+ * crawl requests every module from esm.sh over the network.
+ */
+const MODULE_CRAWL_TIMEOUT_MS = 10_000;
 
 type PackageManifest = {
 	dependencies: Record<string, string>;
@@ -91,7 +95,7 @@ function hasExactVersion(url: string): boolean {
 }
 
 test("the worker setup imports the Monaco workers from esm.sh", () => {
-	assert.notEqual(workerUrls.length, 0);
+	expect(workerUrls).not.toHaveLength(0);
 });
 
 test("the worker URLs use the monaco-editor version of package.json", async () => {
@@ -103,22 +107,26 @@ test("the worker URLs use the monaco-editor version of package.json", async () =
 	const versions = [...versionMatches].map(([, version]) => version);
 	const uniqueVersions = new Set(versions);
 
-	assert.deepEqual([...uniqueVersions], [expectedVersion]);
+	expect([...uniqueVersions]).toEqual([expectedVersion]);
 });
 
-test("every worker module loads from esm.sh with an exact version", async () => {
-	const statusByUrl = await crawlModules(workerUrls);
-	const failedUrls = [...statusByUrl]
-		.filter(([, status]) => status !== 200)
-		.map(([url]) => url);
-	const crawledUrls = [...statusByUrl.keys()];
-	const packageUrls = crawledUrls.filter(
-		(url) => !url.startsWith(NODE_SHIM_URL_PREFIX),
-	);
-	const unpinnedUrls = packageUrls.filter((url) => !hasExactVersion(url));
+test(
+	"every worker module loads from esm.sh with an exact version",
+	{ timeout: MODULE_CRAWL_TIMEOUT_MS },
+	async () => {
+		const statusByUrl = await crawlModules(workerUrls);
+		const failedUrls = [...statusByUrl]
+			.filter(([, status]) => status !== 200)
+			.map(([url]) => url);
+		const crawledUrls = [...statusByUrl.keys()];
+		const packageUrls = crawledUrls.filter(
+			(url) => !url.startsWith(NODE_SHIM_URL_PREFIX),
+		);
+		const unpinnedUrls = packageUrls.filter((url) => !hasExactVersion(url));
 
-	assert.deepEqual(
-		{ failedUrls, unpinnedUrls },
-		{ failedUrls: [], unpinnedUrls: [] },
-	);
-});
+		expect({ failedUrls, unpinnedUrls }).toEqual({
+			failedUrls: [],
+			unpinnedUrls: [],
+		});
+	},
+);
