@@ -72,6 +72,12 @@ For example, `source: "https://github.com/owner/repo"`, `version: "1.0.0"`, and 
 https://github.com/owner/repo/releases/download/1.0.0/schema.graphql
 ```
 
+#### Versions and Releases
+
+A tag versions the release, and `metadata.yaml` must declare that same version for resolution to succeed. Every artifact in a release therefore carries the release's version.
+
+A release holding one artifact gives that artifact a version of its own. A release holding several gives all of them the same version.
+
 #### Identity File
 
 For authenticated remote dependencies, `deps resolve` can read tokens from a dependency identity file.
