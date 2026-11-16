@@ -40,10 +40,17 @@ inputs:
     required: false
     default: ""
 
+  ghes:
+    description: >
+      Set to "true" when the repository lives on a GitHub Enterprise Server instance.
+      Uploads and deploys the site with the Pages action versions that GHES supports.
+    required: false
+    default: "false"
+
 outputs:
   page-url:
     description: "The URL of the deployed GitHub Pages site"
-    value: ${{ steps.deployment.outputs.page_url }}
+    value: ${{ steps.deployment.outputs.page_url || steps.deployment-ghes.outputs.page_url }}
 
 runs:
   using: "composite"
@@ -135,10 +142,25 @@ runs:
       uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
     - name: Upload Pages artifact
+      if: inputs.ghes != 'true'
       uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: website/build
 
     - name: Deploy to GitHub Pages
+      if: inputs.ghes != 'true'
       id: deployment
       uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # tagged both v5.0.0 and v3.0.2-node.24
+
+    # GHES does not support the artifact service behind the newer Pages actions.
+    # These versions use the older artifact service that GHES supports.
+    - name: Upload Pages artifact (GHES)
+      if: inputs.ghes == 'true'
+      uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # v2.0.0
+      with:
+        path: website/build
+
+    - name: Deploy to GitHub Pages (GHES)
+      if: inputs.ghes == 'true'
+      id: deployment-ghes
+      uses: actions/deploy-pages@13b55b33dd8996121833dbc1db458c793a334630 # v3.0.1
