@@ -63,6 +63,7 @@ jobs:
           pages-url: https://myorg.github.io/my-model
           github-repo-url: https://github.com/myorg/my-model
           schema-sources: "spec"
+          ghes: "true"
 ```
 
 ### Multiple schema sources
@@ -93,6 +94,7 @@ with:
 | `github-repo-url` | Full URL to the GitHub repository | Yes | - |
 | `schema-sources` | Space-separated paths/dirs passed to `s2dm compose -s` | Yes | - |
 | `s2dm-version` | s2dm version to install (e.g. `0.22.0`). Omit to use the latest release | No | `''` |
+| `ghes` | Set to `"true"` when the repository lives on a GitHub Enterprise Server instance. Uses the Pages action versions that GHES supports | No | `"false"` |
 
 ## Outputs
 
