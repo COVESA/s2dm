@@ -15,6 +15,7 @@
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
     "test:patch": "node --test scripts/schema-map-cache.test.cjs",
+    "test:releases": "node --test scripts/stage-releases.test.cjs",
     "introspect": "node scripts/generate-introspection.js",
     "doc": "node scripts/generate-introspection.js && node scripts/copy-ledger.js && s2dm insights export -s ../dist/model.graphql -o static/insights.json && s2dm embeddings build -s ../dist/model.graphql -o static/embeddings.json && docusaurus graphql-to-doc"
   },

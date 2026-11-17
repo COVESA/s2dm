@@ -108,6 +108,11 @@ def test_scaffold_includes_ledger_page_and_staging_scripts(scaffolded_site: Path
     assert "sql.js" in package_json
 
 
+def test_scaffold_includes_release_staging_script(scaffolded_site: Path) -> None:
+    """The generated website includes the script that stages the release schemas."""
+    assert (scaffolded_site / "scripts/stage-releases.js").exists()
+
+
 def test_scaffold_includes_semantic_search_and_generation_pipeline(scaffolded_site: Path) -> None:
     """The generated website includes the search code and builds embeddings."""
     output = scaffolded_site

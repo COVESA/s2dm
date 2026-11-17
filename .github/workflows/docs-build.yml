@@ -20,8 +20,9 @@
 #         - "spec/**"          # adjust to your schema directory
 #     workflow_dispatch:
 #
-#   # Required for GitHub Pages deployment
+#   # Required for GitHub Pages deployment and for reading releases
 #   permissions:
+#     contents: read
 #     pages: write
 #     id-token: write
 #
@@ -46,6 +47,10 @@
 #
 # s2dm_version    Optional.  Pin to a specific s2dm release (e.g. "0.22.0").
 #                 Omit to always use the latest published version.
+#
+# releases_limit  Optional.  Number of releases whose schemas the build
+#                 stages, newest first, at most 50 (default 10).  With 0,
+#                 the build stages no releases.
 # ──────────────────────────────────────────────────────────────────────────────
 
 name: "S2DM Docs Build (reusable)"
@@ -94,14 +99,22 @@ on:
         required: false
         type: string
         default: ""
+      releases_limit:
+        description: >
+          Number of releases whose schemas the build stages, newest first, at most 50.
+          Drafts and pre-releases are left out. With `0`, the build stages no releases.
+        required: false
+        type: number
+        default: 10
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    # These permissions are required for GitHub Pages deployment.
-    # They must also be granted in the calling workflow.
+    # These permissions are required for GitHub Pages deployment and for
+    # reading releases. They must also be granted in the calling workflow.
     permissions:
+      contents: read
       pages: write
       id-token: write
 
@@ -180,6 +193,17 @@ jobs:
       - name: Install website dependencies
         run: npm ci
         working-directory: website
+
+      # Browsers cannot read release files, so the build stages the schemas of
+      # the latest releases in static/releases/ for the Releases page.
+      - name: Stage releases
+        if: inputs.releases_limit > 0
+        working-directory: website
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_ENTERPRISE_TOKEN: ${{ github.token }}
+          RELEASES_LIMIT: ${{ inputs.releases_limit }}
+        run: GH_REPO="${GITHUB_SERVER_URL#*://}/${GITHUB_REPOSITORY}" node scripts/stage-releases.js "$RELEASES_LIMIT"
 
       # generate-introspection.js writes static/introspection.json, then
       # graphql-to-doc builds the full API reference under docs/api/.

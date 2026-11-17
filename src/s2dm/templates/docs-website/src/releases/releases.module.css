@@ -1,0 +1,22 @@
+.content {
+	min-width: 0;
+	width: 100%;
+}
+
+/* Fills the window below the navbar. 3rem is the page's top and bottom padding. */
+.editor {
+	border: 1px solid var(--ifm-color-emphasis-200);
+	border-radius: var(--ifm-global-radius, 0.5rem);
+	height: calc(100dvh - var(--ifm-navbar-height) - 3rem);
+	min-height: 24rem;
+	overflow: hidden;
+}
+
+.status {
+	border: 1px solid var(--ifm-color-emphasis-200);
+	border-radius: 0.75rem;
+	margin: 4rem auto;
+	padding: 2rem;
+	text-align: center;
+	width: min(100%, 54rem);
+}

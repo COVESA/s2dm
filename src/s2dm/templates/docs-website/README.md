@@ -23,19 +23,21 @@ All other files are copied verbatim.
 
 | File | Purpose |
 |---|---|
-| `docusaurus.config.ts` | Site configuration: URL, navbar, plugins, Mermaid, GraphQL Markdown, and the plugin that gives Insights and Ledger a route per sidebar link |
-| `sidebars.ts` | Sidebar structure: docs, plus the Insights and Ledger sidebars |
+| `docusaurus.config.ts` | Site configuration: URL, navbar, plugins, Mermaid, GraphQL Markdown, and the plugin that gives Insights, Ledger and Releases a route per sidebar link |
+| `sidebars.ts` | Sidebar structure: docs, plus the Insights, Ledger and Releases sidebars |
 | `tsconfig.json` | TypeScript configuration for the Docusaurus project |
 | `package.json` | Dependencies and scripts (`doc`, `build`, `start`) |
 | `custom-mdx.cjs` | GraphQL Markdown formatter hook — injects Mermaid `classDiagram` into every Object type page |
 | `scripts/generate-introspection.js` | Reads `../dist/model.graphql` and writes `static/introspection.json` for the Voyager visualizer |
 | `scripts/copy-ledger.js` | Copies `../dist/ledger.db` to `static/ledger.db`, and removes a stale copy when no ledger is staged |
 | `scripts/copy-sql-wasm.js` | Copies the installed sql.js WebAssembly binary to `static/sql-wasm.wasm` on `postinstall`, so it matches the installed version |
+| `scripts/stage-releases.js` | Downloads the schemas of the latest releases with `gh` into `static/releases/` for the Releases page |
 | `src/pages/index.tsx` | Homepage: project title (from config), s2dm/COVESA links, Docs + Visualizer + Insights + Ledger buttons |
 | `src/pages/index.module.css` | Homepage layout styles |
 | `src/pages/visualizer.tsx` | Voyager page — wraps `static/voyager.html` in a full-height iframe |
 | `src/insights/` | Insights host page: the shared views inside the docs layout and sidebar |
 | `src/ledger/` | Ledger host page: the shared views inside the docs layout and sidebar |
+| `src/releases/` | Releases page: the schema of the selected release in a read-only editor |
 | `src/insights-ui/` | Copied from `templates/insights-ui`; reached through the `@insights-ui` alias |
 | `src/ledger-ui/` | Copied from `templates/ledger-ui`; reached through the `@ledger-ui` alias |
 | `src/components/`, `src/store/`, `src/hooks/`, `src/utils/` | Host primitives the shared trees import through `@/` |
@@ -44,7 +46,7 @@ All other files are copied verbatim.
 | `static/.nojekyll` | Prevents GitHub Pages from running Jekyll on the build output |
 | `static/img/` | Default images: `favicon.ico` (site icon), `docusaurus-social-card.jpg` (OG image referenced by name in config) |
 | `docs/.gitkeep` | Ensures `docs/` exists in a fresh git checkout; Docusaurus requires it before `graphql-to-doc` runs |
-| `.gitignore` | Excludes generated outputs: `docs/api/`, `static/introspection.json`, `static/insights.json`, `static/sql-wasm.wasm`, `static/ledger.db`, `build/`, `node_modules/` |
+| `.gitignore` | Excludes generated outputs: `docs/api/`, `static/introspection.json`, `static/insights.json`, `static/sql-wasm.wasm`, `static/ledger.db`, `static/releases/`, `build/`, `node_modules/` |
 
 ## How it integrates with an s2dm project
 
@@ -81,7 +83,40 @@ page responsive. A query that is cancelled, or that passes the deadline, ends
 that worker; the ledger is reopened behind it from the bytes already fetched.
 
 The ledger is optional. With nothing staged, `copy-ledger.js` removes any stale copy and
-the page reports that it could not read a ledger. The rest of the site is unaffected.
+the Ledger page says that no ledger is available and shows no sidebar. The rest of the site is
+unaffected.
+
+### Releases
+
+The Releases page shows the schemas of past releases in a read-only editor. Browsers
+cannot read GitHub release files, so the build downloads them:
+
+```sh
+GH_REPO=github.com/<org>/<repo> node scripts/stage-releases.js 5
+```
+
+The script needs the GitHub CLI (`gh`) with read access to the repository. An archive
+release also needs `python3` to extract the archive.
+
+The argument is the number of releases to stage, a whole number from 1 to 50. The script
+goes through the published releases from newest to oldest. It leaves out drafts and
+pre-releases. It stages the schema from the first of these assets that a release has:
+
+1. `schema.graphql`, with a `metadata.yaml` asset next to it.
+2. `release.tar.gz`.
+3. The only archive of the release (`.tar`, `.tar.gz`, `.tgz` or `.zip`).
+
+An archive needs `metadata.yaml` at its top and exactly one `schema.graphql`. A release
+that fails, or whose tag has a `/`, is skipped with a warning and does not count toward
+the limit.
+
+The script clears `static/releases/` first. It then writes each schema to
+`static/releases/<tag>/schema.graphql` and the tags, newest first, to
+`static/releases/releases.json`. The newest release is at `/releases`, the others at
+`/releases/<tag>`. With no releases staged, the Releases page says that no releases are
+available and shows no sidebar.
+
+Run `npm run test:releases` to test the script.
 
 ## GraphQL-Markdown performance patch
 
@@ -149,6 +184,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
@@ -163,6 +199,7 @@ jobs:
       github_repo_url: https://github.com/myorg/seat-model
       schema_sources: "spec"  # space-separated dirs/files passed to s2dm compose -s
       ledger_source: "spec/ledger.db"  # optional; omit if the model has no ledger
+      releases_limit: 5  # optional; releases on the Releases page, at most 50 (default 10, 0 for none)
 ```
 
 With this approach, no website files need to be committed to your repository.

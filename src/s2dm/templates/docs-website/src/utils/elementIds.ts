@@ -4,7 +4,7 @@ import {
 	normalizeSearchTerm,
 } from "@search-ui/utils/textSearch";
 import type { IntrospectionQuery } from "graphql";
-import { fetchJson } from "@/utils/fetchJson";
+import { fetchJson } from "@/utils/fetchFile";
 
 /**
  * List the schema's elements, named the way `s2dm embeddings build` names them.
