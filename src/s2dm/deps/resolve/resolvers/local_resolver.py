@@ -30,7 +30,7 @@ class LocalResolver(Resolver):
             raise DependencySourceError(f"Dependency artifact must be a file: {artifact_path}")
 
         source = self._resolve_artifact(
-            dependency=dependency,
+            artifact_name=dependency.artifact,
             artifact_path=artifact_path,
         )
         return ResolvedDependencySource(source=source, resolved_path=str(artifact_path.absolute()))

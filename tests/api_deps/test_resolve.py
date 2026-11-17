@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import s2dm.api.routes.deps as deps_route
+from tests.deps.helpers import create_archive
 
 DependenciesConfigPayloadFactory = Callable[..., dict[str, object]]
 DependencySourceFactory = Callable[..., Path]
@@ -118,6 +119,30 @@ class TestDepsResolveRoute:
         data = response.json()
         assert data["error"] == "DependencySourceError"
         assert "Dependency source directory does not exist" in data["message"]
+
+    def test_resolve_dependencies_archive_without_metadata_returns_artifact_error(
+        self,
+        test_client: TestClient,
+        tmp_path: Path,
+        resolve_payload_factory: ResolvePayloadFactory,
+    ) -> None:
+        source_directory = tmp_path / "source"
+        source_directory.mkdir()
+        archive_path = source_directory / "bundle.tar.gz"
+        create_archive(archive_path, include_metadata=False)
+        dependency_payload = {
+            "name": "B",
+            "version": "5.1.0",
+            "source": str(source_directory.resolve()),
+            "artifact": archive_path.name,
+        }
+        test_client.post("/api/v1/deps/config", json={"dependencies": [dependency_payload]})
+
+        response = test_client.post("/api/v1/deps/resolve", json=resolve_payload_factory())
+
+        assert response.status_code == 422
+        data = response.json()
+        assert data["error"] == "DependencyArtifactError"
 
     def test_resolve_dependencies_upstream_failure_returns_502(
         self,
