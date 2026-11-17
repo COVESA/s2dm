@@ -1,14 +1,9 @@
 import type { CheckedState } from "@radix-ui/react-checkbox";
-import { Button } from "@shared-ui/components/button";
-import { ChevronUp } from "lucide-react";
 import { useId } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FormLabel } from "@/components/ui/form-label";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+	type CheckboxOption,
+	OptionsPopover,
+} from "@/components/OptionsPopover";
 import {
 	selectAutoPrefix,
 	selectPreserveQueryType,
@@ -37,7 +32,7 @@ export function BuildOptionsPopover({ disabled }: BuildOptionsPopoverProps) {
 		dispatch(preserveQueryTypeAction);
 	};
 
-	const buildOptions = [
+	const buildOptions: CheckboxOption[] = [
 		{
 			id: `${idPrefix}-auto-prefix`,
 			label: "Auto-prefix conflicting types",
@@ -55,42 +50,10 @@ export function BuildOptionsPopover({ disabled }: BuildOptionsPopoverProps) {
 	];
 
 	return (
-		<Popover>
-			<PopoverTrigger asChild={true}>
-				<Button
-					variant={"outline"}
-					size={"icon-sm"}
-					disabled={disabled}
-					title={"Build options"}
-					className={"rounded-l-none border-l-0"}
-				>
-					<ChevronUp className={"h-4 w-4"} />
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent side={"top"} align={"end"} className={"w-64 p-0"}>
-				<ul className={"divide-y"}>
-					{buildOptions.map((buildOption) => (
-						<li
-							key={buildOption.id}
-							className={"flex items-center gap-3 px-4 py-3"}
-							title={buildOption.title}
-						>
-							<FormLabel
-								htmlFor={buildOption.id}
-								className={"flex-1 cursor-pointer text-sm"}
-							>
-								{buildOption.label}
-							</FormLabel>
-							<Checkbox
-								id={buildOption.id}
-								checked={buildOption.checked}
-								disabled={disabled}
-								onCheckedChange={buildOption.onCheckedChange}
-							/>
-						</li>
-					))}
-				</ul>
-			</PopoverContent>
-		</Popover>
+		<OptionsPopover
+			title={"Build options"}
+			disabled={disabled}
+			options={buildOptions}
+		/>
 	);
 }

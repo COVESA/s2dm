@@ -1,6 +1,5 @@
 import { Button } from "@shared-ui/components/button";
 import { StatusBanner } from "@shared-ui/components/status-banner";
-import { TabsContent } from "@shared-ui/components/tabs";
 import { Plus, Upload } from "lucide-react";
 import { useCallback } from "react";
 import { DependencyModal } from "@/components/DependencyModal";
@@ -8,9 +7,9 @@ import { BuildOptionsPopover } from "@/components/dependencies/BuildOptionsPopov
 import { BuiltSchemaViewerButton } from "@/components/dependencies/BuiltSchemaViewerButton";
 import { DependencyImportDialog } from "@/components/dependencies/DependencyImportDialog";
 import { EntryList } from "@/components/dependencies/EntryList";
+import { ResolveOptionsPopover } from "@/components/dependencies/ResolveOptionsPopover";
 import { useEditModal } from "@/components/dependencies/useEditModal";
-import { DialogFooter } from "@/components/ui/dialog";
-import { SplitActionButton } from "@/components/ui/split-action-button";
+import { DialogFooter, DialogTabsContent } from "@/components/ui/dialog";
 import { useDependencyConfigImportController } from "@/hooks/useDependencyConfigImportController";
 import {
 	composeDependencies,
@@ -124,11 +123,8 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 	}, [dispatch]);
 
 	const handleResolve = useCallback(() => {
-		dispatch(resolveDependencies({ clean: false }));
-	}, [dispatch]);
-
-	const handleCleanResolve = useCallback(() => {
-		dispatch(resolveDependencies({ clean: true }));
+		const resolveAction = resolveDependencies();
+		dispatch(resolveAction);
 	}, [dispatch]);
 
 	const handleCompose = useCallback(() => {
@@ -146,7 +142,12 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 		isDependencyStatusLoading ||
 		isDependenciesSaving ||
 		isDependenciesComposing ||
-		isDependenciesResolving;
+		isDependenciesResolving ||
+		hasUnsavedDependencyChanges;
+	let resolveActionsTitle: string | undefined;
+	if (hasUnsavedDependencyChanges) {
+		resolveActionsTitle = "Save changes before resolving";
+	}
 	const isComposeDisabled =
 		dependencyStatus !== "resolved" ||
 		isDependencyStatusLoading ||
@@ -172,11 +173,8 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 
 	return (
 		<>
-			<TabsContent
-				value="dependencies"
-				className="mt-0 flex min-h-0 flex-1 flex-col"
-			>
-				<div className="flex justify-end gap-2 pr-1 pt-2">
+			<DialogTabsContent value={"dependencies"}>
+				<div className="flex justify-end gap-2 pr-1">
 					<BuiltSchemaViewerButton size="icon-sm" />
 					<Button
 						variant="outline"
@@ -199,25 +197,24 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 					</Button>
 				</div>
 
-				<div className="px-1">
-					{uniqueDestructiveErrors.map((error) => (
-						<StatusBanner key={error} variant="destructive" className="mt-2">
-							{error}
-						</StatusBanner>
-					))}
+				{uniqueDestructiveErrors.map((error) => (
+					<StatusBanner key={error} variant="destructive">
+						{error}
+					</StatusBanner>
+				))}
 
-					{dependencyWarnings.length > 0 && (
-						<StatusBanner variant="warning" className="mt-2">
-							{dependencyWarnings.join("\n")}
-						</StatusBanner>
-					)}
+				{dependencyWarnings.length > 0 && (
+					<StatusBanner variant="warning">
+						{dependencyWarnings.join("\n")}
+					</StatusBanner>
+				)}
 
-					{dependenciesComposeMessage && (
-						<StatusBanner variant="success" className="mt-2">
-							{dependenciesComposeMessage}
-						</StatusBanner>
-					)}
-				</div>
+				{dependenciesComposeMessage && (
+					<StatusBanner variant="success">
+						{dependenciesComposeMessage}
+					</StatusBanner>
+				)}
+
 				<EntryList
 					items={dependencies}
 					isLoading={isDependenciesLoading}
@@ -232,7 +229,7 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 					removeTitle="Remove dependency"
 				/>
 
-				<DialogFooter className="mt-6">
+				<DialogFooter>
 					<Button
 						variant="outline"
 						onClick={onDialogClose}
@@ -240,17 +237,20 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 					>
 						Cancel
 					</Button>
-					<SplitActionButton
-						label="Resolve"
-						onClick={handleResolve}
-						loading={isDependenciesResolving}
-						disabled={isResolveDisabled}
-						title="Resolve dependencies"
-						optionsTitle="Resolve options"
-						options={[
-							{ label: "Clean and Resolve", onClick: handleCleanResolve },
-						]}
-					/>
+					<div className={"flex items-center"} title={resolveActionsTitle}>
+						<Button
+							variant={"outline"}
+							size={"sm"}
+							onClick={handleResolve}
+							loading={isDependenciesResolving}
+							disabled={isResolveDisabled}
+							title={"Resolve dependencies"}
+							className={"rounded-r-none"}
+						>
+							Resolve
+						</Button>
+						<ResolveOptionsPopover disabled={isResolveDisabled} />
+					</div>
 					<div className={"flex items-center"}>
 						<Button
 							variant={"outline"}
@@ -273,7 +273,7 @@ export function DependenciesTab({ onDialogClose }: DependenciesTabProps) {
 						Save
 					</Button>
 				</DialogFooter>
-			</TabsContent>
+			</DialogTabsContent>
 
 			{depModal.isOpen && depModal.draft && depModal.mode && (
 				<DependencyModal

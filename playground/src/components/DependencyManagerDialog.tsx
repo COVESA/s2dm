@@ -1,6 +1,7 @@
 import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
 import { Eye, Plus, RefreshCw, Upload } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useConfirmPrompt } from "@/components/ConfirmPromptProvider";
 import { DependenciesTab } from "@/components/dependencies/DependenciesTab";
 import { DependencyStatusBadge } from "@/components/dependencies/DependencyStatusBadge";
 import { IdentitiesTab } from "@/components/dependencies/IdentitiesTab";
@@ -12,13 +13,19 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import {
+	discardDependencyChanges,
 	fetchDependenciesConfig,
 	fetchDependenciesStatus,
 	selectDependencyStatus,
 	selectDependencyStatusError,
+	selectHasUnsavedDependencyChanges,
 	selectIsLoadingDependencyStatus,
 } from "@/store/deps/depsSlice";
-import { fetchIdentities } from "@/store/deps/identities/identitiesSlice";
+import {
+	discardIdentityChanges,
+	fetchIdentities,
+	selectHasUnsavedIdentityChanges,
+} from "@/store/deps/identities/identitiesSlice";
 import { selectIsResolvingDependencies } from "@/store/deps/resolve/resolveSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
@@ -42,16 +49,50 @@ export function DependencyManagerDialog({
 		selectIsLoadingDependencyStatus,
 	);
 	const isDependenciesResolving = useAppSelector(selectIsResolvingDependencies);
+	const hasUnsavedDependencyChanges = useAppSelector(
+		selectHasUnsavedDependencyChanges,
+	);
+	const hasUnsavedIdentityChanges = useAppSelector(
+		selectHasUnsavedIdentityChanges,
+	);
+	const confirmAction = useConfirmPrompt();
 
 	const handleDialogOpenChange = useCallback(
 		(isOpen: boolean) => {
-			if (!isOpen) {
-				setActiveTab("dependencies");
+			if (isOpen) {
+				onOpenChange(true);
+				return;
 			}
 
-			onOpenChange(isOpen);
+			let description =
+				"The unsaved dependency and identity changes will be lost.";
+			if (!hasUnsavedIdentityChanges) {
+				description = "The unsaved dependency changes will be lost.";
+			}
+			if (!hasUnsavedDependencyChanges) {
+				description = "The unsaved identity changes will be lost.";
+			}
+
+			confirmAction({
+				isDataLost: hasUnsavedDependencyChanges || hasUnsavedIdentityChanges,
+				description,
+				onConfirm: () => {
+					const discardDependenciesAction = discardDependencyChanges();
+					const discardIdentitiesAction = discardIdentityChanges();
+					dispatch(discardDependenciesAction);
+					dispatch(discardIdentitiesAction);
+					setActiveTab("dependencies");
+					onOpenChange(false);
+				},
+			});
 		},
-		[onOpenChange],
+		[
+			confirmAction,
+			dispatch,
+			hasUnsavedDependencyChanges,
+			hasUnsavedIdentityChanges,
+			onOpenChange,
+		],
 	);
 
 	const handleDialogClose = useCallback(() => {
@@ -75,7 +116,7 @@ export function DependencyManagerDialog({
 				<Tabs
 					value={activeTab}
 					onValueChange={(value) => setActiveTab(value as DependencyManagerTab)}
-					className="flex min-h-0 flex-1 flex-col"
+					className={"contents"}
 				>
 					<DialogHeader>
 						<div className="space-y-3">
@@ -141,12 +182,14 @@ export function DependencyManagerDialog({
 										preview the composed dependency schema.
 									</HelpItem>
 									<HelpItem term="Resolve">
-										fetch and resolve the configured dependencies. The dropdown
-										offers Clean and Resolve to discard cached results first.
+										fetch and resolve the configured dependencies. Its options
+										menu has “Clean before resolving”, which discards cached
+										results first.
 									</HelpItem>
 									<HelpItem term="Build">
-										compose the resolved dependencies into a single schema. The
-										dropdown offers Build and Auto-prefix.
+										compose the resolved dependencies into a single schema. Its
+										options menu has “Auto-prefix conflicting types” and “Keep
+										Query type”.
 									</HelpItem>
 									<HelpItem term="Save">
 										persist your dependency or identity changes.
