@@ -12,7 +12,7 @@ export type SchemaIssue = {
 	message: string;
 };
 
-/** A ledger that lacks one or more ModL tables. Such a ledger does not open. */
+/** A ledger that lacks one or more ModL tables. */
 export class MissingModlTablesError extends Error {
 	readonly missingTables: string[];
 
@@ -41,8 +41,8 @@ export function requireModlTables(tables: LedgerTable[]): void {
 }
 
 /**
- * Compares the tables of a ledger with the ModL schema. A missing table gives
- * no issue, because such a ledger does not open.
+ * Compares the tables of a ledger with the ModL schema. It reports no issue for
+ * a missing table.
  *
  * @param tables - The tables as read from the database.
  * @returns One issue per missing column, wrong primary key or missing foreign

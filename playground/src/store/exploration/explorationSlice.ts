@@ -7,7 +7,7 @@ import {
 import type { RootState } from "@/store/types";
 import type { DependencyDraft } from "@/types/dependency";
 
-export type DependencyExplorationSnapshot = {
+export type ExplorationSnapshot = {
 	originalSchema: string;
 	originalSchemaReference: SchemaReference | null;
 	filteredSchema: string;
@@ -15,18 +15,18 @@ export type DependencyExplorationSnapshot = {
 	appliedSelectionQuery: string;
 };
 
-export interface DependencyExplorationState {
+export interface ExplorationState {
 	exploringDependencyId: string | null;
-	snapshot: DependencyExplorationSnapshot | null;
+	snapshot: ExplorationSnapshot | null;
 }
 
-const initialState: DependencyExplorationState = {
+const initialState: ExplorationState = {
 	exploringDependencyId: null,
 	snapshot: null,
 };
 
-const dependencyExplorationSlice = createSlice({
-	name: "dependencyExploration",
+const explorationSlice = createSlice({
+	name: "exploration",
 	initialState,
 	reducers: {
 		startDependencyExploration: (
@@ -35,12 +35,12 @@ const dependencyExplorationSlice = createSlice({
 		) => {
 			state.exploringDependencyId = action.payload.id;
 		},
-		exitDependencyExploration: (state) => {
+		exitExploration: (state) => {
 			state.exploringDependencyId = null;
 		},
-		setDependencyExplorationSnapshot: (
+		setExplorationSnapshot: (
 			state,
-			action: PayloadAction<DependencyExplorationSnapshot | null>,
+			action: PayloadAction<ExplorationSnapshot | null>,
 		) => {
 			state.snapshot = action.payload;
 		},
@@ -66,13 +66,15 @@ const dependencyExplorationSlice = createSlice({
 
 export const {
 	startDependencyExploration,
-	exitDependencyExploration,
-	setDependencyExplorationSnapshot,
-} = dependencyExplorationSlice.actions;
+	exitExploration,
+	setExplorationSnapshot,
+} = explorationSlice.actions;
 
 export const selectExploringDependencyId = (state: RootState) =>
-	state.dependencyExploration.exploringDependencyId;
-export const selectDependencyExplorationSnapshot = (state: RootState) =>
-	state.dependencyExploration.snapshot;
+	state.exploration.exploringDependencyId;
+export const selectIsExploring = (state: RootState) =>
+	state.exploration.exploringDependencyId !== null;
+export const selectExplorationSnapshot = (state: RootState) =>
+	state.exploration.snapshot;
 
-export default dependencyExplorationSlice.reducer;
+export default explorationSlice.reducer;

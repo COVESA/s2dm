@@ -7,10 +7,10 @@ import type { LedgerQueryState } from "@ledger-ui/state/ledgerQuerySlice";
 import type { LedgerTableState } from "@ledger-ui/state/ledgerTableSlice";
 import type { CapabilitiesState } from "@/store/capabilities/capabilitiesSlice";
 import type { DepsComposeState } from "@/store/deps/compose/composeSlice";
-import type { DependencyExplorationState } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
 import type { DepsState } from "@/store/deps/depsSlice";
 import type { DepsIdentitiesState } from "@/store/deps/identities/identitiesSlice";
 import type { DepsResolveState } from "@/store/deps/resolve/resolveSlice";
+import type { ExplorationState } from "@/store/exploration/explorationSlice";
 import type { ExportState } from "@/store/export/exportSlice";
 import type { InstanceTagsState } from "@/store/instanceTags/instanceTagsSlice";
 import type { SchemaState } from "@/store/schema/schemaSlice";
@@ -21,7 +21,7 @@ import type { ValidationState } from "@/store/validation/validationSlice";
 
 export interface RootState {
 	deps: DepsState;
-	dependencyExploration: DependencyExplorationState;
+	exploration: ExplorationState;
 	depsIdentities: DepsIdentitiesState;
 	depsResolve: DepsResolveState;
 	depsCompose: DepsComposeState;

@@ -8,6 +8,7 @@ import {
 	areDependencyDraftsEqual,
 	type DependencyDraft,
 	type DependencyEditableField,
+	hasSchemaContent,
 } from "@/types/dependency";
 
 export interface DepsState {
@@ -188,6 +189,10 @@ export const selectIsLoadingDependencyStatus = (state: RootState) =>
 	state.deps.isLoadingStatus;
 export const selectDependencyDrafts = (state: RootState) =>
 	state.deps.dependencies;
+/** Tells whether the dependencies are resolved and at least one has a schema. */
+export const selectHasResolvedDependencies = (state: RootState) =>
+	state.deps.status === "resolved" &&
+	state.deps.dependencies.some(hasSchemaContent);
 export const selectIsLoadingDependenciesConfig = (state: RootState) =>
 	state.deps.isLoadingConfig;
 export const selectIsImportingDependenciesConfig = (state: RootState) =>

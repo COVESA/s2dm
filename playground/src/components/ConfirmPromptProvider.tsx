@@ -45,7 +45,7 @@ type ConfirmPromptProviderProps = {
  * data runs at once. A request that loses data runs only after the user
  * confirms it.
  *
- * @param children - The app content that sends confirm requests.
+ * @param children The app content that sends confirm requests.
  * @returns The app content and the shared prompt.
  */
 export function ConfirmPromptProvider({
