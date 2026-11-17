@@ -1,12 +1,11 @@
 import { Repeat } from "lucide-react";
 import type { ReactNode } from "react";
 import {
-	TreeDocsLink,
+	DocsLinkCheckbox,
 	TreeExpandButton,
 	TreeExpandSpacer,
 	TreeRowFrame,
 } from "@/components/explore/TreeRowParts";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
 	getCheckedState,
 	type LeafCounts,
@@ -75,18 +74,16 @@ export function SelectionTreeItem({
 	return (
 		<TreeRowFrame depth={depth} isMuted={isBeyondCycleDepth}>
 			{expandControl}
-			<Checkbox
+			<DocsLinkCheckbox
+				label={label}
+				highlightTerm={highlightTerm}
+				onShowDocs={() => onShowDocs(node)}
 				checked={checkedState}
 				disabled={isDisabled || isBeyondCycleDepth || totalCount === 0}
 				onCheckedChange={() => onToggle(node, checkedState !== true)}
-				aria-label={`Select ${label}`}
-			/>
-			<TreeDocsLink
-				label={label}
-				highlightTerm={highlightTerm}
-				onClick={() => onShowDocs(node)}
-			/>
-			{labelAccessory}
+			>
+				{labelAccessory}
+			</DocsLinkCheckbox>
 			<span
 				className={"min-w-0 truncate font-mono text-xs text-muted-foreground"}
 				title={node.typeLabel}
