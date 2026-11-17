@@ -136,6 +136,12 @@ const depsSlice = createSlice({
 
 			state.error = null;
 		},
+		discardDependencyChanges: (state) => {
+			state.dependencies = state.storedDependencies.map((draft) => ({
+				...draft,
+			}));
+			state.error = null;
+		},
 		saveDependenciesConfig: (state) => {
 			state.isSavingConfig = true;
 			state.error = null;
@@ -169,6 +175,7 @@ export const {
 	updateDependency,
 	removeDependency,
 	updateDependencyField,
+	discardDependencyChanges,
 	saveDependenciesConfig,
 	saveDependenciesConfigSuccess,
 	saveDependenciesConfigFailure,

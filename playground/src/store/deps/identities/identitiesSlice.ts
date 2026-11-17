@@ -81,6 +81,10 @@ const identitiesSlice = createSlice({
 			);
 			state.error = null;
 		},
+		discardIdentityChanges: (state) => {
+			state.identities = state.storedIdentities.map((draft) => ({ ...draft }));
+			state.error = null;
+		},
 		saveIdentities: (state) => {
 			state.isSaving = true;
 			state.error = null;
@@ -107,6 +111,7 @@ export const {
 	addIdentity,
 	updateIdentity,
 	removeIdentity,
+	discardIdentityChanges,
 	saveIdentities,
 	saveIdentitiesSuccess,
 	saveIdentitiesFailure,
