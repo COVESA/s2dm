@@ -2250,10 +2250,12 @@ def test_deps_resolve_uses_default_identity_file_for_authenticated_remote_releas
                     {
                         "name": "metadata.yaml",
                         "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/1",
+                        "size": 1,
                     },
                     {
                         "name": "schema.graphql",
                         "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/2",
+                        "size": 1,
                     },
                 ]
             }
@@ -2290,7 +2292,7 @@ def test_deps_resolve_uses_default_identity_file_for_authenticated_remote_releas
                 return schema_response
             raise AssertionError(f"Unexpected URL requested: {url}")
 
-        with patch("s2dm.deps.resolve.resolvers.remote_resolver.requests.get", side_effect=mock_request_get):
+        with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", side_effect=mock_request_get):
             result = runner.invoke(cli, ["deps", "resolve"])
 
         assert result.exit_code == 0, result.output

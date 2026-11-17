@@ -37,7 +37,7 @@ import { TreeRowList } from "@/components/explore/TreeRowList";
 import { TreeExpandSpacer } from "@/components/explore/TreeRowParts";
 import { HelpButton, HelpItem } from "@/components/HelpButton";
 import type { ValidatedQuery } from "@/components/QueryEditorWrapper";
-import { Checkbox } from "@/components/ui/checkbox";
+import { LabelCheckbox } from "@/components/ui/checkbox";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectInstanceTagFields,
@@ -503,15 +503,13 @@ function SelectionTreeContent({
 					{!isSearching && (
 						<>
 							<TreeExpandSpacer />
-							<Checkbox
+							<LabelCheckbox
 								checked={allCheckedState}
 								disabled={isTreeDisabled || allCounts.totalCount === 0}
 								onCheckedChange={handleToggleAll}
-								aria-label={"Select all"}
-							/>
-							<span className={"text-sm font-medium text-foreground"}>
+							>
 								Select all
-							</span>
+							</LabelCheckbox>
 						</>
 					)}
 					<div className={"ml-auto"}>
