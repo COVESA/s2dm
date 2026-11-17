@@ -1,5 +1,6 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@shared-ui/components/button";
+import { TabsContent } from "@shared-ui/components/tabs";
 import { cn } from "@shared-ui/utils/cn";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
@@ -129,11 +130,33 @@ function DialogDescription({
 	);
 }
 
+/**
+ * Shows one tab panel of a dialog. The panel fills the free height of the
+ * dialog. It puts the same gap between its children as the dialog frame.
+ *
+ * @param className - Extra classes for the panel.
+ * @param props - The tab panel props, with the tab value.
+ * @returns The tab panel.
+ */
+function DialogTabsContent({
+	className,
+	...props
+}: React.ComponentPropsWithoutRef<typeof TabsContent>) {
+	return (
+		<TabsContent
+			data-slot="dialog-tabs-content"
+			className={cn("mt-0 flex min-h-0 flex-1 flex-col gap-4", className)}
+			{...props}
+		/>
+	);
+}
+
 export {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
+	DialogTabsContent,
 	DialogTitle,
 };

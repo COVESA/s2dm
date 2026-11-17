@@ -57,7 +57,5 @@ export function EntryList<T extends { id: string }>({
 		);
 	}
 
-	return (
-		<div className="min-h-0 flex-1 overflow-y-auto pr-1 pt-4">{content}</div>
-	);
+	return <div className="min-h-0 flex-1 overflow-y-auto pr-1">{content}</div>;
 }
