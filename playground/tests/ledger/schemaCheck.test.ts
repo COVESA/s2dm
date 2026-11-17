@@ -1,5 +1,10 @@
+import { MODL_SCHEMA } from "@ledger-ui/data/modlProfile";
 import { readSchema } from "@ledger-ui/data/schema";
-import { findSchemaIssues } from "@ledger-ui/data/schemaCheck";
+import {
+	findSchemaIssues,
+	MissingModlTablesError,
+	requireModlTables,
+} from "@ledger-ui/data/schemaCheck";
 import type { LedgerTable } from "@ledger-ui/data/types";
 import { describe, expect, it } from "vitest";
 import { createDatabase, MODL_TABLES_SQL } from "./fixtures";
@@ -24,6 +29,43 @@ function issueCodes(tables: LedgerTable[]): string[] {
 	return issues.map((issue) => issue.code);
 }
 
+function rejectedTableNames(tables: LedgerTable[]): string[] {
+	try {
+		requireModlTables(tables);
+	} catch (error) {
+		if (error instanceof MissingModlTablesError) {
+			return error.missingTables;
+		}
+		throw error;
+	}
+	return [];
+}
+
+describe("requireModlTables", () => {
+	it("accepts a ModL export", () => {
+		const names = rejectedTableNames(MODL_TABLES);
+
+		expect(names).toEqual([]);
+	});
+
+	it("rejects a ledger without one ModL table", () => {
+		const tables = MODL_TABLES.filter(
+			(table) => table.name !== "contract_references",
+		);
+
+		expect(() => requireModlTables(tables)).toThrow(MissingModlTablesError);
+		expect(rejectedTableNames(tables)).toEqual(["contract_references"]);
+	});
+
+	it("rejects a ledger without tables", () => {
+		const expectedNames = MODL_SCHEMA.map((table) => table.name);
+
+		const names = rejectedTableNames([]);
+
+		expect(names).toEqual(expectedNames);
+	});
+});
+
 describe("findSchemaIssues", () => {
 	it("finds no issues in a ModL export", () => {
 		const codes = issueCodes(MODL_TABLES);
@@ -31,14 +73,14 @@ describe("findSchemaIssues", () => {
 		expect(codes).toEqual([]);
 	});
 
-	it("reports a missing table", () => {
+	it("leaves a missing table to the open check", () => {
 		const tables = MODL_TABLES.filter(
 			(table) => table.name !== "contract_references",
 		);
 
 		const codes = issueCodes(tables);
 
-		expect(codes).toEqual(["missing-table"]);
+		expect(codes).toEqual([]);
 	});
 
 	it("reports a missing column", () => {
