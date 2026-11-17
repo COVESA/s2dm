@@ -30,6 +30,8 @@ import exportReducer from "@/store/export/exportSlice";
 import { insightsSaga } from "@/store/insights/insightsSaga";
 import { instanceTagsSaga } from "@/store/instanceTags/instanceTagsSaga";
 import instanceTagsReducer from "@/store/instanceTags/instanceTagsSlice";
+import { releasesSaga } from "@/store/releases/releasesSaga";
+import releasesReducer from "@/store/releases/releasesSlice";
 import schemaReducer from "@/store/schema/schemaSlice";
 import { pruneSchemaSaga } from "@/store/selection/pruneSchemaSaga";
 import selectionReducer from "@/store/selection/selectionSlice";
@@ -47,6 +49,7 @@ function* rootSaga() {
 		depsIdentitiesSaga(),
 		depsResolveSaga(),
 		depsComposeSaga(),
+		releasesSaga(),
 		pruneSchemaSaga(),
 		validationSaga(),
 		exportSaga(),
@@ -73,6 +76,7 @@ export const store = configureStore({
 		depsIdentities: depsIdentitiesReducer,
 		depsResolve: depsResolveReducer,
 		depsCompose: depsComposeReducer,
+		releases: releasesReducer,
 		schema: schemaReducer,
 		ledgerFile: ledgerFileReducer,
 		ledgerTable: ledgerTableReducer,
