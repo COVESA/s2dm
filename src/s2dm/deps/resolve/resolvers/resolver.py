@@ -5,7 +5,7 @@ from pathlib import Path
 from s2dm.deps.models import DependencyEntry, DependencySource, ResolvedDependencySource
 from s2dm.deps.resolve.common import METADATA_FILENAME, SCHEMA_FILENAME
 from s2dm.deps.resolve.context import ResolverContext
-from s2dm.deps.resolve.errors import DependencyConfigError, DependencySourceError
+from s2dm.deps.resolve.errors import DependencyArtifactError, DependencyConfigError
 from s2dm.deps.resolve.extractors.factory import ExtractorFactory
 
 
@@ -26,12 +26,11 @@ class Resolver(ABC):
 
     def _resolve_artifact(
         self,
-        dependency: DependencyEntry,
+        artifact_name: str,
         artifact_path: Path,
     ) -> DependencySource:
         """Resolve the schema and metadata from an acquired artifact."""
-        if self._is_direct_dependency(dependency):
-            artifact_name = dependency.artifact
+        if self._is_direct_dependency(artifact_name):
             if artifact_name != SCHEMA_FILENAME:
                 raise DependencyConfigError(
                     f"GraphQL file name mismatch. Should be: {SCHEMA_FILENAME}. Found: {artifact_name}"
@@ -39,8 +38,7 @@ class Resolver(ABC):
             return self._resolve_direct_dependency(artifact_path)
         return self._resolve_bundled_dependency(artifact_path)
 
-    def _is_direct_dependency(self, dependency: DependencyEntry) -> bool:
-        artifact_name = dependency.artifact
+    def _is_direct_dependency(self, artifact_name: str) -> bool:
         return artifact_name.endswith(".graphql") or artifact_name.endswith(".gql")
 
     def _resolve_direct_dependency(
@@ -49,9 +47,9 @@ class Resolver(ABC):
     ) -> DependencySource:
         metadata_path = artifact_path.parent / METADATA_FILENAME
         if not metadata_path.exists():
-            raise DependencySourceError(f"Dependency metadata file not found: {metadata_path}")
+            raise DependencyArtifactError(f"Dependency metadata file not found: {metadata_path}")
         if not metadata_path.is_file():
-            raise DependencySourceError(f"Dependency metadata path must be a file: {metadata_path}")
+            raise DependencyArtifactError(f"Dependency metadata path must be a file: {metadata_path}")
 
         return DependencySource(
             schema_path=artifact_path,
@@ -85,14 +83,14 @@ class Resolver(ABC):
             return schema_paths[0]
 
         if not schema_paths:
-            raise DependencySourceError(expected_schema_message)
+            raise DependencyArtifactError(expected_schema_message)
 
         schema_locations = ", ".join(str(schema_path.relative_to(extraction_directory)) for schema_path in schema_paths)
-        raise DependencySourceError(f"{expected_schema_message}; found {len(schema_paths)}: {schema_locations}")
+        raise DependencyArtifactError(f"{expected_schema_message}; found {len(schema_paths)}: {schema_locations}")
 
     def _require_file(self, path: Path, archive_name: str) -> None:
         if not path.is_file():
-            raise DependencySourceError(f"Dependency archive '{archive_name}' must contain {path.name}")
+            raise DependencyArtifactError(f"Dependency archive '{archive_name}' must contain {path.name}")
 
     def _extract_archive(self, archive_path: Path, extraction_directory: Path) -> None:
         extractor = ExtractorFactory.create_extractor(archive_path)

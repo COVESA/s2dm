@@ -24,7 +24,12 @@ from s2dm.api.routes import (
     validate,
     vspec,
 )
-from s2dm.deps.resolve.errors import DependencyConfigError, DependencySourceError, DependencyUpstreamError
+from s2dm.deps.resolve.errors import (
+    DependencyArtifactError,
+    DependencyConfigError,
+    DependencySourceError,
+    DependencyUpstreamError,
+)
 
 app = FastAPI(
     title="S2DM Export API",
@@ -137,6 +142,16 @@ def dependency_source_error_handler(_request: Request, exc: DependencySourceErro
     error_response = ErrorResponse(error="DependencySourceError", message=str(exc), details=None)
     log.warning(f"Dependency source error: {exc}")
     return JSONResponse(status_code=422, content=error_response.model_dump())
+
+
+@app.exception_handler(DependencyArtifactError)
+def dependency_artifact_error_handler(_request: Request, exc: DependencyArtifactError) -> JSONResponse:
+    """Handle dependency artifacts that do not hold the expected files."""
+    error_message = str(exc)
+    error_response = ErrorResponse(error="DependencyArtifactError", message=error_message, details=None)
+    log.warning(f"Dependency artifact error: {exc}")
+    error_content = error_response.model_dump()
+    return JSONResponse(status_code=422, content=error_content)
 
 
 @app.exception_handler(DependencyUpstreamError)

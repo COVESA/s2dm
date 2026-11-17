@@ -82,15 +82,19 @@ def create_archive(
     archive_path: Path,
     schema_name: str | None = SCHEMA_FILENAME,
     extra_graphql_name: str | None = None,
+    include_metadata: bool = True,
 ) -> None:
     schema_content = "type Query { ping: String }\n"
-    metadata_content = yaml.safe_dump({"name": "B", "id": "urn:test:B", "version": "5.1.0"}, sort_keys=False)
+    metadata_content = None
+    if include_metadata:
+        metadata_content = yaml.safe_dump({"name": "B", "id": "urn:test:B", "version": "5.1.0"}, sort_keys=False)
 
     if archive_path.name.endswith(".zip"):
         with zipfile.ZipFile(archive_path, mode="w") as zip_file:
             if schema_name is not None:
                 zip_file.writestr(schema_name, schema_content)
-            zip_file.writestr(METADATA_FILENAME, metadata_content)
+            if metadata_content is not None:
+                zip_file.writestr(METADATA_FILENAME, metadata_content)
             if extra_graphql_name is not None:
                 zip_file.writestr(extra_graphql_name, schema_content)
         return
@@ -107,7 +111,7 @@ def create_archive(
 def _add_archive_members(
     tar_file: tarfile.TarFile,
     schema_content: str,
-    metadata_content: str,
+    metadata_content: str | None,
     schema_name: str | None,
     extra_graphql_name: str | None,
 ) -> None:
@@ -117,10 +121,11 @@ def _add_archive_members(
         schema_info.size = len(schema_bytes)
         tar_file.addfile(schema_info, BytesIO(schema_bytes))
 
-    metadata_bytes = metadata_content.encode("utf-8")
-    metadata_info = tarfile.TarInfo(name=METADATA_FILENAME)
-    metadata_info.size = len(metadata_bytes)
-    tar_file.addfile(metadata_info, BytesIO(metadata_bytes))
+    if metadata_content is not None:
+        metadata_bytes = metadata_content.encode("utf-8")
+        metadata_info = tarfile.TarInfo(name=METADATA_FILENAME)
+        metadata_info.size = len(metadata_bytes)
+        tar_file.addfile(metadata_info, BytesIO(metadata_bytes))
 
     if extra_graphql_name is not None:
         extra_graphql_bytes = schema_content.encode("utf-8")

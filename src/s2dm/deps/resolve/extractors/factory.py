@@ -24,11 +24,24 @@ class ExtractorFactory:
         return tuple(cls._registered_extractors)
 
     @classmethod
-    def create_extractor(cls, archive_path: Path) -> Extractor:
-        """Create the matching extractor for the given archive path."""
+    def _find_extractor_class(cls, archive_name: str) -> type[Extractor] | None:
+        """Return the registered extractor class that handles the archive name, or None."""
         extractor_classes = cls.get_registered_extractors()
         for extractor_class in extractor_classes:
-            if archive_path.name.endswith(extractor_class.file_formats):
-                return extractor_class()
+            if archive_name.endswith(extractor_class.file_formats):
+                return extractor_class
+        return None
 
-        raise DependencyConfigError(f"Unsupported dependency archive format: {archive_path.name}")
+    @classmethod
+    def supports(cls, archive_name: str) -> bool:
+        """Return whether a registered extractor handles the archive name."""
+        extractor_class = cls._find_extractor_class(archive_name)
+        return extractor_class is not None
+
+    @classmethod
+    def create_extractor(cls, archive_path: Path) -> Extractor:
+        """Create the matching extractor for the given archive path."""
+        extractor_class = cls._find_extractor_class(archive_path.name)
+        if extractor_class is None:
+            raise DependencyConfigError(f"Unsupported dependency archive format: {archive_path.name}")
+        return extractor_class()

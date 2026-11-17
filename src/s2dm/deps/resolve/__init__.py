@@ -4,6 +4,9 @@ from importlib import import_module
 import_module("s2dm.deps.resolve.extractors.tar_extractor")
 import_module("s2dm.deps.resolve.extractors.zip_extractor")
 
+# Release providers bootstrapping
+import_module("s2dm.deps.resolve.providers.github_release_provider")
+
 # Resolvers bootstrapping
 import_module("s2dm.deps.resolve.resolvers.local_resolver")
 import_module("s2dm.deps.resolve.resolvers.remote_resolver")

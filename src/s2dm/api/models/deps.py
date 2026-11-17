@@ -7,7 +7,7 @@ from pydantic import BaseModel, DirectoryPath, Field, field_validator
 
 from s2dm.api.models.base import ContentInput
 from s2dm.deps.helpers import DependencyStatus
-from s2dm.deps.models import RemoteIdentityEntry
+from s2dm.deps.models import DependencyMetadata, RemoteIdentityEntry
 from s2dm.deps.models.common import (
     DependencyName,
     DependencyVersion,
@@ -104,3 +104,19 @@ class DependenciesStatusResponse(BaseModel):
     """Minimal dependency status response."""
 
     status: DependencyStatus = Field(description="Current dependency resolution status")
+
+
+class LoadReleaseRequest(BaseModel):
+    """Request model for loading one remote release asset."""
+
+    repository: RequiredString = Field(description="Repository URL, https://<host>/<owner>/<repository>")
+    tag: RequiredString = Field(description="Release tag")
+    artifact: RequiredString = Field(description="Asset name: schema.graphql or a supported archive")
+
+
+class LoadReleaseResponse(BaseModel):
+    """Response model for a loaded remote release asset."""
+
+    schema_content: str = Field(description="Schema text of the release")
+    schema_id: str = Field(description="Id of the stored schema text, for schema_id inputs")
+    metadata: DependencyMetadata = Field(description="Metadata of the release")
