@@ -14,7 +14,10 @@ export interface SchemaState {
 	originalReference: SchemaReference | null;
 	filtered: string;
 	sourceFiles: ImportedFile[];
+	/** The paths of the source files that the last successful compose used. */
+	composedFilePaths: string[];
 	includeBuiltDependencies: boolean;
+	importError: string | null;
 }
 
 const initialState: SchemaState = {
@@ -22,7 +25,9 @@ const initialState: SchemaState = {
 	originalReference: null,
 	filtered: "",
 	sourceFiles: [],
+	composedFilePaths: [],
 	includeBuiltDependencies: false,
+	importError: null,
 };
 
 const schemaSlice = createSlice({
@@ -43,8 +48,14 @@ const schemaSlice = createSlice({
 		setSourceFiles: (state, action: PayloadAction<ImportedFile[]>) => {
 			state.sourceFiles = action.payload;
 		},
+		setComposedFilePaths: (state, action: PayloadAction<string[]>) => {
+			state.composedFilePaths = action.payload;
+		},
 		setIncludeBuiltDependencies: (state, action: PayloadAction<boolean>) => {
 			state.includeBuiltDependencies = action.payload;
+		},
+		setImportError: (state, action: PayloadAction<string | null>) => {
+			state.importError = action.payload;
 		},
 		resetSchema: () => initialState,
 	},
@@ -54,7 +65,9 @@ export const {
 	setOriginalSchema,
 	setFilteredSchema,
 	setSourceFiles,
+	setComposedFilePaths,
 	setIncludeBuiltDependencies,
+	setImportError,
 	resetSchema,
 } = schemaSlice.actions;
 
@@ -65,7 +78,10 @@ export const selectHasSchema = (state: RootState) =>
 	state.schema.original.trim().length > 0;
 export const selectFilteredSchema = (state: RootState) => state.schema.filtered;
 export const selectSourceFiles = (state: RootState) => state.schema.sourceFiles;
+export const selectComposedFilePaths = (state: RootState) =>
+	state.schema.composedFilePaths;
 export const selectIncludeBuiltDependencies = (state: RootState) =>
 	state.schema.includeBuiltDependencies;
+export const selectImportError = (state: RootState) => state.schema.importError;
 
 export default schemaSlice.reducer;

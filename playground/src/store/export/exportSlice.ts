@@ -85,6 +85,9 @@ export const selectExportResult = (state: RootState, endpoint: string) =>
 	state.schemaExport.resultsByEndpoint[endpoint]?.output || "";
 export const selectExportFormat = (state: RootState, endpoint: string) =>
 	state.schemaExport.resultsByEndpoint[endpoint]?.format || "text";
+/** Tells whether at least one export has a result. */
+export const selectHasExportResults = (state: RootState) =>
+	Object.keys(state.schemaExport.resultsByEndpoint).length > 0;
 export const selectExportError = (state: RootState, endpoint: string) =>
 	state.schemaExport.errorsByEndpoint[endpoint] || null;
 

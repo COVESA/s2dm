@@ -65,6 +65,9 @@ export const {
 export const selectSelectionQuery = (state: RootState) => state.selection.query;
 export const selectAppliedSelectionQuery = (state: RootState) =>
 	state.selection.appliedQuery;
+/** Tells whether a selection query is typed or applied. */
+export const selectHasSelection = (state: RootState) =>
+	state.selection.query.length > 0 || state.selection.appliedQuery.length > 0;
 export const selectIsPruning = (state: RootState) => state.selection.isPruning;
 export const selectPruningError = (state: RootState) => state.selection.error;
 

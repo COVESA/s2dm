@@ -17,6 +17,12 @@ type TextEditorProps = {
 	fullscreenTitle?: string;
 	fileName?: string;
 	isExpandable?: boolean;
+	/**
+	 * The name of the editor's document. Each name keeps its own scroll and
+	 * cursor position. The fullscreen view uses the name with a "fullscreen/"
+	 * prefix. Without a name, the editor keeps one document for all values.
+	 */
+	path?: string;
 };
 
 export function TextEditor({
@@ -27,10 +33,16 @@ export function TextEditor({
 	fullscreenTitle,
 	fileName,
 	isExpandable = true,
+	path,
 }: TextEditorProps) {
 	const theme = useMonacoTheme();
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const monacoLanguage = resolveMonacoLanguage(language);
+
+	let fullscreenPath: string | undefined;
+	if (path !== undefined) {
+		fullscreenPath = `fullscreen/${path}`;
+	}
 
 	const handleEditorBeforeMount = useCallback((monaco: Monaco) => {
 		registerTurtle(monaco);
@@ -53,10 +65,11 @@ export function TextEditor({
 		downloadTextFile(value, fileName);
 	}, [value, fileName]);
 
-	const renderEditor = () => (
+	const renderEditor = (editorPath: string | undefined) => (
 		<Editor
 			beforeMount={handleEditorBeforeMount}
 			language={monacoLanguage}
+			path={editorPath}
 			value={value}
 			onChange={readOnly ? undefined : handleChange}
 			theme={theme}
@@ -71,9 +84,12 @@ export function TextEditor({
 		/>
 	);
 
-	const renderEditorWithButtons = (showMaximize: boolean) => (
+	const renderEditorWithButtons = (
+		showMaximize: boolean,
+		editorPath: string | undefined,
+	) => (
 		<div className="group relative h-full w-full overflow-hidden">
-			{renderEditor()}
+			{renderEditor(editorPath)}
 			<div className="absolute top-2 right-4 z-10 flex flex-col gap-2">
 				{showMaximize && isExpandable && (
 					<Button
@@ -105,14 +121,14 @@ export function TextEditor({
 
 	return (
 		<>
-			{renderEditorWithButtons(true)}
+			{renderEditorWithButtons(true, path)}
 
 			<TextEditorDialog
 				open={isFullscreen}
 				onOpenChange={setIsFullscreen}
 				title={fullscreenTitle || "Editor"}
 			>
-				{renderEditorWithButtons(false)}
+				{renderEditorWithButtons(false, fullscreenPath)}
 			</TextEditorDialog>
 		</>
 	);

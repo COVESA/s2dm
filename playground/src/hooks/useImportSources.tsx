@@ -1,7 +1,11 @@
-import { type ReactNode, useCallback, useState } from "react";
+import { type ReactNode, useCallback } from "react";
 import { useFileImport } from "@/hooks/useFileImport";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectSourceFiles, setSourceFiles } from "@/store/schema/schemaSlice";
+import {
+	selectSourceFiles,
+	setImportError,
+	setSourceFiles,
+} from "@/store/schema/schemaSlice";
 import type { ImportedFile } from "@/types/importedFile";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { isGraphQLFile } from "@/utils/validation";
@@ -13,7 +17,6 @@ type FileWithPath = File & {
 export function useImportSources() {
 	const dispatch = useAppDispatch();
 	const files = useAppSelector(selectSourceFiles);
-	const [error, setError] = useState("");
 
 	const handleImportedFiles = useCallback(
 		async (selectedFiles: FileList) => {
@@ -26,9 +29,10 @@ export function useImportSources() {
 			}
 
 			if (graphqlFiles.length === 0) {
-				setError(
+				const noFilesAction = setImportError(
 					"No GraphQL files found. Please select files with .graphql or .gql extensions.",
 				);
+				dispatch(noFilesAction);
 				return;
 			}
 
@@ -45,9 +49,14 @@ export function useImportSources() {
 					}),
 				);
 				dispatch(setSourceFiles([...files, ...fileData]));
-				setError("");
+				const clearAction = setImportError(null);
+				dispatch(clearAction);
 			} catch (err) {
-				setError(`Failed to read files: ${getErrorMessage(err)}`);
+				const readErrorMessage = getErrorMessage(err);
+				const readErrorAction = setImportError(
+					`Failed to read files: ${readErrorMessage}`,
+				);
+				dispatch(readErrorAction);
 			}
 		},
 		[files, dispatch],
@@ -88,7 +97,6 @@ export function useImportSources() {
 		openFileImport: fileImport.openImportInput,
 		openFolderImport: folderImport.openImportInput,
 		addUrl,
-		error,
 		hiddenInputs,
 	};
 }

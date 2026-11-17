@@ -3,12 +3,12 @@ import { call, put, select, takeLatest } from "redux-saga/effects";
 import { ApiValidationError, filterSchema } from "@/api/s2dm";
 import { mapImportedFilesToSchemaInputs } from "@/api/schemaInputs";
 import type { ExportResponse, QueryInput, SchemaInput } from "@/api/types";
-import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
 import {
 	saveDependenciesConfig,
 	selectDependencyDrafts,
 	updateDependencyField,
 } from "@/store/deps/depsSlice";
+import { selectExploringDependencyId } from "@/store/exploration/explorationSlice";
 import { selectComposedSources } from "@/store/schema/composedSources";
 import {
 	selectOriginalSchema,
