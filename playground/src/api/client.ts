@@ -9,18 +9,27 @@ const UNREACHABLE_ERROR_MESSAGE = "Cannot reach the API server";
 /** A failed API request. The message is ready to show to the user. */
 export class ApiError extends Error {
 	public status: number | undefined;
+	public code: string | undefined;
 
 	/**
 	 * @param message The message to show to the user.
 	 * @param status The HTTP status of the error reply. It is undefined when no
 	 * reply arrived.
+	 * @param code The error code of the error reply. It is undefined when the
+	 * reply has none.
 	 */
-	constructor(message: string, status?: number) {
+	constructor(message: string, status?: number, code?: string) {
 		super(message);
 		this.name = "ApiError";
 		this.status = status;
+		this.code = code;
 	}
 }
+
+type ErrorReply = {
+	message: string;
+	code: string | undefined;
+};
 
 /**
  * Reads a response body as JSON.
@@ -38,33 +47,44 @@ async function readJsonBody(response: Response): Promise<unknown> {
 }
 
 /**
- * Reads the message to show for an HTTP error reply.
+ * Reads the message to show and the error code of an HTTP error reply.
  *
  * @param response The error reply.
  * @returns The API's message, or a generic message when the reply has none.
+ * The code is the reply's `error` field. It is undefined when the reply has
+ * none.
  */
-async function readErrorMessage(response: Response): Promise<string> {
+async function readErrorReply(response: Response): Promise<ErrorReply> {
 	let body: unknown;
 	try {
 		body = await readJsonBody(response);
 	} catch (error) {
 		if (error instanceof SyntaxError) {
-			return GENERIC_ERROR_MESSAGE;
+			return { message: GENERIC_ERROR_MESSAGE, code: undefined };
 		}
 
 		throw error;
 	}
 
-	if (typeof body !== "object" || body === null || !("message" in body)) {
-		return GENERIC_ERROR_MESSAGE;
+	if (typeof body !== "object" || body === null) {
+		return { message: GENERIC_ERROR_MESSAGE, code: undefined };
 	}
 
-	const { message } = body;
-	if (typeof message !== "string" || message.trim().length === 0) {
-		return GENERIC_ERROR_MESSAGE;
+	let code: string | undefined;
+	if ("error" in body && typeof body.error === "string") {
+		code = body.error;
 	}
 
-	return message;
+	let message = GENERIC_ERROR_MESSAGE;
+	if (
+		"message" in body &&
+		typeof body.message === "string" &&
+		body.message.trim().length > 0
+	) {
+		message = body.message;
+	}
+
+	return { message, code };
 }
 
 /**
@@ -140,8 +160,12 @@ class ApiClient {
 		try {
 			const response = await fetch(url, init);
 			if (!response.ok) {
-				const errorMessage = await readErrorMessage(response);
-				throw new ApiError(errorMessage, response.status);
+				const errorReply = await readErrorReply(response);
+				throw new ApiError(
+					errorReply.message,
+					response.status,
+					errorReply.code,
+				);
 			}
 
 			const body = await readJsonBody(response);

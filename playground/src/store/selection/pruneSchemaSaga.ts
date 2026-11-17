@@ -5,10 +5,14 @@ import { mapImportedFilesToSchemaInputs } from "@/api/schemaInputs";
 import type { ExportResponse, QueryInput, SchemaInput } from "@/api/types";
 import {
 	saveDependenciesConfig,
-	selectDependencyDrafts,
 	updateDependencyField,
 } from "@/store/deps/depsSlice";
-import { selectExploringDependencyId } from "@/store/exploration/explorationSlice";
+import {
+	selectExploredSchemaContent,
+	selectExploringDependencyId,
+	selectExploringReleaseId,
+} from "@/store/exploration/explorationSlice";
+import { setReleaseSelection } from "@/store/releases/releasesSlice";
 import { selectComposedSources } from "@/store/schema/composedSources";
 import {
 	selectOriginalSchema,
@@ -21,11 +25,22 @@ import {
 	pruningSuccess,
 	resetSelection,
 } from "@/store/selection/selectionSlice";
-import type { DependencyDraft } from "@/types/dependency";
 import type { SchemaSource } from "@/types/schemaSource";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
-function* persistExploringDependencySelection(value: string) {
+function* persistExploredSelection(value: string) {
+	const exploringReleaseId: string | null = yield select(
+		selectExploringReleaseId,
+	);
+	if (exploringReleaseId) {
+		const selectionAction = setReleaseSelection({
+			releaseId: exploringReleaseId,
+			value,
+		});
+		yield put(selectionAction);
+		return;
+	}
+
 	const exploringDependencyId: string | null = yield select(
 		selectExploringDependencyId,
 	);
@@ -53,21 +68,17 @@ function* pruneSchemaWorker(action: PayloadAction<string>) {
 	}
 
 	const sources: SchemaSource[] = yield select(selectComposedSources);
-	const dependencies: DependencyDraft[] = yield select(selectDependencyDrafts);
-	const exploringDependencyId: string | null = yield select(
-		selectExploringDependencyId,
-	);
-	const exploringDependency = dependencies.find(
-		(dependency) => dependency.id === exploringDependencyId,
+	const exploredSchemaContent: string | null | undefined = yield select(
+		selectExploredSchemaContent,
 	);
 
 	try {
 		let schemas: SchemaInput[];
-		if (exploringDependency?.schemaContent?.trim()) {
+		if (exploredSchemaContent?.trim()) {
 			schemas = [
 				{
 					type: "content",
-					content: exploringDependency.schemaContent,
+					content: exploredSchemaContent,
 				},
 			];
 		} else {
@@ -99,7 +110,7 @@ function* pruneSchemaWorker(action: PayloadAction<string>) {
 }
 
 function* pruningSuccessWorker(action: PayloadAction<string>) {
-	yield* persistExploringDependencySelection(action.payload);
+	yield* persistExploredSelection(action.payload);
 }
 
 function* clearAppliedSelectionWorker() {
@@ -110,7 +121,7 @@ function* clearAppliedSelectionWorker() {
 function* resetSelectionWorker() {
 	const originalSchema: string = yield select(selectOriginalSchema);
 	yield put(setFilteredSchema(originalSchema));
-	yield* persistExploringDependencySelection("");
+	yield* persistExploredSelection("");
 }
 
 export function* pruneSchemaSaga() {

@@ -14,7 +14,10 @@ import type {
 	FilterSchemaRequest,
 	GetDependenciesConfigResponse,
 	InstanceTagsResponse,
+	LoadReleaseRequest,
+	LoadReleaseResponse,
 	QueryInput,
+	ReleasePage,
 	SaveDependenciesConfigRequest,
 	SchemaInput,
 	ValidateSchemaRequest,
@@ -33,6 +36,16 @@ export class ApiValidationError extends Error {
 		super(message);
 		this.name = "ApiValidationError";
 		this.errors = errors;
+	}
+}
+
+const RELEASE_ARTIFACT_ERROR_CODE = "DependencyArtifactError";
+
+/** A release asset that does not hold the expected schema and metadata files. */
+export class ReleaseArtifactError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "ReleaseArtifactError";
 	}
 }
 
@@ -173,6 +186,45 @@ export async function composeDependencies(
 		);
 		return response.result[0] ?? "";
 	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function listReleases(
+	repository: string,
+	page: number,
+): Promise<ReleasePage> {
+	const pageNumber = String(page);
+	const query = new URLSearchParams({ repository, page: pageNumber });
+	try {
+		return await apiClient.get<ReleasePage>(`/api/v1/deps/releases?${query}`);
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+/**
+ * Loads the schema and metadata of one release asset.
+ *
+ * @param request The repository, the release tag and the asset name.
+ * @returns The schema text, its stored schema id and the release metadata.
+ * @throws ReleaseArtifactError When the asset does not hold the expected files.
+ */
+export async function loadRelease(
+	request: LoadReleaseRequest,
+): Promise<LoadReleaseResponse> {
+	try {
+		return await apiClient.post<LoadReleaseResponse>(
+			"/api/v1/deps/releases/load",
+			request,
+		);
+	} catch (error) {
+		const isArtifactError =
+			error instanceof ApiError && error.code === RELEASE_ARTIFACT_ERROR_CODE;
+		if (isArtifactError) {
+			throw new ReleaseArtifactError(error.message);
+		}
+
 		return handleApiError(error);
 	}
 }

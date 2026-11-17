@@ -30,7 +30,10 @@ import {
 	selectExporterByEndpoint,
 	selectSelectedExporterEndpoint,
 } from "@/store/capabilities/capabilitiesSlice";
-import { selectExploringDependencyId } from "@/store/exploration/explorationSlice";
+import {
+	selectExploringDependencyId,
+	selectExploringReleaseId,
+} from "@/store/exploration/explorationSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectFilteredSchema,
@@ -93,6 +96,7 @@ export function ExplorerTab() {
 	const appliedSelectionQuery = useAppSelector(selectAppliedSelectionQuery);
 	const selectionQuery = useAppSelector(selectSelectionQuery);
 	const exploringDependencyId = useAppSelector(selectExploringDependencyId);
+	const exploringReleaseId = useAppSelector(selectExploringReleaseId);
 	const selectedExporterEndpoint = useAppSelector(
 		selectSelectedExporterEndpoint,
 	);
@@ -238,6 +242,10 @@ export function ExplorerTab() {
 	if (exploringDependencyId) {
 		resetDescription =
 			"This will clear the selection text, remove the applied filtering, and delete the saved selection for the explored dependency.";
+	}
+	if (exploringReleaseId) {
+		resetDescription =
+			"This will clear the selection text, remove the applied filtering, and delete the saved selection for the explored release.";
 	}
 
 	const handleResetSelection = () => {

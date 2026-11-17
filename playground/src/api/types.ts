@@ -86,6 +86,46 @@ export type DependenciesStatusResponse = {
 	status: DependencyStatus;
 };
 
+export type ReleaseAsset = {
+	name: string;
+	size: number;
+};
+
+export type ReleaseSummary = {
+	tag: string;
+	name: string | null;
+	published_at: string | null;
+	prerelease: boolean;
+	candidate_assets: ReleaseAsset[];
+};
+
+export type ReleasePage = {
+	releases: ReleaseSummary[];
+	page: number;
+	has_next: boolean;
+	has_previous: boolean;
+	last_page: number | null;
+};
+
+export type ReleaseMetadata = {
+	name: string;
+	id: string;
+	version: string;
+	preferred_prefix: string | null;
+};
+
+export type LoadReleaseRequest = {
+	repository: string;
+	tag: string;
+	artifact: string;
+};
+
+export type LoadReleaseResponse = {
+	schema_content: string;
+	schema_id: string;
+	metadata: ReleaseMetadata;
+};
+
 type ResponseMetadata = {
 	result_format: string;
 	processing_time_ms?: number;
