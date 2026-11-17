@@ -13,18 +13,19 @@ const insightsUiDirectory = path.join(sourceDirectory, "insights-ui");
 const ledgerUiDirectory = path.join(sourceDirectory, "ledger-ui");
 const searchUiDirectory = path.join(sourceDirectory, "search-ui");
 
-function addBaseUrlToSidebar(items: PropSidebar, baseUrl: string): PropSidebar {
-  const addBaseUrl = (href: string) =>
-    href.startsWith("/") ? `${baseUrl}${href.slice(1)}` : href;
+function addBaseUrl(href: string, baseUrl: string): string {
+  return href.startsWith("/") ? `${baseUrl}${href.slice(1)}` : href;
+}
 
+function addBaseUrlToSidebar(items: PropSidebar, baseUrl: string): PropSidebar {
   return items.map((item): PropSidebarItem => {
     if (item.type === "link") {
-      return { ...item, href: addBaseUrl(item.href) };
+      return { ...item, href: addBaseUrl(item.href, baseUrl) };
     }
     if (item.type === "category") {
       return {
         ...item,
-        ...(item.href && { href: addBaseUrl(item.href) }),
+        ...(item.href && { href: addBaseUrl(item.href, baseUrl) }),
         items: addBaseUrlToSidebar(item.items, baseUrl),
       };
     }
@@ -44,20 +45,57 @@ function getSidebarLinks(items: PropSidebar): string[] {
   });
 }
 
-// Each workspace renders one page against its own docs sidebar, with a route per
-// sidebar link so the sidebar highlights the current view the way the docs do.
-const SIDEBAR_PAGES = [
-  { sidebar: "insightsSidebar", data: "insights-sidebar.json", component: "@site/src/insights/InsightsPage.tsx" },
-  { sidebar: "ledgerSidebar", data: "ledger-sidebar.json", component: "@site/src/ledger/LedgerPage.tsx" },
+/** A page whose routes come from the links of its own sidebar. */
+type ContentPage = {
+  /** The sidebar's name in `sidebars.ts`. */
+  sidebar: string;
+  /** The name of the data file that holds the sidebar for the page. */
+  data: string;
+  /** The address of the page. */
+  root: string;
+  /** The page component. */
+  component: string;
+  /** The component of each link route. It renders inside `component`. */
+  childComponent?: string;
+};
+
+const CONTENT_PAGES: ContentPage[] = [
+  {
+    sidebar: "insightsSidebar",
+    data: "insights-sidebar.json",
+    root: "/insights",
+    component: "@site/src/insights/InsightsPage.tsx",
+  },
+  {
+    sidebar: "ledgerSidebar",
+    data: "ledger-sidebar.json",
+    root: "/ledger",
+    component: "@site/src/ledger/LedgerPage.tsx",
+  },
+  {
+    sidebar: "releasesSidebar",
+    data: "releases-sidebar.json",
+    root: "/releases",
+    component: "@site/src/releases/ReleasesPage.tsx",
+    childComponent: "@site/src/releases/ReleaseSchema.tsx",
+  },
 ];
 
-const sidebarPagesPlugin = ({ baseUrl }: LoadContext) => ({
-  name: "s2dm-sidebar-pages",
+/**
+ * Adds the routes of the content pages. Each page gets one route per link of its sidebar.
+ * The sidebar then highlights the current link, as the docs sidebar does.
+ * Without `childComponent`, each link route renders `component`.
+ * With `childComponent`, `component` renders once at `root`. Each link route then renders
+ * `childComponent` inside it, and the sidebar stays in place.
+ * A sidebar without links gets one route at `root`, which renders `component`.
+ */
+const contentPagesPlugin = ({ baseUrl }: LoadContext) => ({
+  name: "s2dm-content-pages",
   async allContentLoaded({ allContent, actions }) {
     const docsContent = allContent["docusaurus-plugin-content-docs"]?.default as LoadedContent | undefined;
     const version = docsContent?.loadedVersions.find((candidate) => candidate.isLast);
 
-    for (const page of SIDEBAR_PAGES) {
+    for (const page of CONTENT_PAGES) {
       const sidebarItems = version?.sidebars[page.sidebar] as PropSidebar | undefined;
       if (!sidebarItems) {
         throw new Error(`The ${page.sidebar} definition is missing from sidebars.ts`);
@@ -65,7 +103,34 @@ const sidebarPagesPlugin = ({ baseUrl }: LoadContext) => ({
 
       const sidebar = addBaseUrlToSidebar(sidebarItems, baseUrl);
       const sidebarData = await actions.createData(page.data, sidebar);
-      for (const path of getSidebarLinks(sidebar)) {
+      const sidebarLinks = getSidebarLinks(sidebar);
+      const rootPath = addBaseUrl(page.root, baseUrl);
+      if (sidebarLinks.length === 0) {
+        actions.addRoute({
+          path: rootPath,
+          component: page.component,
+          exact: true,
+          modules: { sidebar: sidebarData },
+        });
+        continue;
+      }
+      const childComponent = page.childComponent;
+      if (childComponent) {
+        const childRoutes = sidebarLinks.map((path) => ({
+          path,
+          component: childComponent,
+          exact: true,
+        }));
+        actions.addRoute({
+          path: rootPath,
+          component: page.component,
+          exact: false,
+          modules: { sidebar: sidebarData },
+          routes: childRoutes,
+        });
+        continue;
+      }
+      for (const path of sidebarLinks) {
         actions.addRoute({
           path,
           component: page.component,
@@ -124,7 +189,8 @@ const config: Config = {
     navbar: {
       title: "$project_title",
       items: [
-        { type: "docSidebar", sidebarId: "tutorialSidebar", position: "left", label: "Docs" },
+        { type: "docSidebar", sidebarId: "docsSidebar", position: "left", label: "Docs" },
+        { to: "/releases", label: "Releases", position: "left" },
         { to: "/visualizer", label: "Visualizer", position: "left" },
         { to: "/insights", label: "Insights", position: "left" },
         { to: "/ledger", label: "Ledger", position: "left" },
@@ -138,7 +204,7 @@ const config: Config = {
     },
     prism: { theme: prismThemes.github, darkTheme: prismThemes.dracula },
   } satisfies Preset.ThemeConfig,
-  plugins: [sidebarPagesPlugin, [
+  plugins: [contentPagesPlugin, [
     "@graphql-markdown/docusaurus",
     {
       schema: "../dist/model.graphql",

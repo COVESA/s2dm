@@ -1,10 +1,5 @@
 import type { PropSidebar } from "@docusaurus/plugin-content-docs";
-import { DocsSidebarProvider } from "@docusaurus/plugin-content-docs/client";
 import { useHistory, useLocation } from "@docusaurus/router";
-import {
-	HtmlClassNameProvider,
-	ThemeClassNames,
-} from "@docusaurus/theme-common";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import { CompositionSummaryCard } from "@insights-ui/components/CompositionSummaryCard";
 import { ConceptsBreakdown } from "@insights-ui/components/ConceptsBreakdown";
@@ -28,11 +23,10 @@ import {
 	selectInsightDetail,
 	selectInsightsSubTab,
 } from "@insights-ui/state/insightDetailSlice";
-import DocRootLayout from "@theme/DocRoot/Layout";
-import Layout from "@theme/Layout";
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
+import { ContentPageLayout } from "@/components/ContentPageLayout";
 import { InsightsDetailsPane } from "@/components/InsightsDetailsPane";
 import {
 	INSIGHTS_ROOT_PATH,
@@ -43,7 +37,7 @@ import {
 import type { InsightsBundle } from "@/insights/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createInsightsStore, type InsightsStore } from "@/store/store";
-import { fetchJson } from "@/utils/fetchJson";
+import { fetchJson } from "@/utils/fetchFile";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import styles from "./insights.module.css";
 
@@ -166,29 +160,6 @@ function InsightsContent() {
 	);
 }
 
-function InsightsLayout({
-	children,
-	sidebar,
-}: {
-	children: ReactNode;
-	sidebar: PropSidebar;
-}) {
-	return (
-		<HtmlClassNameProvider className={ThemeClassNames.wrapper.docsPages}>
-			<Layout
-				title="Insights"
-				description="Schema composition and quality insights"
-			>
-				<HtmlClassNameProvider className={ThemeClassNames.page.docsDocPage}>
-					<DocsSidebarProvider name="insightsSidebar" items={sidebar}>
-						<DocRootLayout>{children}</DocRootLayout>
-					</DocsSidebarProvider>
-				</HtmlClassNameProvider>
-			</Layout>
-		</HtmlClassNameProvider>
-	);
-}
-
 export default function InsightsPage({
 	sidebar,
 }: {
@@ -230,5 +201,14 @@ export default function InsightsPage({
 		);
 	}
 
-	return <InsightsLayout sidebar={sidebar}>{content}</InsightsLayout>;
+	return (
+		<ContentPageLayout
+			title={"Insights"}
+			description={"Schema composition and quality insights"}
+			sidebarName={"insightsSidebar"}
+			sidebar={sidebar}
+		>
+			{content}
+		</ContentPageLayout>
+	);
 }

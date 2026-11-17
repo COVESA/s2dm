@@ -40,6 +40,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
@@ -83,6 +84,21 @@ with:
   s2dm-version: "0.22.0"
 ```
 
+### Showing past releases
+
+By default, the build stages the schemas of 10 releases, newest first, for the Releases page.
+Drafts and pre-releases are left out. The build stages a release that has a `schema.graphql`
+asset with a `metadata.yaml` asset. It also stages a release that has an archive asset with a
+top-level `metadata.yaml` and one `schema.graphql`.
+
+`releases-limit` sets the number of releases, at most 50. With `0`, the build stages no
+releases. This example stages 5 releases:
+
+```yaml
+with:
+  releases-limit: "5"
+```
+
 ## Inputs
 
 | Input | Description | Required | Default |
@@ -95,6 +111,7 @@ with:
 | `schema-sources` | Space-separated paths/dirs passed to `s2dm compose -s` | Yes | - |
 | `s2dm-version` | s2dm version to install (e.g. `0.22.0`). Omit to use the latest release | No | `''` |
 | `ghes` | Set to `"true"` when the repository lives on a GitHub Enterprise Server instance. Uses the Pages action versions that GHES supports | No | `"false"` |
+| `releases-limit` | Number of releases whose schemas the build stages, newest first, at most 50. With `0`, the build stages no releases | No | `10` |
 
 ## Outputs
 
@@ -106,6 +123,8 @@ with:
 
 - GitHub Pages enabled for the repository, with the source set to "GitHub Actions"
 - `permissions: pages: write` and `permissions: id-token: write` declared on the calling job
+- `permissions: contents: read` on the calling job and the GitHub CLI (`gh`) on the runner, when
+  `releases-limit` is above `0`
 - A `github-pages` deployment environment (created automatically by GitHub Pages on first deploy)
 
 ## How It Works
@@ -113,6 +132,8 @@ with:
 1. Installs Python, `uv`, and the `s2dm` CLI
 2. Composes the adopter's GraphQL schema files into `dist/model.graphql`
 3. Scaffolds a fresh Docusaurus website into `./website` via `s2dm docs scaffold`
-4. Installs Node dependencies and generates the GraphQL API reference (`npm run doc`)
-5. Builds the site (`npm run build`)
-6. Uploads and deploys the built site to GitHub Pages
+4. Installs Node dependencies
+5. Downloads the schemas of the latest releases, when `releases-limit` is above `0`
+6. Generates the GraphQL API reference (`npm run doc`)
+7. Builds the site (`npm run build`)
+8. Uploads and deploys the built site to GitHub Pages

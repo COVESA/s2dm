@@ -13,6 +13,7 @@
 /static/embeddings.json
 /static/sql-wasm.wasm
 /static/ledger.db
+/static/releases/
 
 # Misc
 .DS_Store
