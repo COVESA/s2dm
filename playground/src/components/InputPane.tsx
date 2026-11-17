@@ -2,6 +2,8 @@ import { LedgerOverview } from "@ledger-ui/components/LedgerOverview";
 import { LedgerActions } from "@/components/ledger/LedgerActions";
 import { LedgerFileList } from "@/components/ledger/LedgerFileList";
 import { PANE_BOTTOM_PADDING, Pane } from "@/components/Pane";
+import { ReleasesActions } from "@/components/releases/ReleasesActions";
+import { ReleasesWorkspace } from "@/components/releases/ReleasesWorkspace";
 import { SchemaActions } from "@/components/SchemaActions";
 import { SchemaEditor } from "@/components/SchemaEditor";
 import { SchemaSources } from "@/components/SchemaSources";
@@ -14,6 +16,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { selectExploringReleaseId } from "@/store/exploration/explorationSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectOriginalSchema,
@@ -45,6 +48,9 @@ export function InputPane({
 	const workspace = useAppSelector(selectWorkspace);
 	const isLedger = workspace === "ledger";
 
+	const exploringReleaseId = useAppSelector(selectExploringReleaseId);
+	const isExploringRelease = exploringReleaseId !== null;
+
 	let schemaEmptyMessage = "Nothing to display";
 	if (files.length > 0) {
 		schemaEmptyMessage =
@@ -59,6 +65,10 @@ export function InputPane({
 			<SchemaEditor emptyMessage={schemaEmptyMessage} />
 		</>
 	);
+	if (workspace === "releases") {
+		workspaceActions = <ReleasesActions />;
+		body = <ReleasesWorkspace />;
+	}
 	if (isLedger) {
 		workspaceActions = <LedgerActions />;
 		body = (
@@ -89,7 +99,10 @@ export function InputPane({
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value={"schema"}>Schema</SelectItem>
+							<SelectItem value={"schema"} disabled={isExploringRelease}>
+								Schema
+							</SelectItem>
+							<SelectItem value={"releases"}>Releases</SelectItem>
 							<SelectItem value={"ledger"}>Ledger</SelectItem>
 						</SelectContent>
 					</Select>
