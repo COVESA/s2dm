@@ -88,37 +88,6 @@ jobs:
           mkdir -p dist
           uv run s2dm compose -s tests/data/ci_model.graphql -o dist/model.graphql
 
-      - name: fetch ledger
-        id: ledger
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p dist
-          status=$(curl -sS -o release.json -w '%{http_code}' \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/latest")
-          if [ "$status" != "200" ] && [ "$status" != "404" ]; then
-            echo "The releases API answered $status"
-            exit 1
-          fi
-          asset_id=""
-          if [ "$status" = "200" ]; then
-            asset_id=$(jq -r '.assets[]? | select(.name == "ledger.db") | .id' release.json)
-          fi
-          rm -f release.json
-          if [ -z "$asset_id" ]; then
-            echo "staged=false" >> "$GITHUB_OUTPUT"
-            echo "No ledger.db in the latest release; building without one."
-            exit 0
-          fi
-          curl -fsSL \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/octet-stream" \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" \
-            -o dist/ledger.db
-          echo "staged=true" >> "$GITHUB_OUTPUT"
-
       - name: scaffold website
         run: |
           uv run s2dm docs scaffold \
@@ -151,16 +120,3 @@ jobs:
       - name: build
         run: npm run build
         working-directory: website
-
-      - name: check the ledger reached the build
-        run: |
-          test -f website/static/sql-wasm.wasm
-          test -f website/build/ledger/index.html
-          for view in explore query schema/structure schema/diagram; do
-            test -f "website/build/ledger/$view/index.html"
-          done
-          if [ "${{ steps.ledger.outputs.staged }}" = "true" ]; then
-            test -f website/static/ledger.db
-          else
-            test ! -f website/static/ledger.db
-          fi
