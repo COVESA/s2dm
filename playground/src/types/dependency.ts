@@ -33,6 +33,17 @@ export function createEmptyDependencyDraft(): DependencyDraft {
 	};
 }
 
+/**
+ * Tells whether a dependency has a resolved schema.
+ *
+ * @param dependency The dependency draft.
+ * @returns True when its schema content is not blank.
+ */
+export function hasSchemaContent(dependency: DependencyDraft): boolean {
+	const schemaContent = dependency.schemaContent ?? "";
+	return schemaContent.trim() !== "";
+}
+
 export function areDependencyDraftsEqual(
 	left: DependencyDraft[],
 	right: DependencyDraft[],

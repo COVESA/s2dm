@@ -48,8 +48,7 @@ const VIEW_PANELS: Record<LedgerViewId, () => ReactNode> = {
 	raw: () => <RawTablesView />,
 	explore: () => <ExploreView />,
 	query: () => <QueryView />,
-	// The overview leaves the diagram out, since the diagram is a view of its own.
-	structure: () => <LedgerOverview relationships={null} />,
+	structure: () => <LedgerOverview />,
 	diagram: () => <LedgerErdDiagram fit className="p-6" />,
 };
 

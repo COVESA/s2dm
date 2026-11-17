@@ -134,8 +134,8 @@ function DialogDescription({
  * Shows one tab panel of a dialog. The panel fills the free height of the
  * dialog. It puts the same gap between its children as the dialog frame.
  *
- * @param className - Extra classes for the panel.
- * @param props - The tab panel props, with the tab value.
+ * @param className Extra classes for the panel.
+ * @param props The tab panel props, with the tab value.
  * @returns The tab panel.
  */
 function DialogTabsContent({

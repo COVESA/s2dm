@@ -2,12 +2,12 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { put, select, takeLatest } from "redux-saga/effects";
 import type { SchemaReference } from "@/api/types";
 import {
-	type DependencyExplorationSnapshot,
-	exitDependencyExploration,
-	selectDependencyExplorationSnapshot,
-	setDependencyExplorationSnapshot,
+	type ExplorationSnapshot,
+	exitExploration,
+	selectExplorationSnapshot,
+	setExplorationSnapshot,
 	startDependencyExploration,
-} from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
+} from "@/store/exploration/explorationSlice";
 import {
 	selectFilteredSchema,
 	selectOriginalSchema,
@@ -36,8 +36,8 @@ function* startDependencyExplorationWorker(
 		return;
 	}
 
-	const existingSnapshot: DependencyExplorationSnapshot | null = yield select(
-		selectDependencyExplorationSnapshot,
+	const existingSnapshot: ExplorationSnapshot | null = yield select(
+		selectExplorationSnapshot,
 	);
 	const isResultPaneCollapsed: boolean = yield select(
 		selectResultPaneCollapsed,
@@ -59,7 +59,7 @@ function* startDependencyExplorationWorker(
 		);
 
 		yield put(
-			setDependencyExplorationSnapshot({
+			setExplorationSnapshot({
 				originalSchema,
 				originalSchemaReference,
 				filteredSchema,
@@ -87,9 +87,9 @@ function* startDependencyExplorationWorker(
 	yield put(setAppliedSelectionQuery(""));
 }
 
-function* exitDependencyExplorationWorker() {
-	const snapshot: DependencyExplorationSnapshot | null = yield select(
-		selectDependencyExplorationSnapshot,
+function* exitExplorationWorker() {
+	const snapshot: ExplorationSnapshot | null = yield select(
+		selectExplorationSnapshot,
 	);
 
 	if (!snapshot) {
@@ -106,16 +106,13 @@ function* exitDependencyExplorationWorker() {
 	yield put(setFilteredSchema(snapshot.filteredSchema));
 	yield put(setSelectionQuery(snapshot.selectionQuery));
 	yield put(setAppliedSelectionQuery(snapshot.appliedSelectionQuery));
-	yield put(setDependencyExplorationSnapshot(null));
+	yield put(setExplorationSnapshot(null));
 }
 
-export function* depsExplorationSaga() {
+export function* explorationSaga() {
 	yield takeLatest(
 		startDependencyExploration.type,
 		startDependencyExplorationWorker,
 	);
-	yield takeLatest(
-		exitDependencyExploration.type,
-		exitDependencyExplorationWorker,
-	);
+	yield takeLatest(exitExploration.type, exitExplorationWorker);
 }

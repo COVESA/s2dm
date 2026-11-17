@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Pane } from "@/components/Pane";
-import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
+import { selectIsExploring } from "@/store/exploration/explorationSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectResultPaneCollapsed,
@@ -24,10 +24,8 @@ export function DetailsPane({
 }: DetailsPaneProps) {
 	const dispatch = useAppDispatch();
 	const isCollapsed = useAppSelector(selectResultPaneCollapsed);
-	const exploringDependencyId = useAppSelector(selectExploringDependencyId);
-	const canCollapsePane = Boolean(
-		collapsible && hasContent && !exploringDependencyId,
-	);
+	const isExploring = useAppSelector(selectIsExploring);
+	const canCollapsePane = Boolean(collapsible && hasContent && !isExploring);
 	const shouldCollapsePane = !hasContent || isCollapsed;
 
 	return (

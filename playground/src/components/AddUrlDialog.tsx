@@ -10,7 +10,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { isValidUrl } from "@/utils/validation";
+import { getUrlError } from "@/utils/validation";
 
 type AddUrlDialogProps = {
 	open: boolean;
@@ -30,14 +30,10 @@ export function AddUrlDialog({ open, onOpenChange, onAdd }: AddUrlDialogProps) {
 	}, [open]);
 
 	const handleConfirm = useCallback(() => {
-		const trimmed = urlInput.trim();
-		if (!trimmed) {
-			setUrlError("URL is required");
-			return;
-		}
-
-		if (!isValidUrl(urlInput)) {
-			setUrlError("Please enter a valid URL");
+		const trimmedUrl = urlInput.trim();
+		const typedUrlError = getUrlError(trimmedUrl);
+		if (typedUrlError) {
+			setUrlError(typedUrlError);
 			return;
 		}
 

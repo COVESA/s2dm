@@ -28,8 +28,8 @@ type OptionsPopoverProps = {
 };
 
 /**
- * An options button that opens a list of checkboxes above it. It sits to the
- * right of an action button and joins its border.
+ * An options button that opens a list of checkboxes above it. Its left side
+ * has no border and no round corners.
  */
 export function OptionsPopover({
 	title,

@@ -9,19 +9,26 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 
+const BUTTON_LABEL = "View relationships";
+
+/**
+ * An icon button that opens the ledger relationships diagram in a dialog.
+ */
 export function LedgerErdButton() {
 	const [open, setOpen] = useState(false);
 
 	return (
 		<>
 			<Button
-				variant="outline"
-				size="sm"
-				className="w-full"
+				type={"button"}
+				variant={"ghost"}
+				size={"icon-sm"}
+				className={"hover:bg-background/70"}
 				onClick={() => setOpen(true)}
+				aria-label={BUTTON_LABEL}
+				title={BUTTON_LABEL}
 			>
-				<Network className="h-4 w-4" />
-				View relationships
+				<Network />
 			</Button>
 
 			<Dialog open={open} onOpenChange={setOpen}>

@@ -1,5 +1,4 @@
 import { LedgerBadge } from "@ledger-ui/components/LedgerBadge";
-import { LedgerErdButton } from "@ledger-ui/components/LedgerErdButton";
 import { LedgerSchemaWarning } from "@ledger-ui/components/LedgerSchemaWarning";
 import { tableIcon } from "@ledger-ui/components/tableIcon";
 import { tableTitle } from "@ledger-ui/data/recordLabel";
@@ -12,18 +11,11 @@ import { EmptyState } from "@shared-ui/components/empty-state";
 import { cn } from "@shared-ui/utils/cn";
 
 type LedgerOverviewProps = {
-	// How this host offers the relationships diagram. A narrow pane wants the
-	// dialog it defaults to; `null` leaves it out for a host that places the
-	// drawing itself.
-	relationships?: React.ReactNode;
 	// Layout the host's frame needs, such as room for its own controls.
 	className?: string;
 };
 
-export function LedgerOverview({
-	relationships,
-	className,
-}: LedgerOverviewProps = {}) {
+export function LedgerOverview({ className }: LedgerOverviewProps = {}) {
 	const tables = useLedgerSelector(selectLedgerTables);
 	const status = useLedgerSelector(selectLedgerStatus);
 
@@ -98,8 +90,6 @@ export function LedgerOverview({
 					);
 				})}
 			</dl>
-
-			{relationships === undefined ? <LedgerErdButton /> : relationships}
 		</div>
 	);
 }

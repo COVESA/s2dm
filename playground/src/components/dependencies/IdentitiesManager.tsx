@@ -43,9 +43,9 @@ function getIdentitySummary(identity: DependencyIdentityDraft) {
 
 /**
  * Lists the stored identities and lets the user import, add, edit, remove and
- * save them. The parent supplies the dialog around it.
+ * save them.
  *
- * @param onClose - Called when the user clicks Cancel.
+ * @param onClose Called when the user clicks Cancel.
  * @returns The identities manager.
  */
 export function IdentitiesManager({ onClose }: IdentitiesManagerProps) {
