@@ -10,6 +10,10 @@ class DependencySourceError(DependencyResolutionError):
     """Dependency resolution failed because the configured dependency source was unusable."""
 
 
+class DependencyArtifactError(DependencySourceError):
+    """Dependency resolution failed because an artifact does not hold the expected files."""
+
+
 class DependencyUpstreamError(DependencyResolutionError):
     """Dependency resolution failed because an upstream dependency provider could not be used."""
 

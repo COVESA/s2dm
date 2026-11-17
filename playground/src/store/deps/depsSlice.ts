@@ -8,6 +8,7 @@ import {
 	areDependencyDraftsEqual,
 	type DependencyDraft,
 	type DependencyEditableField,
+	hasSchemaContent,
 } from "@/types/dependency";
 
 export interface DepsState {
@@ -136,6 +137,12 @@ const depsSlice = createSlice({
 
 			state.error = null;
 		},
+		discardDependencyChanges: (state) => {
+			state.dependencies = state.storedDependencies.map((draft) => ({
+				...draft,
+			}));
+			state.error = null;
+		},
 		saveDependenciesConfig: (state) => {
 			state.isSavingConfig = true;
 			state.error = null;
@@ -169,6 +176,7 @@ export const {
 	updateDependency,
 	removeDependency,
 	updateDependencyField,
+	discardDependencyChanges,
 	saveDependenciesConfig,
 	saveDependenciesConfigSuccess,
 	saveDependenciesConfigFailure,
@@ -181,6 +189,10 @@ export const selectIsLoadingDependencyStatus = (state: RootState) =>
 	state.deps.isLoadingStatus;
 export const selectDependencyDrafts = (state: RootState) =>
 	state.deps.dependencies;
+/** Tells whether the dependencies are resolved and at least one has a schema. */
+export const selectHasResolvedDependencies = (state: RootState) =>
+	state.deps.status === "resolved" &&
+	state.deps.dependencies.some(hasSchemaContent);
 export const selectIsLoadingDependenciesConfig = (state: RootState) =>
 	state.deps.isLoadingConfig;
 export const selectIsImportingDependenciesConfig = (state: RootState) =>

@@ -3,9 +3,11 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+import requests
 import yaml
 
-from s2dm.deps.models import DependencyConfig, RemoteIdentityConfig
+from s2dm.deps.models import DependencyConfig, ReleaseAsset, RemoteIdentityConfig
 from s2dm.deps.resolve.common import (
     DEFAULT_DEPS_CONFIG_FILENAME,
     DEPENDENCY_LOCK_FILENAME,
@@ -13,8 +15,17 @@ from s2dm.deps.resolve.common import (
     SCHEMA_FILENAME,
 )
 from s2dm.deps.resolve.context import ResolverContext
+from s2dm.deps.resolve.errors import (
+    DependencyArtifactError,
+    DependencyConfigError,
+    DependencySourceError,
+    DependencyUpstreamError,
+)
 from s2dm.deps.resolve.providers import RemoteIdentityProvider
+from s2dm.deps.resolve.providers.github_release_provider import RELEASES_PAGE_SIZE
+from s2dm.deps.resolve.releases import list_releases
 from s2dm.deps.resolve.resolve import resolve_dependencies
+from s2dm.deps.resolve.resolvers.remote_resolver import RemoteResolver
 from tests.deps.helpers import (
     file_sha256,
     first_lock_dependency,
@@ -144,6 +155,7 @@ def test_resolve_dependencies_from_authenticated_remote_archive_release(tmp_path
                 {
                     "name": "bundle.tgz",
                     "url": f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases/assets/123",
+                    "size": 1,
                 }
             ]
         }
@@ -175,7 +187,7 @@ def test_resolve_dependencies_from_authenticated_remote_archive_release(tmp_path
     remote_identity_provider = RemoteIdentityProvider(remote_identity_config)
     resolver_context = ResolverContext(remote_identity_provider=remote_identity_provider)
 
-    with patch("s2dm.deps.resolve.resolvers.remote_resolver.requests.get", side_effect=mock_request_get):
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", side_effect=mock_request_get):
         lock_file = resolve_dependencies(
             DependencyConfig.load(config_path),
             workspace,
@@ -212,7 +224,7 @@ def test_resolve_dependencies_from_unauthenticated_remote_archive_release(tmp_pa
         return asset_response
 
     with (
-        patch("s2dm.deps.resolve.resolvers.remote_resolver.requests.get") as mock_release_get,
+        patch("s2dm.deps.resolve.providers.github_release_provider.requests.get") as mock_release_get,
         patch("s2dm.utils.download.requests.get", side_effect=mock_asset_get),
     ):
         lock_file = resolve_dependencies(DependencyConfig.load(config_path), workspace)
@@ -226,3 +238,202 @@ def test_resolve_dependencies_from_unauthenticated_remote_archive_release(tmp_pa
 
     dependency = first_lock_dependency(lock_path)
     assert dependency["resolved_path"] == "https://github.com/owner/repo/releases/download/5.1.0/bundle.tgz"
+
+
+GITHUB_RELEASES_URL = "https://api.github.com/repos/owner/repo/releases"
+GITHUB_JSON_HEADERS = {"Accept": "application/vnd.github+json"}
+
+
+def _github_asset(name: str) -> dict[str, object]:
+    return {
+        "name": name,
+        "url": f"https://api.github.com/repos/owner/repo/releases/assets/{name}",
+        "browser_download_url": f"https://github.com/owner/repo/releases/download/v1/{name}",
+        "size": 1,
+        "content_type": "application/octet-stream",
+    }
+
+
+def _github_release(
+    tag: str,
+    asset_names: list[str],
+    *,
+    draft: bool = False,
+    prerelease: bool = False,
+) -> dict[str, object]:
+    return {
+        "tag_name": tag,
+        "name": f"Release {tag}",
+        "draft": draft,
+        "prerelease": prerelease,
+        "published_at": "2026-01-02T03:04:05Z",
+        "tarball_url": f"https://api.github.com/repos/owner/repo/tarball/{tag}",
+        "zipball_url": f"https://api.github.com/repos/owner/repo/zipball/{tag}",
+        "assets": [_github_asset(name) for name in asset_names],
+    }
+
+
+def _releases_response(releases: list[dict[str, object]], links: dict[str, dict[str, str]]) -> Mock:
+    response = Mock()
+    response.raise_for_status = Mock()
+    response.json = Mock(return_value=releases)
+    response.links = links
+    return response
+
+
+def _failed_response(status_code: int) -> Mock:
+    error_response = Mock(status_code=status_code)
+    http_error = requests.HTTPError(response=error_response)
+    response = Mock()
+    response.raise_for_status = Mock(side_effect=http_error)
+    response.links = {}
+    return response
+
+
+def _page_link(page: int) -> dict[str, str]:
+    return {"url": f"{GITHUB_RELEASES_URL}?per_page={RELEASES_PAGE_SIZE}&page={page}"}
+
+
+def test_list_releases_returns_candidate_assets() -> None:
+    releases = [
+        _github_release("v3", [SCHEMA_FILENAME, METADATA_FILENAME, "bundle.zip"]),
+        _github_release("v2", ["release.tar.gz", "notes.txt"], prerelease=True),
+        _github_release("v1", []),
+    ]
+    response = _releases_response(releases, {})
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response) as mock_get:
+        page = list_releases("https://github.com/owner/repo", 2, None)
+
+    mock_get.assert_called_once_with(
+        GITHUB_RELEASES_URL,
+        headers=GITHUB_JSON_HEADERS,
+        params={"per_page": RELEASES_PAGE_SIZE, "page": 2},
+        timeout=30,
+    )
+    assert [release.tag for release in page.releases] == ["v3", "v2", "v1"]
+    assert [release.prerelease for release in page.releases] == [False, True, False]
+    assert [release.candidate_assets for release in page.releases] == [
+        [ReleaseAsset(name=SCHEMA_FILENAME, size=1), ReleaseAsset(name="bundle.zip", size=1)],
+        [ReleaseAsset(name="release.tar.gz", size=1)],
+        [],
+    ]
+
+
+def test_list_releases_keeps_asset_sizes() -> None:
+    release = _github_release("v1", [])
+    release["assets"] = [
+        {**_github_asset(METADATA_FILENAME), "size": 117},
+        {**_github_asset(SCHEMA_FILENAME), "size": 2242042},
+        {**_github_asset("model.zip"), "size": 1536},
+    ]
+    response = _releases_response([release], {})
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response):
+        page = list_releases("https://github.com/owner/repo", 1, None)
+
+    assert page.releases[0].candidate_assets == [
+        ReleaseAsset(name=SCHEMA_FILENAME, size=2242042),
+        ReleaseAsset(name="model.zip", size=1536),
+    ]
+
+
+def test_list_releases_drops_drafts_and_keeps_paging() -> None:
+    releases = [_github_release("v2", ["release.tar.gz"], draft=True)]
+    response = _releases_response(releases, {"next": _page_link(2)})
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response):
+        page = list_releases("https://github.com/owner/repo", 1, None)
+
+    assert page.releases == []
+    assert page.has_next is True
+
+
+def test_list_releases_reads_paging_links() -> None:
+    links = {"next": _page_link(3), "prev": _page_link(1), "last": _page_link(5)}
+    response = _releases_response([], links)
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response):
+        page = list_releases("https://github.com/owner/repo", 2, None)
+
+    assert (page.page, page.has_next, page.has_previous, page.last_page) == (2, True, True, 5)
+
+
+def test_list_releases_without_link_header() -> None:
+    response = _releases_response([], {})
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response):
+        page = list_releases("https://github.com/owner/repo", 1, None)
+
+    assert (page.has_next, page.has_previous, page.last_page) == (False, False, 1)
+
+
+def test_list_releases_reports_current_page_as_last_page() -> None:
+    links = {"prev": _page_link(4), "first": _page_link(1)}
+    response = _releases_response([], links)
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response):
+        page = list_releases("https://github.com/owner/repo", 5, None)
+
+    assert (page.has_next, page.has_previous, page.last_page) == (False, True, 5)
+
+
+def test_list_releases_keeps_unknown_last_page_with_next_link() -> None:
+    response = _releases_response([], {"next": _page_link(3)})
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response):
+        page = list_releases("https://github.com/owner/repo", 2, None)
+
+    assert (page.has_next, page.last_page) == (True, None)
+
+
+def test_list_releases_uses_token_on_enterprise_host() -> None:
+    remote_identity_config = RemoteIdentityConfig.model_validate(
+        {"identities": [{"host": TEST_REMOTE_HOST, "token": "test-token"}]}
+    )
+    remote_identity_provider = RemoteIdentityProvider(remote_identity_config)
+    resolver_context = ResolverContext(remote_identity_provider=remote_identity_provider)
+    response = _releases_response([], {})
+
+    with patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response) as mock_get:
+        list_releases(f"https://{TEST_REMOTE_HOST}/owner/repo", 1, resolver_context)
+
+    mock_get.assert_called_once_with(
+        f"https://{TEST_REMOTE_HOST}/api/v3/repos/owner/repo/releases",
+        headers={"Authorization": "Bearer test-token", **GITHUB_JSON_HEADERS},
+        params={"per_page": RELEASES_PAGE_SIZE, "page": 1},
+        timeout=30,
+    )
+
+
+@pytest.mark.parametrize("status_code", [401, 403, 404])
+def test_list_releases_maps_access_failure_to_source_error(status_code: int) -> None:
+    response = _failed_response(status_code)
+
+    with (
+        patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response),
+        pytest.raises(DependencySourceError) as error_info,
+    ):
+        list_releases("https://github.com/owner/repo", 1, None)
+
+    assert not isinstance(error_info.value, DependencyArtifactError)
+
+
+def test_list_releases_maps_server_failure_to_upstream_error() -> None:
+    response = _failed_response(500)
+
+    with (
+        patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", return_value=response),
+        pytest.raises(DependencyUpstreamError),
+    ):
+        list_releases("https://github.com/owner/repo", 1, None)
+
+
+@pytest.mark.parametrize("asset_name", ["../schema.graphql", "nested/schema.graphql", "nested\\schema.zip", ".."])
+def test_resolve_release_asset_rejects_asset_name_with_path(asset_name: str) -> None:
+    with (
+        patch("s2dm.deps.resolve.providers.github_release_provider.requests.get", side_effect=AssertionError),
+        patch("s2dm.deps.resolve.providers.github_release_provider.download_url_to_path", side_effect=AssertionError),
+        pytest.raises(DependencyConfigError),
+    ):
+        RemoteResolver().resolve_release_asset("https://github.com/owner/repo", "v1.0.0", asset_name)

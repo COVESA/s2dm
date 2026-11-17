@@ -3,6 +3,7 @@ import { Heading } from "@shared-ui/components/heading";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
+import { ConfirmPromptProvider } from "@/components/ConfirmPromptProvider";
 import { ExplorePane } from "@/components/ExplorePane";
 import { InputPane } from "@/components/InputPane";
 import { InsightsDetailsPane } from "@/components/InsightsDetailsPane";
@@ -63,7 +64,9 @@ function App() {
 	return (
 		<Provider store={store}>
 			<InsightsHostDefaults selectableCards>
-				<AppContent />
+				<ConfirmPromptProvider>
+					<AppContent />
+				</ConfirmPromptProvider>
 			</InsightsHostDefaults>
 		</Provider>
 	);

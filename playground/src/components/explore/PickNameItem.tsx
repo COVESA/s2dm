@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { HighlightedText } from "@/components/explore/HighlightedText";
 import {
-	TreeDocsLink,
+	DocsLinkCheckbox,
 	TreeExpandSpacer,
 	TreeRowFrame,
 } from "@/components/explore/TreeRowParts";
-import { Checkbox } from "@/components/ui/checkbox";
+import { LabelCheckbox } from "@/components/ui/checkbox";
 import type { PickNameTreeRow } from "@/utils/selectionQuery/treeRows";
 
 type PickNameItemProps = {
@@ -25,20 +25,28 @@ export function PickNameItem({
 }: PickNameItemProps) {
 	const { name, highlightTerm } = row;
 
-	let nameLabel: ReactNode = (
-		<span
-			className={"min-w-0 truncate font-mono text-sm text-foreground"}
-			title={name}
+	const handleCheckedChange = () => onToggle([name], !isPicked);
+
+	let nameCheckbox: ReactNode = (
+		<LabelCheckbox
+			checked={isPicked}
+			disabled={isDisabled}
+			onCheckedChange={handleCheckedChange}
 		>
-			<HighlightedText text={name} normalizedTerm={highlightTerm} />
-		</span>
+			<span className={"truncate font-mono font-normal"} title={name}>
+				<HighlightedText text={name} normalizedTerm={highlightTerm} />
+			</span>
+		</LabelCheckbox>
 	);
 	if (onShowDocs) {
-		nameLabel = (
-			<TreeDocsLink
+		nameCheckbox = (
+			<DocsLinkCheckbox
 				label={name}
 				highlightTerm={highlightTerm}
-				onClick={() => onShowDocs(name)}
+				onShowDocs={() => onShowDocs(name)}
+				checked={isPicked}
+				disabled={isDisabled}
+				onCheckedChange={handleCheckedChange}
 			/>
 		);
 	}
@@ -46,13 +54,7 @@ export function PickNameItem({
 	return (
 		<TreeRowFrame depth={row.depth}>
 			<TreeExpandSpacer />
-			<Checkbox
-				checked={isPicked}
-				disabled={isDisabled}
-				onCheckedChange={() => onToggle([name], !isPicked)}
-				aria-label={`Select ${name}`}
-			/>
-			{nameLabel}
+			{nameCheckbox}
 		</TreeRowFrame>
 	);
 }

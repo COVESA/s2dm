@@ -8,7 +8,7 @@ import { cn } from "@shared-ui/utils/cn";
 import { buildSchema, execute, GraphQLError, parse } from "graphql";
 import { Columns2, Download, FileCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
+import { useConfirmPrompt } from "@/components/ConfirmPromptProvider";
 import { CycleDepthWarning } from "@/components/explore/CycleDepthWarning";
 import { DocsPanel } from "@/components/explore/DocsPanel";
 import { SelectionTree } from "@/components/explore/SelectionTree";
@@ -30,7 +30,7 @@ import {
 	selectExporterByEndpoint,
 	selectSelectedExporterEndpoint,
 } from "@/store/capabilities/capabilitiesSlice";
-import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
+import { selectExploringDependencyId } from "@/store/exploration/explorationSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
 	selectFilteredSchema,
@@ -87,6 +87,7 @@ function GraphiQLThemeSync() {
 
 export function ExplorerTab() {
 	const dispatch = useAppDispatch();
+	const confirmAction = useConfirmPrompt();
 	const originalSchema = useAppSelector(selectOriginalSchema);
 	const filteredSchema = useAppSelector(selectFilteredSchema);
 	const appliedSelectionQuery = useAppSelector(selectAppliedSelectionQuery);
@@ -239,6 +240,18 @@ export function ExplorerTab() {
 			"This will clear the selection text, remove the applied filtering, and delete the saved selection for the explored dependency.";
 	}
 
+	const handleResetSelection = () => {
+		confirmAction({
+			title: "Reset selection?",
+			description: resetDescription,
+			confirmLabel: "Reset Selection",
+			onConfirm: () => {
+				const resetAction = resetSelection();
+				dispatch(resetAction);
+			},
+		});
+	};
+
 	let isSelectionActionDisabled = false;
 	if (selectionAction !== "unapply") {
 		isSelectionActionDisabled = !hasSelectionText || queryHasErrors;
@@ -321,20 +334,13 @@ export function ExplorerTab() {
 											{selectionActionLabel}
 										</Button>
 									</div>
-									<ConfirmActionDialog
-										trigger={
-											<Button
-												variant="destructive"
-												disabled={!hasSelectionText && !hasAppliedSelection}
-											>
-												Reset Selection
-											</Button>
-										}
-										title="Reset selection?"
-										description={resetDescription}
-										confirmLabel="Reset Selection"
-										onConfirm={() => dispatch(resetSelection())}
-									/>
+									<Button
+										variant="destructive"
+										disabled={!hasSelectionText && !hasAppliedSelection}
+										onClick={handleResetSelection}
+									>
+										Reset Selection
+									</Button>
 									<Button
 										onClick={handleDownloadQuery}
 										variant="outline"

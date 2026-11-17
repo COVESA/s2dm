@@ -1,5 +1,5 @@
 import { Button } from "@shared-ui/components/button";
-import { type ReactNode, useState } from "react";
+import { type ComponentProps, type ReactNode, useState } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -11,9 +11,16 @@ type HelpButtonProps = {
 	title: string;
 	ariaLabel: string;
 	children: ReactNode;
+	/** The size of the "?" button. It is extra small by default. */
+	size?: ComponentProps<typeof Button>["size"];
 };
 
-export function HelpButton({ title, ariaLabel, children }: HelpButtonProps) {
+export function HelpButton({
+	title,
+	ariaLabel,
+	children,
+	size = "icon-xs",
+}: HelpButtonProps) {
 	const [open, setOpen] = useState(false);
 
 	return (
@@ -21,7 +28,7 @@ export function HelpButton({ title, ariaLabel, children }: HelpButtonProps) {
 			<Button
 				type="button"
 				variant="outline"
-				size="icon-xs"
+				size={size}
 				onClick={() => setOpen(true)}
 				aria-label={ariaLabel}
 				title="How this works"

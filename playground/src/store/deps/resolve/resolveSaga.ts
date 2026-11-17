@@ -1,5 +1,4 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, select, takeLatest } from "redux-saga/effects";
 import { resolveDependencies as resolveDependenciesRequest } from "@/api/s2dm";
 import {
 	fetchDependenciesConfig,
@@ -9,14 +8,16 @@ import {
 	resolveDependencies,
 	resolveDependenciesFailure,
 	resolveDependenciesSuccess,
+	selectCleanBeforeResolve,
 } from "@/store/deps/resolve/resolveSlice";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
-function* resolveDependenciesWorker(action: PayloadAction<{ clean: boolean }>) {
+function* resolveDependenciesWorker() {
 	try {
+		const cleanBeforeResolve: boolean = yield select(selectCleanBeforeResolve);
 		const warnings: string[] = yield call(
 			resolveDependenciesRequest,
-			action.payload.clean,
+			cleanBeforeResolve,
 		);
 		yield put(resolveDependenciesSuccess(warnings));
 		yield put(fetchDependenciesConfig());

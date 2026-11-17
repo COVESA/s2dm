@@ -2,6 +2,7 @@ import { Button } from "@shared-ui/components/button";
 import { Input } from "@shared-ui/components/input";
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useConfirmPrompt } from "@/components/ConfirmPromptProvider";
 import {
 	Dialog,
 	DialogContent,
@@ -11,9 +12,10 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { FormLabel } from "@/components/ui/form-label";
-import type {
-	DependencyIdentityDraft,
-	DependencyIdentityEditableField,
+import {
+	areDependencyIdentityDraftsEqual,
+	type DependencyIdentityDraft,
+	type DependencyIdentityEditableField,
 } from "@/types/dependencyIdentity";
 
 type DependencyIdentityModalProps = {
@@ -44,18 +46,6 @@ const FIELDS: FieldConfig[] = [
 	},
 ];
 
-function validateIdentity(identity: DependencyIdentityDraft): string | null {
-	if (!identity.host.trim()) {
-		return "Host is required.";
-	}
-
-	if (!identity.token.trim()) {
-		return "Token is required.";
-	}
-
-	return null;
-}
-
 export function DependencyIdentityModal({
 	open,
 	mode,
@@ -64,8 +54,8 @@ export function DependencyIdentityModal({
 	onSave,
 }: DependencyIdentityModalProps) {
 	const [draft, setDraft] = useState(identity);
-	const [error, setError] = useState("");
 	const [showToken, setShowToken] = useState(false);
+	const confirmAction = useConfirmPrompt();
 
 	useEffect(() => {
 		if (!open) {
@@ -73,9 +63,30 @@ export function DependencyIdentityModal({
 		}
 
 		setDraft(identity);
-		setError("");
 		setShowToken(false);
 	}, [identity, open]);
+
+	const handleOpenChange = (isOpen: boolean) => {
+		if (isOpen) {
+			onOpenChange(true);
+			return;
+		}
+
+		const isDraftUnchanged = areDependencyIdentityDraftsEqual(
+			[draft],
+			[identity],
+		);
+		let description = "The new identity will be lost.";
+		if (mode === "edit") {
+			description = `Your changes to the identity for ${identity.host} will be lost.`;
+		}
+
+		confirmAction({
+			isDataLost: !isDraftUnchanged,
+			description,
+			onConfirm: () => onOpenChange(false),
+		});
+	};
 
 	const title = mode === "add" ? "Add Identity" : "Edit Identity";
 	const description =
@@ -83,6 +94,9 @@ export function DependencyIdentityModal({
 			? "Create a new identity entry and add it to the list."
 			: "Edit the selected identity entry.";
 	const submitLabel = mode === "add" ? "Add" : "Save";
+	const hasEmptyRequiredField = FIELDS.some(
+		({ field, required }) => required && !draft[field].trim(),
+	);
 
 	const handleFieldChange = (
 		field: DependencyIdentityEditableField,
@@ -92,34 +106,20 @@ export function DependencyIdentityModal({
 			...currentDraft,
 			[field]: value,
 		}));
-		setError("");
 	};
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-
-		const validationError = validateIdentity(draft);
-		if (validationError) {
-			setError(validationError);
-			return;
-		}
-
 		onSave(draft);
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent className="flex max-h-[90vh] w-[90vw] max-w-2xl flex-col sm:max-w-2xl">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					<DialogDescription>{description}</DialogDescription>
 				</DialogHeader>
-
-				{error && (
-					<div className="rounded border border-destructive bg-destructive/10 p-2 text-sm text-destructive">
-						{error}
-					</div>
-				)}
 
 				<form onSubmit={handleSubmit}>
 					<div className="space-y-4 py-1">
@@ -170,11 +170,13 @@ export function DependencyIdentityModal({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => onOpenChange(false)}
+							onClick={() => handleOpenChange(false)}
 						>
 							Cancel
 						</Button>
-						<Button type="submit">{submitLabel}</Button>
+						<Button type="submit" disabled={hasEmptyRequiredField}>
+							{submitLabel}
+						</Button>
 					</DialogFooter>
 				</form>
 			</DialogContent>

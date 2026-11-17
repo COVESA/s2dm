@@ -3,7 +3,6 @@ import { primaryKeyColumnsOf } from "@ledger-ui/data/schema";
 import type { LedgerForeignKey, LedgerTable } from "@ledger-ui/data/types";
 
 export type SchemaIssueCode =
-	| "missing-table"
 	| "missing-column"
 	| "wrong-primary-key"
 	| "missing-foreign-key";
@@ -13,20 +12,47 @@ export type SchemaIssue = {
 	message: string;
 };
 
+/** A ledger that lacks one or more ModL tables. */
+export class MissingModlTablesError extends Error {
+	readonly missingTables: string[];
+
+	constructor(missingTables: string[]) {
+		const tableList = missingTables.join(", ");
+		super(`The ledger is missing these ModL tables: ${tableList}.`);
+		this.name = "MissingModlTablesError";
+		this.missingTables = missingTables;
+	}
+}
+
 /**
- * Compares the tables of a ledger with the ModL schema.
+ * Checks that a ledger has every ModL table.
  *
  * @param tables - The tables as read from the database.
- * @returns One issue per missing table, missing column, wrong primary key or
- *   missing foreign key. Empty when the ledger matches the ModL schema.
+ * @throws MissingModlTablesError when one or more ModL tables are missing.
+ */
+export function requireModlTables(tables: LedgerTable[]): void {
+	const tableNames = new Set(tables.map((table) => table.name));
+	const missingTables = MODL_SCHEMA.filter(
+		(expected) => !tableNames.has(expected.name),
+	).map((expected) => expected.name);
+	if (missingTables.length > 0) {
+		throw new MissingModlTablesError(missingTables);
+	}
+}
+
+/**
+ * Compares the tables of a ledger with the ModL schema. It reports no issue for
+ * a missing table.
+ *
+ * @param tables - The tables as read from the database.
+ * @returns One issue per missing column, wrong primary key or missing foreign
+ *   key. Empty when the ledger matches the ModL schema.
  */
 export function findSchemaIssues(tables: LedgerTable[]): SchemaIssue[] {
 	const issues: SchemaIssue[] = [];
 	for (const expected of MODL_SCHEMA) {
 		const table = tables.find((candidate) => candidate.name === expected.name);
 		if (!table) {
-			const message = `Table ${expected.name} is missing.`;
-			issues.push({ code: "missing-table", message });
 			continue;
 		}
 		const columnIssues = findColumnIssues(expected, table);

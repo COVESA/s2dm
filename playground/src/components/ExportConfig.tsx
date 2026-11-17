@@ -2,7 +2,7 @@ import { CollapsibleSection } from "@insights-ui/components/CollapsibleSection";
 import { Input } from "@shared-ui/components/input";
 import { ExternalLink } from "lucide-react";
 import { TextEditor } from "@/components/TextEditor";
-import { Checkbox } from "@/components/ui/checkbox";
+import { LabelCheckbox } from "@/components/ui/checkbox";
 import { FormLabel } from "@/components/ui/form-label";
 import {
 	selectExporterByEndpoint,
@@ -87,23 +87,19 @@ export function ExportConfig({ selectedExporterEndpoint }: ExportConfigProps) {
 					className="flex items-center justify-between gap-3"
 					title={property.description}
 				>
-					<div className="flex items-center space-x-2">
-						<Checkbox
-							id={propertyKey}
-							checked={
-								exporter.propertyValues[propertyKey] === true ||
-								exporter.propertyValues[propertyKey] === "true"
-							}
-							onCheckedChange={(checked) =>
-								handleValueChange(propertyKey, checked)
-							}
-						/>
-						<FormLabel htmlFor={propertyKey} showRequired={property.required}>
-							<span className="cursor-pointer">
-								{property.title || propertyKey}
-							</span>
-						</FormLabel>
-					</div>
+					<LabelCheckbox
+						id={propertyKey}
+						checked={
+							exporter.propertyValues[propertyKey] === true ||
+							exporter.propertyValues[propertyKey] === "true"
+						}
+						onCheckedChange={(checked) =>
+							handleValueChange(propertyKey, checked)
+						}
+						showRequired={property.required}
+					>
+						{property.title || propertyKey}
+					</LabelCheckbox>
 					{renderDocsLink(property.docsUrl, true)}
 				</div>
 			);

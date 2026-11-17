@@ -2,7 +2,7 @@ import {
 	TreeExpandButton,
 	TreeRowFrame,
 } from "@/components/explore/TreeRowParts";
-import { Checkbox } from "@/components/ui/checkbox";
+import { LabelCheckbox } from "@/components/ui/checkbox";
 import { getCheckedState } from "@/utils/selectionQuery/leafCounts";
 import type { PickGroupTreeRow } from "@/utils/selectionQuery/treeRows";
 
@@ -35,15 +35,13 @@ export function PickGroupItem({
 				isDisabled={row.isExpandedBySearch}
 				onToggle={() => onToggleExpanded(row.key)}
 			/>
-			<Checkbox
+			<LabelCheckbox
 				checked={checkedState}
 				disabled={isDisabled}
 				onCheckedChange={() => onToggle(names, checkedState !== true)}
-				aria-label={`Select all ${label}`}
-			/>
-			<span className={"truncate text-sm font-medium text-foreground"}>
-				{label}
-			</span>
+			>
+				<span className={"truncate"}>{label}</span>
+			</LabelCheckbox>
 		</TreeRowFrame>
 	);
 }

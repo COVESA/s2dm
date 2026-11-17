@@ -10,7 +10,6 @@ import type {
 	GetDependenciesConfigResponse,
 	SaveDependenciesConfigRequest,
 } from "@/api/types";
-import { selectExploringDependencyId } from "@/store/deps/dependencyExploration/dependencyExplorationSlice";
 import {
 	parseDependencyConfig,
 	serializeDependencyDraft,
@@ -30,6 +29,7 @@ import {
 	saveDependenciesConfigSuccess,
 	selectDependencyDrafts,
 } from "@/store/deps/depsSlice";
+import { selectExploringDependencyId } from "@/store/exploration/explorationSlice";
 import type { RootState } from "@/store/types";
 import type { DependencyDraft } from "@/types/dependency";
 import { getErrorMessage } from "@/utils/getErrorMessage";
