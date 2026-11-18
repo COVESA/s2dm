@@ -244,6 +244,6 @@ class SpecHistoryExporter:
         filename = SpecHistoryExporter.generate_history_filename(id_value)
         file_path: Path = history_dir / filename
 
-        with open(file_path, "w") as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(type_def)
         log.debug(f"Saved type definition for {parent_type} to {file_path}")
