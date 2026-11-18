@@ -190,6 +190,49 @@ class TestSKOSSearchService:
         assert search_service.parse_limit("invalid") == 0
         assert search_service.parse_limit("not_a_number") == 0
 
+    def test_parse_limit_warns_on_unparseable_string(
+        self, search_service: SKOSSearchService, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Unparseable --limit strings are coerced to 0; the user must be told."""
+        import logging
+
+        with caplog.at_level(logging.WARNING, logger="s2dm"):
+            result = search_service.parse_limit("not_a_number")
+
+        assert result == 0
+        warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+        assert any(
+            "not_a_number" in m and "0" in m and "no results" in m for m in warnings
+        ), f"Expected a parse-failure warning naming the bad value, got: {warnings}"
+
+    def test_parse_limit_warns_on_negative_int(
+        self, search_service: SKOSSearchService, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Negative ints get coerced to 0; the user must be told."""
+        import logging
+
+        with caplog.at_level(logging.WARNING, logger="s2dm"):
+            result = search_service.parse_limit(-5)
+
+        assert result == 0
+        warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+        assert any(
+            "negative" in m.lower() and "no results" in m for m in warnings
+        ), f"Expected a 'negative' warning, got: {warnings}"
+
+    def test_parse_limit_does_not_warn_on_zero(
+        self, search_service: SKOSSearchService, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A literal 0 is a legitimate user request for no results — no warning."""
+        import logging
+
+        with caplog.at_level(logging.WARNING, logger="s2dm"):
+            assert search_service.parse_limit(0) == 0
+            assert search_service.parse_limit("0") == 0
+
+        warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+        assert not warnings, f"Did not expect any warnings for limit=0, got: {warnings}"
+
     def test_count_keyword_matches(self, search_service: SKOSSearchService) -> None:
         """Test that count_keyword_matches returns correct counts."""
         # Test with "Vehicle" (should match multiple times)
