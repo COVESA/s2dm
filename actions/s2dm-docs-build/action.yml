@@ -40,6 +40,14 @@ inputs:
     required: false
     default: ""
 
+  releases-limit:
+    description: >
+      Number of releases whose schemas the build stages, newest first, at most 50.
+      Drafts and pre-releases are left out. Needs `contents: read` on the calling job.
+      With `0`, the build stages no releases.
+    required: false
+    default: "10"
+
 outputs:
   page-url:
     description: "The URL of the deployed GitHub Pages site"
@@ -118,6 +126,16 @@ runs:
       shell: bash
       run: npm ci
       working-directory: website
+
+    - name: Stage releases
+      if: inputs.releases-limit != '0'
+      shell: bash
+      working-directory: website
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_ENTERPRISE_TOKEN: ${{ github.token }}
+        RELEASES_LIMIT: ${{ inputs.releases-limit }}
+      run: GH_REPO="${GITHUB_SERVER_URL#*://}/${GITHUB_REPOSITORY}" node scripts/stage-releases.js "$RELEASES_LIMIT"
 
     # generate-introspection.js writes static/introspection.json, then
     # graphql-to-doc builds the full API reference under docs/api/.

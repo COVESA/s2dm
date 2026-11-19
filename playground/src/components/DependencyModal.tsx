@@ -1,6 +1,8 @@
 import { Button } from "@shared-ui/components/button";
 import { Input } from "@shared-ui/components/input";
+import { StatusBanner } from "@shared-ui/components/status-banner";
 import { useEffect, useState } from "react";
+import { useConfirmPrompt } from "@/components/ConfirmPromptProvider";
 import { TextEditor } from "@/components/TextEditor";
 import {
 	Dialog,
@@ -12,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { FormLabel } from "@/components/ui/form-label";
 import {
+	areDependencyDraftsEqual,
 	DEPENDENCY_NAME_PATTERN,
 	type DependencyDraft,
 	type DependencyEditableField,
@@ -79,24 +82,8 @@ function getDependencyLabel(
 }
 
 function validateDependency(dependency: DependencyDraft): string | null {
-	if (!dependency.name.trim()) {
-		return "Name is required.";
-	}
-
 	if (!DEPENDENCY_NAME_PATTERN.test(dependency.name.trim())) {
 		return "Name must start and end with a letter or digit and may contain only letters, digits, '.', '_', or '-'.";
-	}
-
-	if (!dependency.version.trim()) {
-		return "Version is required.";
-	}
-
-	if (!dependency.source.trim()) {
-		return "Source is required.";
-	}
-
-	if (!dependency.artifact.trim()) {
-		return "Artifact is required.";
 	}
 
 	return null;
@@ -111,6 +98,7 @@ export function DependencyModal({
 }: DependencyModalProps) {
 	const [draft, setDraft] = useState(dependency);
 	const [error, setError] = useState("");
+	const confirmAction = useConfirmPrompt();
 
 	useEffect(() => {
 		if (!open) {
@@ -121,6 +109,25 @@ export function DependencyModal({
 		setError("");
 	}, [dependency, open]);
 
+	const handleOpenChange = (isOpen: boolean) => {
+		if (isOpen) {
+			onOpenChange(true);
+			return;
+		}
+
+		const isDraftUnchanged = areDependencyDraftsEqual([draft], [dependency]);
+		let description = "The new dependency will be lost.";
+		if (mode === "edit") {
+			description = `Your changes to ${dependency.name} ${dependency.version} will be lost.`;
+		}
+
+		confirmAction({
+			isDataLost: !isDraftUnchanged,
+			description,
+			onConfirm: () => onOpenChange(false),
+		});
+	};
+
 	const dependencyLabel = getDependencyLabel(draft, mode);
 	const title = mode === "add" ? "Add Dependency" : "Edit Dependency";
 	const description =
@@ -128,6 +135,9 @@ export function DependencyModal({
 			? "Create a new dependency entry and add it to the list."
 			: "Edit the selected dependency entry.";
 	const submitLabel = mode === "add" ? "Add" : "Save";
+	const hasEmptyRequiredField = FIELDS.some(
+		({ field, required }) => required && !draft[field].trim(),
+	);
 
 	const handleFieldChange = (field: DependencyInputField, value: string) => {
 		setDraft((currentDraft) => ({
@@ -150,7 +160,7 @@ export function DependencyModal({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent className="flex max-h-[90vh] w-[90vw] max-w-3xl flex-col sm:max-w-3xl">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
@@ -158,9 +168,9 @@ export function DependencyModal({
 				</DialogHeader>
 
 				{error && (
-					<div className="rounded border border-destructive bg-destructive/10 p-2 text-sm text-destructive">
+					<StatusBanner variant={"destructive"}>
 						{dependencyLabel}: {error}
-					</div>
+					</StatusBanner>
 				)}
 
 				<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
@@ -213,11 +223,13 @@ export function DependencyModal({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => onOpenChange(false)}
+							onClick={() => handleOpenChange(false)}
 						>
 							Cancel
 						</Button>
-						<Button type="submit">{submitLabel}</Button>
+						<Button type="submit" disabled={hasEmptyRequiredField}>
+							{submitLabel}
+						</Button>
 					</DialogFooter>
 				</form>
 			</DialogContent>

@@ -1,22 +1,24 @@
 import { LedgerOverview } from "@ledger-ui/components/LedgerOverview";
-import { EmptyState } from "@shared-ui/components/empty-state";
-import { Tabs, TabsList, TabsTrigger } from "@shared-ui/components/tabs";
-import { useEffect, useState } from "react";
-import { ErrorDisplay } from "@/components/ErrorDisplay";
-import { FileList } from "@/components/FileList";
+import { LedgerActions } from "@/components/ledger/LedgerActions";
 import { LedgerFileList } from "@/components/ledger/LedgerFileList";
-import { LedgerToolbar } from "@/components/ledger/LedgerHelpButton";
 import { PANE_BOTTOM_PADDING, Pane } from "@/components/Pane";
-import { SchemaToolbar } from "@/components/SchemaHelpButton";
-import { TextEditor } from "@/components/TextEditor";
-import { Separator } from "@/components/ui/separator";
+import { ReleasesActions } from "@/components/releases/ReleasesActions";
+import { ReleasesWorkspace } from "@/components/releases/ReleasesWorkspace";
+import { SchemaActions } from "@/components/SchemaActions";
+import { SchemaEditor } from "@/components/SchemaEditor";
+import { SchemaSources } from "@/components/SchemaSources";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
-	FILTERED_SCHEMA_FILENAME,
-	ORIGINAL_SCHEMA_FILENAME,
-} from "@/constants";
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { selectExploringReleaseId } from "@/store/exploration/explorationSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-	selectFilteredSchema,
 	selectOriginalSchema,
 	selectSourceFiles,
 } from "@/store/schema/schemaSlice";
@@ -27,12 +29,6 @@ import {
 	toggleInputPane,
 	type Workspace,
 } from "@/store/ui/uiSlice";
-import {
-	selectIsValidating,
-	selectValidationErrors,
-} from "@/store/validation/validationSlice";
-
-type SchemaTab = "original" | "filtered";
 
 type InputPaneProps = {
 	position?: "none" | "left" | "center" | "right";
@@ -47,95 +43,38 @@ export function InputPane({
 }: InputPaneProps) {
 	const dispatch = useAppDispatch();
 	const originalSchema = useAppSelector(selectOriginalSchema);
-	const filteredSchema = useAppSelector(selectFilteredSchema);
-	const isValidating = useAppSelector(selectIsValidating);
-	const validationErrors = useAppSelector(selectValidationErrors);
 	const isCollapsed = useAppSelector(selectInputPaneCollapsed);
 	const files = useAppSelector(selectSourceFiles);
 	const workspace = useAppSelector(selectWorkspace);
-	const [activeTab, setActiveTab] = useState<SchemaTab>("original");
 	const isLedger = workspace === "ledger";
 
-	useEffect(() => {
-		const hasFilteredSchema =
-			filteredSchema?.trim() && filteredSchema !== originalSchema;
-		if (!hasFilteredSchema && activeTab === "filtered") {
-			setActiveTab("original");
-		}
-	}, [filteredSchema, originalSchema, activeTab]);
+	const exploringReleaseId = useAppSelector(selectExploringReleaseId);
+	const isExploringRelease = exploringReleaseId !== null;
 
-	const renderSchemaEditor = () => {
-		if (isValidating) {
-			return <EmptyState isLoading title="Validating schema..." />;
-		}
+	let schemaEmptyMessage = "Nothing to display";
+	if (files.length > 0) {
+		schemaEmptyMessage =
+			"Nothing to display. Click the compose button in the files section to start.";
+	}
 
-		if (validationErrors.length > 0) {
-			return <ErrorDisplay error={validationErrors.join("\n")} />;
-		}
-
-		if (!originalSchema?.trim()) {
-			let message = "Nothing to display";
-			if (files.length === 1) {
-				message = 'Nothing to display. Click "Validate" to start.';
-			} else if (files.length > 1) {
-				message = 'Nothing to display. Click "Compose and Validate" to start.';
-			}
-			return <EmptyState title={message} />;
-		}
-
-		const hasFilteredSchema =
-			filteredSchema?.trim() && filteredSchema !== originalSchema;
-		const displayedSchema =
-			activeTab === "filtered" ? filteredSchema : originalSchema;
-
-		return (
-			<div className="flex-1 min-h-0 flex flex-col">
-				<div className="flex justify-center mb-4">
-					<Tabs
-						value={activeTab}
-						onValueChange={(value) => setActiveTab(value as SchemaTab)}
-					>
-						<TabsList>
-							<TabsTrigger value="original">Original Schema</TabsTrigger>
-							<TabsTrigger value="filtered" disabled={!hasFilteredSchema}>
-								Filtered Schema
-							</TabsTrigger>
-						</TabsList>
-					</Tabs>
-				</div>
-				<div className="flex-1 min-h-0">
-					<TextEditor
-						language="graphql"
-						value={displayedSchema}
-						readOnly
-						fullscreenTitle={
-							activeTab === "filtered" ? "Filtered Schema" : "Original Schema"
-						}
-						fileName={
-							activeTab === "filtered"
-								? FILTERED_SCHEMA_FILENAME
-								: ORIGINAL_SCHEMA_FILENAME
-						}
-					/>
-				</div>
-			</div>
-		);
-	};
-
-	let body: React.ReactNode;
+	let workspaceActions: React.ReactNode = <SchemaActions />;
+	let body: React.ReactNode = (
+		<>
+			<SchemaSources />
+			{originalSchema?.trim() && <Separator />}
+			<SchemaEditor emptyMessage={schemaEmptyMessage} />
+		</>
+	);
+	if (workspace === "releases") {
+		workspaceActions = <ReleasesActions />;
+		body = <ReleasesWorkspace />;
+	}
 	if (isLedger) {
+		workspaceActions = <LedgerActions />;
 		body = (
 			<>
-				<LedgerFileList leading={<LedgerToolbar />} />
+				<LedgerFileList />
 				<LedgerOverview className={PANE_BOTTOM_PADDING} />
-			</>
-		);
-	} else {
-		body = (
-			<>
-				<FileList leading={<SchemaToolbar />} />
-				{originalSchema?.trim() && <Separator />}
-				{renderSchemaEditor()}
 			</>
 		);
 	}
@@ -148,18 +87,28 @@ export function InputPane({
 			isCollapsed={isCollapsed}
 			onToggleCollapse={() => dispatch(toggleInputPane())}
 		>
-			<div className="flex justify-center px-2 pt-2">
-				<Tabs
-					value={workspace}
-					onValueChange={(value) => {
-						dispatch(setWorkspace(value as Workspace));
-					}}
-				>
-					<TabsList>
-						<TabsTrigger value="schema">Schema</TabsTrigger>
-						<TabsTrigger value="ledger">Ledger</TabsTrigger>
-					</TabsList>
-				</Tabs>
+			<div className={"flex items-center justify-between gap-2 px-2 pt-2 pb-4"}>
+				<div className={"flex items-center gap-2"}>
+					<Select
+						value={workspace}
+						onValueChange={(value) => {
+							dispatch(setWorkspace(value as Workspace));
+						}}
+					>
+						<SelectTrigger aria-label={"Workspace"} title={"Workspace"}>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value={"schema"} disabled={isExploringRelease}>
+								Schema
+							</SelectItem>
+							<SelectItem value={"releases"}>Releases</SelectItem>
+							<SelectItem value={"ledger"}>Ledger</SelectItem>
+						</SelectContent>
+					</Select>
+					<ThemeToggle />
+				</div>
+				{workspaceActions}
 			</div>
 
 			{body}

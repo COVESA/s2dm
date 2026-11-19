@@ -36,10 +36,14 @@ export function ExplorePane({
 
 	// Checked after the ledger workspace, which this must not block.
 	if (!hasSchema) {
+		let emptyMessage = "Import a schema to start";
+		if (workspace === "releases") {
+			emptyMessage = "Load a repository and pick a release to start";
+		}
 		return (
 			<Pane className={className} position={position}>
 				<div className="flex-1 flex items-center justify-center bg-background text-muted-foreground">
-					<p>Import a schema to start</p>
+					<p>{emptyMessage}</p>
 				</div>
 			</Pane>
 		);

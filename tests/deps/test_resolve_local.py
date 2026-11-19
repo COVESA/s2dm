@@ -9,7 +9,7 @@ from s2dm.deps.resolve.common import (
     METADATA_FILENAME,
     SCHEMA_FILENAME,
 )
-from s2dm.deps.resolve.errors import DependencyConfigError, DependencySourceError
+from s2dm.deps.resolve.errors import DependencyArtifactError, DependencyConfigError, DependencySourceError
 from s2dm.deps.resolve.resolve import resolve_dependencies
 from tests.deps.helpers import (
     create_archive,
@@ -208,8 +208,61 @@ def test_resolve_dependencies_fails_for_invalid_archive_schema_count(
     config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
     write_dependency_config(config_path, str(source_directory.resolve()), archive_path.name)
 
-    with pytest.raises(DependencySourceError):
+    with pytest.raises(DependencyArtifactError):
         resolve_dependencies(DependencyConfig.load(config_path), workspace)
+
+
+def test_resolve_dependencies_fails_for_archive_without_metadata(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    archive_path = source_directory / "bundle.tar.gz"
+    create_archive(archive_path, include_metadata=False)
+
+    config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
+    write_dependency_config(config_path, str(source_directory.resolve()), archive_path.name)
+
+    with pytest.raises(DependencyArtifactError):
+        resolve_dependencies(DependencyConfig.load(config_path), workspace)
+
+
+def test_resolve_dependencies_fails_for_direct_schema_without_metadata(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / SCHEMA_FILENAME).write_text("type Query { ping: String }\n", encoding="utf-8")
+
+    config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
+    write_dependency_config(config_path, str(source_directory.resolve()), SCHEMA_FILENAME)
+
+    with pytest.raises(DependencyArtifactError):
+        resolve_dependencies(DependencyConfig.load(config_path), workspace)
+
+
+def test_resolve_dependencies_from_publish_layout_archive(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    archive_path = source_directory / "release.tar.gz"
+    create_archive(
+        archive_path,
+        schema_name=f"graphql/{SCHEMA_FILENAME}",
+        extra_graphql_name="registry/history/Vehicle_v1.0.graphql",
+    )
+
+    config_path = workspace / DEFAULT_DEPS_CONFIG_FILENAME
+    write_dependency_config(config_path, str(source_directory.resolve()), archive_path.name)
+
+    resolve_dependencies(DependencyConfig.load(config_path), workspace)
+
+    vendored_directory = workspace / ".s2dm" / "vendor" / "B" / "5.1.0"
+    assert (vendored_directory / SCHEMA_FILENAME).is_file()
 
 
 def test_resolve_dependencies_fails_for_non_fixed_schema_name(

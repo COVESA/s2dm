@@ -10,7 +10,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type { RootState } from "@/store/types";
 
-export type Workspace = "schema" | "ledger";
+export type Workspace = "schema" | "releases" | "ledger";
 
 export type ExploreTab = "explorer" | "insights";
 

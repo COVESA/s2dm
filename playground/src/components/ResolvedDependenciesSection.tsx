@@ -3,11 +3,10 @@ import { Button } from "@shared-ui/components/button";
 import { StatusBanner } from "@shared-ui/components/status-banner";
 import { Hammer } from "lucide-react";
 import { useCallback, useMemo } from "react";
-import { ConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { DependencyEntry } from "@/components/DependencyEntry";
 import { BuildOptionsPopover } from "@/components/dependencies/BuildOptionsPopover";
 import { BuiltSchemaViewerButton } from "@/components/dependencies/BuiltSchemaViewerButton";
-import { useDependencyExploration } from "@/hooks/useDependencyExploration";
+import { useExploration } from "@/hooks/useExploration";
 import {
 	composeDependencies,
 	selectComposeError,
@@ -16,18 +15,25 @@ import {
 } from "@/store/deps/compose/composeSlice";
 import {
 	selectDependencyDrafts,
-	selectDependencyStatus,
 	selectIsLoadingDependencyStatus,
 	selectIsSavingDependenciesConfig,
 } from "@/store/deps/depsSlice";
 import { selectIsSavingIdentities } from "@/store/deps/identities/identitiesSlice";
 import { selectIsResolvingDependencies } from "@/store/deps/resolve/resolveSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { type DependencyDraft, hasSchemaContent } from "@/types/dependency";
 
-export function ResolvedDependenciesSection() {
+type ResolvedDependenciesSectionProps = {
+	isCollapsed: boolean;
+	onCollapsedChange: (isCollapsed: boolean) => void;
+};
+
+export function ResolvedDependenciesSection({
+	isCollapsed,
+	onCollapsedChange,
+}: ResolvedDependenciesSectionProps) {
 	const dispatch = useAppDispatch();
 	const dependencies = useAppSelector(selectDependencyDrafts);
-	const dependencyStatus = useAppSelector(selectDependencyStatus);
 	const isComposing = useAppSelector(selectIsComposing);
 	const composeError = useAppSelector(selectComposeError);
 	const composeMessage = useAppSelector(selectComposeMessage);
@@ -39,28 +45,19 @@ export function ResolvedDependenciesSection() {
 	const isIdentitiesSaving = useAppSelector(selectIsSavingIdentities);
 
 	const resolvedDependencies = useMemo(
-		() =>
-			dependencies.filter((dependency) =>
-				Boolean(dependency.schemaContent?.trim()),
-			),
+		() => dependencies.filter(hasSchemaContent),
 		[dependencies],
 	);
 
-	const {
-		exploringDependencyId,
-		toggleExploration,
-		pendingAction,
-		dismissPendingAction,
-		confirmPendingAction,
-	} = useDependencyExploration(resolvedDependencies);
+	const { exploringDependencyId, toggleExploration } = useExploration();
+
+	const handleToggleExplore = (dependency: DependencyDraft) => {
+		toggleExploration({ kind: "dependency", dependency });
+	};
 
 	const handleCompose = useCallback(() => {
 		dispatch(composeDependencies());
 	}, [dispatch]);
-
-	if (dependencyStatus !== "resolved" || resolvedDependencies.length === 0) {
-		return null;
-	}
 
 	const isComposeDisabled =
 		isDependencyStatusLoading ||
@@ -70,68 +67,57 @@ export function ResolvedDependenciesSection() {
 		isComposing;
 
 	const dependencyCountText = `${resolvedDependencies.length} dependenc${resolvedDependencies.length === 1 ? "y" : "ies"}`;
+	const hasComposeStatus = Boolean(composeError || composeMessage);
+
+	const buildActions = (
+		<div className={"flex items-center gap-1"}>
+			<BuiltSchemaViewerButton size={"icon-sm"} />
+			<div className={"flex items-center"}>
+				<Button
+					variant={"outline"}
+					size={"icon-sm"}
+					onClick={handleCompose}
+					loading={isComposing}
+					disabled={isComposeDisabled}
+					title={"Build dependencies"}
+					className={"rounded-r-none"}
+				>
+					{!isComposing && <Hammer />}
+				</Button>
+				<BuildOptionsPopover disabled={isComposeDisabled} />
+			</div>
+		</div>
+	);
 
 	return (
-		<div className="space-y-2">
-			<CollapsibleSection title={dependencyCountText}>
-				<ul className="space-y-1 py-2">
+		<div className="flex min-h-0 flex-col space-y-2">
+			<CollapsibleSection
+				title={dependencyCountText}
+				actions={buildActions}
+				isCollapsed={isCollapsed}
+				onCollapsedChange={onCollapsedChange}
+			>
+				<ul className="min-h-0 space-y-1 overflow-y-auto py-2">
 					{resolvedDependencies.map((dependency) => (
 						<DependencyEntry
 							key={dependency.id}
 							dependency={dependency}
 							isExploring={dependency.id === exploringDependencyId}
-							onToggleExplore={toggleExploration}
+							onToggleExplore={handleToggleExplore}
 						/>
 					))}
 				</ul>
 			</CollapsibleSection>
-			<div className="px-2 space-y-2">
-				<div className="flex gap-2">
-					<div className={"flex flex-1 items-center"}>
-						<Button
-							variant={"outline"}
-							size={"sm"}
-							onClick={handleCompose}
-							loading={isComposing}
-							disabled={isComposeDisabled}
-							title={"Build dependencies"}
-							className={"flex-1 rounded-r-none"}
-						>
-							<Hammer />
-							Build
-						</Button>
-						<BuildOptionsPopover disabled={isComposeDisabled} />
-					</div>
-					<BuiltSchemaViewerButton />
+			{hasComposeStatus && (
+				<div className="px-2 space-y-2">
+					{composeError && (
+						<StatusBanner variant="destructive">{composeError}</StatusBanner>
+					)}
+					{composeMessage && (
+						<StatusBanner variant="success">{composeMessage}</StatusBanner>
+					)}
 				</div>
-				{composeError && (
-					<StatusBanner variant="destructive">{composeError}</StatusBanner>
-				)}
-				{composeMessage && (
-					<StatusBanner variant="success">{composeMessage}</StatusBanner>
-				)}
-			</div>
-
-			<ConfirmActionDialog
-				open={Boolean(pendingAction)}
-				onOpenChange={(open) => {
-					if (!open) {
-						dismissPendingAction();
-					}
-				}}
-				title="Discard selection changes?"
-				description={
-					pendingAction?.kind === "switch"
-						? "You have unsaved selection query changes. Switch to a different dependency and discard them?"
-						: "You have unsaved selection query changes. Exit exploration mode and discard them?"
-				}
-				confirmLabel={
-					pendingAction?.kind === "switch"
-						? "Switch Dependency"
-						: "Exit Exploration"
-				}
-				onConfirm={confirmPendingAction}
-			/>
+			)}
 		</div>
 	);
 }

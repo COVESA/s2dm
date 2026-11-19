@@ -12,25 +12,27 @@ export interface DepsResolveState {
 	isResolving: boolean;
 	warnings: string[];
 	error: string | null;
+	cleanBeforeResolve: boolean;
 }
 
 const initialState: DepsResolveState = {
 	isResolving: false,
 	warnings: [],
 	error: null,
+	cleanBeforeResolve: false,
 };
 
 const resolveSlice = createSlice({
 	name: "depsResolve",
 	initialState,
 	reducers: {
-		resolveDependencies: (
-			state,
-			_action: PayloadAction<{ clean: boolean }>,
-		) => {
+		resolveDependencies: (state) => {
 			state.isResolving = true;
 			state.warnings = [];
 			state.error = null;
+		},
+		setCleanBeforeResolve: (state, action: PayloadAction<boolean>) => {
+			state.cleanBeforeResolve = action.payload;
 		},
 		resolveDependenciesSuccess: (state, action: PayloadAction<string[]>) => {
 			state.isResolving = false;
@@ -58,6 +60,7 @@ export const {
 	resolveDependencies,
 	resolveDependenciesSuccess,
 	resolveDependenciesFailure,
+	setCleanBeforeResolve,
 } = resolveSlice.actions;
 
 export const selectIsResolvingDependencies = (state: RootState) =>
@@ -65,5 +68,7 @@ export const selectIsResolvingDependencies = (state: RootState) =>
 export const selectResolveWarnings = (state: RootState) =>
 	state.depsResolve.warnings;
 export const selectResolveError = (state: RootState) => state.depsResolve.error;
+export const selectCleanBeforeResolve = (state: RootState) =>
+	state.depsResolve.cleanBeforeResolve;
 
 export default resolveSlice.reducer;

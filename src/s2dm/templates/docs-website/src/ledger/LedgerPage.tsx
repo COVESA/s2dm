@@ -1,10 +1,5 @@
 import type { PropSidebar } from "@docusaurus/plugin-content-docs";
-import { DocsSidebarProvider } from "@docusaurus/plugin-content-docs/client";
 import { useHistory, useLocation } from "@docusaurus/router";
-import {
-	HtmlClassNameProvider,
-	ThemeClassNames,
-} from "@docusaurus/theme-common";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import { ExploreView } from "@ledger-ui/components/ExploreView";
 import { LedgerDetailsContent } from "@ledger-ui/components/LedgerDetailsContent";
@@ -23,10 +18,9 @@ import {
 	selectLedgerView,
 	setLedgerView,
 } from "@ledger-ui/state/ledgerSlice";
-import DocRootLayout from "@theme/DocRoot/Layout";
-import Layout from "@theme/Layout";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Provider } from "react-redux";
+import { ContentPageLayout } from "@/components/ContentPageLayout";
 import {
 	type LedgerSession,
 	openLedgerOnce,
@@ -48,8 +42,7 @@ const VIEW_PANELS: Record<LedgerViewId, () => ReactNode> = {
 	raw: () => <RawTablesView />,
 	explore: () => <ExploreView />,
 	query: () => <QueryView />,
-	// The overview leaves the diagram out, since the diagram is a view of its own.
-	structure: () => <LedgerOverview relationships={null} />,
+	structure: () => <LedgerOverview />,
 	diagram: () => <LedgerErdDiagram fit className="p-6" />,
 };
 
@@ -164,26 +157,6 @@ function LedgerContent() {
 	return <article className={`${styles.content} s2dm-ledger`}>{body}</article>;
 }
 
-function LedgerLayout({
-	children,
-	sidebar,
-}: {
-	children: ReactNode;
-	sidebar: PropSidebar;
-}) {
-	return (
-		<HtmlClassNameProvider className={ThemeClassNames.wrapper.docsPages}>
-			<Layout title="Ledger" description="Explore the project's ModL ledger">
-				<HtmlClassNameProvider className={ThemeClassNames.page.docsDocPage}>
-					<DocsSidebarProvider name="ledgerSidebar" items={sidebar}>
-						<DocRootLayout>{children}</DocRootLayout>
-					</DocsSidebarProvider>
-				</HtmlClassNameProvider>
-			</Layout>
-		</HtmlClassNameProvider>
-	);
-}
-
 export default function LedgerPage({
 	sidebar,
 }: {
@@ -194,9 +167,14 @@ export default function LedgerPage({
 	const ledgerUrl = useBaseUrl(LEDGER_FILE);
 	const ledgerRootUrl = useBaseUrl(LEDGER_ROOT_PATH);
 	const [session, setSession] = useState<LedgerSession | null>(null);
+	// The sidebar is empty when `npm run doc` staged no ledger.
+	const hasLedger = sidebar.length > 0;
 
 	// In an effect: every route here is prerendered in Node.
 	useEffect(() => {
+		if (!hasLedger) {
+			return;
+		}
 		configureLedgerWorker({ wasmUrl });
 		setSession(
 			openLedgerOnce({
@@ -204,7 +182,7 @@ export default function LedgerPage({
 				name: LEDGER_FILE.replace(/^\//, ""),
 			}),
 		);
-	}, [ledgerUrl, wasmUrl]);
+	}, [hasLedger, ledgerUrl, wasmUrl]);
 
 	// On leaving the ledger, not on unmount: each view is its own route.
 	useEffect(() => {
@@ -217,7 +195,9 @@ export default function LedgerPage({
 	}, [history, ledgerRootUrl]);
 
 	let content: ReactNode;
-	if (!session) {
+	if (!hasLedger) {
+		content = <div className={styles.status}>No ledger is available.</div>;
+	} else if (!session) {
 		content = <div className={styles.status}>Loading ledger...</div>;
 	} else {
 		content = (
@@ -227,5 +207,14 @@ export default function LedgerPage({
 		);
 	}
 
-	return <LedgerLayout sidebar={sidebar}>{content}</LedgerLayout>;
+	return (
+		<ContentPageLayout
+			title={"Ledger"}
+			description={"Explore the project's ModL ledger"}
+			sidebarName={"ledgerSidebar"}
+			sidebar={sidebar}
+		>
+			{content}
+		</ContentPageLayout>
+	);
 }

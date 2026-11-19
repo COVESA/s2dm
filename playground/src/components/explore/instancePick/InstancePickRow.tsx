@@ -1,7 +1,6 @@
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import type { ReactNode } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FormLabel } from "@/components/ui/form-label";
+import { LabelCheckbox } from "@/components/ui/checkbox";
 
 type InstancePickRowProps = {
 	checkboxId: string;
@@ -19,19 +18,15 @@ export function InstancePickRow({
 	children,
 }: InstancePickRowProps) {
 	return (
-		<li className={"flex items-center gap-2 px-3 py-1"}>
-			<Checkbox
+		<li className={"px-3 py-1"}>
+			<LabelCheckbox
 				id={checkboxId}
 				checked={checked}
 				disabled={isDisabled}
 				onCheckedChange={onCheckedChange}
-			/>
-			<FormLabel
-				htmlFor={checkboxId}
-				className={"flex-1 cursor-pointer text-sm"}
 			>
 				{children}
-			</FormLabel>
+			</LabelCheckbox>
 		</li>
 	);
 }

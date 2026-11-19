@@ -7,6 +7,8 @@ import {
 	composeDependencies,
 	getDependenciesConfig,
 	getDependenciesIdentities,
+	loadRelease,
+	ReleaseArtifactError,
 	resolveDependencies,
 	saveDependenciesConfig,
 	validateSchemas,
@@ -15,6 +17,7 @@ import type {
 	EmbeddingsBuildResponse,
 	ExportResponse,
 	GetDependenciesConfigResponse,
+	LoadReleaseRequest,
 	OpenAPISpec,
 	SaveDependenciesConfigRequest,
 	SchemaInput,
@@ -54,6 +57,7 @@ const BUILD_EMBEDDINGS_URL = `${testApiConfig.baseUrl}/api/v1/embeddings/build`;
 const RESOLVE_DEPENDENCIES_URL = `${testApiConfig.baseUrl}/api/v1/deps/resolve`;
 const COMPOSE_DEPENDENCIES_URL = `${testApiConfig.baseUrl}/api/v1/deps/build`;
 const CAPABILITIES_URL = `${testApiConfig.baseUrl}/api/v1/capabilities`;
+const LOAD_RELEASE_URL = `${testApiConfig.baseUrl}/api/v1/deps/releases/load`;
 /** A reply delay in milliseconds that exceeds the default request timeout. */
 const SLOW_REPLY_DELAY_MS = 200;
 
@@ -337,4 +341,45 @@ test("a failed export shows the API's message", async () => {
 		const exportError = selectExportError(store.getState(), exportPath);
 		expect(exportError).toBe(badRequestReply.message);
 	});
+});
+
+const releaseRequest: LoadReleaseRequest = {
+	repository: "https://github.com/owner/repo",
+	tag: "v1.0.0",
+	artifact: "release.tar.gz",
+};
+
+test("a release asset with the wrong content reads as an archive error", async () => {
+	const artifactErrorReply: ApiErrorReply = {
+		error: "DependencyArtifactError",
+		message: "The archive has no metadata.yaml at its root",
+		details: null,
+	};
+	const loadHandler = http.post(LOAD_RELEASE_URL, () =>
+		HttpResponse.json(artifactErrorReply, { status: 422 }),
+	);
+	server.use(loadHandler);
+
+	const loadRequest = loadRelease(releaseRequest);
+
+	await expect(loadRequest).rejects.toBeInstanceOf(ReleaseArtifactError);
+});
+
+test("another release load failure is not an archive error", async () => {
+	const sourceErrorReply: ApiErrorReply = {
+		error: "DependencySourceError",
+		message: "Unable to access the release",
+		details: null,
+	};
+	const loadHandler = http.post(LOAD_RELEASE_URL, () =>
+		HttpResponse.json(sourceErrorReply, { status: 422 }),
+	);
+	server.use(loadHandler);
+
+	const loadError = await loadRelease(releaseRequest).catch(
+		(error: unknown) => error,
+	);
+
+	expect(loadError).toBeInstanceOf(Error);
+	expect(loadError).not.toBeInstanceOf(ReleaseArtifactError);
 });

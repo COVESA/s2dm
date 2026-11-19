@@ -1,4 +1,4 @@
-import { fetchJson } from "@/utils/fetchJson";
+import { fetchJson } from "@/utils/fetchFile";
 import {
 	decodeVectors,
 	type EmbeddingsFile,

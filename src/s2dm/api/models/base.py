@@ -64,6 +64,7 @@ ErrorCode: TypeAlias = Literal[
     "GraphQLError",
     "NotFound",
     "DependencySourceError",
+    "DependencyArtifactError",
     "DependencyUpstreamError",
     "ServerError",
 ]

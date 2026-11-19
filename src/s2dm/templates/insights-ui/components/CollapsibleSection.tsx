@@ -8,6 +8,9 @@ interface CollapsibleSectionProps {
 	defaultCollapsed?: boolean;
 	children: React.ReactNode;
 	className?: string;
+	actions?: React.ReactNode;
+	isCollapsed?: boolean;
+	onCollapsedChange?: (isCollapsed: boolean) => void;
 }
 
 /**
@@ -22,6 +25,12 @@ interface CollapsibleSectionProps {
  * @param defaultCollapsed - Whether the body starts closed.
  * @param children - The body content.
  * @param className - Extra classes for the outer element.
+ * @param actions - Buttons that sit in the header, after the toggle button.
+ * They do not toggle the body.
+ * @param isCollapsed - Whether the body is closed. When set, the parent owns
+ * the state and `defaultCollapsed` has no effect.
+ * @param onCollapsedChange - Called with the new state when the user toggles
+ * the body.
  * @returns The section.
  */
 export function CollapsibleSection({
@@ -29,8 +38,15 @@ export function CollapsibleSection({
 	defaultCollapsed = false,
 	children,
 	className,
+	actions,
+	isCollapsed: controlledIsCollapsed,
+	onCollapsedChange,
 }: CollapsibleSectionProps) {
-	const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+	const [ownIsCollapsed, setOwnIsCollapsed] = useState(defaultCollapsed);
+	let isCollapsed = ownIsCollapsed;
+	if (controlledIsCollapsed !== undefined) {
+		isCollapsed = controlledIsCollapsed;
+	}
 
 	let chevronIcon: React.ReactNode;
 	if (isCollapsed) {
@@ -39,17 +55,61 @@ export function CollapsibleSection({
 		chevronIcon = <ChevronUp className="h-4 w-4" />;
 	}
 
+	const toggleCollapsed = () => {
+		const nextIsCollapsed = !isCollapsed;
+		setOwnIsCollapsed(nextIsCollapsed);
+		onCollapsedChange?.(nextIsCollapsed);
+	};
+	const toggleClassName =
+		"w-full flex items-center justify-between px-3 py-2 text-sm text-foreground border-0 bg-muted hover:bg-muted/80 transition-colors rounded h-auto";
+
+	let header: React.ReactNode = (
+		<Button
+			type="button"
+			variant="ghost"
+			onClick={toggleCollapsed}
+			className={toggleClassName}
+		>
+			<span>{title}</span>
+			{chevronIcon}
+		</Button>
+	);
+	if (actions) {
+		let chevronLabel = "Collapse section";
+		if (isCollapsed) {
+			chevronLabel = "Expand section";
+		}
+
+		header = (
+			<div className="flex items-center gap-1 rounded bg-muted py-1 pr-1">
+				<Button
+					type="button"
+					variant="ghost"
+					onClick={toggleCollapsed}
+					aria-expanded={!isCollapsed}
+					className={cn(toggleClassName, "min-w-0 flex-1 shrink")}
+				>
+					<span>{title}</span>
+				</Button>
+				{actions}
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon-sm"
+					onClick={toggleCollapsed}
+					aria-expanded={!isCollapsed}
+					aria-label={chevronLabel}
+					title={chevronLabel}
+				>
+					{chevronIcon}
+				</Button>
+			</div>
+		);
+	}
+
 	return (
 		<div className={className}>
-			<Button
-				type="button"
-				variant="ghost"
-				onClick={() => setIsCollapsed(!isCollapsed)}
-				className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground border-0 bg-muted hover:bg-muted/80 transition-colors rounded h-auto"
-			>
-				<span>{title}</span>
-				{chevronIcon}
-			</Button>
+			{header}
 			<div
 				className={cn(
 					"px-2 grid transition-all duration-300 ease-in-out",

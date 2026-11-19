@@ -14,8 +14,11 @@ from s2dm.api.models.deps import (
     DependenciesStatusResponse,
     DependencyPathInput,
     GetDependenciesConfigResponse,
+    LoadReleaseRequest,
+    LoadReleaseResponse,
     SaveDependenciesConfigRequest,
 )
+from s2dm.api.services.schema_store import store_schema_text
 from s2dm.deps.compose import DependencyCompositionError
 from s2dm.deps.helpers import (
     build_resolver_context,
@@ -33,11 +36,13 @@ from s2dm.deps.helpers import (
     save_dependency_identity_config,
     validate_cached_dependency_workspace,
 )
-from s2dm.deps.models import DependencyConfig, DependencyEntry, RemoteIdentityConfig
-from s2dm.deps.models.deps_file import GRAPHQL_FILE_EXTENSIONS
+from s2dm.deps.models import DependencyConfig, DependencyEntry, ReleasePage, RemoteIdentityConfig
+from s2dm.deps.models.deps_file import GRAPHQL_FILE_EXTENSIONS, is_dependency_source_url
 from s2dm.deps.resolve.common import DEPENDENCY_LOCK_FILENAME, SCHEMA_FILENAME, VENDOR_DIRECTORY
+from s2dm.deps.resolve.context import ResolverContext
 from s2dm.deps.resolve.errors import DependencyConfigError
-from s2dm.deps.resolve.warnings import ListWarningCollector
+from s2dm.deps.resolve.releases import list_releases, load_release
+from s2dm.deps.resolve.warnings import ListWarningCollector, WarningCollector
 
 
 def save_dependencies_config(config: SaveDependenciesConfigRequest) -> None:
@@ -119,8 +124,8 @@ def resolve_api_dependencies(clean: bool) -> list[str]:
     """Resolve dependencies in the API-managed workspace."""
     api_workspace = get_api_workspace()
     warnings: list[str] = []
-    identity_config = load_dependency_identity_config(get_dependency_identity_path(api_workspace))
-    resolver_context = build_resolver_context(identity_config, warning_collector=ListWarningCollector(warnings))
+    warning_collector = ListWarningCollector(warnings)
+    resolver_context = _load_api_resolver_context(warning_collector)
     dependency_config = _load_stored_dependency_config(api_workspace)
 
     resolve_dependency_config_to_lock_path(
@@ -150,6 +155,38 @@ def build_api_dependencies(auto_prefix: bool, preserve_query_type: bool) -> str:
             format_error_list("Dependency build failed due to conflicting definitions", list(error.messages))
         ) from error
     return compose_dependency_schemas(schema_paths, preserve_query_type)
+
+
+def list_api_releases(repository: str, page: int) -> ReleasePage:
+    """List one page of the published releases of a remote repository with the stored identities."""
+    _require_repository_url(repository)
+    resolver_context = _load_api_resolver_context()
+    return list_releases(repository, page, resolver_context)
+
+
+def load_api_release(request: LoadReleaseRequest) -> LoadReleaseResponse:
+    """Load one remote release asset with the stored identities and store its schema text."""
+    _require_repository_url(request.repository)
+    resolver_context = _load_api_resolver_context()
+    loaded_release = load_release(request.repository, request.tag, request.artifact, resolver_context)
+    schema_id = store_schema_text(loaded_release.schema_text)
+    return LoadReleaseResponse(
+        schema_content=loaded_release.schema_text,
+        schema_id=schema_id,
+        metadata=loaded_release.metadata,
+    )
+
+
+def _load_api_resolver_context(warning_collector: WarningCollector | None = None) -> ResolverContext:
+    api_workspace = get_api_workspace()
+    identity_path = get_dependency_identity_path(api_workspace)
+    identity_config = load_dependency_identity_config(identity_path)
+    return build_resolver_context(identity_config, warning_collector=warning_collector)
+
+
+def _require_repository_url(repository: str) -> None:
+    if not is_dependency_source_url(repository):
+        raise DependencyConfigError("Repository must be a valid repository URL")
 
 
 def _build_dependency_config(config: SaveDependenciesConfigRequest, api_workspace: Path) -> DependencyConfig:
