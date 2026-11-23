@@ -216,7 +216,7 @@ def _resolve_dependency(
         raise DependencySourceError(
             f"Dependency version mismatch for '{dependency.name}': metadata.yaml declares '{metadata.version}'"
         )
-    _build_dependency_schema(resolved_source.source.schema_path, dependency.name, dependency.version)
+    build_dependency_schema(resolved_source.source.schema_path, dependency.name, dependency.version)
 
     target_directory.mkdir(parents=True, exist_ok=False)
 
@@ -343,7 +343,17 @@ def _build_expected_resolved_path(dependency: DependencyEntry) -> str:
     return f"{dependency.source.rstrip('/')}/releases/download/{dependency.version}/{dependency.artifact}"
 
 
-def _build_dependency_schema(schema_path: Path, dependency_name: str, dependency_version: str) -> None:
+def build_dependency_schema(schema_path: Path, dependency_name: str, dependency_version: str) -> None:
+    """Check that a dependency schema is valid GraphQL.
+
+    Args:
+        schema_path: The path of the schema file.
+        dependency_name: The dependency name, for the error message.
+        dependency_version: The dependency version, for the error message.
+
+    Raises:
+        DependencySourceError: When the schema is not valid GraphQL.
+    """
     dependency_label = f"{dependency_name}/{dependency_version}"
     try:
         build_schema(schema_path.read_text(encoding="utf-8"))

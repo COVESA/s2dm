@@ -1,6 +1,6 @@
 """Dependency resolution routes."""
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Query, Response
 from fastapi.responses import JSONResponse
 
 from s2dm.api.config import COMMON_RESPONSES
@@ -12,12 +12,16 @@ from s2dm.api.models.deps import (
     DependenciesIdentities,
     DependenciesStatusResponse,
     GetDependenciesConfigResponse,
+    LoadReleaseRequest,
+    LoadReleaseResponse,
     ResolveDependenciesRequest,
     SaveDependenciesConfigRequest,
 )
 from s2dm.api.services.deps_service import (
     build_api_dependencies,
     delete_dependencies_identities,
+    list_api_releases,
+    load_api_release,
     load_dependencies_config,
     load_dependencies_identities,
     load_dependencies_status,
@@ -26,6 +30,7 @@ from s2dm.api.services.deps_service import (
     save_dependencies_identities,
 )
 from s2dm.api.services.response_service import execute_and_respond
+from s2dm.deps.models import ReleasePage
 from s2dm.deps.resolve.errors import (
     DependencyConfigError,
     DependencyInternalError,
@@ -60,6 +65,15 @@ BUILD_RESPONSES = {
     200: {"model": ApiResponse, "description": "Dependency build succeeded"},
     404: {"model": ErrorResponse, "description": "Dependency config is not stored"},
     422: {"model": ErrorResponse, "description": "Dependency build failed due to invalid config or schema issues"},
+}
+
+RELEASES_RESPONSES = {
+    **COMMON_RESPONSES,
+    422: {
+        "model": ErrorResponse,
+        "description": "The repository URL is invalid, the release is inaccessible, or its asset is unusable",
+    },
+    502: {"model": ErrorResponse, "description": "The release provider failed"},
 }
 
 router = APIRouter()
@@ -135,3 +149,18 @@ def build_dependencies(request: BuildDependenciesRequest) -> ApiResponse:
         return [build_api_dependencies(request.auto_prefix, request.preserve_query_type)]
 
     return execute_and_respond(executor=process_request, result_format="graphql")
+
+
+@router.get("/releases", response_model=ReleasePage, responses=RELEASES_RESPONSES)
+def list_releases(
+    repository: str = Query(description="Repository URL, https://<host>/<owner>/<repository>"),
+    page: int = Query(default=1, ge=1, description="Page number, starting at 1"),
+) -> ReleasePage:
+    """List one page of the published releases of a remote repository."""
+    return list_api_releases(repository, page)
+
+
+@router.post("/releases/load", response_model=LoadReleaseResponse, responses=RELEASES_RESPONSES)
+def load_release(request: LoadReleaseRequest) -> LoadReleaseResponse:
+    """Load the schema and metadata of one remote release asset."""
+    return load_api_release(request)
