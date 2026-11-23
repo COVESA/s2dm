@@ -1,13 +1,20 @@
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { cn } from "@shared-ui/utils/cn";
 import { CheckIcon, MinusIcon } from "lucide-react";
-import type * as React from "react";
+import { type ComponentProps, type ReactNode, useId } from "react";
+import { FormLabel } from "@/components/ui/form-label";
 
+/**
+ * A checkbox. Its children follow the box in one row. Children that are not
+ * a label leave the box without a name, so the box then needs an
+ * `aria-label`. Without children, only the box is drawn.
+ */
 function Checkbox({
 	className,
+	children,
 	...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
-	return (
+}: ComponentProps<typeof CheckboxPrimitive.Root>) {
+	const box = (
 		<CheckboxPrimitive.Root
 			data-slot="checkbox"
 			className={cn(
@@ -25,6 +32,53 @@ function Checkbox({
 			</CheckboxPrimitive.Indicator>
 		</CheckboxPrimitive.Root>
 	);
+
+	if (children === undefined) {
+		return box;
+	}
+
+	return (
+		<div data-slot="checkbox-row" className="flex min-w-0 items-center gap-2">
+			{box}
+			{children}
+		</div>
+	);
 }
 
-export { Checkbox };
+type LabelCheckboxProps = Omit<
+	ComponentProps<typeof CheckboxPrimitive.Root>,
+	"children"
+> & {
+	/** The visible name of the box. */
+	children: ReactNode;
+	/** Whether the name shows the required mark. */
+	showRequired?: boolean;
+};
+
+/**
+ * A checkbox followed by its name. A click on the name toggles the box. The
+ * name dims when the box is disabled.
+ */
+function LabelCheckbox({
+	id,
+	children,
+	showRequired = false,
+	...props
+}: LabelCheckboxProps) {
+	const generatedId = useId();
+	const checkboxId = id ?? generatedId;
+
+	return (
+		<Checkbox id={checkboxId} {...props}>
+			<FormLabel
+				htmlFor={checkboxId}
+				showRequired={showRequired}
+				className="min-w-0 flex-1 cursor-pointer"
+			>
+				{children}
+			</FormLabel>
+		</Checkbox>
+	);
+}
+
+export { Checkbox, LabelCheckbox };

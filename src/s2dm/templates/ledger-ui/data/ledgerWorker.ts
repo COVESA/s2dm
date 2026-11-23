@@ -11,6 +11,7 @@ import {
 	searchTable,
 } from "@ledger-ui/data/rows";
 import { readSchema } from "@ledger-ui/data/schema";
+import { requireModlTables } from "@ledger-ui/data/schemaCheck";
 import type { SearchOptions } from "@ledger-ui/data/search";
 import {
 	closeLedgerDatabase,
@@ -34,8 +35,10 @@ const operations = {
 	async open(payload: { bytes: Uint8Array; wasmUrl: string }) {
 		configureSqlJs({ wasmUrl: payload.wasmUrl });
 		const database = await openLedgerDatabase(payload.bytes);
+		const ledgerTables = readSchema(database);
+		requireModlTables(ledgerTables);
 		setLedgerDatabase(database);
-		tables = readSchema(database);
+		tables = ledgerTables;
 		return tables;
 	},
 

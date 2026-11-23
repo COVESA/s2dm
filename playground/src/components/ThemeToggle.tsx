@@ -1,4 +1,5 @@
-import { useLayoutEffect, useState } from "react";
+import { type LucideIcon, Monitor, Moon, Sun } from "lucide-react";
+import { type ReactNode, useEffect, useLayoutEffect, useState } from "react";
 import {
 	Select,
 	SelectContent,
@@ -6,8 +7,21 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { getIconClassName, isDarkTheme, type Theme } from "@/utils/theme";
 
-type Theme = "light" | "dark" | "system";
+const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
+
+type ThemeOption = {
+	value: Theme;
+	label: string;
+	Icon: LucideIcon;
+};
+
+const THEME_OPTIONS: ThemeOption[] = [
+	{ value: "light", label: "Light", Icon: Sun },
+	{ value: "dark", label: "Dark", Icon: Moon },
+	{ value: "system", label: "System", Icon: Monitor },
+];
 
 export function ThemeToggle() {
 	// Read during the first render, or a mount per workspace switch paints one
@@ -19,31 +33,25 @@ export function ThemeToggle() {
 			return "system";
 		}
 	});
+	const [isDeviceDark, setIsDeviceDark] = useState(() => {
+		const mediaQuery = window.matchMedia(DARK_SCHEME_QUERY);
+		return mediaQuery.matches;
+	});
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia(DARK_SCHEME_QUERY);
+		const updateDeviceScheme = (event: MediaQueryListEvent) => {
+			setIsDeviceDark(event.matches);
+		};
+
+		mediaQuery.addEventListener("change", updateDeviceScheme);
+		return () => mediaQuery.removeEventListener("change", updateDeviceScheme);
+	}, []);
 
 	useLayoutEffect(() => {
-		const root = document.documentElement;
-
-		if (theme === "system") {
-			const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-			const updateSystemTheme = (e: MediaQueryList | MediaQueryListEvent) => {
-				if (e.matches) {
-					root.classList.add("dark");
-				} else {
-					root.classList.remove("dark");
-				}
-			};
-
-			updateSystemTheme(mediaQuery);
-			mediaQuery.addEventListener("change", updateSystemTheme);
-
-			return () => mediaQuery.removeEventListener("change", updateSystemTheme);
-		} else if (theme === "dark") {
-			root.classList.add("dark");
-		} else {
-			root.classList.remove("dark");
-		}
-	}, [theme]);
+		const isDark = isDarkTheme(theme, isDeviceDark);
+		document.documentElement.classList.toggle("dark", isDark);
+	}, [theme, isDeviceDark]);
 
 	const handleThemeChange = (newTheme: Theme) => {
 		setTheme(newTheme);
@@ -54,33 +62,34 @@ export function ThemeToggle() {
 		}
 	};
 
+	const selectedOption = THEME_OPTIONS.find((option) => option.value === theme);
+	let selectedIcon: ReactNode = null;
+	if (selectedOption) {
+		const SelectedIcon = selectedOption.Icon;
+		const selectedIconClassName = getIconClassName(theme, isDeviceDark);
+		selectedIcon = <SelectedIcon className={selectedIconClassName} />;
+	}
+
 	return (
 		<Select
 			value={theme}
 			onValueChange={(value) => handleThemeChange(value as Theme)}
 		>
-			<SelectTrigger className="w-[130px]">
-				<SelectValue />
+			<SelectTrigger aria-label={"Theme"} title={"Theme"}>
+				<SelectValue>{selectedIcon}</SelectValue>
 			</SelectTrigger>
 			<SelectContent>
-				<SelectItem value="light">
-					<div className="flex items-center">
-						<span className="mr-2">☀️</span>
-						Light
-					</div>
-				</SelectItem>
-				<SelectItem value="dark">
-					<div className="flex items-center">
-						<span className="mr-2">🌙</span>
-						Dark
-					</div>
-				</SelectItem>
-				<SelectItem value="system">
-					<div className="flex items-center">
-						<span className="mr-2">💻</span>
-						System
-					</div>
-				</SelectItem>
+				{THEME_OPTIONS.map((option) => {
+					const iconClassName = getIconClassName(option.value, isDeviceDark);
+					return (
+						<SelectItem key={option.value} value={option.value}>
+							<div className={"flex items-center gap-2"}>
+								<option.Icon className={iconClassName} />
+								{option.label}
+							</div>
+						</SelectItem>
+					);
+				})}
 			</SelectContent>
 		</Select>
 	);

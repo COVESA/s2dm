@@ -1,8 +1,9 @@
 import { Button } from "@shared-ui/components/button";
 import { cn } from "@shared-ui/utils/cn";
 import { ChevronRight } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { HighlightedText } from "@/components/explore/HighlightedText";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const TREE_ROW_HEIGHT_PX = 24;
 
@@ -98,5 +99,40 @@ export function TreeDocsLink({
 				<HighlightedText text={label} normalizedTerm={highlightTerm} />
 			</span>
 		</Button>
+	);
+}
+
+type DocsLinkCheckboxProps = Omit<
+	ComponentProps<typeof Checkbox>,
+	"aria-label" | "children"
+> & {
+	/** The name of the box and the text of its docs link. */
+	label: string;
+	highlightTerm: string;
+	onShowDocs: () => void;
+	/** Controls shown after the docs link. */
+	children?: ReactNode;
+};
+
+/**
+ * A checkbox followed by a docs link with the same name. A click on the link
+ * opens the docs and leaves the box unchanged. Extra controls follow the link.
+ */
+export function DocsLinkCheckbox({
+	label,
+	highlightTerm,
+	onShowDocs,
+	children,
+	...checkboxProps
+}: DocsLinkCheckboxProps) {
+	return (
+		<Checkbox aria-label={`Select ${label}`} {...checkboxProps}>
+			<TreeDocsLink
+				label={label}
+				highlightTerm={highlightTerm}
+				onClick={onShowDocs}
+			/>
+			{children}
+		</Checkbox>
 	);
 }
